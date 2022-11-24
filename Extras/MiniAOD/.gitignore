@@ -1,0 +1,7 @@
+*.pyc
+*.log
+*.DS_Store
+*.py~
+*.c~
+*.cc~
+*.cpp~

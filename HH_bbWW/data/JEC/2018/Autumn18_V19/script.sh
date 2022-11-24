@@ -1,0 +1,55 @@
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep AbsoluteSample -A41 > Autumn18_V19_MC_UncertaintySources_AbsoluteSample_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep AbsoluteStat -A41 > Autumn18_V19_MC_UncertaintySources_AbsoluteStat_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep AbsoluteScale -A41 > Autumn18_V19_MC_UncertaintySources_AbsoluteScale_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep AbsoluteMPFBias -A41 > Autumn18_V19_MC_UncertaintySources_AbsoluteMPFBias_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep Fragmentation -A41 > Autumn18_V19_MC_UncertaintySources_Fragmentation_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep SinglePionECAL -A41 > Autumn18_V19_MC_UncertaintySources_SinglePionECAL_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep SinglePionHCAL -A41 > Autumn18_V19_MC_UncertaintySources_SinglePionHCAL_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep FlavorQCD -A41 > Autumn18_V19_MC_UncertaintySources_FlavorQCD_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep TimePtEta -A41 > Autumn18_V19_MC_UncertaintySources_TimePtEta_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeJEREC1 -A41 > Autumn18_V19_MC_UncertaintySources_RelativeJEREC1_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeJEREC2 -A41 > Autumn18_V19_MC_UncertaintySources_RelativeJEREC2_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeJERHF -A41 > Autumn18_V19_MC_UncertaintySources_RelativeJERHF_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativePtBB -A41 > Autumn18_V19_MC_UncertaintySources_RelativePtBB_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativePtEC1 -A41 > Autumn18_V19_MC_UncertaintySources_RelativePtEC1_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativePtEC2 -A41 > Autumn18_V19_MC_UncertaintySources_RelativePtEC2_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativePtHF -A41 > Autumn18_V19_MC_UncertaintySources_RelativePtHF_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeBal -A41 > Autumn18_V19_MC_UncertaintySources_RelativeBal_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeFSR -A41 > Autumn18_V19_MC_UncertaintySources_RelativeFSR_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeStatFSR -A41 > Autumn18_V19_MC_UncertaintySources_RelativeStatFSR_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeStatEC -A41 > Autumn18_V19_MC_UncertaintySources_RelativeStatEC_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeStatHF -A41 > Autumn18_V19_MC_UncertaintySources_RelativeStatHF_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep PileUpDataMC -A41 > Autumn18_V19_MC_UncertaintySources_PileUpDataMC_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep PileUpPtRef -A41 > Autumn18_V19_MC_UncertaintySources_PileUpPtRef_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep PileUpPtBB -A41 > Autumn18_V19_MC_UncertaintySources_PileUpPtBB_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep PileUpPtEC1 -A41 > Autumn18_V19_MC_UncertaintySources_PileUpPtEC1_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep PileUpPtEC2 -A41 > Autumn18_V19_MC_UncertaintySources_PileUpPtEC2_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep PileUpPtHF -A41 > Autumn18_V19_MC_UncertaintySources_PileUpPtHF_AK4PFchs.txt
+
+cat Autumn18_V19_MC_UncertaintySources_AK4PFchs.txt | grep RelativeSample -A41 > Autumn18_V19_MC_UncertaintySources_RelativeSample_AK4PFchs.txt

@@ -1,0 +1,17 @@
+*.c~
+*.cc~
+*.cpp~
+.DS_Store
+*.eps
+*.log
+*.pdf
+*.gz
+*.py~
+*.pyc
+#*.root
+*.so
+*.tar.gz
+*.tgz
+._*
+
+

@@ -1,0 +1,53 @@
+#
+#
+# This is a yaml config file for HH to bbWW analysis  
+#
+## Generic parameters
+Generic:
+    verbosity: false
+    # Prints events' triggers. Depends on verbosity and collect_trigger_stats
+    print_HLT_event_path: false
+    HLT_config_tag: 'HLT'
+    # for MC
+    filter_config_tag: 'PAT'
+    # for DATA
+    #filter_config_tag: 'RECO'
+    
+## Filters to fire upon
+Filters:
+    # For MC
+    filter_names: ['Flag_HBHENoiseFilter', 'Flag_HBHENoiseIsoFilter', 'Flag_EcalDeadCellTriggerPrimitiveFilter', 'Flag_goodVertices', 'Flag_globalSuperTightHalo2016Filter', 'Flag_BadPFMuonFilter']
+    # For DATA
+    #filter_names: ['Flag_HBHENoiseFilter', 'Flag_HBHENoiseIsoFilter', 'Flag_EcalDeadCellTriggerPrimitiveFilter', 'Flag_goodVertices', 'Flag_eeBadScFilter', 'Flag_globalSuperTightHalo2016Filter', 'Flag_BadPFMuonFilter']
+
+## Event cuts
+Cuts:
+
+    # For 2018
+    min_ele_pT : 15.0
+    min_mu_pT : 15.0
+    min_jet_pT : 15.0
+    max_ele_eta : 2.4
+    max_mu_eta : 2.4
+    max_jet_eta : 3.0
+    min_ele_tight_sl_pT : 30.0
+    min_ele_tight_di_pT : 25.0
+    min_mu_tight_sl_pT : 26.0
+    min_mu_tight_di_pT : 25.0
+    min_jet_tight_pT : 25.0
+    max_ele_tight_sl_eta : 2.4
+    max_mu_tight_sl_eta : 2.4
+    btag_csv_cut_M : 0.4184
+
+# Additional
+Additional :
+  using_real_data : false
+  data_era : 2018
+  is_OLS : false
+  is_madg : false
+  is_LHE : true
+  is_tH : false
+  save_gen_info : true
+  is_trigger_study : false
+  is_tight_skim : true
+

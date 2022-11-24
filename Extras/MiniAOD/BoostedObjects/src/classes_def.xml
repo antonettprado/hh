@@ -1,0 +1,6 @@
+<lcgdict>
+  <class name="boosted::BoostedJet" />
+  <class name="std::vector<boosted::BoostedJet>" />
+  <class name="edm::Wrapper<boosted::BoostedJet>"/>
+  <class name="edm::Wrapper<std::vector<boosted::BoostedJet> >" />
+</lcgdict>

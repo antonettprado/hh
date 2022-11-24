@@ -1,0 +1,18 @@
+<use name = "DataFormats/Common"/>
+<use name = "DataFormats/Math"/>
+<use name = "DataFormats/PatCandidates"/>
+<use name = "MiniAOD/MiniAODHelper"/>
+<use name = "root"/>
+<use name = "roottmva"/>
+<use name = "lhapdf"/>
+<use name = "JetMETCorrections/Objects"/>
+<use name = "JetMETCorrections/Algorithms"/>
+<use name = "JetMETCorrections/JetCorrector"/>
+<use name = "TrackingTools/TransientTrack"/>
+<use name = "TrackingTools/Records"/>
+<use name = "TrackingTools/IPTools"/>
+<use name = "RecoBTag/BTagTools"/>
+<export>
+  <use name = "root"/>
+  <lib name = "1"/>
+</export>
