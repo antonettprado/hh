@@ -109,7 +109,6 @@
 #include "HH_bbWW_EDA_Handles.h"
 
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
-#include "analyzers/ttH_bb/interface/HH_bbWW_EDA_Ntuple.h"
 
 #include "analyzers/ttH_bb/interface/RoccoR.h"
 
