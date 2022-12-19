@@ -22,7 +22,7 @@ CMSSW_build()
 #
 CMSSW_init
 cd $CMSSW_BASE/src/
-. hh/scripts/setup/ttH_bb_pkgs.sh
+. hh/scripts/setup/HH_bbWW_pkgs.sh
 CMSSW_build
 
 cd ${CMSSW_BASE}/src/hh/HH_bbWW/macros/Pile_Up_Calc/
