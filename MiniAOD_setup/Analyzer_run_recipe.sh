@@ -22,11 +22,11 @@ CMSSW_build()
 #
 CMSSW_init
 cd $CMSSW_BASE/src/
-. hh/scripts/setup/HH_bbWW_pkgs.sh
+. hh/MiniAOD_setup/scripts/setup/HH_bbWW_pkgs.sh
 CMSSW_build
 
-cd ${CMSSW_BASE}/src/hh/HH_bbWW/macros/Pile_Up_Calc/
+cd ${CMSSW_BASE}/src/hh/MiniAOD_setup/HH_bbWW/macros/Pile_Up_Calc/
 g++ PU_data_hist_prod.cxx -I$ROOTSYS/include -L$ROOTSYS/lib `root-config --cflags --glibs` -o PU_data_hist_prod
 g++ PU_hist_calc.cc -o PU_hist_calc
 ./Pileup_calculation_script.sh
-cd ${CMSSW_BASE}/src/hh/HH_bbWW/
+cd ${CMSSW_BASE}/src/hh/MiniAOD_setup/HH_bbWW/

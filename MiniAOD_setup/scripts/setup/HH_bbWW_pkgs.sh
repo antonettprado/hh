@@ -18,7 +18,7 @@ git clone https://github.com/cms-data/EgammaAnalysis-ElectronTools.git EgammaAna
 git cms-addpkg RecoMET/METFilters
 
 # Copy relevant stuff
-cp -rf hh/Extras/MiniAOD .
+cp -rf hh/MiniAOD_setup/Extras/MiniAOD .
 
 ### Fix for Pt dependent JER
-cp hh/Extras/SmearedJetProducerT.h PhysicsTools/PatUtils/interface/
+cp hh/MiniAOD_setup/Extras/SmearedJetProducerT.h PhysicsTools/PatUtils/interface/

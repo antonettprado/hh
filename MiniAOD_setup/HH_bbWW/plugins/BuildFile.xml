@@ -19,7 +19,7 @@
 <use name = "JetMETCorrections/Modules"/>
 <use name = "HLTrigger/HLTcore" />
 <use name = "MiniAOD/MiniAODHelper" />
-<use name = "hh/HH_bbWW" />
+<use name = "hh/MiniAOD_setup/HH_bbWW" />
 <use name = "root" />
 <use name = "rootmath" />
 <use name = "CondTools/BTau"/>

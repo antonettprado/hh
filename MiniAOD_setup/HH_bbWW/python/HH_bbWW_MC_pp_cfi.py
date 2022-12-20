@@ -4,7 +4,7 @@
 
 import FWCore.ParameterSet.Config as cms
 
-import hh.HH_bbWW.HH_read_yaml_MC_pp as read_yaml
+import hh.MiniAOD_setup.HH_bbWW.HH_read_yaml_MC_pp as read_yaml
 
 HH_bbWW =  cms.EDAnalyzer('HH_bbWW_EDA',
         # Generic

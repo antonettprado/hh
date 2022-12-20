@@ -369,7 +369,7 @@ if options.isTtjetsCat:
     seq += process.categorizeGenTtbar
 
 # load the analysis:
-process.load("hh.HH_bbWW.HH_bbWW_MC_pp_cfi")
+process.load("hh.MiniAOD_setup.HH_bbWW.HH_bbWW_MC_pp_cfi")
 
 # pat object collections
 process.ttHbb.input_tags.electrons = electronCollection

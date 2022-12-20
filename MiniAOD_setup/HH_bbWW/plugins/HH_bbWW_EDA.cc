@@ -39,8 +39,7 @@ HH_bbWW_EDA::HH_bbWW_EDA(const edm::ParameterSet &iConfig)
       hltTag(iConfig.getParameter<string>("HLT_config_tag")),
       filterTag(iConfig.getParameter<string>("filter_config_tag")),
       // Filters
-      MET_filter_names(
-          iConfig.getParameter<std::vector<string>>("MET_filter_names")),
+      MET_filter_names(iConfig.getParameter<std::vector<string>>("MET_filter_names")),
       // Cuts
       min_ele_pT(iConfig.getParameter<double>("min_ele_pT")),
       min_mu_pT(iConfig.getParameter<double>("min_mu_pT")),

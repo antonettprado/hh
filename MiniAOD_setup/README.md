@@ -18,7 +18,7 @@ cmsenv
 
 git clone https://gitlab.cern.ch/abdatta/hh.git
 
-. hh/Analyzer_run_recipe.sh
+. hh/MiniAOD_setup/Analyzer_run_recipe.sh
 
 # Step 1 : Run to Create Ntuples :
 
