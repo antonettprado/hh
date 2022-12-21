@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     df_list = {}
     input_json_file = json.load(open(args.input_json))
-    print ("")
+    #print ("")
     for sample in input_json_file:
         #print ("Sample: %s"%sample)
         df_list[sample] = {}
@@ -27,16 +27,15 @@ if __name__ == "__main__":
             for sample_file in sample_list:
                 #print ("    Sample file: %s"%sample_file)
                 df_list[sample][year].append(ROOT.RDataFrame("Events", sample_file))
-            print ("")
-        print ("")
+            #print ("")
+        #print ("")
     
     for sample in df_list:
-        print ("Sample: %s"%sample)
         for year in df_list[sample]:
-            print ("  Year: %s"%year)
+            if len(df_list[sample][year]) == 0:
+                continue
             for df in df_list[sample][year]:
-                nevents = df.GetNRuns()
-                print (nevents)
+                print (df.GetColumnNames())
 
 
 

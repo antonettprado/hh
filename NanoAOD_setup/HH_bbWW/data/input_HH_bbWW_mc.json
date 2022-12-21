@@ -7,7 +7,7 @@
     "hh_bbWW_dl_cHHH1":{
         "2016": [],
         "2017": [],
-        "2018": ["/store/mc/RunIIAutumn18MiniAOD/GluGluToHHTo2B2VTo2L2Nu_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/MINIAODSIM/102X_upgrade2018_realistic_v15-v1/110000/1161CC9B-A01E-6E43-9D4F-E6751419554B.root"]
+        "2018": ["root://cms-xrd-global.cern.ch///store/mc/RunIIAutumn18MiniAOD/GluGluToHHTo2B2VTo2L2Nu_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/MINIAODSIM/102X_upgrade2018_realistic_v15-v1/110000/1161CC9B-A01E-6E43-9D4F-E6751419554B.root"]
     },
     "hh_bbtautau_cHHH1":{
         "2016": [],
