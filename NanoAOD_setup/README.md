@@ -2,23 +2,23 @@
 
 # Installation:
 
-git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git NanoAODTools
+source /cvmfs/cms.cern.ch/cmsset_default.sh
 
-cd NanoAODTools
+source /cvmfs/cms.cern.ch/common/crab-setup.sh
 
-bash standalone/env_standalone.sh build
+export SCRAM_ARCH="slc7_amd64_gcc900" 
 
-source standalone/env_standalone.sh (repeat at the beginning of every session)
+cmsrel CMSSW_12_0_1
 
-cd ../
+cd CMSSW_12_0_1/src
+
+cmsenv
 
 git clone https://gitlab.cern.ch/abdatta/hh.git
 
-cp -r hh/NanoADO_setup/HH_bbWW NanoAODTools/python/postprocessing/
+cd hh/NanoAOD_setup/HH_bbWW
 
-cd NanoAODTools/
-
-
+python3 src/HH_bbWW_event_selection.py -i data/input_HH_bbWW_mc.json
 
 
 
