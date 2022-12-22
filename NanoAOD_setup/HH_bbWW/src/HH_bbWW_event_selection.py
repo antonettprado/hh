@@ -35,8 +35,11 @@ if __name__ == "__main__":
             if len(df_list[sample][year]) == 0:
                 continue
             for df in df_list[sample][year]:
-                print (df.GetColumnNames())
-
+                #Example
+                df = df.Define("tight_mu", "Muon_pt>25 && abs(Muon_eta)<2.4")
+                df = df.Filter("Sum(tight_mu)==2")
+                df = df.Define("Muon_pt_tight", "Muon_pt[tight_mu]")
+                df.Display("Muon_pt_tight").Print()
 
 
 
