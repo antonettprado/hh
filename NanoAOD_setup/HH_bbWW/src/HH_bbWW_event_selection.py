@@ -2,6 +2,10 @@ import sys, os, glob
 import argparse
 import ROOT
 import json
+from HH_bbWW_selection_defs import *
+
+import warnings
+warnings.filterwarnings("ignore")
 
 #ROOT.ROOT.EnableImplicitMT()
 
@@ -36,44 +40,50 @@ if __name__ == "__main__":
 
     for df in df_list:
         # Example
-        df = df.Define("tight_mu", "Muon_pt>25 && abs(Muon_eta)<2.4")
-        df = df.Filter("Sum(tight_mu)==2")
-        df = df.Define("Muon_pt_tight", "Muon_pt[tight_mu]")
-        df.Display("Muon_pt_tight").Print()
+        # df = df.Define("tight_mu", "Muon_pt>25 && abs(Muon_eta)<2.4")
+        # df = df.Filter("Sum(tight_mu)==2")
+        # df = df.Define("Muon_pt_tight", "Muon_pt[tight_mu]")
+        # df.Display("Muon_pt_tight").Print()
 
         # Basic event selection
-
+        df = df.Define("pcv", "PV_z<24 && PV_ndof >= 4")         #Missing rho
+        pcv_n = df.Filter("pcv").Count()
+        print('{} pass the the basic event selection'.format(pcv_n.GetValue()))
 
         # Electron selections
-
+        df = df.Define("loose_e", "Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_lostHits<=1 && Electron_mvaFall17V2noIso_WPL==1")
+        df = df.Define("fakeable_e", "Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_hoe<0.10 && Electron_eInvMinusPInv>-0.04 && Electron_lostHits==0 && Electron_mvaFall17V2noIso_WP90==1 && Electron_jetRelIso<0.7")
+        df = df.Define("tight_e", "Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_hoe<0.10 && Electron_eInvMinusPInv>-0.04 && Electron_lostHits==0 && Electron_mvaFall17V2noIso_WPL==1")
+        # df.Display("loose_e").Print()
 
         # Muon selections
-
+        df = df.Define("loose_mu", "Muon_pt > 5 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_looseId==1")
+        df = df.Define("fakeable_mu", "Muon_pt > 10 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_looseId==1 && Muon_jetRelIso<0.8")
+        df = df.Define("tight_mu", "Muon_pt > 10 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_mediumId==1")
+        # df.Display("loose_mu").Print()
 
         # Tau selections
 
 
         # AK4 Jet selections
-
+        df = df.Define("central_ak4","Jet_pt>25 && Jet_eta<2.4")
+        df = df.Filter("central_ak4").Define("VBF_Jet", "Jet_pt>30 && Jet_eta<4.7")
 
         # AK8 Jet selections
-
+        df = df.Define("ak8_jet", "FatJet_pt>200 && FatJet_eta<2.4 && FatJet_msoftdrop>30 && FatJet_msoftdrop<210 ")
 
 
         # Final event selections
 
 
         # SL
-
-
+        df_sl = selection_sl_channel(df, args.year)
 
         # DL
-
+        df_dl = selection_dl_channel(df, args.year)
 
 
         # Yields
-
-
 
 
 
