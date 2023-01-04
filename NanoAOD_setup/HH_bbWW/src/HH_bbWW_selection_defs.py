@@ -1,17 +1,24 @@
 def selection_sl_channel(df, year):
-    df_1l = df.Filter("nMuon+nElectron==1", "Only 1 lepton")
-    df_tri = df_1l      #single-lepton trigger
+    df_1l = df.Filter("nMuon+nElectron==1", "one_lepton_cut")
+    
+    df_1l.Report()
+    # print('{} before trigger selections'.format(df_1l_count_before.GetValue()))
+    
+    df_tri = trigger_selection(df_1l, year)
+
     df_pt = df_tri.Filter("Electron_pt>30 || Muon_pt>25")
     df_eta = df_pt.Filter("Electron_eta<2.5 || Muon_eta<2.4")
     df_tauv = df_eta    #hadronic tau veto
     df_jmul = df_tauv.Filter("nJet>=1 || nFatJet>=1")
     df_btag = df_jmul
+
+    df_btag.Report()
 
     return df_btag
 
 def selection_dl_channel(df, year):
     df_2l = df.Filter("nMuon+nElectron==2", "2 leptons")
-    df_tri = df_2l      #single-lepton trigger
+    df_tri = trigger_selection(df_2l, year)
     df_pt = df_tri.Filter("Electron_pt>30 || Muon_pt>25")
     df_eta = df_pt.Filter("Electron_eta<2.5 || Muon_eta<2.4")
     df_tauv = df_eta    #hadronic tau veto
@@ -20,7 +27,7 @@ def selection_dl_channel(df, year):
 
     return df_btag
 
-def trigger_selection(year):
+def trigger_selection(df, year):
 
     se_trig_dict = {}
     se_trig_dict['HLT_Ele25_eta2p1_WPTight_Gsf']    = [1, 0, 0]
@@ -46,5 +53,9 @@ def trigger_selection(year):
     for key in dict.keys():
         if dict[key][year_column] == 1:
             selected_triggers.append(key)
-    
-    return selected_triggers
+
+    for trigger in selected_triggers:
+        df = df.Filter(trigger)
+        print(trigger)
+
+    return df

@@ -45,16 +45,19 @@ if __name__ == "__main__":
         # df = df.Define("Muon_pt_tight", "Muon_pt[tight_mu]")
         # df.Display("Muon_pt_tight").Print()
 
+        c_all = df.Count()
+
+
         # Basic event selection
         df = df.Define("pcv", "PV_z<24 && PV_ndof >= 4")         #Missing rho
         pcv_n = df.Filter("pcv").Count()
         print('{} pass the the basic event selection'.format(pcv_n.GetValue()))
+        df.Report().Print()
 
         # Electron selections
         df = df.Define("loose_e", "Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_lostHits<=1 && Electron_mvaFall17V2noIso_WPL==1")
         df = df.Define("fakeable_e", "Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_hoe<0.10 && Electron_eInvMinusPInv>-0.04 && Electron_lostHits==0 && Electron_mvaFall17V2noIso_WP90==1 && Electron_jetRelIso<0.7")
         df = df.Define("tight_e", "Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_hoe<0.10 && Electron_eInvMinusPInv>-0.04 && Electron_lostHits==0 && Electron_mvaFall17V2noIso_WPL==1")
-        # df.Display("loose_e").Print()
 
         # Muon selections
         df = df.Define("loose_mu", "Muon_pt > 5 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_looseId==1")
@@ -80,11 +83,12 @@ if __name__ == "__main__":
         df_sl = selection_sl_channel(df, args.year)
 
         # DL
-        df_dl = selection_dl_channel(df, args.year)
+        # df_dl = selection_dl_channel(df, args.year)
 
 
         # Yields
 
+        print(" - All entries:", c_all.GetValue())        
 
 
 
