@@ -1,6 +1,8 @@
 # HH Analysis
 
-# Installation:
+# For MiniAOD
+
+## Installation:
 
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 
@@ -16,11 +18,14 @@ cd ${CMSSW_VERSION}/src
 
 cmsenv
 
+cd ../../
+
 git clone https://gitlab.cern.ch/abdatta/hh.git
 
 . hh/MiniAOD_setup/Analyzer_run_recipe.sh
 
-# Step 1 : Run to Create Ntuples :
+
+## Step 1 : Run to Create Ntuples :
 
 ## For MC :
    
@@ -53,16 +58,15 @@ cmsRun test/HH_bbWW_data_EDA_cfg.py > output_log.txt
 
 crab submit -c crabConfig_Data.py
 
-# Additional Stuff :
 
-# CRAB commands :
-To check status :
-crab status -d \<crab_output_directory_name\>
 
-To resubmit :
-crab resubmit -d \<crab_output_directory_name\>
 
-To kill : 
-crab kill -d \<crab_output_directory_name\>
+
+
+# For NanoAOD
+
+
+
+
 
 

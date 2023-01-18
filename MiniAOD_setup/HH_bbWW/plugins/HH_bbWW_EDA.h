@@ -89,8 +89,8 @@
 #include "RecoBTag/BTagTools/interface/SignedTransverseImpactParameter.h"
 #include "TrackingTools/IPTools/interface/IPTools.h"
 
-#include "MiniAOD/MiniAODHelper/interface/LeptonSFHelper.h"
-#include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
+#include "hh/MiniAOD_setup/Extras/MiniAOD/MiniAODHelper/interface/LeptonSFHelper.h"
+#include "hh/MiniAOD_setup/Extras/MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 
 #include "LHAPDF/LHAPDF.h"
 
@@ -102,8 +102,8 @@
 #include "TTree.h"
 
 /// Higgs and top tagger
-#include "MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
-#include "MiniAOD/MiniAODHelper/interface/TopTagger.h"
+#include "hh/MiniAOD_setup/Extras/MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
+#include "hh/MiniAOD_setup/Extras/MiniAOD/MiniAODHelper/interface/TopTagger.h"
 
 /// structs for holding multiple edm::Handle and EDGetTokenT
 #include "HH_bbWW_EDA_Handles.h"
