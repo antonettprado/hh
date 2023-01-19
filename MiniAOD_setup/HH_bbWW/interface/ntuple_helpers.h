@@ -1,10 +1,10 @@
 #ifndef HH_bbWW_ntuple_helpers_h
 #define HH_bbWW_ntuple_helpers_h
 
-#include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
+#include "hh/MiniAOD_setup/Extras/MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 #include "TLorentzVector.h"
-#include "analyzers/ttH_bb/interface/HH_bbWW_EDA_Ntuple.h"
-#include "analyzers/ttH_bb/interface/HH_bbWW_EDA_event_vars.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/HH_bbWW_EDA_Ntuple.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/HH_bbWW_EDA_event_vars.h"
 
 #include "TTree.h"
 

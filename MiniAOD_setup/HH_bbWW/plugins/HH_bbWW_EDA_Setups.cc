@@ -3,7 +3,7 @@
 
 /// Includes
 #include "HH_bbWW_EDA.h"
-#include "analyzers/ttH_bb/interface/ntuple_helpers.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/ntuple_helpers.h"
 
 void HH_bbWW_EDA::Set_up_weights()
 {
@@ -31,10 +31,10 @@ void HH_bbWW_EDA::Init_weights(HH_bbWW_EDA_event_vars &local)
     local.me_weight_murdown_mufup = 1;
     local.me_weight_murdown_mufdown = 1;
     local.ps_weights.clear();
-    local.tH_weights.clear();
-    local.prefweight = 1;
-    local.prefweight_up = 1;
-    local.prefweight_down = 1;
+    local.tH_weights.clear(); // remove?
+    local.prefweight = 1; 
+    local.prefweight_up = 1; 
+    local.prefweight_down = 1; 
 }
 
 void HH_bbWW_EDA::Init_SFs(HH_bbWW_EDA_event_vars &local)
@@ -127,8 +127,6 @@ void HH_bbWW_EDA::Set_up_tokens(const edm::ParameterSet &config)
         edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
     token.triggerObjects = consumes<pat::TriggerObjectStandAloneCollection>(
         edm::InputTag(std::string("slimmedPatTrigger"), std::string(""), filterTag));
-    //token.triggerObjects = consumes<pat::TriggerObjectStandAloneCollection>(
-    //    edm::InputTag(std::string("selectedPatTrigger"), std::string(""), filterTag));
     token.vertices = consumes<reco::VertexCollection>(
         config.getParameter<edm::InputTag>("pv"));
     token.sec_vertices = consumes<reco::VertexCompositePtrCandidateCollection>(
@@ -140,8 +138,12 @@ void HH_bbWW_EDA::Set_up_tokens(const edm::ParameterSet &config)
         config.getParameter<edm::InputTag>("electrons"));
     token.muons = consumes<pat::MuonCollection>(
         config.getParameter<edm::InputTag>("muons"));
+    token.taus = consumes<pat::TauCollection>(
+        config.getParameter<edm::InputTag>("taus")); // new
     token.jets = consumes<pat::JetCollection>(
         config.getParameter<edm::InputTag>("jets"));
+    token.fatjets = consumes<pat::FatJetCollection>(
+        config.getParameter<edm::InputTag>("fatjets")); // new
     token.METs = consumes<pat::METCollection>(
         config.getParameter<edm::InputTag>("mets"));
     token.genjets = consumes<reco::GenJetCollection>(
@@ -154,30 +156,16 @@ void HH_bbWW_EDA::Set_up_tokens(const edm::ParameterSet &config)
         config.getParameter<edm::InputTag>("pfcand"));
     token.BS = consumes<reco::BeamSpot>(
         config.getParameter<edm::InputTag>("beamspot"));
-    //token.eleTightIdMapToken_ = consumes<edm::ValueMap<bool>>(
-    //    config.getParameter<edm::InputTag>("eleTightIdMap"));
-
-    // token.mvaValuesMapToken_ = consumes<edm::ValueMap<float>>(
-    //    config.getParameter<edm::InputTag>("mvaValues"));
-    // token.mvaCategoriesMapToken_ = consumes<edm::ValueMap<int>>(
-    //    config.getParameter<edm::InputTag>("mvaCategories"));
-    // token.electrons_for_mva_token = mayConsume<edm::View<reco::GsfElectron>>(
-    //    config.getParameter<edm::InputTag>("electrons"));
-
     token.electrons_for_mva_token = consumes<edm::View<pat::Electron>>(
         config.getParameter<edm::InputTag>("electrons"));
     token.muon_h_token = consumes<edm::View<pat::Muon>>(
         config.getParameter<edm::InputTag>("muons"));
-    if (!isdata) {
+    if (!isdata) { // remove?
         token.event_gen_info = consumes<GenEventInfoProduct>(
             config.getParameter<edm::InputTag>("geninfo"));
         if (!is_madg || is_OLS)
             token.genTtbarIdToken_ =
                 consumes<int>(config.getParameter<edm::InputTag>("genTtbarId"));
-        //if (!is_madg && !is_OLS) {
-        //    token.ttHFGenFilterToken_ = consumes<bool>(
-        //        config.getParameter<edm::InputTag>("ttHFGenFilter"));
-        //}
     }
     token.puInfoToken = consumes<std::vector<PileupSummaryInfo>>(
         config.getParameter<edm::InputTag>("pileupinfo"));
@@ -187,14 +175,6 @@ void HH_bbWW_EDA::Set_up_tokens(const edm::ParameterSet &config)
         token.lhepruninfotoken = consumes<LHERunInfoProduct, edm::InRun>(
             config.getParameter<edm::InputTag>("lhepprod"));
     }
-
-    /*
-    if (!isdata) {
-        token.prefweight_token = consumes< double >(edm::InputTag("prefiringweight:nonPrefiringProb"));
-        token.prefweightup_token = consumes< double >(edm::InputTag("prefiringweight:nonPrefiringProbUp"));
-        token.prefweightdown_token = consumes< double >(edm::InputTag("prefiringweight:nonPrefiringProbDown"));
-    }
-    */
 
     token.passecalBadCalibFilterUpdate_token = consumes<bool>(edm::InputTag("ecalBadCalibReducedMINIAODFilter"));
 }
@@ -206,18 +186,6 @@ void HH_bbWW_EDA::Set_up_Tree()
         genTree = fs_->make<TTree>("genTree", "Gen tree");
         commTree = fs_->make<TTree>("commTree", "Common tree");
     }
-
-    /*
-    n_total = fs_->make<TH1D>("n_total","n_total; n_total; Nr. of Events",3,-1,2);
-    gen_weight_dist = fs_->make<TH1D>("gen_weight_dist","gen_weight_dist; gen_weight_dist; Nr. of Events",20000,-1000,1000);
-    gen_weight_pos = fs_->make<TH1D>("gen_weight_pos","gen_weight_pos; gen_weight_pos; Nr. of Events",3,-1,2);
-    gen_weight_neg = fs_->make<TH1D>("gen_weight_neg","gen_weight_neg; gen_weight_neg; Nr. of Events",3,-1,2);
-    ttHf_category = fs_->make<TH1D>("ttHf_category","ttHf_category; ttHf_category; Nr. of Events",20,40,60);
-    ttHF_GenFilter = fs_->make<TH1D>("ttHF_GenFilter","ttHF_GenFilter; ttHF_GenFilter; Nr. of Events",4,-2,2);
-    SLtag = fs_->make<TH1D>("SLtag","SLtag; SLtag; Nr. of Events",3,-1,2);
-    DLtag = fs_->make<TH1D>("DLtag","DLtag; DLtag; Nr. of Events",3,-1,2);
-    FHtag = fs_->make<TH1D>("FHtag","FHtag; FHtag; Nr. of Events",3,-1,2);
-    */
 
     ntuple::set_up_reco_branches(recoTree, data_era, save_gen_info, reco_hbbNtuple);
     if (!isdata){

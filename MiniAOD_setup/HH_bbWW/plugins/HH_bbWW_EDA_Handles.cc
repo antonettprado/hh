@@ -19,7 +19,9 @@ void Set_up_handles(const Event &iEvent, const EventSetup &iSetup,
 
     iEvent.getByToken(token.electrons, handle.electrons);
     iEvent.getByToken(token.muons, handle.muons);
+    iEvent.getByToken(token.taus, handle.taus); // new
     iEvent.getByToken(token.jets, handle.jets);
+    iEvent.getByToken(token.fatjets, handle.fatjets); // new
     iEvent.getByToken(token.METs, handle.METs);
     iEvent.getByToken(token.genjets, handle.genjets);
     iEvent.getByToken(token.genparticles, handle.genparticles);
@@ -29,9 +31,6 @@ void Set_up_handles(const Event &iEvent, const EventSetup &iSetup,
 
     iEvent.getByToken(token.BS, handle.BS);
 
-    //iEvent.getByToken(token.eleTightIdMapToken_, handle.tight_id_decisions);
-    // iEvent.getByToken(token.mvaValuesMapToken_, handle.mvaValues);
-    // iEvent.getByToken(token.mvaCategoriesMapToken_, handle.mvaCategories);
     iEvent.getByToken(token.electrons_for_mva_token, handle.electrons_for_mva);
     iEvent.getByToken(token.muon_h_token, handle.muon_h);
 
@@ -43,26 +42,13 @@ void Set_up_handles(const Event &iEvent, const EventSetup &iSetup,
 
         // for ttHf categorization
         if(!local.is_madg || local.is_OLS)
-            iEvent.getByToken(token.genTtbarIdToken_, handle.genTtbarId);
-		//if(!local.is_madg && !local.is_OLS)
-			//iEvent.getByToken(token.ttHFGenFilterToken_, handle.ttHFGenFilter);
+            iEvent.getByToken(token.genTtbarIdToken_, handle.genTtbarId);  // remove?
 
         // for Q2 weight
         if (local.is_LHE){
             iEvent.getByToken(token.lheptoken, handle.EvtHandle);
-            //iEvent.getByToken(token.lhepruninfotoken, handle.LHERunInfoHandle);
         }
     }
-
-    //iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", handle.ttrkbuilder);
-
-    /*
-    if (!local.isdata) {
-        iEvent.getByToken(token.prefweight_token, handle.prefweight_handle );
-        iEvent.getByToken(token.prefweightup_token, handle.prefweightup_handle );
-        iEvent.getByToken(token.prefweightdown_token, handle.prefweightdown_handle );
-    }
-    */
 
     iEvent.getByToken(token.passecalBadCalibFilterUpdate_token, handle.passecalBadCalibFilterUpdate_handle );
 }

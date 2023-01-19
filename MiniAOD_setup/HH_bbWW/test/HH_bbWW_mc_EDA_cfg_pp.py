@@ -62,18 +62,6 @@ options.register("updatePUJetId",
                  VarParsing.varType.bool,
                  "update the PUJetId values"
                  )
-options.register("isTtbar",
-                 True, # set to True for all ttbar datasets
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.bool,
-                 "creates the ttbar gen id and performs ttbar heavy flavour tagging"
-                 )
-options.register("isTtjetsCat",
-                 True, # set to True for all ttbar datasets
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.bool,
-                 "creates the ttjets categorization"
-                 )
 options.parseArguments()
 
 #
@@ -85,6 +73,7 @@ tauCollection      = cms.InputTag("slimmedTaus", "", "PAT")
 photonCollection   = cms.InputTag("slimmedPhotons", "", "PAT")
 METCollection      = cms.InputTag("slimmedMETs", "", "PAT")
 jetCollection      = cms.InputTag("slimmedJets", "", "PAT")
+fatjetCollection   = cms.InputTag("slimmedFatJets", "", "PAT") ## new
 
 
 process = cms.Process("MAOD")
@@ -296,86 +285,16 @@ genJetCollection = 'ak4GenJetsCustom'
 genParticleCollection = 'prunedGenParticles'
 genJetInputParticleCollection = 'packedGenParticles'
 
-#ttHf categorization
-if options.isTtjetsCat:
-    ## producing a subset of particles to be used for jet clustering
-    from RecoJets.Configuration.GenJetParticles_cff import genParticlesForJetsNoNu
-    process.genParticlesForJetsNoNu = genParticlesForJetsNoNu.clone(
-    	src = cms.InputTag(genJetInputParticleCollection)
-    )
-    seq += process.genParticlesForJetsNoNu
-
-    
-    # Producing own jets for testing purposes
-    from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
-    process.ak4GenJetsCustom = ak4GenJets.clone(
-        src = cms.InputTag("genParticlesForJetsNoNu"),
-        #    src = genJetInputParticleCollection,
-	    jetAlgorithm = cms.string("AntiKt"),
-        rParam = cms.double(0.4)
-    )
-    seq += process.ak4GenJetsCustom
-
-    
-    # Ghost particle collection used for Hadron-Jet association
-    # MUST use proper input particle collection
-    from PhysicsTools.JetMCAlgos.HadronAndPartonSelector_cfi import selectedHadronsAndPartons
-    process.selectedHadronsAndPartons = selectedHadronsAndPartons.clone(
-        particles = cms.InputTag(genParticleCollection)
-    )
-    seq += process.selectedHadronsAndPartons
-
-    from PhysicsTools.JetMCAlgos.AK4PFJetsMCFlavourInfos_cfi import ak4JetFlavourInfos
-    process.genJetFlavourInfos = ak4JetFlavourInfos.clone(
-    	jets = cms.InputTag(genJetCollection)
-    )
-    seq += process.genJetFlavourInfos
-    
-    # Input particle collection for matching to gen jets (partons + leptons)
-    # MUST use use proper input jet collection: the jets to which hadrons should be associated
-    # rParam and jetAlgorithm MUST match those used for jets to be associated with hadrons
-    # More details on the tool: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools#New_jet_flavour_definition
-
-    from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenBHadron
-    # Plugin for analysing B hadrons
-    # MUST use the same particle collection as in selectedHadronsAndPartons
-    process.matchGenBHadron = matchGenBHadron.clone(
-        genParticles = cms.InputTag(genParticleCollection),
-        jetFlavourInfos = cms.InputTag("genJetFlavourInfos"),
-	    onlyJetClusteredHadrons = cms.bool(False)
-    )
-    seq += process.matchGenBHadron
-    
-    # Plugin for analysing C hadrons
-    # MUST use the same particle collection as in selectedHadronsAndPartons
-    from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenCHadron
-    process.matchGenCHadron = matchGenCHadron.clone(
-        genParticles = cms.InputTag(genParticleCollection),
-        jetFlavourInfos = cms.InputTag("genJetFlavourInfos"),
-	    onlyJetClusteredHadrons = cms.bool(False)
-    )
-    seq += process.matchGenCHadron
-    
-    ## Producer for ttbar categorisation ID
-    # MUST use same genJetCollection as used for tools above
-    #from PhysicsTools.JetMCAlgos.GenTtbarCategorizer_cfi import categorizeGenTtbar
-    from TopQuarkAnalysis.TopTools.GenTtbarCategorizer_cfi import categorizeGenTtbar
-    process.categorizeGenTtbar = categorizeGenTtbar.clone(
-		genJets = cms.InputTag(genJetCollection),
-		genJetPtMin     = cms.double(20.),
-		genJetAbsEtaMax = cms.double(2.4)
-    )
-
-    seq += process.categorizeGenTtbar
-
 # load the analysis:
 process.load("hh.MiniAOD_setup.HH_bbWW.HH_bbWW_MC_pp_cfi")
 
 # pat object collections
 process.ttHbb.input_tags.electrons = electronCollection
 process.ttHbb.input_tags.muons     = muonCollection
+process.ttHbb.input_tags.taus     = tauCollection ## new
 process.ttHbb.input_tags.mets      = METCollection
 process.ttHbb.input_tags.jets     = jetCollection
+process.ttHbb.input_tags.fatjets     = fatjetCollection ## new
 
 process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('HH_bbWW_ntuple.root')

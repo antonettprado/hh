@@ -110,9 +110,9 @@
 
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
-#include "analyzers/ttH_bb/interface/RoccoR.h"
-#include "analyzers/ttH_bb/interface/CU_ttH_EDA_Ntuple.h"
-#include "analyzers/ttH_bb/interface/CU_ttH_EDA_event_vars.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/RoccoR.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/CU_ttH_EDA_Ntuple.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/CU_ttH_EDA_event_vars.h"
 
 #include "CondFormats/BTauObjects/interface/BTagCalibration.h"
 #include "CondTools/BTau/interface/BTagCalibrationReader.h"

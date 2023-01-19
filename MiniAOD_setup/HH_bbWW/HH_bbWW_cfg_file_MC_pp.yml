@@ -30,14 +30,20 @@ Cuts:
     max_ele_eta : 2.4
     max_mu_eta : 2.4
     max_jet_eta : 3.0
-    min_ele_tight_sl_pT : 30.0
-    min_ele_tight_di_pT : 25.0
-    min_mu_tight_sl_pT : 26.0
-    min_mu_tight_di_pT : 25.0
-    min_jet_tight_pT : 25.0
-    max_ele_tight_sl_eta : 2.4
-    max_mu_tight_sl_eta : 2.4
-    btag_csv_cut_M : 0.4184
+
+    min_tau_pT : 15.0 ## new
+    min_tau_eta : 2.4 ## new
+    min_fatjet_pT : 15.0 ## new
+    max_fatjet_eta : 3.0 ## new
+
+    min_ele_tight_sl_pT : 30.0 ## remove?
+    min_ele_tight_di_pT : 25.0 ## remove?
+    min_mu_tight_sl_pT : 26.0 ## remove?
+    min_mu_tight_di_pT : 25.0 ## remove?
+    min_jet_tight_pT : 25.0 ## remove?
+    max_ele_tight_sl_eta : 2.4 ## remove?
+    max_mu_tight_sl_eta : 2.4 ## remove?
+    btag_cut_M : 0.4184 # change name
 
 # Additional
 Additional :
@@ -46,8 +52,8 @@ Additional :
   is_OLS : false
   is_madg : false
   is_LHE : true
-  is_tH : false
+  is_tH : false ## remove?
   save_gen_info : true
-  is_trigger_study : false
-  is_tight_skim : true
+  is_trigger_study : false ## remove?
+  is_tight_skim : false
 

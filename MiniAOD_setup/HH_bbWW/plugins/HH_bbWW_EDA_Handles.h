@@ -66,7 +66,7 @@
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
-#include "analyzers/ttH_bb/interface/HH_bbWW_EDA_event_vars.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/HH_bbWW_EDA_event_vars.h"
 
 /*
  *
@@ -88,7 +88,9 @@ struct edm_Handles {
 
 	Handle<pat::ElectronCollection> electrons;
     Handle<pat::MuonCollection> muons;
+    Handle<pat::TauCollection> taus; // new
     Handle<pat::JetCollection> jets;
+    Handle<pat::FatJetCollection> fatjets; // new
     Handle<pat::METCollection> METs;
     Handle<reco::GenJetCollection> genjets;
     Handle<reco::GenParticleCollection> genparticles;
@@ -98,24 +100,13 @@ struct edm_Handles {
 
     Handle<reco::BeamSpot> BS;
 
-    //Handle<edm::ValueMap<bool>> tight_id_decisions;
-    // Handle<edm::ValueMap<float>> mvaValues;
-    // Handle<edm::ValueMap<int>> mvaCategories;
     Handle<edm::View<pat::Electron>> electrons_for_mva;
     Handle<edm::View<pat::Muon>> muon_h;
 
-    Handle<int> genTtbarId;
-    //Handle<bool> ttHFGenFilter;
+    Handle<int> genTtbarId; // remove?
     Handle<std::vector<PileupSummaryInfo>> PupInfo;
     Handle<LHEEventProduct> EvtHandle;
-    //Handle<LHERunInfoProduct> LHERunInfoHandle;
-
-    //ESHandle<TransientTrackBuilder> ttrkbuilder;
-
-    //Handle<double> prefweight_handle;
-    //Handle<double> prefweightup_handle;
-    //Handle<double> prefweightdown_handle;
-
+    
     Handle<bool> passecalBadCalibFilterUpdate_handle;
 
 };
@@ -133,7 +124,9 @@ struct edm_Tokens {
 
 	EDGetTokenT<pat::ElectronCollection> electrons;
     EDGetTokenT<pat::MuonCollection> muons;
+    EDGetTokenT<pat::TauCollection> taus; // new
     EDGetTokenT<pat::JetCollection> jets;
+    EDGetTokenT<pat::FatJetCollection> fatjets; // new
     EDGetTokenT<pat::METCollection> METs;
     EDGetTokenT<reco::GenJetCollection> genjets;
     EDGetTokenT<reco::GenParticleCollection> genparticles;
@@ -143,21 +136,13 @@ struct edm_Tokens {
 
     EDGetTokenT<reco::BeamSpot> BS;
 
-    //EDGetTokenT<edm::ValueMap<bool>> eleTightIdMapToken_;
-    // EDGetTokenT<edm::ValueMap<float>> mvaValuesMapToken_;
-    // EDGetTokenT<edm::ValueMap<int>> mvaCategoriesMapToken_;
     EDGetTokenT<edm::View<pat::Electron>> electrons_for_mva_token;
     EDGetTokenT<edm::View<pat::Muon>> muon_h_token;
 
-    EDGetTokenT<int> genTtbarIdToken_;
-    //EDGetTokenT<bool> ttHFGenFilterToken_;
+    EDGetTokenT<int> genTtbarIdToken_; // remove?
     EDGetTokenT<std::vector<PileupSummaryInfo>> puInfoToken;
     EDGetTokenT<LHEEventProduct> lheptoken;
     EDGetTokenT<LHERunInfoProduct> lhepruninfotoken;
-
-    //edm::EDGetTokenT<double> prefweight_token;
-    //edm::EDGetTokenT<double> prefweightup_token;
-    //edm::EDGetTokenT<double> prefweightdown_token;
 
     edm::EDGetTokenT<bool> passecalBadCalibFilterUpdate_token;
 

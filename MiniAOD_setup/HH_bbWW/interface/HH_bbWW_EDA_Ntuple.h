@@ -34,21 +34,21 @@ struct HH_bbWW_EDA_Reco_Ntuple //: public TClass
 
     // event variables
     int nEvent;
-    int ls;  // luminosity section number
-    int run; // run number
-	int is_data; // whether MC or data
+    int ls;  
+    int run;
+	int is_data; 
     int data_era;
     int save_gen_info;
-    int is_trigger_study;
-    int is_tight_skim;
+    int is_trigger_study; // remove?
+    int is_tight_skim; 
 
     int npv;
     int truenpv;
-    int ttHf_cat;
-    int ttHFGenFilter;
-    int SL_tag;
-    int DL_tag;
-    int FH_tag;
+    int ttHf_cat; // remove?
+    int ttHFGenFilter; // remove?
+    int SL_tag; // remove?
+    int DL_tag; // remove?
+    int FH_tag; // remove?
     int higgs_decay_channel;
     double rho;
 
@@ -80,45 +80,46 @@ struct HH_bbWW_EDA_Reco_Ntuple //: public TClass
     int pass_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_;
 	int pass_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8_;
 	int pass_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8_;
-    int pass_HLT_PFMET110_PFMHT110_IDTight_;
-    int pass_HLT_PFMET120_PFMHT120_IDTight_;
-    int pass_HLT_PFMET130_PFMHT130_IDTight_;
-    int pass_HLT_PFMET140_PFMHT140_IDTight_;
-	int pass_HLT_PFMETTypeOne120_PFMHT120_IDTight_;
-	int pass_HLT_PFHT500_PFMET100_PFMHT100_IDTight_;
-	int pass_HLT_PFHT700_PFMET85_PFMHT85_IDTight_;
-	int pass_HLT_PFHT800_PFMET75_PFMHT75_IDTight_;
-	int pass_HLT_CaloMET250_HBHECleaned_;
-	int pass_HLT_PFMET250_HBHECleaned_;
-	int pass_HLT_PFMET200_HBHE_BeamHaloCleaned_;
-    int pass_HLT_PFHT180_;
-    int pass_HLT_PFHT250_;
-    int pass_HLT_PFHT350_;
-    int pass_HLT_PFHT370_;
-    int pass_HLT_PFHT430_;
-    int pass_HLT_PFHT510_;
-    int pass_HLT_PFHT590_;
-    int pass_HLT_PFHT680_;
-    int pass_HLT_PFHT780_;
-    int pass_HLT_PFHT890_;
-    int pass_HLT_PFHT1050_;
-    int pass_HLT_PFJet40_;
-    int pass_HLT_PFJet60_;
-    int pass_HLT_PFJet80_;
-    int pass_HLT_PFJet140_;
-    int pass_HLT_PFJet200_;
-    int pass_HLT_PFJet260_;
-    int pass_HLT_PFJet320_;
-    int pass_HLT_PFJet400_;
-    int pass_HLT_PFJet450_;
-    int pass_HLT_PFJet500_;
-    int pass_HLT_PFJet550_;
+
+    int pass_HLT_PFMET110_PFMHT110_IDTight_; // remove?
+    int pass_HLT_PFMET120_PFMHT120_IDTight_; // remove?
+    int pass_HLT_PFMET130_PFMHT130_IDTight_; // remove?
+    int pass_HLT_PFMET140_PFMHT140_IDTight_; // remove?
+	int pass_HLT_PFMETTypeOne120_PFMHT120_IDTight_; // remove?
+	int pass_HLT_PFHT500_PFMET100_PFMHT100_IDTight_; // remove?
+	int pass_HLT_PFHT700_PFMET85_PFMHT85_IDTight_; // remove?
+	int pass_HLT_PFHT800_PFMET75_PFMHT75_IDTight_; // remove?
+	int pass_HLT_CaloMET250_HBHECleaned_; // remove?
+	int pass_HLT_PFMET250_HBHECleaned_; // remove?
+	int pass_HLT_PFMET200_HBHE_BeamHaloCleaned_; // remove?
+    int pass_HLT_PFHT180_; // remove?
+    int pass_HLT_PFHT250_; // remove?
+    int pass_HLT_PFHT350_; // remove?
+    int pass_HLT_PFHT370_; // remove?
+    int pass_HLT_PFHT430_; // remove?
+    int pass_HLT_PFHT510_; // remove?
+    int pass_HLT_PFHT590_; // remove?
+    int pass_HLT_PFHT680_; // remove?
+    int pass_HLT_PFHT780_; // remove?
+    int pass_HLT_PFHT890_; // remove?
+    int pass_HLT_PFHT1050_; // remove?
+    int pass_HLT_PFJet40_; // remove?
+    int pass_HLT_PFJet60_; // remove?
+    int pass_HLT_PFJet80_; // remove?
+    int pass_HLT_PFJet140_; // remove?
+    int pass_HLT_PFJet200_; // remove?
+    int pass_HLT_PFJet260_; // remove?
+    int pass_HLT_PFJet320_; // remove?
+    int pass_HLT_PFJet400_; // remove?
+    int pass_HLT_PFJet450_; // remove?
+    int pass_HLT_PFJet500_; // remove?
+    int pass_HLT_PFJet550_; // remove?
 
     // HLT Objects (for trigger efficiency studies)
-    std::vector<double> pt_trigger_object_;
-    std::vector<double> eta_trigger_object_;
-    std::vector<double> phi_trigger_object_;
-    std::vector<std::vector<std::string>> filter_trigger_object_;
+    std::vector<double> pt_trigger_object_; // remove?
+    std::vector<double> eta_trigger_object_; // remove?
+    std::vector<double> phi_trigger_object_; // remove?
+    std::vector<std::vector<std::string>> filter_trigger_object_; // remove?
 
     // muons
     std::vector<double> mu_pt;
@@ -127,14 +128,16 @@ struct HH_bbWW_EDA_Reco_Ntuple //: public TClass
     std::vector<double> mu_phi;
     std::vector<double> mu_E;
     std::vector<double> mu_E_uncorr;
-    //std::vector<int> mu_charge;
     std::vector<double> mu_iso;
     std::vector<double> mu_iso_uncorr;
     std::vector<int> mu_isotight_pass;
     std::vector<int> mu_pdgid;
-    std::vector<int> mu_parentid;
-    std::vector<int> mu_grandparentid;
-    std::vector<unsigned int> mu_seeds;
+    std::vector<int> mu_parentid; // remove?
+    std::vector<int> mu_grandparentid; // remove?
+    std::vector<unsigned int> mu_seeds; 
+    std::vector<double> mu_dxy; // new
+    std::vector<double> mu_dz; // new
+    std::vector<double> mu_dsigma; // new
 
     // electrons
     std::vector<double> ele_pt;
@@ -144,27 +147,44 @@ struct HH_bbWW_EDA_Reco_Ntuple //: public TClass
     std::vector<double> ele_phi;
     std::vector<double> ele_E;
     std::vector<double> ele_E_uncorr;
-    //std::vector<int> ele_charge;
     std::vector<double> ele_iso;
     std::vector<double> ele_iso_uncorr;
     std::vector<int> ele_pdgid;
-    std::vector<int> ele_parentid;
-    std::vector<int> ele_grandparentid;
-    std::vector<unsigned int> ele_seeds;
+    std::vector<int> ele_parentid; // remove?
+    std::vector<int> ele_grandparentid; // remove?
+    std::vector<unsigned int> ele_seeds; 
+    std::vector<double> ele_dxy; // new
+    std::vector<double> ele_dz; // new
+    std::vector<double> ele_dsigma; // new
+
+    // taus
+    std::vector<double> tau_pt; // new
+    std::vector<double> tau_eta; // new
+    std::vector<double> tau_phi; // new
+    std::vector<double> tau_E; // new
+    std::vector<double> tau_iso; // new
+    std::vector<int> tau_pdgid; // new
 
     // jets
     std::vector<double> jet_pt_uncorr;
     std::vector<double> jet_eta;
     std::vector<double> jet_phi;
     std::vector<double> jet_E_uncorr;
-    std::vector<double> jet_CSV_csvv2;
-    std::vector<double> jet_CSV_deepcsv;
-    std::vector<double> jet_CSV_deepjet;
+    std::vector<double> jet_CSV_csvv2; // remove?
+    std::vector<double> jet_CSV_deepcsv; // remove?
+    std::vector<double> jet_btag_deepjet; // change name
     std::vector<int> jet_flavor;
     std::vector<unsigned int> jet_seeds;
     std::vector<int> jet_puid;
     std::vector<double> jet_pudisc;
 
+    // fatjets
+    std::vector<double> fatjet_pt; // new
+    std::vector<double> fatjet_eta; // new
+    std::vector<double> fatjet; // new
+    std::vector<double> fatjet_E; // new
+    std::vector<double> fatjet_btag_deepjet; // new
+    
     // MET
     double met_pt_uncorr;
     double met_phi_uncorr;
@@ -180,7 +200,6 @@ struct HH_bbWW_EDA_Reco_Ntuple //: public TClass
     std::vector<double> jet_jecSF_nominal;
     std::vector<double> jet_jecSF_nominal_up;
     std::vector<double> jet_jecSF_nominal_down;
-    //std::vector<std::string> jet_jesSF_sourcename;
     std::vector<std::vector<double>> jet_jesSF_up;
     std::vector<std::vector<double>> jet_jesSF_down;
 	std::vector<double> jet_jerSF_jesnominal_nominal;
@@ -244,10 +263,10 @@ struct HH_bbWW_EDA_Reco_Ntuple //: public TClass
     double me_weight_murdown_mufup;
     double me_weight_murdown_mufdown;
 	std::vector<double> ps_weights;
-    std::vector<double> tH_weights;
+    std::vector<double> tH_weights; // remove?
     double prefweight;
-    double prefweight_up;
-    double prefweight_down;
+    double prefweight_up; 
+    double prefweight_down; 
 };
 
 struct HH_bbWW_EDA_Gen_Ntuple //: public TClass
@@ -261,7 +280,6 @@ struct HH_bbWW_EDA_Gen_Ntuple //: public TClass
     std::vector<double> genmu_eta;
     std::vector<double> genmu_phi;
     std::vector<double> genmu_E;
-    //std::vector<int> genmu_charge;
     std::vector<int> genmu_genid;
     std::vector<int> genmu_parentid;
     std::vector<int> genmu_grandparentid;
@@ -270,7 +288,6 @@ struct HH_bbWW_EDA_Gen_Ntuple //: public TClass
     std::vector<double> genele_eta;
     std::vector<double> genele_phi;
     std::vector<double> genele_E;
-    //std::vector<int> genele_charge;
     std::vector<int> genele_genid;
     std::vector<int> genele_parentid;
     std::vector<int> genele_grandparentid;
@@ -318,11 +335,11 @@ struct HH_bbWW_EDA_Comm_Ntuple //: public TClass
 
     int npv;
     int truenpv;
-    int ttHf_cat;
-    int ttHFGenFilter;
-    int SL_tag;
-    int DL_tag;
-    int FH_tag;
+    int ttHf_cat; // remove?
+    int ttHFGenFilter; // remove?
+    int SL_tag; // remove?
+    int DL_tag; // remove?
+    int FH_tag; // remove?
     int higgs_decay_channel;
 
     double gen_weight;
@@ -342,10 +359,10 @@ struct HH_bbWW_EDA_Comm_Ntuple //: public TClass
     double me_weight_murdown_mufup;
     double me_weight_murdown_mufdown;
     std::vector<double> ps_weights;
-    std::vector<double> tH_weights;
-    double prefweight;
-    double prefweight_up;
-    double prefweight_down;
+    std::vector<double> tH_weights; // remove?
+    double prefweight; 
+    double prefweight_up; 
+    double prefweight_down; 
 };
 
 #endif
