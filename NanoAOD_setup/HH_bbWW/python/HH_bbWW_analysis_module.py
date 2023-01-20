@@ -50,18 +50,56 @@ class HH_bbWW_Analysis(Module):
         print ("Number of events selected in the DL channel: %d"%self.selected_events_dl)
 
     def analyze(self, event):
+
+        # Read objects from NanoAOD
+        pv = Object(event, "PV")
+        flag = Object(event, "Flag")
+        hlt = Object(event, "HLT")
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
+        taus = Collection(event, "Tau")
         jets = Collection(event, "Jet")
-        #met       = Object(event, "MET")
-        #hlt       = Object(event, "HLT")
-
+        ak8jets = Collection(event, "FatJet")
+        met = Object(event, "MET")
+        
+        # Basic event selection
         self.h_nevent_total.Fill(1)
         self.total_events += 1
+        
 
-        is_sl = 1
+
+        # Select Electrons
+
+
+
+        # Select Muons
+
+
+        # Select Taus
+
+
+        # Select Jets
+
+
+
+        # Select AK8 jets
+
+
+        # Final event selection - SL and DL
+        is_sl = 0
         is_dl = 0
+        
 
+
+
+
+
+
+        
+
+        if not is_sl and not is_dl:
+            return False
+        
         if is_sl:
             self.h_nevent_sl.Fill(1)
             self.selected_events_sl += 1
