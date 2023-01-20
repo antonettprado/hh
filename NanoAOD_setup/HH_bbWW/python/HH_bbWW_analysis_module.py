@@ -34,6 +34,9 @@ class HH_bbWW_Analysis(Module):
         self.h_dl_lepton1_pt = ROOT.TH1F("h_dl_lepton1_pt" , ";Subleading lepton p_{T} [GeV];Nr. of Events" , 20, 0, 200)
         self.h_dl_lepton1_eta = ROOT.TH1F("h_dl_lepton1_eta" , ";Subleading lepton #eta;Nr. of Events" , 20, -3, 3)
 
+        self.addObject(self.h_nevent_total)
+        self.addObject(self.h_nevent_sl)
+        self.addObject(self.h_nevent_dl)
         self.addObject(self.h_sl_lepton0_pt)
         self.addObject(self.h_sl_lepton0_eta)
         self.addObject(self.h_dl_lepton0_pt)

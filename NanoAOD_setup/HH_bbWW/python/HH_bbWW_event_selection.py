@@ -42,7 +42,7 @@ if __name__ == "__main__":
         file_list.append(s)
 
     print("\nRunning HH bbWW event selection for %s sample: %s for year %s"%(args.type, args.sample, args.year))
-    output_filename = "HH_bbWW_%s_%s_%s.root"%(args.type, args.sample, args.year)
+    output_filename = "%s_%s_%s.root"%(args.type, args.sample, args.year)
     output_dir_name = "hh_bbww"
 
     preselection=""
