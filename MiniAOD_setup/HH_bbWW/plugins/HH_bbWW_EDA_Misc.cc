@@ -3,7 +3,7 @@
 
 /// Includes
 #include "HH_bbWW_EDA.h"
-#include "analyzers/ttH_bb/interface/ntuple_helpers.h"
+#include "hh/MiniAOD_setup/HH_bbWW/interface/ntuple_helpers.h"
 
 void HH_bbWW_EDA::Update_common_vars(const edm::Event &iEvent,
                                     HH_bbWW_EDA_event_vars &local)

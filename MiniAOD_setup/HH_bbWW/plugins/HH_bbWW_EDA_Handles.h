@@ -90,7 +90,7 @@ struct edm_Handles {
     Handle<pat::MuonCollection> muons;
     Handle<pat::TauCollection> taus; // new
     Handle<pat::JetCollection> jets;
-    Handle<pat::FatJetCollection> fatjets; // new
+    Handle<pat::JetCollection> fatjets; // new
     Handle<pat::METCollection> METs;
     Handle<reco::GenJetCollection> genjets;
     Handle<reco::GenParticleCollection> genparticles;
@@ -126,7 +126,7 @@ struct edm_Tokens {
     EDGetTokenT<pat::MuonCollection> muons;
     EDGetTokenT<pat::TauCollection> taus; // new
     EDGetTokenT<pat::JetCollection> jets;
-    EDGetTokenT<pat::FatJetCollection> fatjets; // new
+    EDGetTokenT<pat::JetCollection> fatjets; // new
     EDGetTokenT<pat::METCollection> METs;
     EDGetTokenT<reco::GenJetCollection> genjets;
     EDGetTokenT<reco::GenParticleCollection> genparticles;

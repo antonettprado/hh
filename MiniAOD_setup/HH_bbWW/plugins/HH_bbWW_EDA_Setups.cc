@@ -142,7 +142,7 @@ void HH_bbWW_EDA::Set_up_tokens(const edm::ParameterSet &config)
         config.getParameter<edm::InputTag>("taus")); // new
     token.jets = consumes<pat::JetCollection>(
         config.getParameter<edm::InputTag>("jets"));
-    token.fatjets = consumes<pat::FatJetCollection>(
+    token.fatjets = consumes<pat::JetCollection>(
         config.getParameter<edm::InputTag>("fatjets")); // new
     token.METs = consumes<pat::METCollection>(
         config.getParameter<edm::InputTag>("mets"));

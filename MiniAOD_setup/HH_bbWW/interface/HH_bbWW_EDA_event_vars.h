@@ -156,7 +156,7 @@ struct HH_bbWW_EDA_event_vars {
     std::vector<pat::Jet> jets_nominal_corrected;
     std::vector<pat::Jet> jets_selected_uncorrected;
 
-    std::vector<pat::FatJet> fatjets_selected; // new
+    std::vector<pat::Jet> fatjets_selected; // new
 
     std::vector<unsigned int> jet_seeds;
     std::vector<int> jet_puid;

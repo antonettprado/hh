@@ -387,6 +387,7 @@ inline void fill_ntuple_electrons(const std::vector<pat::Electron> &electrons, c
 }
 
 // new
+/*
 inline void fill_ntuple_taus(const std::vector<pat::Tau> &taus, const MiniAODHelper &miniAODhelper, HH_bbWW_EDA_Reco_Ntuple &ntup){
     for(unsigned int i=0; i<taus.size(); i++){
         ntup.tau_pt.push_back(taus[i].pt());
@@ -397,6 +398,7 @@ inline void fill_ntuple_taus(const std::vector<pat::Tau> &taus, const MiniAODHel
         ntup.tau_pdgid.push_back(taus[i].pdgId());
     }
 }
+*/
 
 inline void fill_ntuple_jets(const std::vector<pat::Jet> &jets, const MiniAODHelper &miniAODhelper, HH_bbWW_EDA_Reco_Ntuple &ntup, const bool &is_data){
     for (unsigned int i = 0; i < jets.size(); ++i) {
@@ -415,6 +417,7 @@ inline void fill_ntuple_jets(const std::vector<pat::Jet> &jets, const MiniAODHel
 }
 
 // new
+/*
 inline void fill_ntuple_fatjets(const std::vector<pat::FatJet> &fatjets, const MiniAODHelper &miniAODhelper, HH_bbWW_EDA_Reco_Ntuple &ntup, const bool &is_data){
     for (unsigned int i = 0; i < fatjets.size(); ++i) {
         ntup.jet_pt.push_back(fatjets[i].pt());
@@ -424,6 +427,7 @@ inline void fill_ntuple_fatjets(const std::vector<pat::FatJet> &fatjets, const M
         ntup.fatjet_btag_deepjet.push_back(miniAODhelper.GetJetCSV(fatjets[i], "pfDeepFlavourJetTags:probb") + miniAODhelper.GetJetCSV(fatjets[i], "pfDeepFlavourJetTags:probbb") + miniAODhelper.GetJetCSV(fatjets[i], "pfDeepFlavourJetTags:problepb"));
     }
 }
+*/
 
 void ntuple::fill_ntuple_gen_b(const HH_bbWW_EDA_event_vars &local, HH_bbWW_EDA_Gen_Ntuple &ntup){
     for (unsigned int i = 0; i < local.genbquarks.size(); ++i) {

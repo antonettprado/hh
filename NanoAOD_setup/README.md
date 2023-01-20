@@ -14,7 +14,15 @@ cd CMSSW_12_0_1/src
 
 cmsenv
 
+git cms-init
+
+git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
+
 git clone https://gitlab.cern.ch/abdatta/hh.git
+
+scram b -j 4
+
+# Run Tests
 
 cd hh/NanoAOD_setup/HH_bbWW
 
