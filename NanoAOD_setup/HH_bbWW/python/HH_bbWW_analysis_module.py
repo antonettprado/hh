@@ -42,6 +42,7 @@ class HH_bbWW_Analysis(Module):
         self.addObject(self.h_dl_lepton1_eta)
 
     def endJob(self):
+        print ("")
         print ("Total number of events: %d"%self.total_events)
         print ("Number of events selected in the SL channel: %d"%self.selected_events_sl)
         print ("Number of events selected in the DL channel: %d"%self.selected_events_dl)
