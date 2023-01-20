@@ -6,8 +6,6 @@ import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from importlib import import_module
 
-ROOT.PyConfig.IgnoreCommandLineOptions = True
-
 #importing tools from nanoAOD processing set up to store the ratio histograms in a root file
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
@@ -45,6 +43,10 @@ class HH_bbWW_Analysis(Module):
         self.addObject(self.h_dl_lepton1_eta)
 
     def endJob(self):
+
+        self.h_nevent_total.Write()
+        self.h_nevent_sl.Write()
+        self.h_nevent_dl.Write()
         print ("")
         print ("Total number of events: %d"%self.total_events)
         print ("Number of events selected in the SL channel: %d"%self.selected_events_sl)
