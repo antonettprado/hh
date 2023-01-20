@@ -5,7 +5,7 @@ import ROOT
 import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from importlib import import_module
-from hh.NanoAOD_setup.HH_bbWW.python.HH_bbWW_analysis_module import *
+from hh.NanoAOD_setup.HH_bbWW.HH_bbWW_analysis_module import *
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
