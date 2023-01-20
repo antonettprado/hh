@@ -44,9 +44,6 @@ class HH_bbWW_Analysis(Module):
 
     def endJob(self):
 
-        self.h_nevent_total.Write()
-        self.h_nevent_sl.Write()
-        self.h_nevent_dl.Write()
         print ("")
         print ("Total number of events: %d"%self.total_events)
         print ("Number of events selected in the SL channel: %d"%self.selected_events_sl)
