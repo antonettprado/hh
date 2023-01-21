@@ -3,9 +3,13 @@ import argparse
 import ROOT
 import json
 from HH_bbWW_selection_funcs import *
+from pathlib import Path
 
-import warnings
+import warnings 
 warnings.filterwarnings("ignore")
+
+helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_cpp_functions.cc")
+ROOT.gInterpreter.ProcessLine('#include "{}"'.format(helper_func_path))
 
 if __name__ == "__main__":
 
@@ -34,12 +38,17 @@ if __name__ == "__main__":
     for s in input_json_file[args.sample][args.year]:
         df_list.append(ROOT.RDataFrame("Events", s))
 
+    ROOT.justprint()
+    a = ROOT.A(123)
+    ROOT.printA(a)
+
     print("\nRunning HH bbWW event selection for %s sample: %s for year %s"%(args.type, args.sample, args.year))
 
     for df in df_list:
 
         print("1) Basic Event Selection ---------------------------------")
         df = df.Filter("PV_npvsGood>=1")    # Primary collision vertex
+        print("after first filter")
         df = met_filter(df, args.type)
 
         print("2) Electron Selection ------------------------------------")
@@ -54,11 +63,19 @@ if __name__ == "__main__":
         df = df.Define("tight_mu", "Muon_pt > 10 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_mediumId==1")
 
         print("5) AK4 Jet Selection ------------------------------------")
-        df = df.Define("central_ak4","Jet_pt>25 && Jet_eta<2.4")
-        df = df.Define("VBF_Jet", "central_ak4 && Jet_pt>30 && Jet_eta<4.7")
+        df = df.Define("AK4","Jet_pt>25 && Jet_eta<2.4")
+        df = df.Define("VBF_Jet", "AK4 && Jet_pt>30 && Jet_eta<4.7")
+        df = df.Define("AK4_eta","Jet_eta[AK4]")
+        df = df.Define("AK4_phi","Jet_phi[AK4]")
+        df = df.Define("nAK4", "Sum(AK4)")
 
         print("6) AK8 Jet Selection ------------------------------------")
-        df = df.Define("ak8_jet", "FatJet_pt>200 && FatJet_eta<2.4 && FatJet_msoftdrop>30 && FatJet_msoftdrop<210 ")
+        df = df.Define("AK8", "FatJet_pt>200 && FatJet_eta<2.4 && FatJet_msoftdrop>30 && FatJet_msoftdrop<210 ")
+        df = df.Define("AK8_eta","FatJet_eta[AK8]")
+        df = df.Define("AK8_phi","FatJet_phi[AK8]")
+        df = df.Define("nAK8", "Sum(AK8)")
+
+        df = df.Define("deltaR_jets", "deltaR_values(AK8_eta, AK4_eta, AK8_phi, AK4_phi)")
 
         print("7) Final Event Selection ---------------------------------")
         df_sl = df    
@@ -66,8 +83,8 @@ if __name__ == "__main__":
         df_sl = selection_sl_channel(df_sl, args.year)
         df_sl.Report().Print()
         
-        # df_dl = selection_dl_channel(df, args.year)
-        # df_dl.Report().Print()
+        df_dl = selection_dl_channel(df_dl, args.year)
+        df_dl.Report().Print()
 
 
         # print("8) Plotting -------------------------------------------------")

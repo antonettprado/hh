@@ -25,23 +25,29 @@ def selection_sl_channel(df, year):
 
     print("\t SL channel:")
     df = trigger_filter(df, year, 1)
-    df = df.Filter("Sum(tight_e)>=1 || Sum(tight_mu)>=1",       "sl_filter_1")
-    df.Display({"nElectron","nMuon","tight_e", "tight_mu", "Electron_pt", "Muon_pt"},10).Print()
-    df = df.Filter("Electron_pt[0]>30 || Muon_pt[0]>25",        "sl_filter_2")
-    df = df.Filter("Electron_eta[0]<2.5 || Muon_eta[0]<2.4",    "sl_filter_3")
-    # df_sl = df_sl.[hadronic tau veto]
-    df = df.Filter("nJet>=1 || nFatJet>=1",                     "sl_filter_4")
+    df = df.Filter("Min(Electron_pt) > 30   || Min(Muon_pt) > 25",      "sl_filter_1")
+    df = df.Filter("Max(Electron_eta) < 2.5 || Max(Muon_eta) < 2.4",    "sl_filter_2")
+    df = df.Filter("nAK8 >= 1               && nAK4 >= 1",              "sl_filter_3")
+    df = df.Filter("Max(deltaR_jets)>1.2    || nAK4 >=  3",             "sl_filter_4")
+    df = df.Filter("Sum(tight_e) == 1       || Sum(tight_mu) == 1",     "sl_filter_5")
+
+    # df.Display({"nAK4", "nAK8", "AK4_eta", "AK8_eta", "deltaR_jets"}).Print()
 
     return df
 
 def selection_dl_channel(df, year):
 
     print("\t DL channel:")
-    # df = df.Filter("nMuon+nElectron==2",                "dl_filter_1")
-    # df = trigger_filter(df, year, 2)
+
+    df = trigger_filter(df, year, 2)
+
+    df = df.Filter("dl_pt_cut(Electron_pt, Muon_pt)",   "dl_filter_1")
+    # df = df.Filter("Sum(tight_mu) + Sum(tight_e) >=2 ",                "dl_filter_1")
     # df = df.Filter("Electron_pt>30 || Muon_pt>25",      "dl_filter_2")
     # df = df.Filter("Electron_eta<2.5 || Muon_eta<2.4",  "dl_filter_3")
     # df = df.Filter("nJet>=1 || nFatJet>=1",             "dl_filter_4")
+
+    # df.Display({"tight_e","tight_mu"}).Print()
 
     return df
 
@@ -53,7 +59,7 @@ def trigger_filter(df, year, lepton_number):
     s_e_trig_dict = {}
     s_e_trig_dict['HLT_Ele25_eta2p1_WPTight_Gsf']    = [1, 0, 0]
     s_e_trig_dict['HLT_Ele27_WPTight_Gsf']           = [1, 0, 0]
-    s_e_trig_dict['HLT_Ele27_eta2p1_WPLoos_e_Gsf']    = [1, 0, 0]
+    s_e_trig_dict['HLT_Ele27_eta2p1_WPLoos_e_Gsf']   = [1, 0, 0]
     s_e_trig_dict['HLT_Ele32_WPTight_Gsf']           = [0, 1, 1]
     s_e_trig_dict['HLT_Ele35_WPTight_Gsf']           = [0, 1, 0]
     
