@@ -5,6 +5,7 @@ import ROOT
 import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from importlib import import_module
+from HH_bbWW_object_selection import *
 
 #importing tools from nanoAOD processing set up to store the ratio histograms in a root file
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
@@ -65,16 +66,39 @@ class HH_bbWW_Analysis(Module):
         # Basic event selection
         self.h_nevent_total.Fill(1)
         self.total_events += 1
-        
+
 
 
         # Select Electrons
+        electrons_basic_sel_index = electron_basic_selection(electrons)
+        
+        
+        electrons_loose_index = []
+        electrons_fakeable_index = []
+        electrons_tight_index = []
+        for i in electrons_basic_sel_index:
+            ele = electrons[i]
 
 
 
         # Select Muons
+        muons_basic_sel_index = muon_basic_selection(muons)
+        muons_basic_sel_index = []
+        for (i, mu) in enumerate(muons):
+            # Pass Loose PF muon ID 
+            if not mu.looseId:
+                continue
+            muons_basic_sel_index.append(i)
 
+        muons_loose_index = []
+        muons_fakeable_index = []
+        muons_tight_index = []
 
+        print ("")
+        print (len(electrons), len(electrons_basic_sel_index))
+        print (len(muons), len(muons_basic_sel_index))
+        print ("")
+        
         # Select Taus
 
 
