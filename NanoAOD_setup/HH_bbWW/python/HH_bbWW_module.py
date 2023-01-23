@@ -23,13 +23,9 @@ class HH_bbWW_Analysis(Module):
 
         self.cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
-        self.total_events = 0
-        self.selected_events_sl = 0
-        self.selected_events_dl = 0
-
-        self.h_nevent_total = ROOT.TH1F("h_nevent_total" , ";;Nr. of Events" , 1, 0, 1)
-        self.h_nevent_sl = ROOT.TH1F("h_nevent_sl" , ";;Nr. of Events" , 1, 0, 1)
-        self.h_nevent_dl = ROOT.TH1F("h_nevent_dl" , ";;Nr. of Events" , 1, 0, 1)
+        self.h_nevent_total = ROOT.TH1F("h_nevent_total" , ";;Nr. of Events" , 2, 0, 2)
+        self.h_nevent_sl = ROOT.TH1F("h_nevent_sl" , ";;Nr. of Events" , 2, 0, 2)
+        self.h_nevent_dl = ROOT.TH1F("h_nevent_dl" , ";;Nr. of Events" , 2, 0, 2)
         self.h_sl_lepton0_pt = ROOT.TH1F("h_sl_lepton0_pt" , ";Leading lepton p_{T} [GeV];Nr. of Events" , 20, 0, 200)
         self.h_sl_lepton0_eta = ROOT.TH1F("h_sl_lepton0_eta" , ";Leading lepton #eta;Nr. of Events" , 20, -3, 3)
         self.h_dl_lepton0_pt = ROOT.TH1F("h_dl_lepton0_pt" , ";Leading lepton p_{T} [GeV];Nr. of Events" , 20, 0, 200)
@@ -47,12 +43,12 @@ class HH_bbWW_Analysis(Module):
         self.addObject(self.h_dl_lepton1_pt)
         self.addObject(self.h_dl_lepton1_eta)
 
-    def endJob(self):
+    #def endJob(self):
 
-        print ("")
-        print ("Total number of events: %d"%self.total_events)
-        print ("Number of events selected in the SL channel: %d"%self.selected_events_sl)
-        print ("Number of events selected in the DL channel: %d"%self.selected_events_dl)
+    #    print ("")
+    #    print ("Total number of events: %d"%self.total_events)
+    #    print ("Number of events selected in the SL channel: %d"%self.selected_events_sl)
+    #    print ("Number of events selected in the DL channel: %d"%self.selected_events_dl)
 
     def analyze(self, event):
 
@@ -70,8 +66,7 @@ class HH_bbWW_Analysis(Module):
         
         # Basic event selection
         self.h_nevent_total.Fill(1)
-        self.total_events += 1
-
+        
         ## PV Selection
         pass_pv_sel = pv_selection(pv)
         if not pass_pv_sel:
@@ -139,10 +134,7 @@ class HH_bbWW_Analysis(Module):
         
         if is_sl:
             self.h_nevent_sl.Fill(1)
-            self.selected_events_sl += 1
         elif is_dl:
             self.h_nevent_dl.Fill(1)
-            self.selected_events_dl += 1
-        
 
         return True
