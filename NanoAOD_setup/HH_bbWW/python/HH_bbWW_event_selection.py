@@ -5,6 +5,7 @@ import ROOT
 import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from importlib import import_module
+from HH_bbWW_common_functions import *
 
 #importing tools from nanoAOD processing set up to store the ratio histograms in a root file
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
@@ -155,7 +156,7 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
                 ak4_jet = ak4_jets[i]
                 for j in ak8_btag_sel_clean_index:
                     ak8_jet = ak8_jets[j]
-                    deltar = ROOT.DeltaR(ak4_jet.p4(), ak8_jet.p4())
+                    deltar = delta_R(ak4_jet.eta, ak8_jet.eta, ak4_jet.phi, ak8_jet.phi)
                     if deltar > 1.2:
                         n_ak4jets_ak8cleaned += 1
             if n_ak4jets_ak8cleaned >= 1:
