@@ -92,7 +92,7 @@ def electron_selection(electrons, jets, electrons_sel_index, cuts):
         electrons_final_sel_index.append(i)
     return electrons_final_sel_index
 
-def muon_selection(muons, jets, muons_basic_sel_index):
+def muon_selection(muons, jets, muons_basic_sel_index, cuts):
     muons_final_sel_index = []
     for i in muons_basic_sel_index:
         mu = muons[i]
@@ -131,7 +131,7 @@ def muon_selection(muons, jets, muons_basic_sel_index):
         muons_final_sel_index.append(i)
     return muons_final_sel_index
 
-def tau_selection(taus):
+def tau_selection(taus, cuts):
     taus_final_sel_index = []
     for (i,tau) in enumerate(taus):
 

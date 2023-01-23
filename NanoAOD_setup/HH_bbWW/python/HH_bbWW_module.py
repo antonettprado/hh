@@ -20,7 +20,7 @@ class HH_bbWW_Analysis(Module):
     def beginJob(self,histFile=None,histDirName=None):
         Module.beginJob(self,histFile,histDirName)
 
-        self.cuts = json.load(open("../data/input_HH_bbWW_cuts.json"))
+        self.cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
         self.total_events = 0
         self.selected_events_sl = 0
