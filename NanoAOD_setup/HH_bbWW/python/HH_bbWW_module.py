@@ -128,13 +128,60 @@ class HH_bbWW_Analysis(Module):
         is_dl = 0
         is_sl = single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["single_lepton_event"])
         is_dl = dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["dilepton_event"])        
-
         if not is_sl and not is_dl:
             return False
         
+        # Fill Histograms
         if is_sl:
             self.h_nevent_sl.Fill(1)
+            if len(electrons_tight_sel_index) == 1:
+                ele = electrons[electrons_tight_sel_index[0]]
+                self.h_sl_lepton0_pt.Fill(ele.pt)
+                self.h_sl_lepton0_eta.Fill(ele.eta)
+            elif len(muons_tight_sel_index) == 1:
+                mu = muons[muons_tight_sel_index[0]]
+                self.h_sl_lepton0_pt.Fill(mu.pt)
+                self.h_sl_lepton0_eta.Fill(mu.eta)
         elif is_dl:
             self.h_nevent_dl.Fill(1)
+            if len(electrons_tight_sel_index) == 2:
+                ele1 = electrons[electrons_tight_sel_index[0]]
+                ele2 = electrons[electrons_tight_sel_index[1]]
+                if ele1.pt > ele2.pt:
+                    self.h_dl_lepton0_pt.Fill(ele1.pt)
+                    self.h_dl_lepton0_eta.Fill(ele1.eta)
+                    self.h_dl_lepton1_pt.Fill(ele2.pt)
+                    self.h_dl_lepton1_eta.Fill(ele2.eta)
+                else:
+                    self.h_dl_lepton0_pt.Fill(ele2.pt)
+                    self.h_dl_lepton0_eta.Fill(ele2.eta)
+                    self.h_dl_lepton1_pt.Fill(ele1.pt)
+                    self.h_dl_lepton1_eta.Fill(ele1.eta)
+            elif len(muons_tight_sel_index) == 2:
+                mu1 = muons[muons_tight_sel_index[0]]
+                mu2 = muons[muons_tight_sel_index[1]]
+                if mu1.pt > mu2.pt:
+                    self.h_dl_lepton0_pt.Fill(mu1.pt)
+                    self.h_dl_lepton0_eta.Fill(mu1.eta)
+                    self.h_dl_lepton1_pt.Fill(mu2.pt)
+                    self.h_dl_lepton1_eta.Fill(mu2.eta)
+                else:
+                    self.h_dl_lepton0_pt.Fill(mu2.pt)
+                    self.h_dl_lepton0_eta.Fill(mu2.eta)
+                    self.h_dl_lepton1_pt.Fill(mu1.pt)
+                    self.h_dl_lepton1_eta.Fill(mu1.eta)
+            elif len(electrons_tight_sel_index) == 1 and len(muons_tight_sel_index) == 1:
+                ele = electrons[electrons_tight_sel_index[0]]
+                mu = muons[muons_tight_sel_index[0]]
+                if ele.pt > mu.pt:
+                    self.h_dl_lepton0_pt.Fill(ele.pt)
+                    self.h_dl_lepton0_eta.Fill(ele.eta)
+                    self.h_dl_lepton1_pt.Fill(mu.pt)
+                    self.h_dl_lepton1_eta.Fill(mu.eta)
+                else:
+                    self.h_dl_lepton0_pt.Fill(mu.pt)
+                    self.h_dl_lepton0_eta.Fill(mu.eta)
+                    self.h_dl_lepton1_pt.Fill(ele.pt)
+                    self.h_dl_lepton1_eta.Fill(ele.eta)
 
         return True
