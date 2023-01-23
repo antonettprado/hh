@@ -70,9 +70,9 @@ def mll_selection(electrons, muons, electrons_loose_sel_index, muons_loose_sel_i
         for i in range(0, len(muons_loose_sel_index)):
             pair_match_found = 0
             for j in range(i+1, len(muons_loose_sel_index)):
-                mu1 = electrons[muons_loose_sel_index[i]]
-                mu2 = electrons[muons_loose_sel_index[j]]
-                if ele1.charge * ele2.charge < 0:
+                mu1 = muons[muons_loose_sel_index[i]]
+                mu2 = muons[muons_loose_sel_index[j]]
+                if mu1.charge * mu2.charge < 0:
                     mll = (mu1.p4() + mu2.p4()).M()
                     if (mll < 12) or abs(mll - mZ) < 10:
                         pair_match_found = 1
@@ -85,7 +85,7 @@ def mll_selection(electrons, muons, electrons_loose_sel_index, muons_loose_sel_i
 
 def is_e_trigger(hlt):
     pass_e_trigger = 0
-    if hlt.HLT_Ele32_WPTight_Gsf:
+    if hlt.Ele32_WPTight_Gsf:
         pass_e_trigger = 1
     return pass_e_trigger
 
@@ -97,7 +97,7 @@ def is_mu_trigger(hlt):
 
 def is_ee_trigger(hlt):
     pass_ee_trigger = 0
-    if hlt.HLT_Ele32_WPTight_Gsf or hlt.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL:
+    if hlt.Ele32_WPTight_Gsf or hlt.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL:
         pass_ee_trigger = 1
     return pass_ee_trigger
 
@@ -109,7 +109,7 @@ def is_mumu_trigger(hlt):
 
 def is_emu_trigger(hlt):
     pass_emu_trigger = 0
-    if hlt.HLT_Ele32_WPTight_Gsf or hlt.IsoMu24 or hlt.IsoMu27 or hlt.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ: # do we need Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL for impact parameter cut study?
+    if hlt.Ele32_WPTight_Gsf or hlt.IsoMu24 or hlt.IsoMu27 or hlt.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ: # do we need Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL for impact parameter cut study?
         pass_emu_trigger = 1
     return pass_emu_trigger
 

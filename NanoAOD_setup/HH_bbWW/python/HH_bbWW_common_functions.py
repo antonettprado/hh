@@ -30,10 +30,10 @@ def calculate_met_quantities(ak4_jets, electrons, muons, met_pt, ak4_jet_sel_cle
         ht += jet.p4()
     for i in electrons_fakeable_sel_index:
         ele = electrons[i]
-        ht += ele.pt()
+        ht += ele.p4()
     for i in muons_fakeable_sel_index:
         mu = muons[i]
-        ht += mu.pt()
+        ht += mu.p4()
     mht = ht.Pt()
     met_ld = 0.6*met_pt + 0.4*mht
     return ht_jets, mht, met_ld

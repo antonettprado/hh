@@ -112,7 +112,7 @@ def muon_selection(muons, jets, muons_basic_sel_index, cuts):
             continue
         if mu.ip3d/mu.sip3d > cuts["max_d_over_sigmad"]:
             continue
-        if abs(ele.pfRelIso03_all) > cuts["max_iso"]:
+        if abs(mu.pfRelIso03_all) > cuts["max_iso"]:
             continue
         
         id_cut = cuts["id"]

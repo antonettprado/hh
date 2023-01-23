@@ -113,7 +113,7 @@ class HH_bbWW_Analysis(Module):
         ak8_jet_sel_clean_index = ak8_jet_cleaning(ak8_jets, ak8_jet_sel_clean_index, muons, muons_fakeable_sel_index, 0.8)
 
         # Select AK8 btags
-        ak8_btag_sel_clean_index = ak8_btag_selection(ak8_jets, ak8_jet_sel_clean_index, self.cuts["ak8_jets"])
+        ak8_btag_sel_clean_index = ak8_btag_selection(ak8_jets, ak8_subjets, ak8_jet_sel_clean_index, self.cuts["ak8_jets"])
 
         # MET and MHT
         met_pt = met.pt
@@ -142,7 +142,7 @@ class HH_bbWW_Analysis(Module):
             self.selected_events_sl += 1
         elif is_dl:
             self.h_nevent_dl.Fill(1)
-            self.selected_events_dl = 1
+            self.selected_events_dl += 1
         
 
         return True
