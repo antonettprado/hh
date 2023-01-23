@@ -6,6 +6,7 @@ import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from importlib import import_module
 from HH_bbWW_object_selection import *
+from HH_bbWW_event_selection import *
 
 #importing tools from nanoAOD processing set up to store the ratio histograms in a root file
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
@@ -70,6 +71,16 @@ class HH_bbWW_Analysis(Module):
         self.h_nevent_total.Fill(1)
         self.total_events += 1
 
+        ## PV Selection
+        pass_pv_sel = pv_selection(pv)
+        if not pass_pv_sel:
+            return False
+
+        ## MET filter Selection
+        pass_met_filter = met_filter_selection(flag)
+        if not pass_met_filter:
+            return False
+
         # Select Electrons
         electrons_basic_sel_index = electron_basic_selection(electrons)
         electrons_loose_sel_index = electron_selection(electrons, ak4_jets, electrons_basic_sel_index, self.cuts["electrons_loose"])
@@ -103,17 +114,24 @@ class HH_bbWW_Analysis(Module):
         # Select AK8 btags
         ak8_btag_sel_clean_index = ak8_btag_selection(ak8_jets, ak8_jet_sel_clean_index, self.cuts["ak8_jets"])
 
+        # MET and MHT
+        met_pt = met.pt
+        met_phi = met.phi
+        ht_jets, mht, met_ld = calculate_met_quantities(ak4_jets, electrons, muons, met_pt, ak4_jet_sel_clean_index, electrons_fakeable_sel_index, muons_fakeable_sel_index)
+
+        # TO DO: Heavy Mass Estimator
+        # TO DO: S_min
+
+        # mll Selection
+        pass_mll_cut = mll_selection(electrons, muons, electrons_loose_sel_index, muons_loose_sel_index)
+        if not pass_mll_cut:
+            return False
+
         # Final event selection - SL and DL
         is_sl = 0
         is_dl = 0
-        
-
-
-
-
-
-
-        
+        is_sl = single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["single_lepton_event"])
+        is_dl = dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["dilepton_event"])        
 
         if not is_sl and not is_dl:
             return False

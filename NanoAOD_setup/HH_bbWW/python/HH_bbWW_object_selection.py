@@ -11,6 +11,8 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import Pos
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
+# Object Selection Functions
+
 def electron_basic_selection(electrons):
     electrons_basic_sel_index = []
     for (i, ele) in enumerate(electrons):
@@ -95,7 +97,10 @@ def muon_selection(muons, jets, muons_basic_sel_index):
     for i in muons_basic_sel_index:
         mu = muons[i]
 
-        if mu.pt < cuts["min_pt"]:
+        # TO DO: calculate cone-pT
+        mu_cone_pt = mu.pt
+
+        if mu_cone_pt < cuts["min_pt"]:
             continue
         if abs(mu.eta) > cuts["max_eta"]:
             continue
@@ -258,6 +263,7 @@ def ak8_jet_selection(ak8_jets, ak8_subjets, cuts):
 
 def ak8_jet_cleaning(ak8_jets, ak8_jet_sel_index, leptons, leptons_sel_index, deltar_cut=0.8):
     ak8_jet_sel_clean_index = []
+
     for i in ak8_jet_sel_index:
         jet = ak8_jets[i]
         jet_p4 = jet.p4()
@@ -281,22 +287,41 @@ def ak8_btag_selection(ak8_jets, ak8_subjets, ak8_jet_sel_clean_index, cuts):
         subjet2 = ak8_subjets[jet.subJetIdx2]
         btag_cut = cuts["subjet1_btag"]
         btag_cut_value = -9999
-        btag_subjet = -9999
+        btag_subjet1 = -9999
+        btag_subjet2 = -9999
         if "deepjet" in btag_cut:
-            if subjet1.pt > subjet2.pt:
-                btag_subjet = subjet1.btagDeepB
-            else:
-                btag_subjet = subjet2.btagDeepB
+            if subjet1.pt > cuts["min_subjet1_pt"]:
+                btag_subjet1 = subjet1.btagDeepB
+            if subjet2.pt > cuts["min_subjet1_pt"]:
+                btag_subjet2 = subjet2.btagDeepB
             if "WP_L" in btag_cut:
                 btag_cut_value = 0.0494
             elif "WP_M" in btag_cut:
                 btag_cut_value = 0.2770
             elif "WP_T" in btag_cut:
                 btag_cut_value = 0.7264
-        if btag_subjet > btag_cut_value:
+        if btag_subjet1 > btag_cut_value or btag_subjet2 > btag_cut_value:
             ak8_btags_final_sel_index.append(i)
     return ak8_btags_final_sel_index
 
+def calculate_met_quantities(ak4_jets, electrons, muons, met_pt, ak4_jet_sel_clean_index, electrons_fakeable_sel_index, muons_fakeable_sel_index):
+    mht = 0
+    ht_jets = 0
+    met_ld = 0
+    ht = ROOT.TLorentzVector()
+    for i in ak4_jet_sel_clean_index:
+        jet = ak4_jets[i]
+        ht_jets += jet.pt
+        ht += jet.p4()
+    for i in electrons_fakeable_sel_index:
+        ele = electrons[i]
+        ht += ele.pt()
+    for i in muons_fakeable_sel_index:
+        mu = muons[i]
+        ht += mu.pt()
+    mht = ht.Pt()
+    met_ld = 0.6*met_pt + 0.4*mht
+    return ht_jets, mht, met_ld
 
 
 

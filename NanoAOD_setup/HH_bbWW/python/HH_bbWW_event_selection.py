@@ -5,44 +5,229 @@ import ROOT
 import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from importlib import import_module
-from HH_bbWW_analysis_module import *
 
 #importing tools from nanoAOD processing set up to store the ratio histograms in a root file
 from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import PostProcessor
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
-if __name__ == "__main__":
+# Event Selection Functions
 
-    # Parsing arguments
-    parser = argparse.ArgumentParser(description="HH to bbWW Event Selection")
-    parser.add_argument("-i", "--input_json", action="store", dest="input_json", help="input json file for samples")
-    parser.add_argument("-t", "--type", action="store", dest="type", help="type = mc or data")
-    parser.add_argument("-s", "--sample", action="store", dest="sample", help="sample = MC or data sample to run")
-    parser.add_argument("-y", "--year", action="store", dest="year", help="year = 2016, 2017 or 2018")
-    args = parser.parse_args()
+def pv_selection(pv):
+    pass_pv_sel = 0
+    if pv.npvsGood >= 1:
+        pass_pv_sel = 1
+    return pass_pv_sel
 
-    file_list = []
-    if args.type not in ["mc", "data"]:
-        print ("Type can only be mc or data")
-        sys.exit()
-    if args.type not in args.input_json.split("/")[-1].split(".json")[0]:
-        print ("Type does not match with json filename")
-        sys.exit()
-    input_json_file = json.load(open(args.input_json))
-    if args.sample not in input_json_file:
-        print ("Sample not present in json")
-        sys.exit()
-    if args.year not in input_json_file[args.sample]:
-        print ("Year not present in json")
-        sys.exit()
-    for s in input_json_file[args.sample][args.year]:
-        file_list.append(s)
+def met_filter_selection(flag):
+    pass_met_filter_sel = 1
+    if not flag.goodVertices:
+        pass_met_filter_sel = 0
+    if not flag.globalSuperTightHalo2016Filter:
+        pass_met_filter_sel = 0
+    if not flag.HBHENoiseFilter:
+        pass_met_filter_sel = 0
+    if not flag.HBHENoiseIsoFilter:
+        pass_met_filter_sel = 0
+    if not flag.EcalDeadCellTriggerPrimitiveFilter:
+        pass_met_filter_sel = 0
+    if not flag.BadPFMuonFilter:
+        pass_met_filter_sel = 0
 
-    print("\nRunning HH bbWW event selection for %s sample: %s for year %s"%(args.type, args.sample, args.year))
-    output_filename = "%s_%s_%s.root"%(args.type, args.sample, args.year)
-    output_dir_name = "hh_bbww"
+    # TO DO: add this MET filter
+    #if not flag.ecalBadCalibReducedMINIAODFilter:
+    #    pass_met_filter_sel = 0
+    
+    #if not flag.eeBadScFilter: # only for data
+    #    pass_met_filter_sel = 0
+    return pass_met_filter_sel
 
-    preselection=""
-    p=PostProcessor(".",file_list,cut=preselection,branchsel=None,modules=[HH_bbWW_Analysis()],noOut=True,histFileName=output_filename,histDirName=output_dir_name)
-    p.run()
+def mll_selection(electrons, muons, electrons_loose_sel_index, muons_loose_sel_index):
+    pass_mll_cut = 1
+    mZ = 91.2
+
+    if len(electrons_loose_sel_index) >= 2:
+        for i in range(0, len(electrons_loose_sel_index)):
+            pair_match_found = 0
+            for j in range(i+1, len(electrons_loose_sel_index)):
+                ele1 = electrons[electrons_loose_sel_index[i]]
+                ele2 = electrons[electrons_loose_sel_index[j]]
+                if ele1.charge * ele2.charge < 0:
+                    mll = (ele1.p4() + ele2.p4()).M()
+                    if (mll < 12) or abs(mll - mZ) < 10:
+                        pair_match_found = 1
+                        break
+            if pair_match_found == 1:
+                pass_mll_cut = 0
+                break
+    
+    if pass_mll_cut == 0:
+        return pass_mll_cut
+
+    if len(muons_loose_sel_index) >= 2:
+        for i in range(0, len(muons_loose_sel_index)):
+            pair_match_found = 0
+            for j in range(i+1, len(muons_loose_sel_index)):
+                mu1 = electrons[muons_loose_sel_index[i]]
+                mu2 = electrons[muons_loose_sel_index[j]]
+                if ele1.charge * ele2.charge < 0:
+                    mll = (mu1.p4() + mu2.p4()).M()
+                    if (mll < 12) or abs(mll - mZ) < 10:
+                        pair_match_found = 1
+                        break
+            if pair_match_found == 1:
+                pass_mll_cut = 0
+                break
+
+    return pass_mll_cut
+
+def is_e_trigger(hlt):
+    pass_e_trigger = 0
+    if hlt.HLT_Ele32_WPTight_Gsf:
+        pass_e_trigger = 1
+    return pass_e_trigger
+
+def is_mu_trigger(hlt):
+    pass_mu_trigger = 0
+    if hlt.IsoMu24 or hlt.IsoMu27:
+        pass_mu_trigger = 1
+    return pass_mu_trigger
+
+def is_ee_trigger(hlt):
+    pass_ee_trigger = 0
+    if hlt.HLT_Ele32_WPTight_Gsf or hlt.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL:
+        pass_ee_trigger = 1
+    return pass_ee_trigger
+
+def is_mumu_trigger(hlt):
+    pass_mumu_trigger = 0
+    if hlt.IsoMu24 or hlt.IsoMu27 or hlt.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8: # do we want Mu17_TrkIsoVVL_Mu8_TrkIsoVVL for impact parameter cut study?
+        pass_mumu_trigger = 1
+    return pass_mumu_trigger
+
+def is_emu_trigger(hlt):
+    pass_emu_trigger = 0
+    if hlt.HLT_Ele32_WPTight_Gsf or hlt.IsoMu24 or hlt.IsoMu27 or hlt.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ: # do we need Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL for impact parameter cut study?
+        pass_emu_trigger = 1
+    return pass_emu_trigger
+
+def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, cuts):
+    is_sl = 1
+    is_sl_e = 0
+    is_sl_mu = 0
+
+    # Check if event is Single Electron
+    if len(electrons_tight_sel_index) == 1 and len(muons_tight_sel_index) == 0:
+        # TO DO: calculate cone-pT
+        ele_cone_pt = electrons[electrons_tight_sel_index[0]].pt
+        if ele_cone_pt > cuts["sl_e_pt"]:
+            if is_e_trigger(hlt):
+                is_sl_e = 1
+
+    # Check if event is Single Muon
+    if len(electrons_tight_sel_index) == 0 and len(muons_tight_sel_index) == 1:
+        # TO DO: calculate cone-pT
+        mu_cone_pt = muons[muons_tight_sel_index[0]].pt
+        if mu_cone_pt > cuts["sl_mu_pt"]:
+            if is_mu_trigger(hlt):
+                is_sl_mu = 1
+
+    if not is_sl_e and not is_sl_mu:
+        is_sl = 0    
+    if not is_sl:
+        return is_sl
+
+    # Check tau veto
+    is_sl_tau_veto = 0
+    if len(tau_sel_clean_index) >= 1:
+        is_sl_tau_veto = 1
+    if is_sl_tau_veto:
+        is_sl = 0    
+    if not is_sl:
+        return is_sl
+
+    # Check jets
+    is_sl_jet = 0
+    if len(ak8_btag_sel_clean_index) >= 1: # boosted Hbb case
+        if len(ak4_jet_sel_clean_index) >= 1:
+            n_ak4jets_ak8cleaned = 0
+            for i in ak4_jet_sel_clean_index:
+                ak4_jet = ak4_jets[i]
+                for j in ak8_btag_sel_clean_index:
+                    ak8_jet = ak8_jets[j]
+                    deltar = ROOT.DeltaR(ak4_jet.p4(), ak8_jet.p4())
+                    if deltar > 1.2:
+                        n_ak4jets_ak8cleaned += 1
+            if n_ak4jets_ak8cleaned >= 1:
+                is_sl_jet = 1
+    else: # resolved Hbb case
+        if len(ak4_jet_sel_clean_index) >= 3:
+            if len(ak4_btag_sel_clean_index) >= 1:
+                is_sl_jet = 1
+
+    if not is_sl_jet:
+        is_sl = 0 
+    return is_sl
+
+def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, cuts):       
+    is_dl = 1
+    is_dl_ee = 0
+    is_dl_mumu = 0
+    is_dl_emu = 0
+
+    # Check if event is Double Electron
+    if len(electrons_tight_sel_index) == 2 and len(muons_tight_sel_index) == 0:
+        # TO DO: calculate cone-pT
+        ele1_cone_pt = electrons[electrons_tight_sel_index[0]].pt
+        ele2_cone_pt = electrons[electrons_tight_sel_index[1]].pt
+        ele1_charge = electrons[electrons_tight_sel_index[0]].charge
+        ele2_charge = electrons[electrons_tight_sel_index[1]].charge
+        if ele1_cone_pt > cuts["dl_subleading_pt"] and ele2_cone_pt > cuts["dl_subleading_pt"]:
+            if ele1_cone_pt > cuts["dl_leading_pt"] or ele2_cone_pt > cuts["dl_leading_pt"]:
+                if ele1_charge * ele2_charge < 0:
+                    if is_ee_trigger(hlt):
+                        is_dl_ee = 1
+
+    # Check if event is Double Muon
+    if len(electrons_tight_sel_index) == 0 and len(muons_tight_sel_index) == 2:
+        # TO DO: calculate cone-pT
+        mu1_cone_pt = muons[muons_tight_sel_index[0]].pt
+        mu2_cone_pt = muons[muons_tight_sel_index[1]].pt
+        mu1_charge = muons[muons_tight_sel_index[0]].charge
+        mu2_charge = muons[muons_tight_sel_index[1]].charge
+        if mu1_cone_pt > cuts["dl_subleading_pt"] and mu2_cone_pt > cuts["dl_subleading_pt"]:
+            if mu1_cone_pt > cuts["dl_leading_pt"] or mu2_cone_pt > cuts["dl_leading_pt"]:
+                if mu1_charge * mu2_charge < 0:
+                    if is_mumu_trigger(hlt):
+                        is_dl_mumu = 1
+
+    # Check if event is Electron Muon
+    if len(electrons_tight_sel_index) == 1 and len(muons_tight_sel_index) == 1:
+        # TO DO: calculate cone-pT
+        ele_cone_pt = electrons[electrons_tight_sel_index[0]].pt
+        mu_cone_pt = muons[muons_tight_sel_index[0]].pt
+        ele_charge = electrons[electrons_tight_sel_index[0]].charge
+        mu_charge = muons[muons_tight_sel_index[0]].charge
+        if ele_cone_pt > cuts["dl_subleading_pt"] and mu_cone_pt > cuts["dl_subleading_pt"]:
+            if ele_cone_pt > cuts["dl_leading_pt"] or mu_cone_pt > cuts["dl_leading_pt"]:
+                if ele_charge * mu_charge < 0:
+                    if is_emu_trigger(hlt):
+                        is_dl_emu = 1
+
+    if not is_dl_ee and not is_dl_mumu and not is_dl_emu:
+        is_dl = 0    
+    if not is_dl:
+        return is_dl
+
+    # Check jets
+    is_dl_jet = 0
+    if len(ak8_btag_sel_clean_index) >= 1: # boosted Hbb case
+        is_dl_jet = 1
+    else: # resolved Hbb case
+        if len(ak4_jet_sel_clean_index) >= 1:
+            if len(ak4_btag_sel_clean_index) >= 1:
+                is_dl_jet = 1
+
+    if not is_dl_jet:
+        is_dl = 0 
+    return is_dl

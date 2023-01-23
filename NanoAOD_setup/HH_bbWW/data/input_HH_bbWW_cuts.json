@@ -113,8 +113,18 @@
         "min_subjet1_pt": 30,
         "min_subjet2_pt": 20,
         "max_subjet_eta": 2.4,
+        "min_msd": 30,
+        "max_msd": 210,
+        "max_tau21": 0.75,
         "subjet1_btag": "deepjet_WP_M"
-
+    },
+    "single_lepton_event":{
+        "sl_e_pt": 32,
+        "sl_mu_pt": 25
+    },
+    "dilepton_event":{
+        "dl_leading_pt": 25,
+        "sl_subleading_pt": 15
     }
 }
 
