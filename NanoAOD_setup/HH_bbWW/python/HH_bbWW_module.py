@@ -26,6 +26,11 @@ class HH_bbWW_Analysis(Module):
         self.h_nevent_total = ROOT.TH1F("h_nevent_total" , ";;Nr. of Events" , 2, 0, 2)
         self.h_nevent_sl = ROOT.TH1F("h_nevent_sl" , ";;Nr. of Events" , 2, 0, 2)
         self.h_nevent_dl = ROOT.TH1F("h_nevent_dl" , ";;Nr. of Events" , 2, 0, 2)
+        self.h_nevent_sl_e = ROOT.TH1F("h_nevent_sl_e" , ";;Nr. of Events" , 2, 0, 2)
+        self.h_nevent_sl_mu = ROOT.TH1F("h_nevent_sl_mu" , ";;Nr. of Events" , 2, 0, 2)
+        self.h_nevent_dl_ee = ROOT.TH1F("h_nevent_dl_ee" , ";;Nr. of Events" , 2, 0, 2)
+        self.h_nevent_dl_emu = ROOT.TH1F("h_nevent_dl_emu" , ";;Nr. of Events" , 2, 0, 2)
+        self.h_nevent_dl_mumu = ROOT.TH1F("h_nevent_dl_mumu" , ";;Nr. of Events" , 2, 0, 2)
         self.h_sl_lepton0_pt = ROOT.TH1F("h_sl_lepton0_pt" , ";Leading lepton p_{T} [GeV];Nr. of Events" , 20, 0, 200)
         self.h_sl_lepton0_eta = ROOT.TH1F("h_sl_lepton0_eta" , ";Leading lepton #eta;Nr. of Events" , 20, -3, 3)
         self.h_dl_lepton0_pt = ROOT.TH1F("h_dl_lepton0_pt" , ";Leading lepton p_{T} [GeV];Nr. of Events" , 20, 0, 200)
@@ -36,6 +41,11 @@ class HH_bbWW_Analysis(Module):
         self.addObject(self.h_nevent_total)
         self.addObject(self.h_nevent_sl)
         self.addObject(self.h_nevent_dl)
+        self.addObject(self.h_nevent_sl_e)
+        self.addObject(self.h_nevent_sl_mu)
+        self.addObject(self.h_nevent_dl_ee)
+        self.addObject(self.h_nevent_dl_emu)
+        self.addObject(self.h_nevent_dl_mumu)
         self.addObject(self.h_sl_lepton0_pt)
         self.addObject(self.h_sl_lepton0_eta)
         self.addObject(self.h_dl_lepton0_pt)
@@ -126,14 +136,24 @@ class HH_bbWW_Analysis(Module):
         # Final event selection - SL and DL
         is_sl = 0
         is_dl = 0
-        is_sl = single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["single_lepton_event"])
-        is_dl = dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["dilepton_event"])        
+        is_sl_e = 0
+        is_sl_mu = 0
+        is_dl_ee = 0
+        is_dl_emu = 0
+        is_dl_mumu = 0
+
+        is_sl, is_sl_e, is_sl_mu = single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["single_lepton_event"])
+        is_dl, is_dl_ee, is_dl_emu, is_dl_mumu = dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["dilepton_event"])        
         if not is_sl and not is_dl:
             return False
         
         # Fill Histograms
         if is_sl:
             self.h_nevent_sl.Fill(1)
+            if is_sl_e:
+                self.h_nevent_sl_e.Fill(1)
+            elif is_sl_mu:
+                self.h_nevent_sl_mu.Fill(1)
             if len(electrons_tight_sel_index) == 1:
                 ele = electrons[electrons_tight_sel_index[0]]
                 self.h_sl_lepton0_pt.Fill(ele.pt)
@@ -144,6 +164,12 @@ class HH_bbWW_Analysis(Module):
                 self.h_sl_lepton0_eta.Fill(mu.eta)
         elif is_dl:
             self.h_nevent_dl.Fill(1)
+            if is_dl_ee:
+                self.h_nevent_dl_ee.Fill(1)
+            elif is_dl_emu:
+                self.h_nevent_dl_emu.Fill(1)
+            elif is_dl_mumu:
+                self.h_nevent_dl_mumu.Fill(1)
             if len(electrons_tight_sel_index) == 2:
                 ele1 = electrons[electrons_tight_sel_index[0]]
                 ele2 = electrons[electrons_tight_sel_index[1]]

@@ -169,13 +169,13 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
 
     if not is_sl_jet:
         is_sl = 0 
-    return is_sl
+    return is_sl, is_sl_e, is_sl_mu
 
 def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, cuts):       
     is_dl = 1
     is_dl_ee = 0
-    is_dl_mumu = 0
     is_dl_emu = 0
+    is_dl_mumu = 0
 
     # Check if event is Double Electron
     if len(electrons_tight_sel_index) == 2 and len(muons_tight_sel_index) == 0:
@@ -232,4 +232,4 @@ def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, el
 
     if not is_dl_jet:
         is_dl = 0 
-    return is_dl
+    return is_dl, is_dl_ee, is_dl_emu, is_dl_mumu
