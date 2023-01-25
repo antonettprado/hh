@@ -137,7 +137,7 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
     if not is_sl_e and not is_sl_mu:
         is_sl = 0    
     if not is_sl:
-        return is_sl
+        return is_sl, is_sl_e, is_sl_mu
 
     # Check tau veto
     is_sl_tau_veto = 0
@@ -146,7 +146,7 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
     if is_sl_tau_veto:
         is_sl = 0    
     if not is_sl:
-        return is_sl
+        return is_sl, is_sl_e, is_sl_mu
 
     # Check jets
     is_sl_jet = 0
@@ -219,7 +219,7 @@ def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, el
     if not is_dl_ee and not is_dl_mumu and not is_dl_emu:
         is_dl = 0    
     if not is_dl:
-        return is_dl
+        return is_dl, is_dl_ee, is_dl_emu, is_dl_mumu
 
     # Check jets
     is_dl_jet = 0
