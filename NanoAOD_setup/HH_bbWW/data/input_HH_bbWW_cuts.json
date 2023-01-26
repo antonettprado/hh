@@ -124,7 +124,7 @@
     },
     "dilepton_event":{
         "dl_leading_pt": 25,
-        "sl_subleading_pt": 15
+        "dl_subleading_pt": 15
     }
 }
 
