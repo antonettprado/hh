@@ -2,7 +2,7 @@ import sys, os, glob
 import argparse
 import ROOT
 import json
-from HH_bbWW_selection_funcs import *
+from HH_bbWW_functions import *
 from pathlib import Path
 
 import warnings 
@@ -10,6 +10,9 @@ warnings.filterwarnings("ignore")
 
 helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_cpp_functions.cc")
 ROOT.gInterpreter.ProcessLine('#include "{}"'.format(helper_func_path))
+
+opts = ROOT.RDF.RSnapshotOptions()
+opts.fMode = "UPDATE"
 
 if __name__ == "__main__":
 
@@ -38,9 +41,7 @@ if __name__ == "__main__":
     for s in input_json_file[args.sample][args.year]:
         df_list.append(ROOT.RDataFrame("Events", s))
 
-    ROOT.justprint()
-    a = ROOT.A(123)
-    ROOT.printA(a)
+    cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
     print("\nRunning HH bbWW event selection for %s sample: %s for year %s"%(args.type, args.sample, args.year))
 
@@ -48,51 +49,42 @@ if __name__ == "__main__":
 
         print("1) Basic Event Selection ---------------------------------")
         df = df.Filter("PV_npvsGood>=1")    # Primary collision vertex
-        print("after first filter")
         df = met_filter(df, args.type)
 
         print("2) Electron Selection ------------------------------------")
-        df = df.Define("loose_e",   "Electron_pt>7  && Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 &&                                                      Electron_lostHits<=1 && Electron_mvaFall17V2noIso_WPL==1")
-        df = df.Define("fakeable_e","Electron_pt>10 && Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_hoe<0.10 && Electron_eInvMinusPInv>-0.04 && Electron_lostHits==0 && Electron_mvaFall17V2noIso_WP90==1 && Electron_jetRelIso<0.7")
-        df = df.Define("tight_e",   "Electron_pt>10 && Electron_eta<2.5 && Electron_dxy<0.05 && Electron_dz<0.1 && Electron_sip3d < 8 && Electron_hoe<0.10 && Electron_eInvMinusPInv>-0.04 && Electron_lostHits==0 && Electron_mvaFall17V2noIso_WPL==1")
-        # df.Display({"loose_e","fakeable_e","tight_e"},20).Print()
+        df = select_e_loose(df, cuts["electrons_loose"])
+        df = select_e_fakeable(df, cuts["electrons_fakeable"])
+        df = select_e_tight(df, cuts["electrons_tight"])
 
         print("3) Muon Selection ----------------------------------------")
-        df = df.Define("loose_mu", "Muon_pt > 5 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_looseId==1")
-        df = df.Define("fakeable_mu", "Muon_pt > 10 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_looseId==1 && Muon_jetRelIso<0.8")
-        df = df.Define("tight_mu", "Muon_pt > 10 && Muon_eta<2.4 && Muon_dxy<0.05 && Muon_dz<0.1 && Muon_sip3d < 8 && Muon_mediumId==1")
+        df = select_mu_loose(df, cuts["muons_loose"])
+        df = select_mu_fakeable(df, cuts["muons_fakeable"])
+        df = select_mu_tight(df, cuts["muons_tight"])
+
+        print("4) Lepton Selection -------------------------------------")
+        df = select_leptons(df)
 
         print("5) AK4 Jet Selection ------------------------------------")
-        df = df.Define("AK4","Jet_pt>25 && Jet_eta<2.4")
-        df = df.Define("VBF_Jet", "AK4 && Jet_pt>30 && Jet_eta<4.7")
-        df = df.Define("AK4_eta","Jet_eta[AK4]")
-        df = df.Define("AK4_phi","Jet_phi[AK4]")
-        df = df.Define("nAK4", "Sum(AK4)")
+        df = select_AK4_jets(df, cuts["ak4_jets"])
 
         print("6) AK8 Jet Selection ------------------------------------")
-        df = df.Define("AK8", "FatJet_pt>200 && FatJet_eta<2.4 && FatJet_msoftdrop>30 && FatJet_msoftdrop<210 ")
-        df = df.Define("AK8_eta","FatJet_eta[AK8]")
-        df = df.Define("AK8_phi","FatJet_phi[AK8]")
-        df = df.Define("nAK8", "Sum(AK8)")
-
-        df = df.Define("deltaR_jets", "deltaR_values(AK8_eta, AK4_eta, AK8_phi, AK4_phi)")
+        df = select_AK8_jets(df, cuts["ak8_jets"])
 
         print("7) Final Event Selection ---------------------------------")
         df_sl = df    
         df_dl = df
-        df_sl = selection_sl_channel(df_sl, args.year)
+        df_sl = select_sl_channel(df_sl, cuts["single_lepton_event"], args.year)
         df_sl.Report().Print()
-        
-        df_dl = selection_dl_channel(df_dl, args.year)
+        df_dl = select_dl_channel(df_dl, cuts["dilepton_event"], args.year)
         df_dl.Report().Print()
 
+        print("8) Saving to root file ----------------------------------")
+        df_sl.Snapshot("sl","outputFile.root")
+        df_dl.Snapshot("dl","outputFile.root", "", opts)
 
-        # print("8) Plotting -------------------------------------------------")
-        # h = df_sl.Histo1D("nMuon")
-        # c = ROOT.TCanvas()  
-        # h.Draw()
-        # c.SaveAs("nMuon.png")
-        # print("Saved figure to nMuon.png")
+    print("Event selections: COMPLETED")
+
+        
 
 
 
