@@ -120,6 +120,9 @@ class HH_bbWW_Analysis(Module):
         # Select AK8 btags
         ak8_btag_sel_clean_index = ak8_btag_selection(ak8_jets, ak8_subjets, ak8_jet_sel_clean_index, self.cuts["ak8_jets"])
 
+        # TO DO: Select AK4 VBF jets
+        # TO DO: Clean AK4 VBF jets
+
         # MET and MHT
         met_pt = met.pt
         met_phi = met.phi
