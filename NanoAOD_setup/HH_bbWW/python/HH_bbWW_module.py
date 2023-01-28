@@ -82,7 +82,7 @@ class HH_bbWW_Analysis(Module):
         if self.event_counter <= 10:
             verbose = True
         if verbose:
-            print ("\n\nEvent: %d"%self.event_counter)
+            print ("\n\n\nEvent: %d"%self.event_counter)
         
         ## PV Selection
         pass_pv_sel = pv_selection(pv)
@@ -97,6 +97,7 @@ class HH_bbWW_Analysis(Module):
             return False
         if verbose:
             print ("  MET Filter Selection Pass")
+            print ("")
 
         # Select Electrons
         electrons_basic_sel_index = electron_basic_selection(electrons)
@@ -163,6 +164,7 @@ class HH_bbWW_Analysis(Module):
             print (pt_string)
             print (eta_string)
             print (id_string)
+            print ("")
         
         # Select Muons
         muons_basic_sel_index = muon_basic_selection(muons)
@@ -229,6 +231,7 @@ class HH_bbWW_Analysis(Module):
             print (pt_string)
             print (eta_string)
             print (id_string)
+            print ("")
 
         # Select Taus
         tau_sel_index = tau_selection(taus, self.cuts["taus"])
@@ -270,6 +273,7 @@ class HH_bbWW_Analysis(Module):
             print (pt_string)
             print (eta_string)
             print (id_string)
+            print ("")
 
         # Select AK4 Jets
         ak4_jet_sel_index = ak4_jet_selection(ak4_jets, self.cuts["ak4_jets"])
@@ -284,7 +288,7 @@ class HH_bbWW_Analysis(Module):
             for jet in ak4_jets:
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                id_string += "%d  "%jet.jetIdx
+                id_string += "%d  "%jet.jetId
                 deepjet_string += "%.4f"%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
@@ -299,7 +303,7 @@ class HH_bbWW_Analysis(Module):
                 jet = ak4_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                id_string += "%d  "%jet.jetIdx
+                id_string += "%d  "%jet.jetId
                 deepjet_string += "%.4f"%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
@@ -314,12 +318,13 @@ class HH_bbWW_Analysis(Module):
                 jet = ak4_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                id_string += "%d  "%jet.jetIdx
+                id_string += "%d  "%jet.jetId
                 deepjet_string += "%.4f"%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
             print (id_string)
             print (deepjet_string)
+            print ("")
 
         # Select AK4 btags
         ak4_btag_sel_clean_index = ak4_btag_selection(ak4_jets, ak4_jet_sel_clean_index, self.cuts["ak4_jets"])
@@ -333,12 +338,13 @@ class HH_bbWW_Analysis(Module):
                 jet = ak4_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                id_string += "%d  "%jet.jetIdx
+                id_string += "%d  "%jet.jetId
                 deepjet_string += "%.4f"%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
             print (id_string)
             print (deepjet_string)
+            print ("")
 
         # Select AK8 jets
         ak8_jet_sel_index = ak8_jet_selection(ak8_jets, ak8_subjets, self.cuts["ak8_jets"])
@@ -359,12 +365,12 @@ class HH_bbWW_Analysis(Module):
             for jet in ak8_jets:
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetId1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetId1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetId2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetId2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -392,12 +398,12 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetId1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetId1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetId2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetId2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -425,12 +431,12 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetId1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetId1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetId2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetId2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -443,7 +449,7 @@ class HH_bbWW_Analysis(Module):
             print (msd_string)
             print (tau21_string)
             print (subjet2_deepjet_string)
-            
+            print ("")
 
         # Select AK8 btags
         ak8_btag_sel_clean_index = ak8_btag_selection(ak8_jets, ak8_subjets, ak8_jet_sel_clean_index, self.cuts["ak8_jets"])
@@ -463,12 +469,12 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetId1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetId1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetId2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetId2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetId2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -481,6 +487,7 @@ class HH_bbWW_Analysis(Module):
             print (msd_string)
             print (tau21_string)
             print (subjet2_deepjet_string)
+            print ("")
 
         # Select AK4 VBF jets
         ak4_vbf_jet_sel_index = ak4_jet_selection(ak4_jets, self.cuts["ak4_vbf_jets"], "ak4_vbf")
@@ -505,6 +512,9 @@ class HH_bbWW_Analysis(Module):
         pass_mll_cut = mll_selection(electrons, muons, electrons_loose_sel_index, muons_loose_sel_index)
         if not pass_mll_cut:
             return False
+        if verbose:
+            print ("  Mll Selection Pass")
+            print ("")
 
         # Final event selection - SL and DL
         is_sl = 0
@@ -522,6 +532,7 @@ class HH_bbWW_Analysis(Module):
         if verbose:
             print ("  is SL: %d\n    is SL_e: %d, is SL_mu"%(is_sl, is_sl_e, is_sl_mu))
             print ("  is DL: %d\n    is DL_ee: %d, is DL_emu: %d, is DL_mumu"%(is_dl, is_dl_ee, is_dl_emu, is_dl_mumu))
+            print ("")
 
         # Fill Histograms
         if is_sl:
