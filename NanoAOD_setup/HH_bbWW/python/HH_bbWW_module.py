@@ -21,7 +21,7 @@ class HH_bbWW_Analysis(Module):
     def beginJob(self,histFile=None,histDirName=None):
         Module.beginJob(self,histFile,histDirName)
 
-        event_counter = 0
+        self.event_counter = 0
         self.cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
         self.h_nevent_total = ROOT.TH1F("h_nevent_total" , ";;Nr. of Events" , 2, 0, 2)
@@ -77,9 +77,9 @@ class HH_bbWW_Analysis(Module):
         
         # Basic event selection
         self.h_nevent_total.Fill(1)
-        event_counter += 1
+        self.event_counter += 1
         verbose = False
-        if event_counter <= 10:
+        if self.event_counter <= 10:
             verbose = True
         if verbose:
             print ("\n\nEvent: %d"%event_counter)
