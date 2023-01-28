@@ -234,22 +234,253 @@ class HH_bbWW_Analysis(Module):
         tau_sel_index = tau_selection(taus, self.cuts["taus"])
         tau_sel_clean_index = tau_cleaning(taus, tau_sel_index, electrons, electrons_fakeable_sel_index, 0.3)
         tau_sel_clean_index = tau_cleaning(taus, tau_sel_clean_index, muons, muons_fakeable_sel_index, 0.3)
+        if verbose:
+            print ("  All Taus:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
+            for tau in taus:
+                pt_string += "%.2f  "%tau.pt
+                eta_string += "%.2f  "%tau.eta
+                id_string += "%d  "%tau.idDeepTau2017v2p1VSjet
+            print (pt_string)
+            print (eta_string)
+            print (id_string)
+            print ("  Selected Taus:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
+            for i in tau_sel_index:
+                tau = taus[i]
+                pt_string += "%.2f  "%tau.pt
+                eta_string += "%.2f  "%tau.eta
+                id_string += "%d  "%tau.idDeepTau2017v2p1VSjet
+            print (pt_string)
+            print (eta_string)
+            print (id_string)
+            print ("  Cleaned Taus:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
+            for i in tau_sel_clean_index:
+                tau = taus[i]
+                pt_string += "%.2f  "%tau.pt
+                eta_string += "%.2f  "%tau.eta
+                id_string += "%d  "%tau.idDeepTau2017v2p1VSjet
+            print (pt_string)
+            print (eta_string)
+            print (id_string)
 
         # Select AK4 Jets
         ak4_jet_sel_index = ak4_jet_selection(ak4_jets, self.cuts["ak4_jets"])
         ak4_jet_sel_clean_index = ak4_jet_cleaning(ak4_jets, ak4_jet_sel_index, electrons, electrons_fakeable_sel_index)
         ak4_jet_sel_clean_index = ak4_jet_cleaning(ak4_jets, ak4_jet_sel_clean_index, muons, muons_fakeable_sel_index)
+        if verbose:
+            print ("  All AK4 Jets:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            id_string = "    id WP_T: "
+            deepjet_string = "    deepjet: "
+            for jet in ak4_jets:
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                id_string += "%d  "%jet.jetIdx
+                deepjet_string += "%.4f"%jet.btagDeepFlavB
+            print (pt_string)
+            print (eta_string)
+            print (id_string)
+            print (deepjet_string)
+            print ("  Selected AK4 jets:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            id_string = "    id WP_T: "
+            deepjet_string = "    deepjet: "
+            for i in ak4_jet_sel_index:
+                jet = ak4_jets[i]
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                id_string += "%d  "%jet.jetIdx
+                deepjet_string += "%.4f"%jet.btagDeepFlavB
+            print (pt_string)
+            print (eta_string)
+            print (id_string)
+            print (deepjet_string)
+            print ("  Cleaned AK4 jets:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            id_string = "    id WP_T: "
+            deepjet_string = "    deepjet: "
+            for i in ak4_jet_sel_clean_index:
+                jet = ak4_jets[i]
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                id_string += "%d  "%jet.jetIdx
+                deepjet_string += "%.4f"%jet.btagDeepFlavB
+            print (pt_string)
+            print (eta_string)
+            print (id_string)
+            print (deepjet_string)
 
         # Select AK4 btags
         ak4_btag_sel_clean_index = ak4_btag_selection(ak4_jets, ak4_jet_sel_clean_index, self.cuts["ak4_jets"])
+        if verbose:
+            print ("  Cleaned AK4 b-tags:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            id_string = "    id WP_T: "
+            deepjet_string = "    deepjet: "
+            for i in ak4_btag_sel_clean_index:
+                jet = ak4_jets[i]
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                id_string += "%d  "%jet.jetIdx
+                deepjet_string += "%.4f"%jet.btagDeepFlavB
+            print (pt_string)
+            print (eta_string)
+            print (id_string)
+            print (deepjet_string)
 
         # Select AK8 jets
         ak8_jet_sel_index = ak8_jet_selection(ak8_jets, ak8_subjets, self.cuts["ak8_jets"])
         ak8_jet_sel_clean_index = ak8_jet_cleaning(ak8_jets, ak8_jet_sel_index, electrons, electrons_fakeable_sel_index, 0.8)
         ak8_jet_sel_clean_index = ak8_jet_cleaning(ak8_jets, ak8_jet_sel_clean_index, muons, muons_fakeable_sel_index, 0.8)
+        if verbose:
+            print ("  All AK8 Jets:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            subjet1_pt_string = "    subjet1 pT: "
+            subjet1_eta_string = "    subjet1 eta:"
+            subjet1_deepjet_string = "    subjet1 deepjet:"
+            subjet2_pt_string = "    subjet2 pT: "
+            subjet2_eta_string = "    subjet2 eta:"
+            subjet2_deepjet_string = "    subjet2 deepjet:"
+            msd_string = "    msd: "
+            tau21_string = "tau2/tau1: "            
+            for jet in ak8_jets:
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f"%jet.msoftdrop
+                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+            print (pt_string)
+            print (eta_string)
+            print (subjet1_pt_string)
+            print (subjet1_eta_string)
+            print (subjet1_deepjet_string)
+            print (subjet2_pt_string)
+            print (subjet2_eta_string)
+            print (msd_string)
+            print (tau21_string)
+            print (subjet2_deepjet_string)
+            print ("  Selected AK8 jets:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            subjet1_pt_string = "    subjet1 pT: "
+            subjet1_eta_string = "    subjet1 eta:"
+            subjet1_deepjet_string = "    subjet1 deepjet:"
+            subjet2_pt_string = "    subjet2 pT: "
+            subjet2_eta_string = "    subjet2 eta:"
+            subjet2_deepjet_string = "    subjet2 deepjet:"
+            msd_string = "    msd: "
+            tau21_string = "tau2/tau1: "
+            for i in ak8_jet_sel_index:
+                jet = ak8_jets[i]
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f"%jet.msoftdrop
+                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+            print (pt_string)
+            print (eta_string)
+            print (subjet1_pt_string)
+            print (subjet1_eta_string)
+            print (subjet1_deepjet_string)
+            print (subjet2_pt_string)
+            print (subjet2_eta_string)
+            print (msd_string)
+            print (tau21_string)
+            print (subjet2_deepjet_string)
+            print ("  Cleaned AK8 jets:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            subjet1_pt_string = "    subjet1 pT: "
+            subjet1_eta_string = "    subjet1 eta:"
+            subjet1_deepjet_string = "    subjet1 deepjet:"
+            subjet2_pt_string = "    subjet2 pT: "
+            subjet2_eta_string = "    subjet2 eta:"
+            subjet2_deepjet_string = "    subjet2 deepjet:"
+            msd_string = "    msd: "
+            tau21_string = "tau2/tau1: "
+            for i in ak8_jet_sel_clean_index:
+                jet = ak8_jets[i]
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f"%jet.msoftdrop
+                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+            print (pt_string)
+            print (eta_string)
+            print (subjet1_pt_string)
+            print (subjet1_eta_string)
+            print (subjet1_deepjet_string)
+            print (subjet2_pt_string)
+            print (subjet2_eta_string)
+            print (msd_string)
+            print (tau21_string)
+            print (subjet2_deepjet_string)
+            
 
         # Select AK8 btags
         ak8_btag_sel_clean_index = ak8_btag_selection(ak8_jets, ak8_subjets, ak8_jet_sel_clean_index, self.cuts["ak8_jets"])
+        if verbose:
+            print ("  Cleaned AK8 btags:")
+            pt_string = "    pT: "
+            eta_string = "    eta: "
+            subjet1_pt_string = "    subjet1 pT: "
+            subjet1_eta_string = "    subjet1 eta:"
+            subjet1_deepjet_string = "    subjet1 deepjet:"
+            subjet2_pt_string = "    subjet2 pT: "
+            subjet2_eta_string = "    subjet2 eta:"
+            subjet2_deepjet_string = "    subjet2 deepjet:"
+            msd_string = "    msd: "
+            tau21_string = "tau2/tau1: "
+            for i in ak8_btag_sel_clean_index:
+                jet = ak8_jets[i]
+                pt_string += "%.2f  "%jet.pt
+                eta_string += "%.2f  "%jet.eta
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f"%jet.msoftdrop
+                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+            print (pt_string)
+            print (eta_string)
+            print (subjet1_pt_string)
+            print (subjet1_eta_string)
+            print (subjet1_deepjet_string)
+            print (subjet2_pt_string)
+            print (subjet2_eta_string)
+            print (msd_string)
+            print (tau21_string)
+            print (subjet2_deepjet_string)
 
         # Select AK4 VBF jets
         ak4_vbf_jet_sel_index = ak4_jet_selection(ak4_jets, self.cuts["ak4_vbf_jets"], "ak4_vbf")
@@ -288,7 +519,10 @@ class HH_bbWW_Analysis(Module):
         is_dl, is_dl_ee, is_dl_emu, is_dl_mumu = dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["dilepton_event"])        
         if not is_sl and not is_dl:
             return False
-        
+        if verbose:
+            print ("  is SL: %d\n    is SL_e: %d, is SL_mu"%(is_sl, is_sl_e, is_sl_mu))
+            print ("  is DL: %d\n    is DL_ee: %d, is DL_emu: %d, is DL_mumu"%(is_dl, is_dl_ee, is_dl_emu, is_dl_mumu))
+
         # Fill Histograms
         if is_sl:
             self.h_nevent_sl.Fill(1)
