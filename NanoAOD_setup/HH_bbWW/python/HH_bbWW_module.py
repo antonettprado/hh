@@ -365,12 +365,12 @@ class HH_bbWW_Analysis(Module):
             for jet in ak8_jets:
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -398,12 +398,12 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -431,12 +431,12 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -469,12 +469,12 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subjetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subjetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subjetIdx2].btagDeepB
+                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
                 msd_string += "%.2f"%jet.msoftdrop
                 tau21_string += "%.2f"%(jet.tau2/jet.tau1)
             print (pt_string)
