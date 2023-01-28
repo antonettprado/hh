@@ -108,6 +108,7 @@ class HH_bbWW_Analysis(Module):
             print ("  All Electrons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for ele in electrons:
                 pt_string += "%.2f  "%ele.pt
@@ -115,54 +116,67 @@ class HH_bbWW_Analysis(Module):
                 id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Basic Selected Electrons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in electrons_basic_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                phi_string += "%.2f  "%ele.phi
                 id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Loose Selected Electrons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in electrons_loose_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                phi_string += "%.2f  "%ele.phi
                 id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Fakeable Selected Electrons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in electrons_fakeable_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                phi_string += "%.2f  "%ele.phi
                 id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Tight Selected Electrons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in electrons_tight_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                phi_string += "%.2f  "%ele.phi
                 id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("")
         
@@ -175,61 +189,76 @@ class HH_bbWW_Analysis(Module):
             print ("  All Muons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for mu in muons:
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                phi_string += "%.2f  "%mu.phi
                 id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Basic Selected Muons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in muons_basic_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                phi_string += "%.2f  "%mu.phi
                 id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Loose Selected Muons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in muons_loose_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                phi_string += "%.2f  "%mu.phi
                 id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Fakeable Selected Muons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in muons_fakeable_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                phi_string += "%.2f  "%mu.phi
                 id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Tight Selected Muons:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in muons_tight_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                phi_string += "%.2f  "%mu.phi
                 id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("")
 
@@ -241,37 +270,46 @@ class HH_bbWW_Analysis(Module):
             print ("  All Taus:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for tau in taus:
                 pt_string += "%.2f  "%tau.pt
                 eta_string += "%.2f  "%tau.eta
+                phi_string += "%.2f  "%tau.phi
                 id_string += "%d  "%tau.idDeepTau2017v2p1VSjet
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Selected Taus:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in tau_sel_index:
                 tau = taus[i]
                 pt_string += "%.2f  "%tau.pt
                 eta_string += "%.2f  "%tau.eta
+                phi_string += "%.2f  "%tau.phi
                 id_string += "%d  "%tau.idDeepTau2017v2p1VSjet
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("  Cleaned Taus:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_M: "
             for i in tau_sel_clean_index:
                 tau = taus[i]
                 pt_string += "%.2f  "%tau.pt
                 eta_string += "%.2f  "%tau.eta
+                phi_string += "%.2f  "%tau.phi
                 id_string += "%d  "%tau.idDeepTau2017v2p1VSjet
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print ("")
 
@@ -283,45 +321,54 @@ class HH_bbWW_Analysis(Module):
             print ("  All AK4 Jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_T: "
             deepjet_string = "    deepjet: "
             for jet in ak4_jets:
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
+                phi_string += "%.2f  "%jet.phi
                 id_string += "%d  "%jet.jetId
-                deepjet_string += "%.4f"%jet.btagDeepFlavB
+                deepjet_string += "%.4f  "%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print (deepjet_string)
             print ("  Selected AK4 jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_T: "
             deepjet_string = "    deepjet: "
             for i in ak4_jet_sel_index:
                 jet = ak4_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
+                phi_string += "%.2f  "%jet.phi
                 id_string += "%d  "%jet.jetId
-                deepjet_string += "%.4f"%jet.btagDeepFlavB
+                deepjet_string += "%.4f  "%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print (deepjet_string)
             print ("  Cleaned AK4 jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_T: "
             deepjet_string = "    deepjet: "
             for i in ak4_jet_sel_clean_index:
                 jet = ak4_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
+                phi_string += "%.2f  "%jet.phi
                 id_string += "%d  "%jet.jetId
-                deepjet_string += "%.4f"%jet.btagDeepFlavB
+                deepjet_string += "%.4f  "%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print (deepjet_string)
             print ("")
@@ -332,16 +379,19 @@ class HH_bbWW_Analysis(Module):
             print ("  Cleaned AK4 b-tags:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             id_string = "    id WP_T: "
             deepjet_string = "    deepjet: "
             for i in ak4_btag_sel_clean_index:
                 jet = ak4_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
+                phi_string += "%.2f  "%jet.phi
                 id_string += "%d  "%jet.jetId
-                deepjet_string += "%.4f"%jet.btagDeepFlavB
+                deepjet_string += "%.4f  "%jet.btagDeepFlavB
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (id_string)
             print (deepjet_string)
             print ("")
@@ -354,6 +404,7 @@ class HH_bbWW_Analysis(Module):
             print ("  All AK8 Jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             subjet1_pt_string = "    subjet1 pT: "
             subjet1_eta_string = "    subjet1 eta:"
             subjet1_deepjet_string = "    subjet1 deepjet:"
@@ -365,16 +416,18 @@ class HH_bbWW_Analysis(Module):
             for jet in ak8_jets:
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
-                msd_string += "%.2f"%jet.msoftdrop
-                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+                phi_string += "%.2f  "%jet.phi
+                subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f  "%jet.msoftdrop
+                tau21_string += "%.2f  "%(jet.tau2/jet.tau1)
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (subjet1_pt_string)
             print (subjet1_eta_string)
             print (subjet1_deepjet_string)
@@ -386,6 +439,7 @@ class HH_bbWW_Analysis(Module):
             print ("  Selected AK8 jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             subjet1_pt_string = "    subjet1 pT: "
             subjet1_eta_string = "    subjet1 eta:"
             subjet1_deepjet_string = "    subjet1 deepjet:"
@@ -398,16 +452,18 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
-                msd_string += "%.2f"%jet.msoftdrop
-                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+                phi_string += "%.2f  "%jet.phi
+                subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f  "%jet.msoftdrop
+                tau21_string += "%.2f  "%(jet.tau2/jet.tau1)
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (subjet1_pt_string)
             print (subjet1_eta_string)
             print (subjet1_deepjet_string)
@@ -419,6 +475,7 @@ class HH_bbWW_Analysis(Module):
             print ("  Cleaned AK8 jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             subjet1_pt_string = "    subjet1 pT: "
             subjet1_eta_string = "    subjet1 eta:"
             subjet1_deepjet_string = "    subjet1 deepjet:"
@@ -431,16 +488,18 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
-                msd_string += "%.2f"%jet.msoftdrop
-                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+                phi_string += "%.2f  "%jet.phi
+                subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f  "%jet.msoftdrop
+                tau21_string += "%.2f  "%(jet.tau2/jet.tau1)
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (subjet1_pt_string)
             print (subjet1_eta_string)
             print (subjet1_deepjet_string)
@@ -457,6 +516,7 @@ class HH_bbWW_Analysis(Module):
             print ("  Cleaned AK8 btags:")
             pt_string = "    pT: "
             eta_string = "    eta: "
+            phi_string = "    phi: "
             subjet1_pt_string = "    subjet1 pT: "
             subjet1_eta_string = "    subjet1 eta:"
             subjet1_deepjet_string = "    subjet1 deepjet:"
@@ -469,16 +529,18 @@ class HH_bbWW_Analysis(Module):
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
-                subjet1_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f"%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f"%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f"%ak8_subjets[jet.subJetIdx2].btagDeepB
-                msd_string += "%.2f"%jet.msoftdrop
-                tau21_string += "%.2f"%(jet.tau2/jet.tau1)
+                phi_string += "%.2f  "%jet.phi
+                subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
+                subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
+                subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
+                subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
+                subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
+                subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
+                msd_string += "%.2f  "%jet.msoftdrop
+                tau21_string += "%.2f  "%(jet.tau2/jet.tau1)
             print (pt_string)
             print (eta_string)
+            print (phi_string)
             print (subjet1_pt_string)
             print (subjet1_eta_string)
             print (subjet1_deepjet_string)
