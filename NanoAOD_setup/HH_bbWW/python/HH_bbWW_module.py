@@ -21,6 +21,7 @@ class HH_bbWW_Analysis(Module):
     def beginJob(self,histFile=None,histDirName=None):
         Module.beginJob(self,histFile,histDirName)
 
+        event_counter = 0
         self.cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
         self.h_nevent_total = ROOT.TH1F("h_nevent_total" , ";;Nr. of Events" , 2, 0, 2)
@@ -63,7 +64,6 @@ class HH_bbWW_Analysis(Module):
     def analyze(self, event):
 
         # Read objects from NanoAOD
-        event_obj = Object(event, "event")
         pv = Object(event, "PV")
         flag = Object(event, "Flag")
         hlt = Object(event, "HLT")
@@ -76,31 +76,129 @@ class HH_bbWW_Analysis(Module):
         met = Object(event, "MET")
         
         # Basic event selection
-        event_nr = event_obj.event
         self.h_nevent_total.Fill(1)
-        print (event_nr)
+        event_counter += 1
+        verbose = False
+        if event_counter <= 10:
+            verbose = True
+        if verbose:
+            print ("\n\nEvent: %d"%event_counter)
         
         ## PV Selection
         pass_pv_sel = pv_selection(pv)
         if not pass_pv_sel:
             return False
+        if verbose:
+            print ("  PV Selection Pass")
 
         ## MET filter Selection
         pass_met_filter = met_filter_selection(flag)
         if not pass_met_filter:
             return False
+        if verbose:
+            print ("  MET Filter Selection Pass")
 
         # Select Electrons
         electrons_basic_sel_index = electron_basic_selection(electrons)
         electrons_loose_sel_index = electron_selection(electrons, ak4_jets, electrons_basic_sel_index, self.cuts["electrons_loose"])
         electrons_fakeable_sel_index = electron_selection(electrons, ak4_jets, electrons_basic_sel_index, self.cuts["electrons_fakeable"])
         electrons_tight_sel_index = electron_selection(electrons, ak4_jets, electrons_basic_sel_index, self.cuts["electrons_tight"])
+        if verbose:
+            print ("  All Electrons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for ele in electrons:
+                pt_string += "%.2f  "ele.pt
+                eta_string += "%.2f  "ele.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Basic Selected Electrons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in electrons_basic_sel_index:
+                ele = electrons[i]
+                pt_string += "%.2f  "ele.pt
+                eta_string += "%.2f  "ele.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Loose Selected Electrons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in electrons_loose_sel_index:
+                ele = electrons[i]
+                pt_string += "%.2f  "ele.pt
+                eta_string += "%.2f  "ele.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Fakeable Selected Electrons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in electrons_fakeable_sel_index:
+                ele = electrons[i]
+                pt_string += "%.2f  "ele.pt
+                eta_string += "%.2f  "ele.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Tight Selected Electrons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in electrons_tight_sel_index:
+                ele = electrons[i]
+                pt_string += "%.2f  "ele.pt
+                eta_string += "%.2f  "ele.eta
+            print (pt_string)
+            print (eta_string)
         
         # Select Muons
         muons_basic_sel_index = muon_basic_selection(muons)
         muons_loose_sel_index = muon_selection(muons, ak4_jets, muons_basic_sel_index, self.cuts["muons_loose"])
         muons_fakeable_sel_index = muon_selection(muons, ak4_jets, muons_basic_sel_index, self.cuts["muons_fakeable"])
         muons_tight_sel_index = muon_selection(muons, ak4_jets, muons_basic_sel_index, self.cuts["muons_tight"])
+        if verbose:
+            print ("  All Muons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for mu in muons:
+                pt_string += "%.2f  "mu.pt
+                eta_string += "%.2f  "mu.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Basic Selected Muons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in muons_basic_sel_index:
+                mu = muons[i]
+                pt_string += "%.2f  "mu.pt
+                eta_string += "%.2f  "mu.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Loose Selected Muons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in muons_loose_sel_index:
+                mu = muons[i]
+                pt_string += "%.2f  "mu.pt
+                eta_string += "%.2f  "mu.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Fakeable Selected Muons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in muons_fakeable_sel_index:
+                mu = muons[i]
+                pt_string += "%.2f  "mu.pt
+                eta_string += "%.2f  "mu.eta
+            print (pt_string)
+            print (eta_string)
+            print ("  Tight Selected Muons:")
+            pt_string = "    pT: "
+            eta_string = "    eta:"
+            for i in muons_tight_sel_index:
+                mu = muons[i]
+                pt_string += "%.2f  "mu.pt
+                eta_string += "%.2f  "mu.eta
+            print (pt_string)
+            print (eta_string)
 
         # Select Taus
         tau_sel_index = tau_selection(taus, self.cuts["taus"])
