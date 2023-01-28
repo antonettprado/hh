@@ -106,48 +106,63 @@ class HH_bbWW_Analysis(Module):
         if verbose:
             print ("  All Electrons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for ele in electrons:
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Basic Selected Electrons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in electrons_basic_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Loose Selected Electrons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in electrons_loose_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Fakeable Selected Electrons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in electrons_fakeable_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Tight Selected Electrons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in electrons_tight_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
+                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
             print (pt_string)
             print (eta_string)
+            print (id_string)
         
         # Select Muons
         muons_basic_sel_index = muon_basic_selection(muons)
@@ -157,48 +172,63 @@ class HH_bbWW_Analysis(Module):
         if verbose:
             print ("  All Muons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for mu in muons:
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Basic Selected Muons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in muons_basic_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Loose Selected Muons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in muons_loose_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Fakeable Selected Muons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in muons_fakeable_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (id_string)
             print ("  Tight Selected Muons:")
             pt_string = "    pT: "
-            eta_string = "    eta:"
+            eta_string = "    eta: "
+            id_string = "    id WP_M: "
             for i in muons_tight_sel_index:
                 mu = muons[i]
                 pt_string += "%.2f  "%mu.pt
                 eta_string += "%.2f  "%mu.eta
+                id_string += "%d  "%mu.mediumId
             print (pt_string)
             print (eta_string)
+            print (id_string)
 
         # Select Taus
         tau_sel_index = tau_selection(taus, self.cuts["taus"])
