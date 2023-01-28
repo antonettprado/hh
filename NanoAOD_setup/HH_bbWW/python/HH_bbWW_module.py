@@ -108,8 +108,8 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta:"
             for ele in electrons:
-                pt_string += "%.2f  "ele.pt
-                eta_string += "%.2f  "ele.eta
+                pt_string += "%.2f  "%ele.pt
+                eta_string += "%.2f  "%ele.eta
             print (pt_string)
             print (eta_string)
             print ("  Basic Selected Electrons:")
@@ -117,8 +117,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in electrons_basic_sel_index:
                 ele = electrons[i]
-                pt_string += "%.2f  "ele.pt
-                eta_string += "%.2f  "ele.eta
+                pt_string += "%.2f  "%ele.pt
+                eta_string += "%.2f  "%ele.eta
             print (pt_string)
             print (eta_string)
             print ("  Loose Selected Electrons:")
@@ -126,8 +126,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in electrons_loose_sel_index:
                 ele = electrons[i]
-                pt_string += "%.2f  "ele.pt
-                eta_string += "%.2f  "ele.eta
+                pt_string += "%.2f  "%ele.pt
+                eta_string += "%.2f  "%ele.eta
             print (pt_string)
             print (eta_string)
             print ("  Fakeable Selected Electrons:")
@@ -135,8 +135,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in electrons_fakeable_sel_index:
                 ele = electrons[i]
-                pt_string += "%.2f  "ele.pt
-                eta_string += "%.2f  "ele.eta
+                pt_string += "%.2f  "%ele.pt
+                eta_string += "%.2f  "%ele.eta
             print (pt_string)
             print (eta_string)
             print ("  Tight Selected Electrons:")
@@ -144,8 +144,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in electrons_tight_sel_index:
                 ele = electrons[i]
-                pt_string += "%.2f  "ele.pt
-                eta_string += "%.2f  "ele.eta
+                pt_string += "%.2f  "%ele.pt
+                eta_string += "%.2f  "%ele.eta
             print (pt_string)
             print (eta_string)
         
@@ -159,8 +159,8 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta:"
             for mu in muons:
-                pt_string += "%.2f  "mu.pt
-                eta_string += "%.2f  "mu.eta
+                pt_string += "%.2f  "%mu.pt
+                eta_string += "%.2f  "%mu.eta
             print (pt_string)
             print (eta_string)
             print ("  Basic Selected Muons:")
@@ -168,8 +168,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in muons_basic_sel_index:
                 mu = muons[i]
-                pt_string += "%.2f  "mu.pt
-                eta_string += "%.2f  "mu.eta
+                pt_string += "%.2f  "%mu.pt
+                eta_string += "%.2f  "%mu.eta
             print (pt_string)
             print (eta_string)
             print ("  Loose Selected Muons:")
@@ -177,8 +177,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in muons_loose_sel_index:
                 mu = muons[i]
-                pt_string += "%.2f  "mu.pt
-                eta_string += "%.2f  "mu.eta
+                pt_string += "%.2f  "%mu.pt
+                eta_string += "%.2f  "%mu.eta
             print (pt_string)
             print (eta_string)
             print ("  Fakeable Selected Muons:")
@@ -186,8 +186,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in muons_fakeable_sel_index:
                 mu = muons[i]
-                pt_string += "%.2f  "mu.pt
-                eta_string += "%.2f  "mu.eta
+                pt_string += "%.2f  "%mu.pt
+                eta_string += "%.2f  "%mu.eta
             print (pt_string)
             print (eta_string)
             print ("  Tight Selected Muons:")
@@ -195,8 +195,8 @@ class HH_bbWW_Analysis(Module):
             eta_string = "    eta:"
             for i in muons_tight_sel_index:
                 mu = muons[i]
-                pt_string += "%.2f  "mu.pt
-                eta_string += "%.2f  "mu.eta
+                pt_string += "%.2f  "%mu.pt
+                eta_string += "%.2f  "%mu.eta
             print (pt_string)
             print (eta_string)
 
