@@ -107,6 +107,12 @@
         "id": "WP_T",
         "btag": "deepjet_WP_M"
     },
+    "ak4_vbf_jets":{
+        "min_pt": 30,
+        "min_pt_high": 60,
+        "max_eta": 4.7,
+        "id": "WP_T"
+    },
     "ak8_jets":{
         "min_pt": 200,
         "max_eta": 2.4,
