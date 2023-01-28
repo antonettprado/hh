@@ -63,6 +63,7 @@ class HH_bbWW_Analysis(Module):
     def analyze(self, event):
 
         # Read objects from NanoAOD
+        event_obj = Object(event, "event")
         pv = Object(event, "PV")
         flag = Object(event, "Flag")
         hlt = Object(event, "HLT")
@@ -75,7 +76,9 @@ class HH_bbWW_Analysis(Module):
         met = Object(event, "MET")
         
         # Basic event selection
+        event_nr = event_obj.event
         self.h_nevent_total.Fill(1)
+        print (event_nr)
         
         ## PV Selection
         pass_pv_sel = pv_selection(pv)
