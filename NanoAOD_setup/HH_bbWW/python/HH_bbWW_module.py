@@ -412,7 +412,7 @@ class HH_bbWW_Analysis(Module):
             subjet2_eta_string = "    subjet2 eta:"
             subjet2_deepjet_string = "    subjet2 deepjet:"
             msd_string = "    msd: "
-            tau21_string = "tau2/tau1: "            
+            tau21_string = "  tau2/tau1: "            
             for jet in ak8_jets:
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
@@ -447,7 +447,7 @@ class HH_bbWW_Analysis(Module):
             subjet2_eta_string = "    subjet2 eta:"
             subjet2_deepjet_string = "    subjet2 deepjet:"
             msd_string = "    msd: "
-            tau21_string = "tau2/tau1: "
+            tau21_string = "  tau2/tau1: "
             for i in ak8_jet_sel_index:
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
@@ -483,7 +483,7 @@ class HH_bbWW_Analysis(Module):
             subjet2_eta_string = "    subjet2 eta:"
             subjet2_deepjet_string = "    subjet2 deepjet:"
             msd_string = "    msd: "
-            tau21_string = "tau2/tau1: "
+            tau21_string = "  tau2/tau1: "
             for i in ak8_jet_sel_clean_index:
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
@@ -524,7 +524,7 @@ class HH_bbWW_Analysis(Module):
             subjet2_eta_string = "    subjet2 eta:"
             subjet2_deepjet_string = "    subjet2 deepjet:"
             msd_string = "    msd: "
-            tau21_string = "tau2/tau1: "
+            tau21_string = "  tau2/tau1: "
             for i in ak8_btag_sel_clean_index:
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
