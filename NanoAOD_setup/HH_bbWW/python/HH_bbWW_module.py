@@ -530,8 +530,8 @@ class HH_bbWW_Analysis(Module):
         if not is_sl and not is_dl:
             return False
         if verbose:
-            print ("  is SL: %d\n    is SL_e: %d, is SL_mu"%(is_sl, is_sl_e, is_sl_mu))
-            print ("  is DL: %d\n    is DL_ee: %d, is DL_emu: %d, is DL_mumu"%(is_dl, is_dl_ee, is_dl_emu, is_dl_mumu))
+            print ("  is SL: %d\n    is SL_e: %d, is SL_mu: %d"%(is_sl, is_sl_e, is_sl_mu))
+            print ("  is DL: %d\n    is DL_ee: %d, is DL_emu: %d, is DL_mumu: %d"%(is_dl, is_dl_ee, is_dl_emu, is_dl_mumu))
             print ("")
 
         # Fill Histograms
