@@ -120,8 +120,16 @@ class HH_bbWW_Analysis(Module):
         # Select AK8 btags
         ak8_btag_sel_clean_index = ak8_btag_selection(ak8_jets, ak8_subjets, ak8_jet_sel_clean_index, self.cuts["ak8_jets"])
 
-        # TO DO: Select AK4 VBF jets
-        # TO DO: Clean AK4 VBF jets
+        # Select AK4 VBF jets
+        ak4_vbf_jet_sel_index = ak4_jet_selection(ak4_jets, self.cuts["ak4_vbf_jets"], "ak4_vbf")
+        ak4_vbf_jet_sel_clean_index = ak4_jet_cleaning(ak4_jets, ak4_vbf_jet_sel_index, electrons, electrons_fakeable_sel_index)
+        ak4_vbf_jet_sel_clean_index = ak4_jet_cleaning(ak4_jets, ak4_vbf_jet_sel_clean_index, muons, muons_fakeable_sel_index)
+        ak4_vbf_jet_sel_clean_index = ak4_jet_jet_cleaning(ak4_jets, ak4_vbf_jet_sel_clean_index, ak8_jets, ak8_btag_sel_clean_index, 1.2)
+        ak4_vbf_jet_sel_clean_index = ak4_jet_jet_cleaning(ak4_jets, ak4_vbf_jet_sel_clean_index, ak4_jets, ak4_btag_sel_clean_index, 0.8)
+        ak4_vbf_jet_sel_clean_resonant_index = ak4_vbf_jet_cleaning(ak4_jets, ak4_vbf_jet_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, 0.4, "resonant")
+        ak4_vbf_jet_sel_clean_nonresonant_index = ak4_vbf_jet_cleaning(ak4_jets, ak4_vbf_jet_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, 0.4, "nonresonant")
+
+        # Clean AK4 VBF jets
 
         # MET and MHT
         met_pt = met.pt

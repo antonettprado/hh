@@ -174,7 +174,7 @@ def tau_cleaning(taus, tau_sel_index, leptons, leptons_sel_index, deltar_cut=0.3
             tau_sel_clean_index.append(i)
     return tau_sel_clean_index
 
-def ak4_jet_selection(ak4_jets, cuts):
+def ak4_jet_selection(ak4_jets, cuts, type="ak4"):
     ak4_jets_final_sel_index = []
     for (i,jet) in enumerate(ak4_jets):
 
@@ -182,7 +182,11 @@ def ak4_jet_selection(ak4_jets, cuts):
             continue
         if abs(jet.eta) > cuts["max_eta"]:
             continue
-        
+        if type=="vbf_ak4":
+            if abs(jet.eta) > 2.7 and abs(jet.eta) < 3.0:
+                if jet.pt < cuts["min_pt_high"]:
+                    continue
+
         id_cut = -9999
         if cuts["id"] == "WP_L":
             id_cut = 1
@@ -230,6 +234,44 @@ def ak4_btag_selection(ak4_jets, ak4_jet_sel_clean_index, cuts):
         if btag > btag_cut_value:
             ak4_btags_final_sel_index.append(i)
     return ak4_btags_final_sel_index
+
+def ak4_jet_jet_cleaning(ak4_jets, ak4_jet_sel_index, btag_jets, btag_sel_index, deltar_cut):
+    ak4_jet_sel_clean_index = []
+    for i in ak4_jet_sel_index:
+        jet = ak4_jets[i]
+        deltar_match = 0
+        for j in btag_sel_index:
+            btag = btag_jets[j]
+            deltar = delta_R(jet.eta, btag.eta, jet.phi, btag.phi)
+            if deltar <= deltar_cut:
+                deltar_match = 1
+                break
+        if not deltar_match:
+            ak4_jet_sel_clean_index.append(i)
+    return ak4_jet_sel_clean_index
+
+def ak4_vbf_jet_cleaning(ak4_jets, ak4_vbf_jet_sel_index, ak4_jet_sel_index, ak4_btag_sel_index, deltar_cut, type):
+    ak4_vbf_jet_sel_clean_index = []
+    m_W = 80.4
+    for i in ak4_vbf_jet_sel_index:
+        vbf_jet = ak4_jets[i]
+        deltar_match = 0
+        for j in ak4_jet_sel_index:
+            jet = ak4_jets[j]
+            if j in ak4_btag_sel_index:
+                continue
+            if type == "nonresonant":
+                mjj = (vbf_jet.p4() + jet.p4()).M()
+                if abs(mjj - m_W) > 15:
+                    continue
+            deltar = delta_R(vbf_jet.eta, jet.eta, vbf_jet.phi, jet.phi)
+            if deltar <= deltar_cut:
+                deltar_match = 1
+                break
+        if not deltar_match:
+            ak4_vbf_jet_sel_clean_index.append(i)
+
+    return ak4_vbf_jet_sel_clean_index
 
 def ak8_jet_selection(ak8_jets, ak8_subjets, cuts):
     ak8_jets_final_sel_index = []
