@@ -75,8 +75,8 @@ def electron_selection(electrons, jets, electrons_sel_index, cuts):
 
         # TO DO: use ID according to Prompt-e MVA for fakeable
         id_cut = cuts["id"]
-        if id_cut == "WP_80_WP_L":
-            id_cut = "WP_80"
+        if id_cut == "WP_80_WP_L" or id_cut == "WP_90_WP_L":
+            id_cut = "WP_L"
         if id_cut == "WP_L":
             if not ele.mvaFall17V2noIso_WPL:
                 continue
