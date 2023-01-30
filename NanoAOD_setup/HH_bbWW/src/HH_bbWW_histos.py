@@ -3,40 +3,52 @@ import ROOT
 opts = ROOT.RDF.RSnapshotOptions()
 opts.fMode = "UPDATE"
 
-fileName = "outputFile.root"
+
+
+def plot_Histo1D(df, obj_name, bins, x_min, x_max):
+    c = ROOT.TCanvas()
+    h = df.Histo1D(("",obj_name, bins, x_min, x_max), obj_name)
+    h.Draw()
+    out_name = "Results/" + obj_name + ".png"
+    c.SaveAs(out_name)
 
 # DL Channel histograms =======================================
 treeName = "sl"
-df_sl = ROOT.RDataFrame(treeName, fileName)
+fileName = "rdf_sl.root"
+sl = ROOT.RDataFrame(treeName, fileName)
+sl_objects = ["sl_e_pt","sl_mu_pt","sl_l_pt","sl_e_eta","sl_mu_eta","sl_l_eta"]
 
-obj_name = "Lepton_pt"
-c1 = ROOT.TCanvas() 
-h1 = df_sl.Histo1D(("", "", 400, -5, 395), obj_name)
-h1.Draw()
-out_name = treeName + "_" + obj_name + ".png"
-c1.SaveAs(out_name)
+plot_Histo1D(sl, "sl_l_pt", 200, -5, 195)
+plot_Histo1D(sl, "sl_l_eta", 61, -3.05, 3.05)
+plot_Histo1D(sl, "sl_l_dxy", 210, -0.105, 0.105)
+plot_Histo1D(sl, "sl_l_dz", 410, -0.205, 0.205)
 
-obj_name = "Lepton_eta"
-c2 = ROOT.TCanvas() 
-h2 = df_sl.Histo1D(("", "", 61, -3.05, 3.05), obj_name)
-h2.Draw()
-out_name = treeName + "_" + obj_name + ".png"
-c2.SaveAs(out_name)
+plot_Histo1D(sl, "sl_N", 3, -1.5, 1.5)
+plot_Histo1D(sl, "sl_e_N", 3, -1.5, 1.5)
+plot_Histo1D(sl, "sl_mu_N", 3, -1.5, 1.5)
+
+# plot_Histo1D(sl, "sl_e_pt", 200, -5, 195)
+# plot_Histo1D(sl, "sl_mu_pt", 200, -5, 195)
+# plot_Histo1D(sl, "sl_e_eta", 61, -3.05, 3.05)
+# plot_Histo1D(sl, "sl_mu_eta", 61, -3.05, 3.05)
+
 
 # DL Channel histograms =======================================
 treeName = "dl"
-df_sl = ROOT.RDataFrame(treeName, fileName)
+fileName = "rdf_dl.root"
+dl = ROOT.RDataFrame(treeName, fileName)
 
-obj_name = "Lepton_pt"
-c1 = ROOT.TCanvas() 
-h1 = df_sl.Histo1D(("", "", 400, -5, 395), obj_name)
-h1.Draw()
-out_name = treeName + "_" + obj_name + ".png"
-c1.SaveAs(out_name)
+plot_Histo1D(dl, "dl_l_pt_0", 200, -5, 195)
+plot_Histo1D(dl, "dl_l_eta_0", 61, -3.05, 3.05)
+plot_Histo1D(dl, "dl_l_dxy_0", 61, -0.305, 0.305)
+plot_Histo1D(dl, "dl_l_dz_0", 110, -0.55, 0.55)
 
-obj_name = "Lepton_eta"
-c2 = ROOT.TCanvas() 
-h2 = df_sl.Histo1D(("", "", 61, -3.05, 3.05), obj_name)
-h2.Draw()
-out_name = treeName + "_" + obj_name + ".png"
-c2.SaveAs(out_name)
+plot_Histo1D(dl, "dl_l_pt_1", 200, -5, 195)
+plot_Histo1D(dl, "dl_l_eta_1", 61, -3.05, 3.05)
+plot_Histo1D(dl, "dl_l_dxy_1", 61, -0.305, 0.305)
+plot_Histo1D(dl, "dl_l_dz_1", 110, -0.55, 0.55)
+
+plot_Histo1D(dl, "dl_N", 3, -1.5, 1.5)
+plot_Histo1D(dl, "dl_ee_N", 3, -1.5, 1.5)
+plot_Histo1D(dl, "dl_mumu_N", 3, -1.5, 1.5)
+plot_Histo1D(dl, "dl_emu_N", 3, -1.5, 1.5)

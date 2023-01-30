@@ -42,7 +42,7 @@ if __name__ == "__main__":
         df_list.append(ROOT.RDataFrame("Events", s))
 
     cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
-
+    print_out = False
     print("\nRunning HH bbWW event selection for %s sample: %s for year %s"%(args.type, args.sample, args.year))
 
     for df in df_list:
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         df = select_e_loose(df, cuts["electrons_loose"])
         df = select_e_fakeable(df, cuts["electrons_fakeable"])
         df = select_e_tight(df, cuts["electrons_tight"])
-
+        
         print("3) Muon Selection ----------------------------------------")
         df = select_mu_loose(df, cuts["muons_loose"])
         df = select_mu_fakeable(df, cuts["muons_fakeable"])
@@ -70,20 +70,49 @@ if __name__ == "__main__":
         print("6) AK8 Jet Selection ------------------------------------")
         df = select_AK8_jets(df, cuts["ak8_jets"])
 
-        print("7) Final Event Selection ---------------------------------")
+        if (print_out):
+            print("9) PRINTOUTS:  ----------------------------------")
+            df.Display({"Electron_pt", "Electron_eta", "Electron_phi", "Electron_mvaFall17V2noIso_WP80"},10).Print()
+            df_e_loose = df.Filter("n_e_loose > 0")
+            df_e_fakeable = df.Filter("n_e_fakeable > 0")
+            df_e_tight = df.Filter("n_e_tight > 0")
+            df_e_loose.Display({"e_loose", "Electron_pt", "Electron_eta", "Electron_phi", "Electron_mvaFall17V2noIso_WP80"},10).Print()
+            df_e_fakeable.Display({"e_fakeable", "Electron_pt", "Electron_eta", "Electron_phi", "Electron_mvaFall17V2noIso_WP80"},10).Print()
+            df_e_tight.Display({"e_tight", "Electron_pt", "Electron_eta", "Electron_phi", "Electron_mvaFall17V2noIso_WP80"},10).Print()
+
+            df.Display({"Muon_pt", "Muon_eta", "Muon_phi", "Muon_looseId", "Muon_mediumId"},10).Print()
+            df_mu_loose = df.Filter("n_mu_loose > 0")
+            df_mu_fakeable = df.Filter("n_mu_fakeable > 0")
+            df_mu_tight = df.Filter("n_mu_tight > 0")
+            df_mu_loose.Display({"mu_loose", "Muon_pt", "Muon_eta", "Muon_phi", "Muon_looseId", "Muon_mediumId"},10).Print()
+            df_mu_fakeable.Display({"mu_fakeable", "Muon_pt", "Muon_eta", "Muon_phi", "Muon_looseId", "Muon_mediumId"},10).Print()
+            df_mu_tight.Display({"mu_tight", "Muon_pt", "Muon_eta", "Muon_phi", "Muon_looseId", "Muon_mediumId"},10).Print()
+
+            df.Display({"Jet_pt", "Jet_eta", "Jet_phi", "Jet_jetId", "Jet_btagDeepFlavB"},10).Print()
+            df_AK4 = df.Filter("nAK4 > 0")
+            df_AK4.Display({"AK4", "Jet_pt", "Jet_eta", "Jet_phi", "Jet_jetId", "Jet_btagDeepFlavB"},10).Print()
+
+            df.Display({"FatJet_pt", "FatJet_eta", "FatJet_phi", "FatJet_msoftdrop", "FatJet_tau2", "FatJet_tau1"},10).Print()
+            df.Display({"FatJet_subJetIdx1", "FatJet_subJetIdx2", "SubJet_pt", "SubJet_eta", "SubJet_btagDeepB"},10).Print()
+            df_AK8 = df.Filter("nAK8 > 0")
+            df_AK8.Display({"AK8", "FatJet_pt", "FatJet_eta", "FatJet_phi", "FatJet_msoftdrop", "FatJet_tau2", "FatJet_tau1"},10).Print()
+            df_AK8.Display({"AK8", "FatJet_subJetIdx1", "FatJet_subJetIdx2", "SubJet_pt", "SubJet_eta", "SubJet_btagDeepB"},10).Print()
+
+        print("7) Final Event Selection --------------------------------")
         df_sl = df    
         df_dl = df
-        df_sl = select_sl_channel(df_sl, cuts["single_lepton_event"], args.year)
+
+        df_sl = select_sl_channel(df_sl, cuts["single_lepton_event"], cuts["taus"],  args.year)
         df_sl.Report().Print()
+
         df_dl = select_dl_channel(df_dl, cuts["dilepton_event"], args.year)
         df_dl.Report().Print()
 
         print("8) Saving to root file ----------------------------------")
-        df_sl.Snapshot("sl","outputFile.root")
-        df_dl.Snapshot("dl","outputFile.root", "", opts)
+        df_sl.Snapshot("sl","rdf_sl.root", {"sl_e_pt","sl_mu_pt","sl_l_pt","sl_e_eta","sl_mu_eta","sl_l_eta", "sl_e_dxy", "sl_mu_dxy", "sl_l_dxy", "sl_e_dz", "sl_mu_dz", "sl_l_dz", "sl_N", "sl_e_N" , "sl_mu_N"})
+        df_dl.Snapshot("dl","rdf_dl.root", {"dl_l_pt_0","dl_l_eta_0","dl_l_dxy_0","dl_l_dz_0", "dl_l_pt_1","dl_l_eta_1","dl_l_dxy_1","dl_l_dz_1", "dl_N", "dl_ee_N", "dl_mumu_N", "dl_emu_N"})
 
-    print("Event selections: COMPLETED")
-
+        print("Event selections: COMPLETED")
         
 
 
