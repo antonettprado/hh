@@ -109,11 +109,11 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for ele in electrons:
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -122,13 +122,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_basic_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -137,13 +137,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_loose_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -152,13 +152,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_fakeable_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -167,13 +167,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_tight_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
