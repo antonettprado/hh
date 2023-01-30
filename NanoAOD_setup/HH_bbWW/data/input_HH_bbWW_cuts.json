@@ -32,7 +32,7 @@
         "min_e_p": -0.04,
         "conv_rej": 1,
         "max_n_missing_hits": 0,
-        "id": "WP_80_WP_L",
+        "id": "WP_90_WP_L",
         "deep-jet": "WP_M",
         "max_jet_iso": 0.7,
         "min_prompt_e_mva": 0.3
@@ -51,7 +51,7 @@
         "min_e_p": -0.04,
         "conv_rej": 1,
         "max_n_missing_hits": 0,
-        "id": "WP_80",
+        "id": "WP_L",
         "deep-jet": "WP_M",
         "max_jet_iso": -9999,
         "min_prompt_e_mva":0.3
@@ -126,7 +126,9 @@
     },
     "single_lepton_event":{
         "sl_e_pt": 32,
-        "sl_mu_pt": 25
+        "sl_mu_pt": 25,
+        "sl_e_eta": 2.5,
+        "sl_mu_eta": 2.4
     },
     "dilepton_event":{
         "dl_leading_pt": 25,
