@@ -54,7 +54,7 @@ class HH_bbWW_Analysis(Module):
         self.addObject(self.h_dl_lepton1_pt)
         self.addObject(self.h_dl_lepton1_eta)
 
-        self.output_file = open("output_data.txt")
+        self.output_file = open("output_data.txt", "w")
         self.output_file.write("NEvent, is_e, is_mu, is_ee, is_emu, is_mumu, lep0_pt, lep1_pt, n_ak4jets, n_ak4btags, n_ak8jets, ak4jet0_pt, ak4jet1_pt, ak4jet2_pt, ak4btag0_pt, ak4btag1_pt, ak8_jet0pt\n")
 
     #def endJob(self):
