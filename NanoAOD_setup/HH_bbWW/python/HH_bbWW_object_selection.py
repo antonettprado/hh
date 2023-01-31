@@ -62,7 +62,7 @@ def electron_selection(electrons, jets, electrons_sel_index, cuts):
                 if ele.sieie > cuts["max_sigma_ieta_endcap"]:
                     continue
         if cuts["max_h_over_e"] != -9999:
-            if ele.hoe > cuts["max_sigma_ieta_endcap"]:
+            if ele.hoe > cuts["max_h_over_e"]:
                 continue
         if cuts["min_e_p"] != -9999:
             if ele.eInvMinusPInv < cuts["min_e_p"]:
