@@ -67,6 +67,7 @@ class HH_bbWW_Analysis(Module):
     def analyze(self, event):
 
         # Read objects from NanoAOD
+        event_nr = Object(event, "event")
         pv = Object(event, "PV")
         flag = Object(event, "Flag")
         hlt = Object(event, "HLT")
@@ -635,7 +636,7 @@ class HH_bbWW_Analysis(Module):
                 ak4btag1_pt = ak4_jets[ak4_btag_sel_clean_index[1]].pt
         if n_ak8jets>=1:
             ak8_jet0pt = ak8_jets[ak8_btag_sel_clean_index[0]].pt
-        self.output_file.write("%d, %d, %d, %d, %d, %d, %.2f, %.2f, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n"%(self.event_counter, is_sl_e, is_sl_mu, is_dl_ee, is_dl_emu, is_dl_mumu, lep0_pt, lep1_pt, n_ak4jets, n_ak4btags, n_ak8jets, ak4jet0_pt, ak4jet1_pt, ak4jet2_pt, ak4btag0_pt, ak4btag1_pt, ak8_jet0pt))
+        self.output_file.write("%d, %d, %d, %d, %d, %d, %.2f, %.2f, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n"%(event_nr, is_sl_e, is_sl_mu, is_dl_ee, is_dl_emu, is_dl_mumu, lep0_pt, lep1_pt, n_ak4jets, n_ak4btags, n_ak8jets, ak4jet0_pt, ak4jet1_pt, ak4jet2_pt, ak4btag0_pt, ak4btag1_pt, ak8_jet0pt))
 
         # Fill Histograms
         if is_sl:
