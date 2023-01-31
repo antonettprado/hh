@@ -617,6 +617,12 @@ class HH_bbWW_Analysis(Module):
         n_ak4jets = len(ak4_jet_sel_clean_index)
         n_ak4btags = len(ak4_btag_sel_clean_index)
         n_ak8jets = len(ak8_btag_sel_clean_index)
+        ak4jet0_pt = -9999
+        ak4jet1_pt = -9999
+        ak4jet2_pt = -9999
+        ak4btag0_pt = -9999
+        ak4btag1_pt = -9999
+        ak8_jet0pt = -9999
         if n_ak4jets>=1:
             ak4jet0_pt = ak4_jets[ak4_jet_sel_clean_index[0]].pt
             if n_ak4jets>=2:
