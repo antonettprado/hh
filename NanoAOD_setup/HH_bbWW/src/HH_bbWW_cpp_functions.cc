@@ -12,6 +12,29 @@ float get_deltaR(float eta1_val, float eta2_val, float phi1_val, float phi2_val)
 	return std::sqrt((eta1_val-eta2_val)*(eta1_val-eta2_val) + (phi1_val-phi2_val)*(phi1_val-phi2_val));
 }
 
+float get_inv_masses(float pt1, float eta1, float phi1, float mass1, float pt2, float eta2, float phi2, float mass2) {
+	
+	// Conversion from (pt, eta, phi, mass) to (x, y, z, e) coordinate system
+	float x1 = pt1 * std::cos(phi1);
+	float y1 = pt1 * std::sin(phi1);
+	float z1 = pt1 * std::sinh(eta1);
+	float e1 = std::sqrt(x1*x1 + y1*y1 + z1*z1 + mass1*mass1);
+
+	float x2 = pt2 * std::cos(phi2);
+	float y2 = pt2 * std::sin(phi2);
+	float z2 = pt2 * std::sinh(eta2);
+	float e2 = std::sqrt(x2*x2 + y2*y2 + z2*z2 + mass2*mass2);
+
+	//Addition of particle four-vector elements
+	float e = e1 + e2;
+	float x = x1 + x2;
+	float y = y1 + y2;
+	float z = z1 + z2;
+
+	float inv_masses = std::sqrt(e*e - x*x - y*y - z*z);
+	return inv_masses;
+}
+
 RVec<int> sigma_ieta_pass(RVec<int> e_selection, RVec<float> Electron_eta, RVec<float> Electron_sieie, float max_sigma_ieta_barrel, float max_sigma_ieta_endcap) {
 
 	for (int e_idx = 0; e_idx<Electron_eta.size(); e_idx++) {
@@ -86,10 +109,8 @@ RVec<int> define_ak4_btag(RVec<int> AK4, RVec<float> Jet_btagDeepFlavB, float bt
 
 // AK8 Jet Selection ===================================================
 RVec<int> refine_ak8_jets(RVec<int> AK8, RVec<int> l_fakeable, 
-			RVec<float> FatJet_eta, RVec<float> FatJet_phi, 
-			RVec<float> Lepton_eta, RVec<float> Lepton_phi, 
-			RVec<int> FatJet_subJetIdx1, RVec<int> FatJet_subJetIdx2, 
-			RVec<float> SubJet_pt, RVec<float> SubJet_eta) {
+	RVec<float> FatJet_eta, RVec<float> FatJet_phi, RVec<float> Lepton_eta, RVec<float> Lepton_phi, 
+	RVec<int> FatJet_subJetIdx1, RVec<int> FatJet_subJetIdx2, RVec<float> SubJet_pt, RVec<float> SubJet_eta) {
 	
 	for (int jet_idx=0; jet_idx<AK8.size(); jet_idx++) {
 		if (AK8[jet_idx] == 1) {
@@ -125,8 +146,7 @@ RVec<int> refine_ak8_jets(RVec<int> AK8, RVec<int> l_fakeable,
 }
 
 RVec<int> refine_ak8_btagging(RVec<int> AK8, RVec<int> FatJet_subJetIdx1, RVec<int> FatJet_subJetIdx2, 
-			RVec<float> SubJet_pt, RVec<float> SubJet_btagDeepB,
-			float higher_pt_cut, float btag_cut) {
+	RVec<float> SubJet_pt, RVec<float> SubJet_btagDeepB, float higher_pt_cut, float btag_cut) {
 
 	// At least one subjet must have pt > 30 & medium b-tagging WP
 	for (int jet_idx = 0; jet_idx<AK8.size(); jet_idx++) {
@@ -157,7 +177,7 @@ RVec<int> refine_taus_sel(RVec<int> taus_sel, RVec<int> l_fakeable, RVec<float> 
 			for (int l_idx = 0; l_idx<l_fakeable.size(); l_idx++) {
 				if (l_fakeable[l_idx]) {
 					float l_eta = Lepton_eta[l_idx];
-					float l_phi = Lepton_phi[l_phi];
+					float l_phi = Lepton_phi[l_idx];
 					float deltaR_val = get_deltaR(tau_eta, l_eta, tau_phi, l_phi);
 					if (deltaR_val < deltaR_cut) {
 						taus_sel[tau_idx] = 0;
@@ -189,15 +209,67 @@ bool get_deltaR_pass(RVec<float> Eta1, RVec<float> Phi1, RVec<float> Eta2, RVec<
 	return false;
 }
 
-bool get_tau_vetoes(RVec<float> Tau_pt, RVec<float> Tau_eta, float tau_pt_cut, float tau_eta_cut) {
+bool get_mll_pass(RVec<int> e_loose, RVec<int> mu_loose,
+	RVec<float> Electron_pt, RVec<float> Electron_eta, RVec<float> Electron_phi, RVec<float> Electron_mass, RVec<int> Electron_charge,
+	RVec<float> Muon_pt, RVec<float> Muon_eta, RVec<float> Muon_phi, RVec<float> Muon_mass, RVec<int> Muon_charge) {
 
-	for (int tau_idx=0; tau_idx<Tau_pt.size(); tau_idx++ ) {
-		float tau_pt = Tau_pt[tau_idx];
-		float tau_eta = Tau_eta[tau_idx];
-		// std::string tau_id = Tau_id[tau_idx];
-		if (tau_pt > tau_pt_cut && std::abs(tau_eta) < tau_eta_cut)  // && (int)tau_id >= tau_id_cut
-			return false;
+	float mZ = 91.2;
+	if (Sum(e_loose) >= 2) {
+		for (int e_idx = 0; e_idx < Electron_pt.size(); e_idx++) {
+			if (e_loose[e_idx] == 1) {
+				int e_charge = Electron_charge[e_idx];
+				float e_pt = Electron_pt[e_idx];
+				float e_eta = Electron_eta[e_idx];
+				float e_phi = Electron_phi[e_idx];
+				float e_mass = Electron_mass[e_idx];
+				for (int e_idx2 = e_idx + 1; e_idx2 < Electron_pt.size(); e_idx2++) {
+					if (e_loose[e_idx2] == 1) {
+						int e_charge2 = Electron_charge[e_idx2];
+						float e_pt2 = Electron_pt[e_idx2];
+						float e_eta2 = Electron_eta[e_idx2];
+						float e_phi2 = Electron_phi[e_idx2];
+						float e_mass2 = Electron_mass[e_idx2];
+						if (e_charge + e_charge2 == 0) {
+							float mll_val = get_inv_masses(e_pt, e_eta, e_phi, e_mass, e_pt2, e_eta2, e_phi2, e_mass2);
+							if ((mll_val > 12) || std::abs(mll_val-mZ)>10)
+								continue; 
+							else
+								return false;
+						}
+					}
+				}
+			}
+		}
 	}
+
+	if (Sum(mu_loose) >= 2) {
+		for (int mu_idx = 0; mu_idx < Muon_pt.size(); mu_idx++) {
+			if (mu_loose[mu_idx] == 1) {
+				int mu_charge = Muon_charge[mu_idx];
+				float mu_pt = Muon_pt[mu_idx];
+				float mu_eta = Muon_eta[mu_idx];
+				float mu_phi = Muon_phi[mu_idx];
+				float mu_mass = Muon_mass[mu_idx];
+				for (int mu_idx2 = mu_idx + 1; mu_idx2 < Muon_pt.size(); mu_idx2++) {
+					if (mu_loose[mu_idx2] == 1) {
+						int mu_charge2 = Muon_charge[mu_idx2];
+						float mu_pt2 = Muon_pt[mu_idx2];
+						float mu_eta2 = Muon_eta[mu_idx2];
+						float mu_phi2 = Muon_phi[mu_idx2];
+						float mu_mass2 = Muon_mass[mu_idx2];
+						if (mu_charge + mu_charge2 == 0) {
+							float mll_val = get_inv_masses(mu_pt, mu_eta, mu_phi, mu_mass, mu_pt2, mu_eta2, mu_phi2, mu_mass2);
+							if ((mll_val > 12) || std::abs(mll_val-mZ)>10)
+								continue; 
+							else
+								return false;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return true;
 }
 

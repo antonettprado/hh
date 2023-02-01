@@ -1,9 +1,8 @@
 import ROOT
 import collections
 import math
-from object_collections import *
 
-# MET Filter Selection ========================================================
+# MET Filter Selection =================================================================
 def met_filter(df, sample_type):
 
     sample_type_dict = {'data': 0, 'mc': 1}
@@ -23,7 +22,7 @@ def met_filter(df, sample_type):
 
     return df
 
-# Electron Selection ==========================================================
+# Electron Selection ===================================================================
 def select_e_loose(df, e_loose_dict):
 
     definition = "Electron_pt > " + str(e_loose_dict["min_cone_pt"])
@@ -75,7 +74,7 @@ def select_e_tight(df, e_tight_dict):
     
     return df
 
-# Muon Selection =============================================================
+# Muon Selection =======================================================================
 def select_mu_loose(df, mu_loose_dict):
     
     definition = "Muon_pt          >   " + str(mu_loose_dict["min_pt"])
@@ -118,7 +117,7 @@ def select_mu_tight(df, mu_tight_dict):
 
     return df
 
-# Lepton Definition ============================================================
+# Lepton Definition =====================================================================
 def select_leptons(df):
       
     df = df.Define("Lepton_pt", "Concatenate(Electron_pt, Muon_pt)")
@@ -138,7 +137,7 @@ def select_leptons(df):
 
     return df
 
-# AK4 Jet Selection ===========================================================
+# AK4 Jet Selection =====================================================================
 def select_AK4_jets(df, ak4_jet_dict):
 
     # Jet id cut ---------------------------
@@ -166,7 +165,7 @@ def select_AK4_jets(df, ak4_jet_dict):
 
     return df
 
-# AK8 Jet Selection ===========================================================
+# AK8 Jet Selection =====================================================================
 def select_AK8_jets(df, ak8_jet_dict):
     
     definition = "FatJet_pt        >   " + str(ak8_jet_dict["min_pt"])
@@ -183,7 +182,7 @@ def select_AK8_jets(df, ak8_jet_dict):
 
     return df
 
-# Tau Selection ===============================================================
+# Tau Selection =========================================================================
 def select_taus(df, taus_dict):
 
     # DeepJet id cut ---------------------------
@@ -199,7 +198,7 @@ def select_taus(df, taus_dict):
     df = df.Define("n_taus_sel", "Sum(taus_sel)")
     return df
 
-# Single Lepton Channel Selection =============================================
+# Single Lepton Channel Selection =======================================================
 def select_sl_channel(df, sl_event_dict, tau_dict, year):
 
     print("\t SL channel:")
@@ -216,6 +215,7 @@ def select_sl_channel(df, sl_event_dict, tau_dict, year):
     filters.append(jet_cases_filter)
     filters.append("n_taus_sel == 0")
     filters.append("n_l_tight == 1")
+    filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
 
     for idx in range(len(filters)):
         name = "sl_filter_" + str(idx+1)
@@ -239,10 +239,12 @@ def select_sl_channel(df, sl_event_dict, tau_dict, year):
     df = df.Define("sl_N", "1")
     df = df.Define("sl_e_N", "define_sl_e_N(e_tight)")
     df = df.Define("sl_mu_N", "define_sl_mu_N(mu_tight)")
-    
+
+    df.Display({"event","l_fakeable","sl_e_N", "sl_mu_N", "taus_sel", "Electron_pt", "e_tight", "Tau_pt"},20).Print()
+
     return df
 
-# Double Lepton Channel Selection =============================================
+# Double Lepton Channel Selection =======================================================
 def select_dl_channel(df, dl_event_dict, year):
 
     print("\t DL channel:")
@@ -258,6 +260,7 @@ def select_dl_channel(df, dl_event_dict, year):
     filters.append("dl_pt_charge_cut(Lepton_pt, l_tight, " + str(dl_event_dict["dl_leading_pt"]) + ", " + str(dl_event_dict["dl_subleading_pt"]) + ", Electron_charge, Muon_charge)")
     filters.append(jet_cases_filter)
     filters.append("n_l_tight == 2")
+    filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
 
     for idx in range(len(filters)):
         name = "dl_filter_" + str(idx+1)
@@ -284,9 +287,9 @@ def select_dl_channel(df, dl_event_dict, year):
 
     return df
 
-# =============================================================================
-# =============================================================================
-# =============================================================================
+# ======================================================================================
+# ======================================================================================
+# ======================================================================================
 def select_filter(df, filter_dict, column, filter_tagname):
     
     selected_filters = []
