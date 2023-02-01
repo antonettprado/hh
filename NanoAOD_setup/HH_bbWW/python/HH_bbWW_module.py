@@ -21,7 +21,7 @@ class HH_bbWW_Analysis(Module):
     def beginJob(self,histFile=None,histDirName=None):
         Module.beginJob(self,histFile,histDirName)
 
-        self.event_counter = 0
+        self.event_counter = -1
         self.cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
         self.h_nevent_total = ROOT.TH1F("h_nevent_total" , ";;Nr. of Events" , 2, 0, 2)
@@ -53,6 +53,9 @@ class HH_bbWW_Analysis(Module):
         self.addObject(self.h_dl_lepton0_eta)
         self.addObject(self.h_dl_lepton1_pt)
         self.addObject(self.h_dl_lepton1_eta)
+
+        self.output_file = open("output_data.csv", "w")
+        self.output_file.write("NEvent, is_e, is_mu, is_ee, is_emu, is_mumu, lep0_pt, lep1_pt, n_ak4jets, n_ak4btags, n_ak8jets, ak4jet0_pt, ak4jet1_pt, ak4jet2_pt, ak4btag0_pt, ak4btag1_pt, ak8_jet0pt\n")
 
     #def endJob(self):
 
@@ -109,11 +112,11 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for ele in electrons:
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -122,13 +125,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_basic_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -137,13 +140,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_loose_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -152,13 +155,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_fakeable_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -167,13 +170,13 @@ class HH_bbWW_Analysis(Module):
             pt_string = "    pT: "
             eta_string = "    eta: "
             phi_string = "    phi: "
-            id_string = "    id WP_M: "
+            id_string = "    id WP_L: "
             for i in electrons_tight_sel_index:
                 ele = electrons[i]
                 pt_string += "%.2f  "%ele.pt
                 eta_string += "%.2f  "%ele.eta
                 phi_string += "%.2f  "%ele.phi
-                id_string += "%d  "%ele.mvaFall17V2noIso_WP80
+                id_string += "%d  "%ele.mvaFall17V2noIso_WPL
             print (pt_string)
             print (eta_string)
             print (phi_string)
@@ -595,6 +598,44 @@ class HH_bbWW_Analysis(Module):
             print ("  is SL: %d\n    is SL_e: %d, is SL_mu: %d"%(is_sl, is_sl_e, is_sl_mu))
             print ("  is DL: %d\n    is DL_ee: %d, is DL_emu: %d, is DL_mumu: %d"%(is_dl, is_dl_ee, is_dl_emu, is_dl_mumu))
             print ("")
+
+        if is_sl_e:
+            lep0_pt = electrons[electrons_tight_sel_index[0]].pt
+            lep1_pt = -9999
+        elif is_sl_mu:
+            lep0_pt = muons[muons_tight_sel_index[0]].pt
+            lep1_pt = -9999
+        elif is_dl_ee:
+            lep0_pt = electrons[electrons_tight_sel_index[0]].pt
+            lep1_pt = electrons[electrons_tight_sel_index[1]].pt
+        elif is_dl_emu:
+            lep0_pt = electrons[electrons_tight_sel_index[0]].pt
+            lep1_pt = muons[muons_tight_sel_index[0]].pt
+        elif is_dl_mumu:
+            lep0_pt = muons[muons_tight_sel_index[0]].pt
+            lep1_pt = muons[muons_tight_sel_index[1]].pt
+        n_ak4jets = len(ak4_jet_sel_clean_index)
+        n_ak4btags = len(ak4_btag_sel_clean_index)
+        n_ak8jets = len(ak8_btag_sel_clean_index)
+        ak4jet0_pt = -9999
+        ak4jet1_pt = -9999
+        ak4jet2_pt = -9999
+        ak4btag0_pt = -9999
+        ak4btag1_pt = -9999
+        ak8_jet0pt = -9999
+        if n_ak4jets>=1:
+            ak4jet0_pt = ak4_jets[ak4_jet_sel_clean_index[0]].pt
+            if n_ak4jets>=2:
+                ak4jet1_pt = ak4_jets[ak4_jet_sel_clean_index[1]].pt
+                if n_ak4jets>=3:
+                    ak4jet2_pt = ak4_jets[ak4_jet_sel_clean_index[2]].pt
+        if n_ak4btags>=1:
+            ak4btag0_pt = ak4_jets[ak4_btag_sel_clean_index[0]].pt
+            if n_ak4btags>=2:
+                ak4btag1_pt = ak4_jets[ak4_btag_sel_clean_index[1]].pt
+        if n_ak8jets>=1:
+            ak8_jet0pt = ak8_jets[ak8_btag_sel_clean_index[0]].pt
+        self.output_file.write("%d, %d, %d, %d, %d, %d, %.2f, %.2f, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n"%(event.event, is_sl_e, is_sl_mu, is_dl_ee, is_dl_emu, is_dl_mumu, lep0_pt, lep1_pt, n_ak4jets, n_ak4btags, n_ak8jets, ak4jet0_pt, ak4jet1_pt, ak4jet2_pt, ak4btag0_pt, ak4btag1_pt, ak8_jet0pt))
 
         # Fill Histograms
         if is_sl:
