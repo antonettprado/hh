@@ -13,25 +13,12 @@ float get_deltaR(float eta1_val, float eta2_val, float phi1_val, float phi2_val)
 }
 
 float get_inv_masses(float pt1, float eta1, float phi1, float mass1, float pt2, float eta2, float phi2, float mass2) {
-	
-	// Conversion from (pt, eta, phi, mass) to (x, y, z, e) coordinate system
-	float x1 = pt1 * std::cos(phi1);
-	float y1 = pt1 * std::sin(phi1);
-	float z1 = pt1 * std::sinh(eta1);
-	float e1 = std::sqrt(x1*x1 + y1*y1 + z1*z1 + mass1*mass1);
 
-	float x2 = pt2 * std::cos(phi2);
-	float y2 = pt2 * std::sin(phi2);
-	float z2 = pt2 * std::sinh(eta2);
-	float e2 = std::sqrt(x2*x2 + y2*y2 + z2*z2 + mass2*mass2);
+	ROOT::Math::PtEtaPhiMVector p4_1(pt1, eta1, phi1, mass1);
+	ROOT::Math::PtEtaPhiMVector p4_2(pt2, eta2, phi2, mass2);
 
-	//Addition of particle four-vector elements
-	float e = e1 + e2;
-	float x = x1 + x2;
-	float y = y1 + y2;
-	float z = z1 + z2;
+	float inv_masses = (p4_1 + p4_2).M();
 
-	float inv_masses = std::sqrt(e*e - x*x - y*y - z*z);
 	return inv_masses;
 }
 
@@ -213,6 +200,7 @@ bool get_mll_pass(RVec<int> e_loose, RVec<int> mu_loose,
 	RVec<float> Electron_pt, RVec<float> Electron_eta, RVec<float> Electron_phi, RVec<float> Electron_mass, RVec<int> Electron_charge,
 	RVec<float> Muon_pt, RVec<float> Muon_eta, RVec<float> Muon_phi, RVec<float> Muon_mass, RVec<int> Muon_charge) {
 
+
 	float mZ = 91.2;
 	if (Sum(e_loose) >= 2) {
 		for (int e_idx = 0; e_idx < Electron_pt.size(); e_idx++) {
@@ -231,7 +219,7 @@ bool get_mll_pass(RVec<int> e_loose, RVec<int> mu_loose,
 						float e_mass2 = Electron_mass[e_idx2];
 						if (e_charge + e_charge2 == 0) {
 							float mll_val = get_inv_masses(e_pt, e_eta, e_phi, e_mass, e_pt2, e_eta2, e_phi2, e_mass2);
-							if ((mll_val > 12) || std::abs(mll_val-mZ)>10)
+							if ((mll_val > 12) && std::abs(mll_val-mZ)>10)
 								continue; 
 							else
 								return false;
@@ -259,7 +247,7 @@ bool get_mll_pass(RVec<int> e_loose, RVec<int> mu_loose,
 						float mu_mass2 = Muon_mass[mu_idx2];
 						if (mu_charge + mu_charge2 == 0) {
 							float mll_val = get_inv_masses(mu_pt, mu_eta, mu_phi, mu_mass, mu_pt2, mu_eta2, mu_phi2, mu_mass2);
-							if ((mll_val > 12) || std::abs(mll_val-mZ)>10)
+							if ((mll_val > 12) && std::abs(mll_val-mZ)>10)
 								continue; 
 							else
 								return false;
@@ -370,26 +358,28 @@ int define_sl_mu_N(RVec<int> mu_tight) {
 }
 
 // DL channel filters fucntions ========================================
-bool dl_pt_charge_cut(RVec<float> Lepton_pt, RVec<int> l_tight, int lead_pt_cut, int sublead_pt_cut, RVec<int> e_charge, RVec<int> mu_charge) {
+bool dl_pt_charge_cut(RVec<float> Lepton_pt, RVec<int> l_tight, float lead_pt_cut, float sublead_pt_cut, RVec<int> Lepton_charge) {
+	
+	RVec<float> l_tight_pt;
+	RVec<int> l_tight_charge;
 
-	RVec<int> lepton_charge = Concatenate(e_charge, mu_charge);
-	auto arg_sorted_pt_dec = Reverse(Argsort(Lepton_pt));
-	auto leading_pt_idx = arg_sorted_pt_dec[0];
-	auto subleading_pt_idx = arg_sorted_pt_dec[1];
-	// Check if lead and subleading lepton are tight leptons:
-	if (l_tight[leading_pt_idx] == 1 && l_tight[subleading_pt_idx] == 1) {}
-	else
-		return false;
-	// Compare top two pts against pt cuts
-	if ((Lepton_pt[leading_pt_idx] > lead_pt_cut) && (Lepton_pt[subleading_pt_idx] > sublead_pt_cut)) {}
-	else
-		return false;
-	// Opposite charge cut
-	if (lepton_charge[leading_pt_idx] == lepton_charge[subleading_pt_idx])
-		return false;
-	else
-		return true;
+	for (int l_idx = 0; l_idx<Lepton_pt.size(); l_idx++) {
+		if (l_tight[l_idx] == 1) {
+			l_tight_pt.push_back(Lepton_pt[l_idx]);
+			l_tight_charge.push_back(Lepton_charge[l_idx]);
+		}
+	}
 
+	RVec<int> arg_sorted_tight_pt_dec = Reverse(Argsort(l_tight_pt));
+	int leading_pt_idx = arg_sorted_tight_pt_dec[0];
+	int subleading_pt_idx = arg_sorted_tight_pt_dec[1];
+
+	if ((l_tight_pt[leading_pt_idx] > lead_pt_cut) && (l_tight_pt[subleading_pt_idx] > sublead_pt_cut)) { 
+		if (l_tight_charge[leading_pt_idx] + l_tight_charge[subleading_pt_idx] == 0)
+			return true;
+	}
+
+	return false;
 }
 
 RVec<float> define_dl_l_pt(RVec<float> Lepton_pt, RVec<int> l_tight) {

@@ -66,7 +66,7 @@ def select_e_tight(df, e_tight_dict):
     definition += " && Electron_pfRelIso03_all <  " + str(e_tight_dict["max_iso"])
     definition += " && Electron_hoe         <   " + str(e_tight_dict["max_h_over_e"]) 
     definition += " && Electron_eInvMinusPInv      >   " + str(e_tight_dict["min_e_p"]) 
-    definition += " && Electron_lostHits    ==   " + str(e_tight_dict["max_n_missing_hits"]) 
+    definition += " && Electron_lostHits    <=   " + str(e_tight_dict["max_n_missing_hits"]) 
     definition += " && " + get_l_WP_id("e", e_tight_dict["id"])
     df = df.Define("e_tight", definition)
     df = df.Redefine("e_tight", "sigma_ieta_pass(e_tight, Electron_eta, Electron_sieie, " + str(e_tight_dict["max_sigma_ieta_barrel"]) + ", " + str(e_tight_dict["max_sigma_ieta_endcap"]) + ")")
@@ -125,6 +125,7 @@ def select_leptons(df):
     df = df.Define("Lepton_phi", "Concatenate(Electron_phi, Muon_phi)")
     df = df.Define("Lepton_dxy", "Concatenate(Electron_dxy, Muon_dxy)")
     df = df.Define("Lepton_dz", "Concatenate(Electron_dz, Muon_dz)")
+    df = df.Define("Lepton_charge", "Concatenate(Electron_charge, Muon_charge)")
     df = df.Define("nLepton", "nElectron+nMuon")
 
     df = df.Define("l_loose", "Concatenate(e_loose, mu_loose)")
@@ -210,8 +211,8 @@ def select_sl_channel(df, sl_event_dict, tau_dict, year):
     jet_cases_filter = case_boosted + " || " + case_resolved
     # ----------------------------------------------------------
     filters = []
-    filters.append("Any(Electron_pt  > abs(" + str(sl_event_dict["sl_e_pt"]) + ") ) || Any(Muon_pt  > abs(" + str(sl_event_dict["sl_mu_pt"]) + ") )")
-    filters.append("Any(Electron_eta < abs(" + str(sl_event_dict["sl_e_eta"]) + ") ) || Any(Muon_eta  > abs(" + str(sl_event_dict["sl_mu_eta"]) + ") )")
+    filters.append("Any(Electron_pt  > " + str(sl_event_dict["sl_e_pt"]) + ") || Any(Muon_pt  > " + str(sl_event_dict["sl_mu_pt"]) + ")")
+    filters.append("Any(abs(Electron_eta) < " + str(sl_event_dict["sl_e_eta"]) + ") || Any(abs(Muon_eta)  < " + str(sl_event_dict["sl_mu_eta"]) + ")")
     filters.append(jet_cases_filter)
     filters.append("n_taus_sel == 0")
     filters.append("n_l_tight == 1")
@@ -240,7 +241,7 @@ def select_sl_channel(df, sl_event_dict, tau_dict, year):
     df = df.Define("sl_e_N", "define_sl_e_N(e_tight)")
     df = df.Define("sl_mu_N", "define_sl_mu_N(mu_tight)")
 
-    df.Display({"event","l_fakeable","sl_e_N", "sl_mu_N", "taus_sel", "Electron_pt", "e_tight", "Tau_pt"},20).Print()
+    # df.Display({"event","l_fakeable","sl_e_N", "sl_mu_N", "taus_sel", "Electron_pt", "e_tight", "Tau_pt"},40).Print()
 
     return df
 
@@ -257,7 +258,7 @@ def select_dl_channel(df, dl_event_dict, year):
     # ---------------------------------------------------------
     filters = []
     filters.append("n_l_tight >= 2")
-    filters.append("dl_pt_charge_cut(Lepton_pt, l_tight, " + str(dl_event_dict["dl_leading_pt"]) + ", " + str(dl_event_dict["dl_subleading_pt"]) + ", Electron_charge, Muon_charge)")
+    filters.append("dl_pt_charge_cut(Lepton_pt, l_tight, " + str(dl_event_dict["dl_leading_pt"]) + ", " + str(dl_event_dict["dl_subleading_pt"]) + ", Lepton_charge)")
     filters.append(jet_cases_filter)
     filters.append("n_l_tight == 2")
     filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
@@ -284,6 +285,9 @@ def select_dl_channel(df, dl_event_dict, year):
     df = df.Define("dl_ee_N", "define_dl_ee_N(e_tight)")
     df = df.Define("dl_mumu_N", "define_dl_mumu_N(mu_tight)")
     df = df.Define("dl_emu_N", "define_dl_emu_N(e_tight, mu_tight)")
+
+    # df.Display({"event","dl_emu_N", "e_tight", "mu_tight", "Electron_pt", "Muon_pt", "Electron_charge", "Muon_charge"},40).Print()
+    # df.Display({"event","dl_l_pt_0", "dl_l_pt_1", "dl_l_eta_0", "dl_l_eta_1"},40).Print()
 
     return df
 

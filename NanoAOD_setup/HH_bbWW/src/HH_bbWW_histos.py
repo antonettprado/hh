@@ -14,7 +14,7 @@ def plot_Histo1D(df, obj_name, bins, x_min, x_max):
 
 # DL Channel histograms =======================================
 treeName = "sl"
-fileName = "rdf_sl.root"
+fileName = "sl.root"
 sl = ROOT.RDataFrame(treeName, fileName)
 sl_objects = ["sl_e_pt","sl_mu_pt","sl_l_pt","sl_e_eta","sl_mu_eta","sl_l_eta"]
 
@@ -35,7 +35,7 @@ plot_Histo1D(sl, "sl_mu_N", 3, -1.5, 1.5)
 
 # DL Channel histograms =======================================
 treeName = "dl"
-fileName = "rdf_dl.root"
+fileName = "dl.root"
 dl = ROOT.RDataFrame(treeName, fileName)
 
 plot_Histo1D(dl, "dl_l_pt_0", 200, -5, 195)

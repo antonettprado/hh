@@ -7,8 +7,9 @@ fileName = "df_sl_print.root"
 df_sl = ROOT.RDataFrame(treeName, fileName)
 
 npy1 = df_sl.AsNumpy()
-DF1 = pd.DataFrame(npy1)
-DF1.to_csv("sl.csv")
+df1 = pd.DataFrame(npy1)
+df1.to_csv("sl.csv")
+
 
 treeName = "df_dl_print"
 fileName = "df_dl_print.root"
