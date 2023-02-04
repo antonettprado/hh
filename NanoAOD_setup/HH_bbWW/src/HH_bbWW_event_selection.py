@@ -80,16 +80,15 @@ if __name__ == "__main__":
             # df.Display({"event", "e_loose", "e_fakeable", "e_tight", "Electron_pt", "Electron_eta"},40).Print()
             # df.Display({"event", "mu_loose", "mu_fakeable", "mu_tight", "Muon_pt", "Muon_eta"},10).Print()
             # df.Display({"event", "AK4", "AK4_btag", "Jet_pt", "AK4_btag"},10).Print()
-            # df.Display({"event", "AK8", "AK8_pt"},10).Print()
 
-        # df = df.Filter("event == 16958 || event == 65827 || event == 271003")
-        # df.Display({"event","e_tight", "mu_tight", "l_tight", "Lepton_pt", "Electron_eta", "Electron_sieie"},40).Print()
+        
+        # df.Display({"event", "AK8", "FatJet_eta", "FatJet_pt"},10).Print()
 
         print("10) Final Event Selection --------------------------------")
         df_sl = df    
         df_dl = df
 
-        df_sl = select_sl_channel(df_sl, cuts["single_lepton_event"], cuts["taus"],  args.year)
+        df_sl = select_sl_channel(df_sl, cuts["single_lepton_event"],  args.year)
         df_sl.Report().Print()
 
         df_dl = select_dl_channel(df_dl, cuts["dilepton_event"], args.year)
@@ -112,9 +111,9 @@ if __name__ == "__main__":
         df_dl_print = df_dl.Snapshot("df_dl_print", "df_dl_print.root", ["event","dl_N", "dl_ee_N" , "dl_mumu_N", "dl_emu_N", "dl_l_pt_0", "dl_l_pt_1", "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
 
         print("12) Saving to root file ----------------------------------")
-        df_sl.Snapshot("sl","sl.root", ["event", "sl_N", "sl_e_N" , "sl_mu_N", "sl_l_pt", "sl_l_eta", "sl_l_dxy", "sl_l_dz"])
+        sl = df_sl.Snapshot("sl","sl.root", ["event", "sl_N", "sl_e_N" , "sl_mu_N", "sl_l_pt", "sl_l_eta", "sl_l_dxy", "sl_l_dz"])
         print('sl.root file done')
-        df_dl.Snapshot("dl","dl.root", ["event", "dl_N", "dl_ee_N", "dl_mumu_N", "dl_emu_N", "dl_l_pt_0","dl_l_eta_0","dl_l_dxy_0","dl_l_dz_0", "dl_l_pt_1","dl_l_eta_1","dl_l_dxy_1","dl_l_dz_1"])
+        dl = df_dl.Snapshot("dl","dl.root", ["event", "dl_N", "dl_ee_N", "dl_mumu_N", "dl_emu_N", "dl_l_pt_0","dl_l_eta_0","dl_l_dxy_0","dl_l_dz_0", "dl_l_pt_1","dl_l_eta_1","dl_l_dxy_1","dl_l_dz_1"])
         print('dl.root file done')
 
         print("Event selections: COMPLETED")

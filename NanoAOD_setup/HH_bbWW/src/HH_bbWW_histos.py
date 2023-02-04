@@ -3,8 +3,6 @@ import ROOT
 opts = ROOT.RDF.RSnapshotOptions()
 opts.fMode = "UPDATE"
 
-
-
 def plot_Histo1D(df, obj_name, bins, x_min, x_max):
     c = ROOT.TCanvas()
     h = df.Histo1D(("",obj_name, bins, x_min, x_max), obj_name)
@@ -16,7 +14,6 @@ def plot_Histo1D(df, obj_name, bins, x_min, x_max):
 treeName = "sl"
 fileName = "sl.root"
 sl = ROOT.RDataFrame(treeName, fileName)
-sl_objects = ["sl_e_pt","sl_mu_pt","sl_l_pt","sl_e_eta","sl_mu_eta","sl_l_eta"]
 
 plot_Histo1D(sl, "sl_l_pt", 200, -5, 195)
 plot_Histo1D(sl, "sl_l_eta", 61, -3.05, 3.05)
