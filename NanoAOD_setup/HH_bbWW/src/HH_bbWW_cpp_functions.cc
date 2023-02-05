@@ -97,7 +97,8 @@ RVec<int> define_ak4_btag(RVec<int> AK4, RVec<float> Jet_btagDeepFlavB, float bt
 // AK8 Jet Selection ===================================================
 RVec<int> refine_ak8_jets(RVec<int> AK8, RVec<int> l_fakeable, 
 	RVec<float> FatJet_eta, RVec<float> FatJet_phi, RVec<float> Lepton_eta, RVec<float> Lepton_phi, 
-	RVec<int> FatJet_subJetIdx1, RVec<int> FatJet_subJetIdx2, RVec<float> SubJet_pt, RVec<float> SubJet_eta) {
+	RVec<int> FatJet_subJetIdx1, RVec<int> FatJet_subJetIdx2, RVec<float> SubJet_pt, RVec<float> SubJet_eta,
+	float subjet1_pt, float subjet2_pt, float subjet_eta) {
 	
 	for (int jet_idx=0; jet_idx<AK8.size(); jet_idx++) {
 		if (AK8[jet_idx] == 1) {
@@ -119,18 +120,24 @@ RVec<int> refine_ak8_jets(RVec<int> AK8, RVec<int> l_fakeable,
 			else {
 				int sj_idx1 = FatJet_subJetIdx1[jet_idx];
 				int sj_idx2 = FatJet_subJetIdx2[jet_idx];
-				if (SubJet_pt[sj_idx1] <= 20 || SubJet_pt[sj_idx2] <= 20)
+				if (SubJet_pt[sj_idx1] > subjet2_pt && SubJet_pt[sj_idx2] > subjet2_pt) {}
+				else 
 					AK8[jet_idx] = 0;
-				else {
-					if (std::abs(SubJet_pt[sj_idx1]) <= 2.4 || std::abs(SubJet_pt[sj_idx2]) <= 2.4)
-						AK8[jet_idx] = 0;
-				}
+
+				if (SubJet_pt[sj_idx1] > subjet1_pt || SubJet_pt[sj_idx2] > subjet1_pt) {}
+				else
+					AK8[jet_idx] = 0;
+
+				if (std::abs(SubJet_eta[sj_idx1]) <= subjet_eta && std::abs(SubJet_eta[sj_idx2]) <= subjet_eta) {}
+				else
+					AK8[jet_idx] = 0;
+				
 			}
 		}
 	}
-
 	return AK8;
 }
+
 
 RVec<int> refine_ak8_btagging(RVec<int> AK8, RVec<int> FatJet_subJetIdx1, RVec<int> FatJet_subJetIdx2, 
 	RVec<float> SubJet_pt, RVec<float> SubJet_btagDeepB, float higher_pt_cut, float btag_cut) {
@@ -179,7 +186,38 @@ RVec<int> refine_taus_sel(RVec<int> taus_sel, RVec<int> l_fakeable, RVec<float> 
 }
 
 // SL channel filters fucntions ========================================
-bool get_deltaR_pass(RVec<float> Eta1, RVec<float> Phi1, RVec<float> Eta2, RVec<float> Phi2, float deltaR_cut) {
+bool sl_pt_eta_tight_cut(RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_eta, RVec<float> Muon_eta,
+	RVec<int> e_tight, RVec<int> mu_tight, float e_pt_cut, float mu_pt_cut, float e_eta_cut, float mu_eta_cut) {
+	
+	if (Electron_pt.size() > 0) {
+		for (int e_idx = 0; e_idx<e_tight.size(); e_idx++) {
+			if (e_tight[e_idx] == 1) {
+				float e_pt = Electron_pt[e_idx];
+				float e_eta = Electron_eta[e_idx];
+				if (e_pt > e_pt_cut && std::abs(e_eta) < e_eta_cut) {
+					return true;
+				}
+			}	
+		}
+	}
+	if (Muon_pt.size() > 0) {
+		for (int mu_idx = 0; mu_idx<mu_tight.size(); mu_idx++) {
+			if (mu_tight[mu_idx] == 1) {
+				float mu_pt = Muon_pt[mu_idx];
+				float mu_eta = Muon_eta[mu_idx];
+				if (mu_pt > mu_pt_cut && std::abs(mu_eta) < mu_eta_cut) {
+					return true;
+				}
+			}	
+		}
+	}
+
+	return false;
+}
+
+bool get_deltaR_pass(RVec<float> Eta1, RVec<float> Phi1, RVec<float> Eta2, RVec<float> Phi2) {
+
+	float deltaR_cut = 1.2;
 
 	for (int i=0; i<Eta1.size(); i++) {
 		float eta1 = Eta1[i];
@@ -265,8 +303,10 @@ RVec<float> define_sl_e_pt(RVec<float> Electron_pt, RVec<int> e_tight) {
 
 	RVec<float> sl_e_pt;
 	for (int i = 0; i<e_tight.size(); i++) {
-		if (e_tight[i] == 1)
+		if (e_tight[i] == 1) {
 			sl_e_pt.push_back(Electron_pt[i]);
+			break;
+		}
 	}
 	return sl_e_pt;
 }
@@ -275,8 +315,10 @@ RVec<float> define_sl_mu_pt(RVec<float> Muon_pt, RVec<int> mu_tight) {
 
 	RVec<float> sl_mu_pt;
 	for (int i = 0; i<mu_tight.size(); i++) {
-		if (mu_tight[i] == 1)
+		if (mu_tight[i] == 1) {
 			sl_mu_pt.push_back(Muon_pt[i]);
+			break;
+		}
 	}
 	return sl_mu_pt;
 }
@@ -285,8 +327,10 @@ RVec<float> define_sl_e_eta(RVec<float> Electron_eta, RVec<int> e_tight) {
 
 	RVec<float> sl_e_eta;
 	for (int i = 0; i<e_tight.size(); i++) {
-		if (e_tight[i] == 1)
+		if (e_tight[i] == 1) {
 			sl_e_eta.push_back(Electron_eta[i]);
+			break;
+		}
 	}
 	return sl_e_eta;
 }
@@ -295,8 +339,10 @@ RVec<float> define_sl_mu_eta(RVec<float> Muon_eta, RVec<int> mu_tight) {
 
 	RVec<float> sl_mu_eta;
 	for (int i = 0; i<mu_tight.size(); i++) {
-		if (mu_tight[i] == 1)
+		if (mu_tight[i] == 1) {
 			sl_mu_eta.push_back(Muon_eta[i]);
+			break;
+		}
 	}
 	return sl_mu_eta;
 }
@@ -305,8 +351,10 @@ RVec<float> define_sl_e_dxy(RVec<float> Electron_dxy, RVec<int> e_tight) {
 
 	RVec<float> sl_e_dxy;
 	for (int i = 0; i<e_tight.size(); i++) {
-		if (e_tight[i] == 1)
+		if (e_tight[i] == 1) {
 			sl_e_dxy.push_back(Electron_dxy[i]);
+			break;
+		}
 	}
 	return sl_e_dxy;
 }
@@ -315,8 +363,10 @@ RVec<float> define_sl_mu_dxy(RVec<float> Muon_dxy, RVec<int> mu_tight) {
 
 	RVec<float> sl_mu_dxy;
 	for (int i = 0; i<mu_tight.size(); i++) {
-		if (mu_tight[i] == 1)
+		if (mu_tight[i] == 1) {
 			sl_mu_dxy.push_back(Muon_dxy[i]);
+			break;
+		}
 	}
 	return sl_mu_dxy;
 }
@@ -325,8 +375,10 @@ RVec<float> define_sl_e_dz(RVec<float> Electron_dz, RVec<int> e_tight) {
 
 	RVec<float> sl_e_dz;
 	for (int i = 0; i<e_tight.size(); i++) {
-		if (e_tight[i] == 1)
+		if (e_tight[i] == 1) {
 			sl_e_dz.push_back(Electron_dz[i]);
+			break;
+		}
 	}
 	return sl_e_dz;
 }
@@ -335,8 +387,10 @@ RVec<float> define_sl_mu_dz(RVec<float> Muon_dz, RVec<int> mu_tight) {
 
 	RVec<float> sl_mu_dz;
 	for (int i = 0; i<mu_tight.size(); i++) {
-		if (mu_tight[i] == 1)
+		if (mu_tight[i] == 1) {
 			sl_mu_dz.push_back(Muon_dz[i]);
+			break;
+		}
 	}
 	return sl_mu_dz;
 }
@@ -344,21 +398,23 @@ RVec<float> define_sl_mu_dz(RVec<float> Muon_dz, RVec<int> mu_tight) {
 int define_sl_e_N(RVec<int> e_tight) {
 
 	int e_event = 0;
-	if (Sum(e_tight)==1)
+	if (Sum(e_tight)==1) {
 		e_event = 1;
+	}
 	return e_event;
 }
 
 int define_sl_mu_N(RVec<int> mu_tight) {
 
 	int mu_event = 0;
-	if (Sum(mu_tight)==1)
+	if (Sum(mu_tight)) {
 		mu_event = 1;
+	}
 	return mu_event;
 }
 
 // DL channel filters fucntions ========================================
-bool dl_pt_charge_cut(RVec<float> Lepton_pt, RVec<int> l_tight, float lead_pt_cut, float sublead_pt_cut, RVec<int> Lepton_charge) {
+bool dl_pt_charge_cut(RVec<int> l_tight, RVec<float> Lepton_pt, RVec<int> Lepton_charge, float lead_pt_cut, float sublead_pt_cut) {
 	
 	RVec<float> l_tight_pt;
 	RVec<int> l_tight_charge;
@@ -443,7 +499,7 @@ RVec<float> define_dl_l_dz(RVec<float> Lepton_pt, RVec<float> Lepton_dz, RVec<in
 
 int define_dl_ee_N(RVec<int> e_tight) {
 
-	int ee_event =0 ;
+	int ee_event = 0;
 	if (Sum(e_tight)==2)
 		ee_event = 1;
 	return ee_event;
@@ -459,7 +515,7 @@ int define_dl_mumu_N(RVec<int> mu_tight) {
 
 int define_dl_emu_N(RVec<int> e_tight, RVec<int> mu_tight) {
 
-	int emu_event =0;
+	int emu_event = 0;
 	if (Sum(e_tight)==1 && Sum(mu_tight)==1)
 		emu_event = 1;
 	return emu_event;

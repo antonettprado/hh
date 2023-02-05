@@ -49,6 +49,7 @@ def select_e_fakeable(df, e_fakeable_dict):
     definition += " && Electron_hoe      <   " + str(e_fakeable_dict["max_h_over_e"])
     definition += " && Electron_eInvMinusPInv  >  " + str(e_fakeable_dict["min_e_p"])
     definition += " && Electron_lostHits    ==  " + str(e_fakeable_dict["max_n_missing_hits"])
+    definition += " && Electron_convVeto    ==  " + str(e_fakeable_dict["conv_rej"])
     definition += " && " + get_l_WP_id("e", e_fakeable_dict["id"])
     df = df.Define("e_fakeable", definition)
     df = df.Redefine("e_fakeable", "sigma_ieta_pass(e_fakeable, Electron_eta, Electron_sieie, " + str(e_fakeable_dict["max_sigma_ieta_barrel"]) + ", " + str(e_fakeable_dict["max_sigma_ieta_endcap"]) + ")")
@@ -65,8 +66,9 @@ def select_e_tight(df, e_tight_dict):
     definition += " && Electron_ip3d/Electron_sip3d  < " + str(e_tight_dict["max_d_over_sigmad"])
     definition += " && Electron_pfRelIso03_all <  " + str(e_tight_dict["max_iso"])
     definition += " && Electron_hoe         <   " + str(e_tight_dict["max_h_over_e"]) 
-    definition += " && Electron_eInvMinusPInv      >   " + str(e_tight_dict["min_e_p"]) 
-    definition += " && Electron_lostHits    <=   " + str(e_tight_dict["max_n_missing_hits"]) 
+    definition += " && Electron_eInvMinusPInv   >   " + str(e_tight_dict["min_e_p"]) 
+    definition += " && Electron_lostHits    <=  " + str(e_tight_dict["max_n_missing_hits"]) 
+    definition += " && Electron_convVeto    ==  " + str(e_tight_dict["conv_rej"])
     definition += " && " + get_l_WP_id("e", e_tight_dict["id"])
     df = df.Define("e_tight", definition)
     df = df.Redefine("e_tight", "sigma_ieta_pass(e_tight, Electron_eta, Electron_sieie, " + str(e_tight_dict["max_sigma_ieta_barrel"]) + ", " + str(e_tight_dict["max_sigma_ieta_endcap"]) + ")")
@@ -168,13 +170,18 @@ def select_AK4_jets(df, ak4_jet_dict):
 
 # AK8 Jet Selection =====================================================================
 def select_AK8_jets(df, ak8_jet_dict):
+
+    subjet1_pt = str(ak8_jet_dict['min_subjet1_pt'])
+    subjet2_pt = str(ak8_jet_dict['min_subjet2_pt'])
+    subjet_eta = str(ak8_jet_dict['max_subjet_eta'])
     
     definition = "FatJet_pt        >   " + str(ak8_jet_dict["min_pt"])
     definition += " && abs(FatJet_eta)  <   " + str(ak8_jet_dict["max_eta"])
     definition += " && FatJet_msoftdrop >   " + str(ak8_jet_dict["min_msd"])
     definition += " && FatJet_msoftdrop <   " + str(ak8_jet_dict["max_msd"]) 
+    definition += " && FatJet_tau2/FatJet_tau1 <   " + str(ak8_jet_dict["max_tau21"]) 
     df = df.Define("AK8", definition)
-    df = df.Redefine("AK8", "refine_ak8_jets(AK8, l_fakeable, FatJet_eta, FatJet_phi, Lepton_eta, Lepton_phi, FatJet_subJetIdx1, FatJet_subJetIdx2, SubJet_pt, SubJet_eta)")
+    df = df.Redefine("AK8", "refine_ak8_jets(AK8, l_fakeable, FatJet_eta, FatJet_phi, Lepton_eta, Lepton_phi, FatJet_subJetIdx1, FatJet_subJetIdx2, SubJet_pt, SubJet_eta, " + subjet1_pt + ", " + subjet2_pt + ", " + subjet_eta + ")")
     df = df.Redefine("AK8", "refine_ak8_btagging(AK8, FatJet_subJetIdx1, FatJet_subJetIdx2, SubJet_pt, SubJet_btagDeepB, " + str(ak8_jet_dict["min_subjet1_pt"]) + ", " + get_btag_cut(ak8_jet_dict["subjet1_btag"]) + ")")
     df = df.Define("AK8_pt" , "FatJet_pt[AK8]")
     df = df.Define("AK8_eta", "FatJet_eta[AK8]")
@@ -200,19 +207,24 @@ def select_taus(df, taus_dict):
     return df
 
 # Single Lepton Channel Selection =======================================================
-def select_sl_channel(df, sl_event_dict, tau_dict, year):
+def select_sl_channel(df, sl_event_dict, year):
+
+    e_pt_cut = str(sl_event_dict['sl_e_pt'])
+    e_eta_cut = str(sl_event_dict['sl_mu_pt'])
+    mu_pt_cut = str(sl_event_dict['sl_e_eta'])
+    mu_eta_cut = str(sl_event_dict['sl_mu_eta'])
 
     print("\t SL channel:")
     df = trigger_filter(df, year, 1)
 
     # Single lepton jet cases ----------------------------------
-    case_boosted    = "(nAK8 >= 1 && nAK4 >= 1 && get_deltaR_pass(AK4_eta, AK4_phi, AK8_eta, AK8_phi, 1.2) )"
+    case_boosted    = "(nAK8 >= 1 && nAK4 >= 1 && get_deltaR_pass(AK4_eta, AK4_phi, AK8_eta, AK8_phi))"
     case_resolved   = "(nAK4 >= 3 && nAK4_btag >= 1)"
     jet_cases_filter = case_boosted + " || " + case_resolved
     # ----------------------------------------------------------
     filters = []
-    filters.append("Any(Electron_pt  > " + str(sl_event_dict["sl_e_pt"]) + ") || Any(Muon_pt  > " + str(sl_event_dict["sl_mu_pt"]) + ")")
-    filters.append("Any(abs(Electron_eta) < " + str(sl_event_dict["sl_e_eta"]) + ") || Any(abs(Muon_eta)  < " + str(sl_event_dict["sl_mu_eta"]) + ")")
+    filters.append("n_l_tight >= 1")
+    filters.append("sl_pt_eta_tight_cut(Electron_pt, Muon_pt, Electron_eta, Muon_eta, e_tight, mu_tight, " + e_pt_cut + ", " + e_eta_cut + ", " + mu_pt_cut + ", " + mu_eta_cut + ")")
     filters.append(jet_cases_filter)
     filters.append("n_taus_sel == 0")
     filters.append("n_l_tight == 1")
@@ -222,10 +234,10 @@ def select_sl_channel(df, sl_event_dict, tau_dict, year):
         name = "sl_filter_" + str(idx+1)
         df = df.Filter(filters[idx], name)
 
-    df = df.Define("sl_e_pt","define_sl_e_pt(Electron_pt, e_tight)")
-    df = df.Define("sl_e_eta","define_sl_e_eta(Electron_eta, e_tight)")
-    df = df.Define("sl_e_dxy","define_sl_e_dxy(Electron_dxy, e_tight)")
-    df = df.Define("sl_e_dz","define_sl_e_dz(Electron_dz, e_tight)")
+    df = df.Define("sl_e_pt", "define_sl_e_pt(Electron_pt, e_tight)")
+    df = df.Define("sl_e_eta", "define_sl_e_eta(Electron_eta, e_tight)")
+    df = df.Define("sl_e_dxy", "define_sl_e_dxy(Electron_dxy, e_tight)")
+    df = df.Define("sl_e_dz", "define_sl_e_dz(Electron_dz, e_tight)")
 
     df = df.Define("sl_mu_pt","define_sl_mu_pt(Muon_pt, mu_tight)")
     df = df.Define("sl_mu_eta","define_sl_mu_eta(Muon_eta, mu_tight)")
@@ -241,12 +253,16 @@ def select_sl_channel(df, sl_event_dict, tau_dict, year):
     df = df.Define("sl_e_N", "define_sl_e_N(e_tight)")
     df = df.Define("sl_mu_N", "define_sl_mu_N(mu_tight)")
 
-    # df.Display({"event","l_fakeable","sl_e_N", "sl_mu_N", "taus_sel", "Electron_pt", "e_tight", "Tau_pt"},40).Print()
+    # df.Display({"event", "sl_e_N", "sl_mu_N", "e_tight", "mu_tight"},10).Print()
+    # df.Display({"event","e_tight", "mu_tight","AK4", "AK8", "AK4_btag"}, 10).Print()
 
     return df
 
 # Double Lepton Channel Selection =======================================================
 def select_dl_channel(df, dl_event_dict, year):
+
+    leading_pt = str(dl_event_dict["dl_leading_pt"])
+    subleading_pt = str(dl_event_dict["dl_subleading_pt"])
 
     print("\t DL channel:")
     df = trigger_filter(df, year, 2)
@@ -258,7 +274,7 @@ def select_dl_channel(df, dl_event_dict, year):
     # ---------------------------------------------------------
     filters = []
     filters.append("n_l_tight >= 2")
-    filters.append("dl_pt_charge_cut(Lepton_pt, l_tight, " + str(dl_event_dict["dl_leading_pt"]) + ", " + str(dl_event_dict["dl_subleading_pt"]) + ", Lepton_charge)")
+    filters.append("dl_pt_charge_cut(l_tight, Lepton_pt, Lepton_charge, " +  leading_pt + ", " + subleading_pt + ")")
     filters.append(jet_cases_filter)
     filters.append("n_l_tight == 2")
     filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
