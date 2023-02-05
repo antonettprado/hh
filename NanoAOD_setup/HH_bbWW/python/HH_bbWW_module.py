@@ -420,12 +420,14 @@ class HH_bbWW_Analysis(Module):
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
                 phi_string += "%.2f  "%jet.phi
-                subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
+                if jet.subJetIdx1 >= 0:
+                    subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
+                    subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
+                    subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
+                if jet.subJetIdx2 >= 0:
+                    subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
+                    subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
+                    subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
                 msd_string += "%.2f  "%jet.msoftdrop
                 tau21_string += "%.2f  "%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -436,9 +438,9 @@ class HH_bbWW_Analysis(Module):
             print (subjet1_deepjet_string)
             print (subjet2_pt_string)
             print (subjet2_eta_string)
+            print (subjet2_deepjet_string)
             print (msd_string)
             print (tau21_string)
-            print (subjet2_deepjet_string)
             print ("  Selected AK8 jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
@@ -450,18 +452,20 @@ class HH_bbWW_Analysis(Module):
             subjet2_eta_string = "    subjet2 eta:"
             subjet2_deepjet_string = "    subjet2 deepjet:"
             msd_string = "    msd: "
-            tau21_string = "  tau2/tau1: "
+            tau21_string = "    tau2/tau1: "
             for i in ak8_jet_sel_index:
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
                 phi_string += "%.2f  "%jet.phi
-                subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
+                if jet.subJetIdx1 >= 0:
+                    subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
+                    subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
+                    subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
+                if jet.subJetIdx2 >= 0:
+                    subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
+                    subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
+                    subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
                 msd_string += "%.2f  "%jet.msoftdrop
                 tau21_string += "%.2f  "%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -472,9 +476,9 @@ class HH_bbWW_Analysis(Module):
             print (subjet1_deepjet_string)
             print (subjet2_pt_string)
             print (subjet2_eta_string)
+            print (subjet2_deepjet_string)
             print (msd_string)
             print (tau21_string)
-            print (subjet2_deepjet_string)
             print ("  Cleaned AK8 jets:")
             pt_string = "    pT: "
             eta_string = "    eta: "
@@ -486,18 +490,20 @@ class HH_bbWW_Analysis(Module):
             subjet2_eta_string = "    subjet2 eta:"
             subjet2_deepjet_string = "    subjet2 deepjet:"
             msd_string = "    msd: "
-            tau21_string = "  tau2/tau1: "
+            tau21_string = "    tau2/tau1: "
             for i in ak8_jet_sel_clean_index:
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt
                 eta_string += "%.2f  "%jet.eta
                 phi_string += "%.2f  "%jet.phi
-                subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
-                subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
-                subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
-                subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
-                subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
-                subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
+                if jet.subJetIdx1 >= 0:
+                    subjet1_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].pt
+                    subjet1_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].eta
+                    subjet1_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx1].btagDeepB
+                if jet.subJetIdx2 >= 0:
+                    subjet2_pt_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].pt
+                    subjet2_eta_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].eta
+                    subjet2_deepjet_string += "%.2f  "%ak8_subjets[jet.subJetIdx2].btagDeepB
                 msd_string += "%.2f  "%jet.msoftdrop
                 tau21_string += "%.2f  "%(jet.tau2/jet.tau1)
             print (pt_string)
@@ -508,9 +514,9 @@ class HH_bbWW_Analysis(Module):
             print (subjet1_deepjet_string)
             print (subjet2_pt_string)
             print (subjet2_eta_string)
+            print (subjet2_deepjet_string)
             print (msd_string)
             print (tau21_string)
-            print (subjet2_deepjet_string)
             print ("")
 
         # Select AK8 btags
@@ -527,7 +533,7 @@ class HH_bbWW_Analysis(Module):
             subjet2_eta_string = "    subjet2 eta:"
             subjet2_deepjet_string = "    subjet2 deepjet:"
             msd_string = "    msd: "
-            tau21_string = "  tau2/tau1: "
+            tau21_string = "    tau2/tau1: "
             for i in ak8_btag_sel_clean_index:
                 jet = ak8_jets[i]
                 pt_string += "%.2f  "%jet.pt

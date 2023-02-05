@@ -155,11 +155,15 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
             n_ak4jets_ak8cleaned = 0
             for i in ak4_jet_sel_clean_index:
                 ak4_jet = ak4_jets[i]
+                flag_ak4jets_ak8cleaned = 1
                 for j in ak8_btag_sel_clean_index:
                     ak8_jet = ak8_jets[j]
                     deltar = delta_R(ak4_jet.eta, ak8_jet.eta, ak4_jet.phi, ak8_jet.phi)
-                    if deltar > 1.2:
-                        n_ak4jets_ak8cleaned += 1
+                    if deltar < 1.2:
+                        flag_ak4jets_ak8cleaned = 0
+                        break
+                if flag_ak4jets_ak8cleaned == 1:
+                    n_ak4jets_ak8cleaned += 1
             if n_ak4jets_ak8cleaned >= 1:
                 is_sl_jet = 1
     else: # resolved Hbb case
