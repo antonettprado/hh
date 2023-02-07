@@ -41,28 +41,28 @@ def electron_selection(electrons, jets, electrons_sel_index, cuts):
         # TO DO: calculate cone-pT
         ele_cone_pt = ele.pt
 
-        if ele_cone_pt < cuts["min_cone_pt"]:
+        if ele_cone_pt <= cuts["min_cone_pt"]:
             continue
-        if abs(ele.eta) > cuts["max_eta"]:
+        if abs(ele.eta) >= cuts["max_eta"]:
             continue
-        if abs(ele.dxy) > cuts["max_dxy"]:
+        if abs(ele.dxy) >= cuts["max_dxy"]:
             continue
-        if abs(ele.dz) > cuts["max_dz"]:
+        if abs(ele.dz) >= cuts["max_dz"]:
             continue
-        if ele.ip3d/ele.sip3d > cuts["max_d_over_sigmad"]:
+        if ele.ip3d/ele.sip3d >= cuts["max_d_over_sigmad"]:
             continue
-        if abs(ele.pfRelIso03_all) > cuts["max_iso"]:
+        if abs(ele.pfRelIso03_all) >= cuts["max_iso"]:
             continue
-        if abs(ele.eta) < 1.479:
+        if abs(ele.eta) <= 1.479:
             if cuts["max_sigma_ieta_barrel"] != -9999:
-                if ele.sieie > cuts["max_sigma_ieta_barrel"]:
+                if ele.sieie >= cuts["max_sigma_ieta_barrel"]:
                     continue
         else:
             if cuts["max_sigma_ieta_endcap"] != -9999:
-                if ele.sieie > cuts["max_sigma_ieta_endcap"]:
+                if ele.sieie >= cuts["max_sigma_ieta_endcap"]:
                     continue
         if cuts["max_h_over_e"] != -9999:
-            if ele.hoe > cuts["max_h_over_e"]:
+            if ele.hoe >= cuts["max_h_over_e"]:
                 continue
         if cuts["min_e_p"] != -9999:
             if ele.eInvMinusPInv < cuts["min_e_p"]:
@@ -102,17 +102,17 @@ def muon_selection(muons, jets, muons_basic_sel_index, cuts):
         # TO DO: calculate cone-pT
         mu_cone_pt = mu.pt
 
-        if mu_cone_pt < cuts["min_pt"]:
+        if mu_cone_pt <= cuts["min_pt"]:
             continue
-        if abs(mu.eta) > cuts["max_eta"]:
+        if abs(mu.eta) >= cuts["max_eta"]:
             continue
-        if abs(mu.dxy) > cuts["max_dxy"]:
+        if abs(mu.dxy) >= cuts["max_dxy"]:
             continue
-        if abs(mu.dz) > cuts["max_dz"]:
+        if abs(mu.dz) >= cuts["max_dz"]:
             continue
-        if mu.ip3d/mu.sip3d > cuts["max_d_over_sigmad"]:
+        if mu.ip3d/mu.sip3d >= cuts["max_d_over_sigmad"]:
             continue
-        if abs(mu.pfRelIso03_all) > cuts["max_iso"]:
+        if abs(mu.pfRelIso03_all) >= cuts["max_iso"]:
             continue
         
         id_cut = cuts["id"]
@@ -137,9 +137,9 @@ def tau_selection(taus, cuts):
     taus_final_sel_index = []
     for (i,tau) in enumerate(taus):
 
-        if tau.pt < cuts["min_pt"]:
+        if tau.pt <= cuts["min_pt"]:
             continue
-        if abs(tau.eta) > cuts["max_eta"]:
+        if abs(tau.eta) >= cuts["max_eta"]:
             continue
         
         id_cut = -9999
@@ -178,13 +178,13 @@ def ak4_jet_selection(ak4_jets, cuts, type="ak4"):
     ak4_jets_final_sel_index = []
     for (i,jet) in enumerate(ak4_jets):
 
-        if jet.pt < cuts["min_pt"]:
+        if jet.pt <= cuts["min_pt"]:
             continue
-        if abs(jet.eta) > cuts["max_eta"]:
+        if abs(jet.eta) >= cuts["max_eta"]:
             continue
         if type=="vbf_ak4":
             if abs(jet.eta) > 2.7 and abs(jet.eta) < 3.0:
-                if jet.pt < cuts["min_pt_high"]:
+                if jet.pt <= cuts["min_pt_high"]:
                     continue
 
         id_cut = -9999
@@ -277,9 +277,9 @@ def ak8_jet_selection(ak8_jets, ak8_subjets, cuts):
     ak8_jets_final_sel_index = []
     for (i,jet) in enumerate(ak8_jets):
 
-        if jet.pt < cuts["min_pt"]:
+        if jet.pt <= cuts["min_pt"]:
             continue
-        if abs(jet.eta) > cuts["max_eta"]:
+        if abs(jet.eta) >= cuts["max_eta"]:
             continue
         
         subjet1_index = jet.subJetIdx1
@@ -288,16 +288,16 @@ def ak8_jet_selection(ak8_jets, ak8_subjets, cuts):
             continue
         subjet1 = ak8_subjets[subjet1_index]
         subjet2 = ak8_subjets[subjet2_index]
-        if abs(subjet1.eta) > cuts["max_subjet_eta"] or abs(subjet2.eta) > cuts["max_subjet_eta"]:
+        if abs(subjet1.eta) >= cuts["max_subjet_eta"] or abs(subjet2.eta) >= cuts["max_subjet_eta"]:
             continue
-        if subjet1.pt < cuts["min_subjet2_pt"] or subjet2.pt < cuts["min_subjet2_pt"]:
+        if subjet1.pt <= cuts["min_subjet2_pt"] or subjet2.pt <= cuts["min_subjet2_pt"]:
             continue
-        if subjet1.pt < cuts["min_subjet1_pt"] and subjet2.pt < cuts["min_subjet1_pt"]:
+        if subjet1.pt <= cuts["min_subjet1_pt"] and subjet2.pt <= cuts["min_subjet1_pt"]:
             continue
         
-        if jet.msoftdrop < cuts["min_msd"] or jet.msoftdrop > cuts["max_msd"]:
+        if jet.msoftdrop <= cuts["min_msd"] or jet.msoftdrop >= cuts["max_msd"]:
             continue
-        if jet.tau2/jet.tau1 > cuts["max_tau21"]:
+        if jet.tau2/jet.tau1 >= cuts["max_tau21"]:
             continue
 
         ak8_jets_final_sel_index.append(i)
