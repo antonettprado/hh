@@ -48,6 +48,8 @@ if __name__ == "__main__":
 
     for df in df_list:
 
+        # df = df.Filter("event == 11 || event == 25 || event == 51")
+
         print("1) Basic Event Selection --------------------------------")
         df = df.Filter("PV_npvsGood>=1")    # Primary collision vertex
         df = met_filter(df, args.type)
@@ -74,47 +76,48 @@ if __name__ == "__main__":
         print("8) Tau Selection ----------------------------------------")
         df = select_taus(df, cuts["taus"])
 
-        print("9) PRINTOUTS:  ------------------------------------------")
-        # if (print_out):
-            
-            # df.Display({"event", "e_loose", "e_fakeable", "e_tight", "Electron_pt", "Electron_eta"},40).Print()
-            # df.Display({"event", "mu_loose", "mu_fakeable", "mu_tight", "Muon_pt", "Muon_eta"},10).Print()
-            # df.Display({"event", "AK4", "AK4_btag", "Jet_pt", "AK4_btag"},10).Print()
-
-        
-        # df.Display({"event", "AK8", "FatJet_eta", "FatJet_pt"},10).Print()
-
-        print("10) Final Event Selection --------------------------------")
+        print("9) Final Event Selection -------------------------------")
         df_sl = df    
         df_dl = df
 
-        df_sl = select_sl_channel(df_sl, cuts["single_lepton_event"],  args.year)
-        df_sl.Report().Print()
+        df_e, df_mu = select_sl_channel(df_sl, cuts["single_lepton_event"])
+        is_e = df_e.Count().GetValue()
+        is_mu = df_mu.Count().GetValue()
+        print('\t Total is_e: ' + str(is_e))
+        print('\t Total is_mu: ' + str(is_mu))
+        print('\t Total SL events: ' + str(is_e + is_mu))
 
-        df_dl = select_dl_channel(df_dl, cuts["dilepton_event"], args.year)
-        df_dl.Report().Print()
+        # df_e.Report().Print()
+        # df_mu.Report().Print()
 
-        print("11) Printable dfs --------------------------------------")
-        df_sl = df_sl.Define("AK4_pt_0", "AK4_pt[0]")
-        df_sl = df_sl.Define("AK4_pt_1", "AK4_pt[1]")
-        df_sl = df_sl.Define("AK4_pt_2", "AK4_pt[2]")
-        df_sl = df_sl.Define("AK4_btag_pt_0", "AK4_btag_pt[0]")
-        df_sl = df_sl.Define("AK4_btag_pt_1", "AK4_btag_pt[1]")
-        df_sl = df_sl.Define("AK8_pt_0", "AK8_pt[0]")
-        df_sl_print = df_sl.Snapshot("df_sl_print", "df_sl_print.root", ["event","sl_N", "sl_e_N" , "sl_mu_N", "sl_l_pt", "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
-        df_dl = df_dl.Define("AK4_pt_0", "AK4_pt[0]")
-        df_dl = df_dl.Define("AK4_pt_1", "AK4_pt[1]")
-        df_dl = df_dl.Define("AK4_pt_2", "AK4_pt[2]")
-        df_dl = df_dl.Define("AK4_btag_pt_0", "AK4_btag_pt[0]")
-        df_dl = df_dl.Define("AK4_btag_pt_1", "AK4_btag_pt[1]")
-        df_dl = df_dl.Define("AK8_pt_0", "AK8_pt[0]")
-        df_dl_print = df_dl.Snapshot("df_dl_print", "df_dl_print.root", ["event","dl_N", "dl_ee_N" , "dl_mumu_N", "dl_emu_N", "dl_l_pt_0", "dl_l_pt_1", "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
+        df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"])
+        is_ee = df_ee.Count().GetValue()
+        is_mumu = df_mumu.Count().GetValue()
+        is_emu = df_emu.Count().GetValue()
+        print('\t Total is_ee: ' + str(is_ee))
+        print('\t Total is_mumu: ' + str(is_mumu))
+        print('\t Total is_emu: ' + str(is_emu))
+        print('\t Total DL events: ' + str(is_ee + is_mumu + is_emu))
 
-        print("12) Saving to root file ----------------------------------")
-        sl = df_sl.Snapshot("sl","sl.root", ["event", "sl_N", "sl_e_N" , "sl_mu_N", "sl_l_pt", "sl_l_eta", "sl_l_dxy", "sl_l_dz"])
-        print('sl.root file done')
-        dl = df_dl.Snapshot("dl","dl.root", ["event", "dl_N", "dl_ee_N", "dl_mumu_N", "dl_emu_N", "dl_l_pt_0","dl_l_eta_0","dl_l_dxy_0","dl_l_dz_0", "dl_l_pt_1","dl_l_eta_1","dl_l_dxy_1","dl_l_dz_1"])
-        print('dl.root file done')
+        # df_ee.Report().Print()
+        # df_mumu.Report().Print()
+        # df_emu.Report().Print()
 
-        print("Event selections: COMPLETED")
+        print("10) Printable dfs --------------------------------------")
+        df_e_print = df_e.Snapshot("sl_e", "sl_e_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
+        df_mu_print = df_mu.Snapshot("sl_mu", "sl_mu_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
+        print('SL printable done')
+
+        df_ee_print = df_ee.Snapshot("dl_ee", "dl_ee_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
+        df_mumu_print = df_mumu.Snapshot("dl_mumu", "dl_mumu_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
+        df_emu_print = df_emu.Snapshot("dl_emu", "dl_emu_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
+        print('DL printable done')
+
+        # print("11) Saving to root file ----------------------------------")
+        # sl = df_sl.Snapshot("sl","sl.root", ["event", "sl_N", "sl_e_N" , "sl_mu_N", "sl_l_pt", "sl_l_eta", "sl_l_dxy", "sl_l_dz"])
+        # print('sl.root file done')
+        # dl = df_dl.Snapshot("dl","dl.root", ["event", "dl_N", "dl_ee_N", "dl_mumu_N", "dl_emu_N", "dl_l_pt_0","dl_l_eta_0","dl_l_dxy_0","dl_l_dz_0", "dl_l_pt_1","dl_l_eta_1","dl_l_dxy_1","dl_l_dz_1"])
+        # print('dl.root file done')
+
+        # print("Event selections: COMPLETED")
         

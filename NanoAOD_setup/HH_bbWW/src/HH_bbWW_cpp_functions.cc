@@ -7,7 +7,10 @@
 
 using namespace ROOT::VecOps;
 
+// =====================================================================
 // Common functions ====================================================
+// =====================================================================
+
 float get_deltaR(float eta1_val, float eta2_val, float phi1_val, float phi2_val) {
 	return std::sqrt((eta1_val-eta2_val)*(eta1_val-eta2_val) + (phi1_val-phi2_val)*(phi1_val-phi2_val));
 }
@@ -45,7 +48,10 @@ RVec<int> sigma_ieta_pass(RVec<int> e_selection, RVec<float> Electron_eta, RVec<
 	return e_selection;
 }
 
+// =====================================================================
 // Define Lepton collections ===========================================
+// =====================================================================
+
 RVec<int> define_lepton_flavor(const UInt_t nElectron, const UInt_t nMuon) {
 	
 	RVec<int> lepton_fl;
@@ -56,7 +62,10 @@ RVec<int> define_lepton_flavor(const UInt_t nElectron, const UInt_t nMuon) {
 	return lepton_fl;
 } 
 
+// =====================================================================
 // AK4 Jet Selection ===================================================
+// =====================================================================
+
 RVec<int> refine_ak4_jets(RVec<int> AK4, RVec<int> Electron_jetIdx, RVec<int> Muon_jetIdx, 
 			RVec<int> e_fakeable,RVec<int> mu_fakeable) {
 
@@ -94,7 +103,10 @@ RVec<int> define_ak4_btag(RVec<int> AK4, RVec<float> Jet_btagDeepFlavB, float bt
 	return AK4_btag;
 }
 
+// =====================================================================
 // AK8 Jet Selection ===================================================
+// =====================================================================
+
 RVec<int> refine_ak8_jets(RVec<int> AK8, RVec<int> l_fakeable, 
 	RVec<float> FatJet_eta, RVec<float> FatJet_phi, RVec<float> Lepton_eta, RVec<float> Lepton_phi, 
 	RVec<int> FatJet_subJetIdx1, RVec<int> FatJet_subJetIdx2, RVec<float> SubJet_pt, RVec<float> SubJet_eta,
@@ -160,7 +172,9 @@ RVec<int> refine_ak8_btagging(RVec<int> AK8, RVec<int> FatJet_subJetIdx1, RVec<i
 	return AK8;
 }
 
+// =====================================================================
 // Tau selection =======================================================
+// =====================================================================
 RVec<int> refine_taus_sel(RVec<int> taus_sel, RVec<int> l_fakeable, RVec<float> Tau_eta, RVec<float> Tau_phi, RVec<float> Lepton_eta, RVec<float> Lepton_phi) {
 
 	float deltaR_cut = 0.3;
@@ -185,7 +199,11 @@ RVec<int> refine_taus_sel(RVec<int> taus_sel, RVec<int> l_fakeable, RVec<float> 
 	return taus_sel;
 }
 
+// =====================================================================
 // SL channel filters fucntions ========================================
+// =====================================================================
+
+
 bool sl_pt_eta_tight_cut(RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_eta, RVec<float> Muon_eta,
 	RVec<int> e_tight, RVec<int> mu_tight, float e_pt_cut, float mu_pt_cut, float e_eta_cut, float mu_eta_cut) {
 	
@@ -215,17 +233,45 @@ bool sl_pt_eta_tight_cut(RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<floa
 	return false;
 }
 
-bool get_deltaR_pass(RVec<float> Eta1, RVec<float> Phi1, RVec<float> Eta2, RVec<float> Phi2) {
+bool s_e_pt_eta_tight_cut(RVec<float> Electron_pt, RVec<float> Electron_eta, RVec<int> e_tight, float e_pt_cut, float e_eta_cut) {
+
+	for (int e_idx = 0; e_idx<e_tight.size(); e_idx++) {
+		if (e_tight[e_idx] == 1) {
+			float e_pt = Electron_pt[e_idx];
+			float e_eta = Electron_eta[e_idx];
+			if (e_pt > e_pt_cut && std::abs(e_eta) < e_eta_cut) {
+				return true;
+			}
+		}	
+	}
+	return false;
+}
+
+bool s_mu_pt_eta_tight_cut(RVec<float> Muon_pt, RVec<float> Muon_eta, RVec<int> mu_tight, float mu_pt_cut, float mu_eta_cut) {
+
+	for (int mu_idx = 0; mu_idx<mu_tight.size(); mu_idx++) {
+		if (mu_tight[mu_idx] == 1) {
+			float mu_pt = Muon_pt[mu_idx];
+			float mu_eta = Muon_eta[mu_idx];
+			if (mu_pt > mu_pt_cut && std::abs(mu_eta) < mu_eta_cut) {
+				return true;
+			}
+		}	
+	}
+	return false;
+}
+
+bool get_deltaR_pass(RVec<float> AK4_eta, RVec<float> AK4_phi, RVec<float> AK8_eta, RVec<float> AK8_phi) {
 
 	float deltaR_cut = 1.2;
 
-	for (int i=0; i<Eta1.size(); i++) {
-		float eta1 = Eta1[i];
-		float phi1 = Phi1[i];
-		for (int j=0; j<Eta2.size(); j++) {
-			float eta2 = Eta2[j];
-			float phi2 = Phi2[j];
-			float deltaR_val = get_deltaR(eta1, eta2, phi1, phi2);
+	for (int i=0; i<AK4_eta.size(); i++) {
+		float ak4_eta = AK4_eta[i];
+		float ak4_phi = AK4_phi[i];
+		for (int j=0; j<AK8_eta.size(); j++) {
+			float ak8_eta = AK8_eta[j];
+			float ak8_phi = AK8_phi[j];
+			float deltaR_val = get_deltaR(ak4_eta, ak8_eta, ak4_phi, ak8_phi);
 			if (deltaR_val > deltaR_cut) {
 				return true;
 			}
@@ -413,7 +459,10 @@ int define_sl_mu_N(RVec<int> mu_tight) {
 	return mu_event;
 }
 
+// =====================================================================
 // DL channel filters fucntions ========================================
+// =====================================================================
+
 bool dl_pt_charge_cut(RVec<int> l_tight, RVec<float> Lepton_pt, RVec<int> Lepton_charge, float lead_pt_cut, float sublead_pt_cut) {
 	
 	RVec<float> l_tight_pt;

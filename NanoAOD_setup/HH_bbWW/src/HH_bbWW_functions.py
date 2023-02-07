@@ -18,7 +18,14 @@ def met_filter(df, sample_type):
     # met_filter_dict['Flag_ecalBadCalibReducedMINIAODFilter']  = [1, 1]
     met_filter_dict['Flag_eeBadScFilter']                       = [1, 0]
 
-    df = select_filter(df, met_filter_dict, sample_type_column, "met")
+    selected_met_filters = []
+    for key in met_filter_dict.keys():
+        if met_filter_dict[key][sample_type_column] == 1:
+            selected_met_filters.append(key)
+    
+    for i in range(len(selected_met_filters)): 
+        filter = selected_met_filters[i]
+        df = df.Filter(filter)
 
     return df
 
@@ -207,129 +214,81 @@ def select_taus(df, taus_dict):
     return df
 
 # Single Lepton Channel Selection =======================================================
-def select_sl_channel(df, sl_event_dict, year):
+def select_sl_channel(df, sl_event_dict):
+
+    print("SL channel:")
 
     e_pt_cut = str(sl_event_dict['sl_e_pt'])
     e_eta_cut = str(sl_event_dict['sl_mu_pt'])
     mu_pt_cut = str(sl_event_dict['sl_e_eta'])
     mu_eta_cut = str(sl_event_dict['sl_mu_eta'])
 
-    print("\t SL channel:")
-    df = trigger_filter(df, year, 1)
+    df_e = df.Filter('n_e_tight == 1 && n_mu_tight == 0', "1 e_tight")
+    df_e = df_e.Filter('s_e_pt_eta_tight_cut(Electron_pt, Electron_eta, e_tight, ' + e_pt_cut + ", " + e_eta_cut +')', 'pt_eta_cut')
+    df_e = df_e.Filter(get_triggers('sl_e_triggers'), "s_e trigger")
 
-    # Single lepton jet cases ----------------------------------
-    case_boosted    = "(nAK8 >= 1 && nAK4 >= 1 && get_deltaR_pass(AK4_eta, AK4_phi, AK8_eta, AK8_phi))"
-    case_resolved   = "(nAK4 >= 3 && nAK4_btag >= 1)"
-    jet_cases_filter = case_boosted + " || " + case_resolved
-    # ----------------------------------------------------------
-    filters = []
-    filters.append("n_l_tight >= 1")
-    filters.append("sl_pt_eta_tight_cut(Electron_pt, Muon_pt, Electron_eta, Muon_eta, e_tight, mu_tight, " + e_pt_cut + ", " + e_eta_cut + ", " + mu_pt_cut + ", " + mu_eta_cut + ")")
-    filters.append(jet_cases_filter)
-    filters.append("n_taus_sel == 0")
-    filters.append("n_l_tight == 1")
-    filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
+    df_mu = df.Filter('n_e_tight == 0 && n_mu_tight == 1', "1 mu_tight")
+    df_mu = df_mu.Filter('s_mu_pt_eta_tight_cut(Muon_pt, Muon_eta, mu_tight, ' + mu_pt_cut + ", " + mu_eta_cut +')', 'pt_eta_cut')
+    df_mu = df_mu.Filter(get_triggers('sl_mu_triggers'), "s_mu trigger")
 
-    for idx in range(len(filters)):
-        name = "sl_filter_" + str(idx+1)
-        df = df.Filter(filters[idx], name)
+    common_filters = []
+    common_filters.append('n_taus_sel == 0')
+    common_filters.append('(nAK8 >= 1 && nAK4 >= 1 && get_deltaR_pass(AK4_eta, AK4_phi, AK8_eta, AK8_phi)) || (nAK4 >= 3 && nAK4_btag >= 1)')
+    common_filters.append('get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)')
 
-    df = df.Define("sl_e_pt", "define_sl_e_pt(Electron_pt, e_tight)")
-    df = df.Define("sl_e_eta", "define_sl_e_eta(Electron_eta, e_tight)")
-    df = df.Define("sl_e_dxy", "define_sl_e_dxy(Electron_dxy, e_tight)")
-    df = df.Define("sl_e_dz", "define_sl_e_dz(Electron_dz, e_tight)")
+    for idx in range(len(common_filters)):
+        df_e = df_e.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
+        df_mu = df_mu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
 
-    df = df.Define("sl_mu_pt","define_sl_mu_pt(Muon_pt, mu_tight)")
-    df = df.Define("sl_mu_eta","define_sl_mu_eta(Muon_eta, mu_tight)")
-    df = df.Define("sl_mu_dxy","define_sl_mu_dxy(Muon_dxy, e_tight)")
-    df = df.Define("sl_mu_dz","define_sl_mu_dz(Muon_dz, e_tight)")
-    
-    df = df.Define("sl_l_pt", "Concatenate(sl_e_pt,sl_mu_pt)[0]")
-    df = df.Define("sl_l_eta","Concatenate(sl_e_eta,sl_mu_eta)[0]")
-    df = df.Define("sl_l_dxy", "Concatenate(sl_e_dxy, sl_mu_dxy)[0]")
-    df = df.Define("sl_l_dz", "Concatenate(sl_e_dz, sl_mu_dz)[0]")
-    
-    df = df.Define("sl_N", "1")
-    df = df.Define("sl_e_N", "define_sl_e_N(e_tight)")
-    df = df.Define("sl_mu_N", "define_sl_mu_N(mu_tight)")
+    df_e = df_e.Define("sl_l_pt", "Electron_pt[e_tight]")
+    df_e = df_e.Define("sl_l_eta", "Electron_eta[e_tight]")
+    df_e = df_e.Define("sl_l_dxy", "Electron_dxy[e_tight]")
+    df_e = df_e.Define("sl_l_dz", "Electron_dz[e_tight]")
 
-    # df.Display({"event", "sl_e_N", "sl_mu_N", "e_tight", "mu_tight"},10).Print()
-    # df.Display({"event","e_tight", "mu_tight","AK4", "AK8", "AK4_btag"}, 10).Print()
+    df_mu = df_mu.Define("sl_l_pt", "Muon_pt[mu_tight]")
+    df_mu = df_mu.Define("sl_l_eta", "Muon_eta[mu_tight]")
+    df_mu = df_mu.Define("sl_l_dxy", "Muon_dxy[mu_tight]")
+    df_mu = df_mu.Define("sl_l_dz", "Muon_dz[mu_tight]")
 
-    return df
+    # s_e.Display({"event", "Electron_pt", "sl_l_pt", "e_tight"},10).Print()
+    # s_mu.Display({"event", "Muon_pt", "sl_l_pt", "mu_tight"},10).Print()
+
+    return df_e, df_mu
 
 # Double Lepton Channel Selection =======================================================
-def select_dl_channel(df, dl_event_dict, year):
+def select_dl_channel(df, dl_event_dict):
+
+    print("DL channel:")
 
     leading_pt = str(dl_event_dict["dl_leading_pt"])
     subleading_pt = str(dl_event_dict["dl_subleading_pt"])
 
-    print("\t DL channel:")
-    df = trigger_filter(df, year, 2)
-
-    # Double lepton jet cases ----------------------------------
-    case_boosted    = "(nAK8 >= 1)"
-    case_resolved   = "(nAK4 >= 1 && nAK4_btag >= 1)"
-    jet_cases_filter = case_boosted + " || " + case_resolved
-    # ---------------------------------------------------------
-    filters = []
-    filters.append("n_l_tight >= 2")
-    filters.append("dl_pt_charge_cut(l_tight, Lepton_pt, Lepton_charge, " +  leading_pt + ", " + subleading_pt + ")")
-    filters.append(jet_cases_filter)
-    filters.append("n_l_tight == 2")
-    filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
-
-    for idx in range(len(filters)):
-        name = "dl_filter_" + str(idx+1)
-        df = df.Filter(filters[idx], name)
+    df_ee = df.Filter('n_e_tight == 2 && n_mu_tight == 0', "2 e_tight")
+    df_ee = df_ee.Filter('dl_pt_charge_cut(e_tight, Electron_pt, Electron_charge, ' +  leading_pt + ", " + subleading_pt + ")", 'pt_charge_cut')
+    df_ee = df_ee.Filter(get_triggers('dl_ee_triggers'), "dl_ee trigger")
     
-    # These collections are pt-sorted
-    df = df.Define("dl_l_pt","define_dl_l_pt(Lepton_pt, l_tight)")
-    df = df.Define("dl_l_eta","define_dl_l_eta(Lepton_pt, Lepton_eta, l_tight)")
-    df = df.Define("dl_l_dxy", "define_dl_l_dxy(Lepton_pt, Lepton_dxy, l_tight)")
-    df = df.Define("dl_l_dz", "define_dl_l_dz(Lepton_pt, Lepton_dz, l_tight)")
+    df_mumu = df.Filter('n_e_tight == 0 && n_mu_tight == 2', "2 e_tight")
+    df_mumu = df_mumu.Filter('dl_pt_charge_cut(mu_tight, Muon_pt, Muon_charge, ' +  leading_pt + ", " + subleading_pt + ")", 'pt_charge_cut')
+    df_mumu = df_mumu.Filter(get_triggers('dl_mumu_triggers'), "dl_mumu trigger")
 
-    df = df.Define("dl_l_pt_0", "dl_l_pt[0]")
-    df = df.Define("dl_l_pt_1", "dl_l_pt[1]")
-    df = df.Define("dl_l_eta_0", "dl_l_eta[0]")
-    df = df.Define("dl_l_eta_1", "dl_l_eta[1]")
-    df = df.Define("dl_l_dxy_0", "dl_l_dxy[0]")
-    df = df.Define("dl_l_dxy_1", "dl_l_dxy[1]")
-    df = df.Define("dl_l_dz_0", "dl_l_dz[0]")
-    df = df.Define("dl_l_dz_1", "dl_l_dz[1]")
-    df = df.Define("dl_N", "1")
-    df = df.Define("dl_ee_N", "define_dl_ee_N(e_tight)")
-    df = df.Define("dl_mumu_N", "define_dl_mumu_N(mu_tight)")
-    df = df.Define("dl_emu_N", "define_dl_emu_N(e_tight, mu_tight)")
+    df_emu = df.Filter('n_e_tight == 1 && n_mu_tight == 1', "1 e & 1 mu")
+    df_emu = df_emu.Filter('dl_pt_charge_cut(l_tight, Lepton_pt, Lepton_charge, ' +  leading_pt + ", " + subleading_pt + ")", 'pt_charge_cut')
+    df_emu = df_emu.Filter(get_triggers('dl_emu_triggers'), "dl_emu trigger")
 
-    # df.Display({"event","dl_emu_N", "e_tight", "mu_tight", "Electron_pt", "Muon_pt", "Electron_charge", "Muon_charge"},40).Print()
-    # df.Display({"event","dl_l_pt_0", "dl_l_pt_1", "dl_l_eta_0", "dl_l_eta_1"},40).Print()
+    common_filters = []
+    common_filters.append('(nAK8 >= 1) || (nAK4 >= 1 && nAK4_btag >= 1)')
+    common_filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
 
-    return df
+    for idx in range(len(common_filters)):
+        df_ee = df_ee.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
+        df_mumu = df_mumu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
+        df_emu = df_emu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
+
+    return df_ee, df_mumu, df_emu
 
 # ======================================================================================
 # ======================================================================================
 # ======================================================================================
-def select_filter(df, filter_dict, column, filter_tagname):
-    
-    selected_filters = []
-    for key in filter_dict.keys():
-        if filter_dict[key][column] == 1:
-            selected_filters.append(key)
-
-    if filter_tagname == "trigger":
-        for i in range(len(selected_filters)):    
-            trigger_i = selected_filters[i]
-            triggers = trigger_i + " || " + triggers
-            df = df.Filter(trigger, trigger_name)
-    else:
-        for i in range(len(selected_filters)): 
-            filter = selected_filters[i]
-            filter_name = filter_tagname + "_filter_" + str(i)
-            df = df.Filter(filter, filter_name)
-
-    return df
-
 def get_l_WP_id(part, key):
     WP_id = ''
     if (part == "e"):
@@ -358,28 +317,19 @@ def get_btag_cut(btag_cut_key):
         btag_cut_value = 0.7264
     return str(btag_cut_value)
 
-def trigger_filter(df, year, lepton_number):
+def get_triggers(key):
 
-    trig_filters = ''
-    if (int(year) == 2018):
-        s_e_trigs       = '(HLT_Ele32_WPTight_Gsf)'
-        s_mu_trigs      = '(HLT_IsoMu24 ||  HLT_IsoMu27)'
-        sl_trigs        = "(" + s_e_trigs + "||" + s_mu_trigs + ")"
+    trigs = ''
+    if key == 'sl_e_triggers':
+        trigs = 'HLT_Ele32_WPTight_Gsf'
+    elif key == 'sl_mu_triggers':
+        trigs = '(HLT_IsoMu24 ||  HLT_IsoMu27)'
+    elif key == 'dl_ee_triggers':
+        trigs = 'HLT_Ele32_WPTight_Gsf || HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL'
+    elif key == 'dl_mumu_triggers':
+        trigs = '(HLT_IsoMu24 ||  HLT_IsoMu27) || HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8'
+    elif key == 'dl_emu_triggers':
+        trigs = 'HLT_Ele32_WPTight_Gsf || (HLT_IsoMu24 ||  HLT_IsoMu27) || HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ'
 
-        d_e_trigs       = '(HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)'
-        d_mu_trigs      = '(HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)'
-        d_emu_trigs     = '(HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ)'
-        dl_ee_trigs     = '(' + s_e_trigs + '||' + d_e_trigs + ')'
-        dl_mumu_trigs   = '(' + s_mu_trigs + '||' + d_mu_trigs + ')'
-        dl_emu_trigs    = '(' + s_e_trigs + '||' + d_mu_trigs + '||' + d_emu_trigs +')'
-        dl_trigs        = '(' + dl_ee_trigs + '||' + dl_mumu_trigs + '||' + dl_emu_trigs + ')'
-
-        if (lepton_number == 1):
-            trig_filters = sl_trigs
-        if (lepton_number == 2):
-            trig_filters = dl_trigs
-
-    df = df.Filter(trig_filters, 'trig_filters')
-
-    return df
+    return trigs
 
