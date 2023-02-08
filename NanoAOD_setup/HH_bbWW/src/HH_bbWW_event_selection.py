@@ -48,8 +48,6 @@ if __name__ == "__main__":
 
     for df in df_list:
 
-        # df = df.Filter("event == 11 || event == 25 || event == 51")
-
         print("1) Basic Event Selection --------------------------------")
         df = df.Filter("PV_npvsGood>=1")    # Primary collision vertex
         df = met_filter(df, args.type)
@@ -87,7 +85,9 @@ if __name__ == "__main__":
         print('\t Total is_mu: ' + str(is_mu))
         print('\t Total SL events: ' + str(is_e + is_mu))
 
+        # print('\t sl_e')
         # df_e.Report().Print()
+        # print('\t sl_mu')
         # df_mu.Report().Print()
 
         df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"])
@@ -99,25 +99,34 @@ if __name__ == "__main__":
         print('\t Total is_emu: ' + str(is_emu))
         print('\t Total DL events: ' + str(is_ee + is_mumu + is_emu))
 
+        # print('\t dl_ee')
         # df_ee.Report().Print()
+        # print('\t dl_mumu')
         # df_mumu.Report().Print()
+        # print('\t dl_emu')
         # df_emu.Report().Print()
+        # print()
 
         print("10) Printable dfs --------------------------------------")
-        df_e_print = df_e.Snapshot("sl_e", "sl_e_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
-        df_mu_print = df_mu.Snapshot("sl_mu", "sl_mu_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
+        print_df_e = df_e.Snapshot("sl_e", "print_sl_e.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight", "l_pt_0", "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
+        print_df_mu = df_mu.Snapshot("sl_mu", "print_sl_mu.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight", "l_pt_0", "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
         print('SL printable done')
 
-        df_ee_print = df_ee.Snapshot("dl_ee", "dl_ee_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
-        df_mumu_print = df_mumu.Snapshot("dl_mumu", "dl_mumu_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
-        df_emu_print = df_emu.Snapshot("dl_emu", "dl_emu_print.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight"])
+        print_df_ee = df_ee.Snapshot("dl_ee", "print_dl_ee.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight", "l_pt_0", "l_pt_1",  "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
+        print_df_mumu = df_mumu.Snapshot("dl_mumu", "print_dl_mumu.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight", "l_pt_0", "l_pt_1", "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
+        print_df_emu = df_emu.Snapshot("dl_emu", "print_dl_emu.root", ["event","n_e_tight", "n_mu_tight", "n_l_tight", "l_pt_0", "l_pt_1", "nAK4", "nAK4_btag", "nAK8", "AK4_pt_0", "AK4_pt_1", "AK4_pt_2", "AK4_btag_pt_0", "AK4_btag_pt_1", "AK8_pt_0"])
         print('DL printable done')
 
-        # print("11) Saving to root file ----------------------------------")
-        # sl = df_sl.Snapshot("sl","sl.root", ["event", "sl_N", "sl_e_N" , "sl_mu_N", "sl_l_pt", "sl_l_eta", "sl_l_dxy", "sl_l_dz"])
-        # print('sl.root file done')
-        # dl = df_dl.Snapshot("dl","dl.root", ["event", "dl_N", "dl_ee_N", "dl_mumu_N", "dl_emu_N", "dl_l_pt_0","dl_l_eta_0","dl_l_dxy_0","dl_l_dz_0", "dl_l_pt_1","dl_l_eta_1","dl_l_dxy_1","dl_l_dz_1"])
-        # print('dl.root file done')
+        print("11) Saving to root file ----------------------------------")
+        hist_df_e = df_e.Snapshot("sl_e","sl_e.root", ["event", "l_pt_0", "l_eta_0", "l_dxy_0", "l_dz_0"])
+        hist_df_mu = df_mu.Snapshot("sl_mu","sl_mu.root", ["event", "l_pt_0", "l_eta_0", "l_dxy_0", "l_dz_0"])
+        print('sl.root files done')
+        hist_df_ee = df_ee.Snapshot("dl_ee","dl_ee.root", ["event", "l_pt_0","l_eta_0","l_dxy_0","l_dz_0", "l_pt_1","l_eta_1","l_dxy_1","l_dz_1"])
+        hist_df_mumu = df_mumu.Snapshot("dl_mumu","dl_mumu.root", ["event", "l_pt_0","l_eta_0","l_dxy_0","l_dz_0", "l_pt_1","l_eta_1","l_dxy_1","l_dz_1"])
+        hist_df_emu = df_emu.Snapshot("dl_emu","dl_emu.root", ["event", "l_pt_0","l_eta_0","l_dxy_0","l_dz_0", "l_pt_1","l_eta_1","l_dxy_1","l_dz_1"])
+        print('dl.root file done')
 
-        # print("Event selections: COMPLETED")
+        # SAVE HISTOGRAMS IN 1 ROOTFILE INSTEAD OF DATAFRAMES 
+
+        print("Event selections: COMPLETED")
         

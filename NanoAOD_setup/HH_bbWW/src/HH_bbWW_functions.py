@@ -219,8 +219,8 @@ def select_sl_channel(df, sl_event_dict):
     print("SL channel:")
 
     e_pt_cut = str(sl_event_dict['sl_e_pt'])
-    e_eta_cut = str(sl_event_dict['sl_mu_pt'])
-    mu_pt_cut = str(sl_event_dict['sl_e_eta'])
+    e_eta_cut = str(sl_event_dict['sl_e_eta'])
+    mu_pt_cut = str(sl_event_dict['sl_mu_pt'])
     mu_eta_cut = str(sl_event_dict['sl_mu_eta'])
 
     df_e = df.Filter('n_e_tight == 1 && n_mu_tight == 0', "1 e_tight")
@@ -240,18 +240,30 @@ def select_sl_channel(df, sl_event_dict):
         df_e = df_e.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
         df_mu = df_mu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
 
-    df_e = df_e.Define("sl_l_pt", "Electron_pt[e_tight]")
-    df_e = df_e.Define("sl_l_eta", "Electron_eta[e_tight]")
-    df_e = df_e.Define("sl_l_dxy", "Electron_dxy[e_tight]")
-    df_e = df_e.Define("sl_l_dz", "Electron_dz[e_tight]")
+    df_e = df_e.Define("l_pt_0", "define_sl_l_pt(Electron_pt, e_tight)")
+    df_e = df_e.Define("l_eta_0", "define_sl_l_eta(Electron_eta, e_tight)")
+    df_e = df_e.Define("l_dxy_0", "define_sl_l_dxy(Electron_dxy, e_tight)")
+    df_e = df_e.Define("l_dz_0", "define_sl_l_dz(Electron_dz, e_tight)")
 
-    df_mu = df_mu.Define("sl_l_pt", "Muon_pt[mu_tight]")
-    df_mu = df_mu.Define("sl_l_eta", "Muon_eta[mu_tight]")
-    df_mu = df_mu.Define("sl_l_dxy", "Muon_dxy[mu_tight]")
-    df_mu = df_mu.Define("sl_l_dz", "Muon_dz[mu_tight]")
+    df_mu = df_mu.Define("l_pt_0", "define_sl_l_pt(Muon_pt, mu_tight)")
+    df_mu = df_mu.Define("l_eta_0", "define_sl_l_eta(Muon_eta, mu_tight)")
+    df_mu = df_mu.Define("l_dxy_0", "define_sl_l_dxy(Muon_dxy, mu_tight)")
+    df_mu = df_mu.Define("l_dz_0", "define_sl_l_dz(Muon_dz, mu_tight)")
 
-    # s_e.Display({"event", "Electron_pt", "sl_l_pt", "e_tight"},10).Print()
-    # s_mu.Display({"event", "Muon_pt", "sl_l_pt", "mu_tight"},10).Print()
+    df_e = df_e.Define("AK4_pt_0", "AK4_pt[0]")
+    df_e = df_e.Define("AK4_pt_1", "AK4_pt[1]")
+    df_e = df_e.Define("AK4_pt_2", "AK4_pt[2]")
+    df_e = df_e.Define("AK4_btag_pt_0", "AK4_pt[0]")
+    df_e = df_e.Define("AK4_btag_pt_1", "AK4_pt[1]")
+    df_e = df_e.Define("AK8_pt_0", "AK8_pt[0]")
+
+    df_mu = df_mu.Define("AK4_pt_0", "AK4_pt[0]")
+    df_mu = df_mu.Define("AK4_pt_1", "AK4_pt[1]")
+    df_mu = df_mu.Define("AK4_pt_2", "AK4_pt[2]")
+    df_mu = df_mu.Define("AK4_btag_pt_0", "AK4_pt[0]")
+    df_mu = df_mu.Define("AK4_btag_pt_1", "AK4_pt[1]")
+    df_mu = df_mu.Define("AK8_pt_0", "AK8_pt[0]")
+
 
     return df_e, df_mu
 
@@ -280,9 +292,73 @@ def select_dl_channel(df, dl_event_dict):
     common_filters.append("get_mll_pass(e_loose, mu_loose, Electron_pt, Electron_eta, Electron_phi, Electron_mass, Electron_charge, Muon_pt, Muon_eta, Muon_phi, Muon_mass, Muon_charge)")
 
     for idx in range(len(common_filters)):
-        df_ee = df_ee.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
-        df_mumu = df_mumu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
-        df_emu = df_emu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
+        df_ee = df_ee.Filter(common_filters[idx], 'common_fil_' + str(idx))
+        df_mumu = df_mumu.Filter(common_filters[idx], 'common_fil_' + str(idx))
+        df_emu = df_emu.Filter(common_filters[idx], 'common_fil_' + str(idx))
+
+    if (True):
+        df_ee = df_ee.Define("l_pt","define_dl_l_pt(Lepton_pt, l_tight)")
+        df_ee = df_ee.Define("l_eta","define_dl_l_eta(Lepton_pt, Lepton_eta, l_tight)")
+        df_ee = df_ee.Define("l_dxy", "define_dl_l_dxy(Lepton_pt, Lepton_dxy, l_tight)")
+        df_ee = df_ee.Define("l_dz", "define_dl_l_dz(Lepton_pt, Lepton_dz, l_tight)")
+
+        df_ee = df_ee.Define("l_pt_0", "l_pt[0]")
+        df_ee = df_ee.Define("l_pt_1", "l_pt[1]")
+        df_ee = df_ee.Define("l_eta_0", "l_eta[0]")
+        df_ee = df_ee.Define("l_eta_1", "l_eta[1]")
+        df_ee = df_ee.Define("l_dxy_0", "l_dxy[0]")
+        df_ee = df_ee.Define("l_dxy_1", "l_dxy[1]")
+        df_ee = df_ee.Define("l_dz_0", "l_dz[0]")
+        df_ee = df_ee.Define("l_dz_1", "l_dz[1]")
+
+        df_mumu = df_mumu.Define("l_pt","define_dl_l_pt(Lepton_pt, l_tight)")
+        df_mumu = df_mumu.Define("l_eta","define_dl_l_eta(Lepton_pt, Lepton_eta, l_tight)")
+        df_mumu = df_mumu.Define("l_dxy", "define_dl_l_dxy(Lepton_pt, Lepton_dxy, l_tight)")
+        df_mumu = df_mumu.Define("l_dz", "define_dl_l_dz(Lepton_pt, Lepton_dz, l_tight)")
+
+        df_mumu = df_mumu.Define("l_pt_0", "l_pt[0]")
+        df_mumu = df_mumu.Define("l_pt_1", "l_pt[1]")
+        df_mumu = df_mumu.Define("l_eta_0", "l_eta[0]")
+        df_mumu = df_mumu.Define("l_eta_1", "l_eta[1]")
+        df_mumu = df_mumu.Define("l_dxy_0", "l_dxy[0]")
+        df_mumu = df_mumu.Define("l_dxy_1", "l_dxy[1]")
+        df_mumu = df_mumu.Define("l_dz_0", "l_dz[0]")
+        df_mumu = df_mumu.Define("l_dz_1", "l_dz[1]")
+
+        df_emu = df_emu.Define("l_pt","define_dl_l_pt(Lepton_pt, l_tight)")
+        df_emu = df_emu.Define("l_eta","define_dl_l_eta(Lepton_pt, Lepton_eta, l_tight)")
+        df_emu = df_emu.Define("l_dxy", "define_dl_l_dxy(Lepton_pt, Lepton_dxy, l_tight)")
+        df_emu = df_emu.Define("l_dz", "define_dl_l_dz(Lepton_pt, Lepton_dz, l_tight)")
+
+        df_emu = df_emu.Define("l_pt_0", "l_pt[0]")
+        df_emu = df_emu.Define("l_pt_1", "l_pt[1]")
+        df_emu = df_emu.Define("l_eta_0", "l_eta[0]")
+        df_emu = df_emu.Define("l_eta_1", "l_eta[1]")
+        df_emu = df_emu.Define("l_dxy_0", "l_dxy[0]")
+        df_emu = df_emu.Define("l_dxy_1", "l_dxy[1]")
+        df_emu = df_emu.Define("l_dz_0", "l_dz[0]")
+        df_emu = df_emu.Define("l_dz_1", "l_dz[1]")
+
+        df_ee = df_ee.Define("AK4_pt_0", "AK4_pt[0]")
+        df_ee = df_ee.Define("AK4_pt_1", "AK4_pt[1]")
+        df_ee = df_ee.Define("AK4_pt_2", "AK4_pt[2]")
+        df_ee = df_ee.Define("AK4_btag_pt_0", "AK4_pt[0]")
+        df_ee = df_ee.Define("AK4_btag_pt_1", "AK4_pt[1]")
+        df_ee = df_ee.Define("AK8_pt_0", "AK8_pt[0]")
+
+        df_mumu = df_mumu.Define("AK4_pt_0", "AK4_pt[0]")
+        df_mumu = df_mumu.Define("AK4_pt_1", "AK4_pt[1]")
+        df_mumu = df_mumu.Define("AK4_pt_2", "AK4_pt[2]")
+        df_mumu = df_mumu.Define("AK4_btag_pt_0", "AK4_pt[0]")
+        df_mumu = df_mumu.Define("AK4_btag_pt_1", "AK4_pt[1]")
+        df_mumu = df_mumu.Define("AK8_pt_0", "AK8_pt[0]")
+
+        df_emu = df_emu.Define("AK4_pt_0", "AK4_pt[0]")
+        df_emu = df_emu.Define("AK4_pt_1", "AK4_pt[1]")
+        df_emu = df_emu.Define("AK4_pt_2", "AK4_pt[2]")
+        df_emu = df_emu.Define("AK4_btag_pt_0", "AK4_pt[0]")
+        df_emu = df_emu.Define("AK4_btag_pt_1", "AK4_pt[1]")
+        df_emu = df_emu.Define("AK8_pt_0", "AK8_pt[0]")
 
     return df_ee, df_mumu, df_emu
 
