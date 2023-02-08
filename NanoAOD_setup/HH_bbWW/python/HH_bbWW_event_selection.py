@@ -150,6 +150,8 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
 
     # Check jets
     is_sl_jet = 0
+    is_sl_boosted_jet = 0
+    is_sl_resolved_jet = 0
     if len(ak8_btag_sel_clean_index) >= 1: # boosted Hbb case
         if len(ak4_jet_sel_clean_index) >= 1:
             n_ak4jets_ak8cleaned = 0
@@ -165,13 +167,13 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
                 if flag_ak4jets_ak8cleaned == 1:
                     n_ak4jets_ak8cleaned += 1
             if n_ak4jets_ak8cleaned >= 1:
-                is_sl_jet = 1
-    else: # resolved Hbb case
+                is_sl_boosted_jet = 1
+    if not is_sl_boosted_jet: # resolved Hbb case
         if len(ak4_jet_sel_clean_index) >= 3:
             if len(ak4_btag_sel_clean_index) >= 1:
-                is_sl_jet = 1
+                is_sl_resolved_jet = 1
 
-    if not is_sl_jet:
+    if not is_sl_boosted_jet and not is_sl_resolved_jet:
         is_sl = 0 
     return is_sl, is_sl_e, is_sl_mu
 

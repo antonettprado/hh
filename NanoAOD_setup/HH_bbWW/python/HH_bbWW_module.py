@@ -85,7 +85,7 @@ class HH_bbWW_Analysis(Module):
         if self.event_counter <= 10:
             verbose = True
         if verbose:
-            print ("\n\n\nEvent: %d"%self.event_counter)
+            print ("\n\n\nEvent: %d"%event.event)
         
         ## PV Selection
         pass_pv_sel = pv_selection(pv)
