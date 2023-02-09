@@ -1,10 +1,10 @@
 import ROOT
-import collections
-import math
+import pandas as pd
+import numpy as np
 
 # MET Filter Selection =================================================================
 def met_filter(df, sample_type):
-
+    print('MET filter')
     sample_type_dict = {'data': 0, 'mc': 1}
     sample_type_column = sample_type_dict[sample_type]
     
@@ -362,6 +362,55 @@ def select_dl_channel(df, dl_event_dict):
 
     return df_ee, df_mumu, df_emu
 
+# Save histograms to root file =========================================================
+def select_histos(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu):
+
+    save_histo(sl_e, "sl_e_pt_0", "l_pt_0", 300, -5, 295)
+    save_histo(sl_e, "sl_e_eta_0", "l_eta_0", 61, -3.05, 3.05)
+    save_histo(sl_e, "sl_e_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
+    save_histo(sl_e, "sl_e_dz_0", "l_dz_0", 410, -0.075, 0.075)
+    print('... saving')
+    save_histo(sl_mu, "sl_mu_pt_0", "l_pt_0", 300, -5, 295)
+    save_histo(sl_mu, "sl_mu_eta_0", "l_eta_0", 61, -3.05, 3.05)
+    save_histo(sl_mu, "sl_mu_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
+    save_histo(sl_mu, "sl_mu_dz_0", "l_dz_0", 410, -0.075, 0.075)
+    print('... saving')
+    save_histo(dl_ee, "dl_ee_pt_0", "l_pt_0", 300, -5, 295)
+    save_histo(dl_ee, "dl_ee_eta_0", "l_eta_0", 61, -3.05, 3.05)
+    save_histo(dl_ee, "dl_ee_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
+    save_histo(dl_ee, "dl_ee_dz_0", "l_dz_0", 410, -0.075, 0.075)
+    save_histo(dl_ee, "dl_ee_pt_1", "l_pt_1", 300, -5, 295)
+    save_histo(dl_ee, "dl_ee_eta_1", "l_eta_1", 61, -3.05, 3.05)
+    save_histo(dl_ee, "dl_ee_dxy_1", "l_dxy_1", 210, -0.0250, 0.0250)
+    save_histo(dl_ee, "dl_ee_dz_1", "l_dz_1", 410, -0.075, 0.075)
+    print('... saving')
+    save_histo(dl_mumu, "dl_mumu_pt_0", "l_pt_0", 300, -5, 295)
+    save_histo(dl_mumu, "dl_mumu_eta_0", "l_eta_0", 61, -3.05, 3.05)
+    save_histo(dl_mumu, "dl_mumu_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
+    save_histo(dl_mumu, "dl_mumu_dz_0", "l_dz_0", 410, -0.075, 0.075)
+    save_histo(dl_mumu, "dl_mumu_pt_1", "l_pt_1", 300, -5, 295)
+    save_histo(dl_mumu, "dl_mumu_eta_1", "l_eta_1", 61, -3.05, 3.05)
+    save_histo(dl_mumu, "dl_mumu_dxy_1", "l_dxy_1", 210, -0.0250, 0.0250)
+    save_histo(dl_mumu, "dl_mumu_dz_1", "l_dz_1", 410, -0.075, 0.075)
+    print('... saving')
+    save_histo(dl_emu, "dl_emu_pt_0", "l_pt_0", 300, -5, 295)
+    save_histo(dl_emu, "dl_emu_eta_0", "l_eta_0", 61, -3.05, 3.05)
+    save_histo(dl_emu, "dl_emu_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
+    save_histo(dl_emu, "dl_emu_dz_0", "l_dz_0", 410, -0.075, 0.075)
+    save_histo(dl_emu, "dl_emu_pt_1", "l_pt_1", 300, -5, 295)
+    save_histo(dl_emu, "dl_emu_eta_1", "l_eta_1", 61, -3.05, 3.05)
+    save_histo(dl_emu, "dl_emu_dxy_1", "l_dxy_1", 210, -0.0250, 0.0250)
+    save_histo(dl_emu, "dl_emu_dz_1", "l_dz_1", 410, -0.075, 0.075)
+
+def save_histo(df, hist_name, obj_name, bins, x_min, x_max):
+    h = df.Histo1D((hist_name,obj_name, bins, x_min, x_max), obj_name)
+    h.Write()
+
+def output_csv(df, outFileName):
+    npy = df.AsNumpy()
+    df = pd.DataFrame(npy)
+    df.to_csv(outFileName)
+
 # ======================================================================================
 # ======================================================================================
 # ======================================================================================
@@ -408,4 +457,3 @@ def get_triggers(key):
         trigs = 'HLT_Ele32_WPTight_Gsf || (HLT_IsoMu24 ||  HLT_IsoMu27) || HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ'
 
     return trigs
-

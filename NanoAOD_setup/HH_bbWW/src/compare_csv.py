@@ -43,28 +43,25 @@ print('\tdl_ee events: ' + str(len(dl_ee_events_datta)))
 print('\tdl_mumu events: ' + str(len(dl_mumu_events_datta)))
 print('\tdl_emu events: ' + str(len(dl_emu_events_datta)))
 print('------> Total DL events: ' + str(len(dl_events_datta)))
-# print('======> Total events: ' + str(len(sl_events_datta) + len(dl_events_datta)))
 print('=============================================')
-
-
 # Reading Antonett's csv files =====================================================
 prado_sl_e = pd.read_csv('data_sl_e.csv')
 prado_sl_mu = pd.read_csv('data_sl_mu.csv')
+prado_dl_ee = pd.read_csv('data_dl_ee.csv')
+prado_dl_mumu = pd.read_csv('data_dl_mumu.csv')
+prado_dl_emu = pd.read_csv('data_dl_emu.csv')
+
 sl_e_events_prado = prado_sl_e['event'].to_numpy()
 sl_mu_events_prado = prado_sl_mu['event'].to_numpy()
+dl_ee_events_prado = prado_dl_ee['event'].to_numpy()
+dl_mumu_events_prado = prado_dl_mumu['event'].to_numpy()
+dl_emu_events_prado = prado_dl_emu['event'].to_numpy()
 
 sl_events_prado = []
 for event in sl_e_events_prado:
     sl_events_prado.append(event)
 for event in sl_mu_events_prado:
     sl_events_prado.append(event)
-
-prado_dl_ee = pd.read_csv('data_dl_ee.csv')
-prado_dl_mumu = pd.read_csv('data_dl_mumu.csv')
-prado_dl_emu = pd.read_csv('data_dl_emu.csv')
-dl_ee_events_prado = prado_dl_ee['event'].to_numpy()
-dl_mumu_events_prado = prado_dl_mumu['event'].to_numpy()
-dl_emu_events_prado = prado_dl_emu['event'].to_numpy()
 
 dl_events_prado = []
 for event in dl_ee_events_prado:
@@ -73,7 +70,6 @@ for event in dl_mumu_events_prado:
     dl_events_prado.append(event)
 for event in dl_emu_events_prado:
     dl_events_prado.append(event)
-
 
 print('Prado_csv: ')
 print('\tsl_e events: ' + str(len(sl_e_events_prado)))
@@ -85,9 +81,7 @@ print('\tdl_mumu events: ' + str(len(dl_mumu_events_prado)))
 print('\tdl_emu events: ' + str(len(dl_emu_events_prado)))
 print('------> Total DL events: ' + str(len(dl_events_prado)))
 print()
-
 # -----------------------------------------------------------------
-
 sl_e_prado_extra_events = []
 for e_event_prado in sl_e_events_prado:
     if e_event_prado not in sl_e_events_datta:
@@ -105,7 +99,6 @@ for e_event_datta in sl_e_events_datta:
 print('sl_e events in datta_csv and NOT in prado_csv: ' + str(len(sl_e_datta_extra_events)) )
 print(sl_e_datta_extra_events[0:10])
 print()
-
 # -----------------------------------------------------------------
 sl_mu_prado_extra_events = []
 for mu_event_prado in sl_mu_events_prado:
@@ -124,7 +117,6 @@ for mu_event_datta in sl_mu_events_datta:
 print('sl_mu events in datta_csv and NOT in prado_csv: ' + str(len(sl_mu_datta_extra_events)) )
 print(sl_mu_datta_extra_events[0:10])
 print()
-
 # -----------------------------------------------------------------
 dl_ee_prado_extra_events = []
 for ee_event_prado in dl_ee_events_prado:
@@ -143,7 +135,6 @@ for ee_event_datta in dl_ee_events_datta:
 print('dl_ee events in datta_csv and NOT in prado_csv: ' + str(len(dl_ee_datta_extra_events)) )
 print(dl_ee_datta_extra_events[0:10])
 print()
-
 # -----------------------------------------------------------------
 dl_mumu_prado_extra_events = []
 for mumu_event_prado in dl_mumu_events_prado:
@@ -163,7 +154,6 @@ for mumu_event_datta in dl_mumu_events_datta:
 print('dl_mumu events in datta_csv and NOT in prado_csv: ' + str(len(dl_mumu_datta_extra_events)) )
 print(dl_mumu_datta_extra_events[0:10])
 print()
-
 # -----------------------------------------------------------------
 dl_emu_prado_extra_events = []
 for emu_event_prado in dl_emu_events_prado:
