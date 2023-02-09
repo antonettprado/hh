@@ -2,14 +2,14 @@ import sys, os, glob
 import argparse
 import ROOT
 import json
-from HH_bbWW_functions import *
+from HH_bbWW_event_sel_funcs import *
 from pathlib import Path
 import csv
 
 import warnings 
 warnings.filterwarnings("ignore")
 
-helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_cpp_functions.cc")
+helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_event_sel_funcs_cpp.cc")
 ROOT.gInterpreter.ProcessLine('#include "{}"'.format(helper_func_path))
 
 opts = ROOT.RDF.RSnapshotOptions()

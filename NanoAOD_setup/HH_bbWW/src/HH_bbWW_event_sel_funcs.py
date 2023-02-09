@@ -4,7 +4,7 @@ import numpy as np
 
 # MET Filter Selection =================================================================
 def met_filter(df, sample_type):
-    print('MET filter')
+
     sample_type_dict = {'data': 0, 'mc': 1}
     sample_type_column = sample_type_dict[sample_type]
     

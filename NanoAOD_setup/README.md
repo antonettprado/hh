@@ -26,7 +26,7 @@ scram b -j 4
 
 cd hh/NanoAOD_setup/HH_bbWW
 
-python3 src/HH_bbWW_event_selection.py -i data/input_HH_bbWW_mc.json -t mc -s hh_bbWW_dl_cHHH1 -y 2018
+python3 src/HH_bbWW_event_sel.py -i data/input_HH_bbWW_mc.json -t mc -s hh_bbWW_dl_cHHH1 -y 2018
 
 
 
