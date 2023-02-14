@@ -1,8 +1,5 @@
-#ifndef HH_bbWW_EDA_cc
-#define HH_bbWW_EDA_cc
-
 /// Includes
-#include "HH_bbWW_EDA.h"
+#include "hh/MiniAOD_setup/HH_bbWW/plugins/HH_bbWW_EDA.h"
 
 /// Constructor
 HH_bbWW_EDA::HH_bbWW_EDA(const edm::ParameterSet &iConfig)
@@ -114,7 +111,7 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         std::cout<<"    pT (GeV) = "<<pt<<",  Eta = "<<eta<<",  PDG ID = "<<pdgid<<",  Gen PDG ID = "<<gen_pdgid<<",  Gen Parent PDG ID = "<<gen_parent_pdgid<<",  Gen Grandparent PDG ID = "<<gen_grandparent_pdgid<<",  Gen Parent Flight Distance (cm) = "<<gen_parent_flight_d<<",  Gen Grandparent Flight Distance (cm) = "<<gen_grandparent_flight_d<<"\n";
     }
     std::cout<<"\n";
-
+    std::cout<<"\n";
     event_count += 1;
 }
 
@@ -141,5 +138,3 @@ void HH_bbWW_EDA::endRun(const edm::Run &iRun, const edm::EventSetup &iSetup)
 
 // define this as a CMSSW plugin
 DEFINE_FWK_MODULE(HH_bbWW_EDA);
-
-#endif
