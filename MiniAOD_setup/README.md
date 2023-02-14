@@ -22,48 +22,9 @@ cd ../../
 
 git clone https://gitlab.cern.ch/abdatta/hh.git
 
-. hh/MiniAOD_setup/Analyzer_run_recipe.sh
+scram b
 
 
-## Step 1 : Run to Create Ntuples :
-
-## For MC :
-   
-### To Run Locally:
-
-in test/HH_bbWW_mc_EDA_cfg.py :
-
-1. put desired MC filename 
-
-cmsRun test/HH_bbWW_mc_EDA_cfg.py > output_log.txt
-
-### To Run on GRID using CRAB :
-
-crab submit -c crabConfig_MC.py
-
-For submitting multiple jobs for different MC samples simultaneously :
-
-## For DATA :
-
-### To Run Locally:
-
-in test/HH_bbWW_data_EDA_cfg.py :
-
-1. put desired DATA filename
-2. put latest Lumi (JSON) filename
-
-cmsRun test/HH_bbWW_data_EDA_cfg.py > output_log.txt
-
-### To Run on GRID using CRAB :
-
-crab submit -c crabConfig_Data.py
-
-
-
-
-
-
-# For NanoAOD
 
 
 
