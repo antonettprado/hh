@@ -49,7 +49,7 @@ def electron_selection(electrons, jets, electrons_sel_index, cuts):
             continue
         if abs(ele.dz) >= cuts["max_dz"]:
             continue
-        if ele.ip3d/ele.sip3d >= cuts["max_d_over_sigmad"]:
+        if ele.sip3d >= cuts["max_d_over_sigmad"]:
             continue
         if abs(ele.pfRelIso03_all) >= cuts["max_iso"]:
             continue
@@ -110,7 +110,7 @@ def muon_selection(muons, jets, muons_basic_sel_index, cuts):
             continue
         if abs(mu.dz) >= cuts["max_dz"]:
             continue
-        if mu.ip3d/mu.sip3d >= cuts["max_d_over_sigmad"]:
+        if mu.sip3d >= cuts["max_d_over_sigmad"]:
             continue
         if abs(mu.pfRelIso03_all) >= cuts["max_iso"]:
             continue
