@@ -41,8 +41,8 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         const reco::GenParticle iEle_gen = *iEle.genLepton();
         int gen_pdgid = iEle_gen.pdgId();
         double gen_vx = iEle_gen.vx();
-        double gen_vx = iEle_gen.vz();
-        double gen_vx = iEle_gen.vy();
+        double gen_vy = iEle_gen.vy();
+        double gen_vz = iEle_gen.vz();
 
         int gen_parent_pdgid = -9999;
         int gen_grandparent_pdgid = -9999;
@@ -56,20 +56,20 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         double gen_grandparent_flight_d = -9999;
 
         if (iEle_gen.numberOfMothers > 0){
-            iEle_parent_gen = *iEle_gen.mother(0);
-            gen_parent_pdgid = iEle_parent_gen.pdgId();
-            gen_parent_vx = iEle_parent_gen.vx();
-            gen_parent_vy = iEle_parent_gen.vy();
-            gen_parent_vz = iEle_parent_gen.vz();
-            gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
+            const reco::GenParticle iEle_parent_gen = *iEle_gen.mother(0);
+            int gen_parent_pdgid = iEle_parent_gen.pdgId();
+            double gen_parent_vx = iEle_parent_gen.vx();
+            double gen_parent_vy = iEle_parent_gen.vy();
+            double gen_parent_vz = iEle_parent_gen.vz();
+            double gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
             if (iEle_parent_gen.numberOfMothers > 0){
-                iEle_grandparent_gen = *iEle_parent_gen.mother(0);
-                gen_grandparent_pdgid = iEle_grandparent_gen.pdgId();
-                gen_grandparent_vx = iEle_grandparent_gen.vx();
-                gen_grandparent_vy = iEle_grandparent_gen.vy();
-                gen_grandparent_vz = iEle_grandparent_gen.vz();
-                gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy)) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
+                const reco::GenParticle iEle_grandparent_gen = *iEle_parent_gen.mother(0);
+                int gen_grandparent_pdgid = iEle_grandparent_gen.pdgId();
+                double gen_grandparent_vx = iEle_grandparent_gen.vx();
+                double gen_grandparent_vy = iEle_grandparent_gen.vy();
+                double gen_grandparent_vz = iEle_grandparent_gen.vz();
+                double gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy)) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
             }
         }
         std::cout<<"    pT (GeV) = "<<pt<<",  Eta = "<<eta<<",  PDG ID = "<<pdgid<<",  Gen PDG ID = "<<gen_pdgid<<",  Gen Parent PDG ID = "<<gen_parent_pdgid<<",  Gen Grandparent PDG ID = "<<gen_grandparent_pdgid<<",  Gen Parent Flight Distance (cm) = "<<gen_parent_flight_d<<",  Gen Grandparent Flight Distance (cm) = "<<gen_grandparent_flight_d<<"\n";
@@ -85,8 +85,8 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         const reco::GenParticle iMu_gen = *iMu.genLepton();
         int gen_pdgid = iMu_gen.pdgId();
         double gen_vx = iMu_gen.vx();
-        double gen_vx = iMu_gen.vz();
-        double gen_vx = iMu_gen.vy();
+        double gen_vy = iMu_gen.vy();
+        double gen_vz = iMu_gen.vz();
 
         int gen_parent_pdgid = -9999;
         int gen_grandparent_pdgid = -9999;
@@ -100,20 +100,20 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         double gen_grandparent_flight_d = -9999;
 
         if (iMu_gen.numberOfMothers > 0){
-            iMu_parent_gen = *iMu_gen.mother(0);
-            gen_parent_pdgid = iMu_parent_gen.pdgId();
-            gen_parent_vx = iMu_parent_gen.vx();
-            gen_parent_vy = iMu_parent_gen.vy();
-            gen_parent_vz = iMu_parent_gen.vz();
-            gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
+            const reco::GenParticle iMu_parent_gen = *iMu_gen.mother(0);
+            int gen_parent_pdgid = iMu_parent_gen.pdgId();
+            double gen_parent_vx = iMu_parent_gen.vx();
+            double gen_parent_vy = iMu_parent_gen.vy();
+            double gen_parent_vz = iMu_parent_gen.vz();
+            double gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
             if (iMu_parent_gen.numberOfMothers > 0){
-                iMu_grandparent_gen = *iMu_parent_gen.mother(0);
-                gen_grandparent_pdgid = iMu_grandparent_gen.pdgId();
-                gen_grandparent_vx = iMu_grandparent_gen.vx();
-                gen_grandparent_vy = iMu_grandparent_gen.vy();
-                gen_grandparent_vz = iMu_grandparent_gen.vz();
-                gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy)) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
+                const reco::GenParticle iMu_grandparent_gen = *iMu_parent_gen.mother(0);
+                int gen_grandparent_pdgid = iMu_grandparent_gen.pdgId();
+                double gen_grandparent_vx = iMu_grandparent_gen.vx();
+                double gen_grandparent_vy = iMu_grandparent_gen.vy();
+                double gen_grandparent_vz = iMu_grandparent_gen.vz();
+                double gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy)) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
             }
         }
         std::cout<<"    pT (GeV) = "<<pt<<",  Eta = "<<eta<<",  PDG ID = "<<pdgid<<",  Gen PDG ID = "<<gen_pdgid<<",  Gen Parent PDG ID = "<<gen_parent_pdgid<<",  Gen Grandparent PDG ID = "<<gen_grandparent_pdgid<<",  Gen Parent Flight Distance (cm) = "<<gen_parent_flight_d<<",  Gen Grandparent Flight Distance (cm) = "<<gen_grandparent_flight_d<<"\n";
@@ -133,16 +133,16 @@ void HH_bbWW_EDA::endJob() {
     return; 
 }
 
-void HH_bbWW_EDA::beginRun(const edm::Run &iRun, const edm::EventSetup &iSetup)
-{
-    return;
-}
+//void HH_bbWW_EDA::beginRun(const edm::Run &iRun, const edm::EventSetup &iSetup)
+//{
+//    return;
+//}
 
-void HH_bbWW_EDA::endRun(const edm::Run &iRun, const edm::EventSetup &iSetup)
-{
-    std::cout<<"Total number of events = "<<event_count<<"\n\n";
-    return;
-}
+//void HH_bbWW_EDA::endRun(const edm::Run &iRun, const edm::EventSetup &iSetup)
+//{
+//    std::cout<<"Total number of events = "<<event_count<<"\n\n";
+//    return;
+//}
 
 void HH_bbWW_EDA::fillDescriptions(edm::ConfigurationDescriptions &descriptions)
 {

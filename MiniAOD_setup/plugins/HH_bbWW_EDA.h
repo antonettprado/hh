@@ -126,9 +126,9 @@ class HH_bbWW_EDA : public edm::EDAnalyzer{
 
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    EDGetTokenT<pat::ElectronCollection> electrons_token;
-    EDGetTokenT<pat::MuonCollection> muons_token;
-    EDGetTokenT<reco::GenParticleCollection> genparticles_token;
+    edm::EDGetTokenT<pat::ElectronCollection> electrons_token;
+    edm::EDGetTokenT<pat::MuonCollection> muons_token;
+    edm::EDGetTokenT<reco::GenParticleCollection> genparticles_token;
 
     edm::Handle<pat::ElectronCollection> electrons_handle;
     edm::Handle<pat::MuonCollection> muons_handle;
