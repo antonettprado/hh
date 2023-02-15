@@ -108,8 +108,8 @@
 /// TMVA
 #include "TMVA/Reader.h"
 
-class HH_bbWW_EDA : public edm::EDAnalyzer
-{
+class HH_bbWW_EDA : public edm::one::EDAnalyzer<edm::one::SharedResources>{
+
   public:
     explicit HH_bbWW_EDA(const edm::ParameterSet &);
     ~HH_bbWW_EDA();
