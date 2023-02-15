@@ -23,6 +23,5 @@
 <use name = "CondTools/BTau"/>
 <use name = "CondFormats/BTauObjects"/>
 <use name = "yaml-cpp" />
-<library file="HH_bbWW_EDA.cc" name="HH_bbWW_EDA">
-  <flags EDM_PLUGIN = "1" />
-</library>
+<flags EDM_PLUGIN = "1" />
+
