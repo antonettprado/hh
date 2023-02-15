@@ -38,10 +38,10 @@ process.maxEvents = cms.untracked.PSet(
 	input = cms.untracked.int32(-1)
 )
 
-process.HH_bbWW = cms.EDAnalyzer("HH_bbWW_EDA",
+process.hh = cms.EDAnalyzer("HH_bbWW_EDA",
     electrons = cms.InputTag("slimmedElectrons"),
     muons = cms.InputTag("slimmedMuons"),
     genparticles = cms.InputTag("prunedGenParticles")
 )
 
-process.p = cms.Path(process.HH_bbWW)
+process.p = cms.Path(process.hh)

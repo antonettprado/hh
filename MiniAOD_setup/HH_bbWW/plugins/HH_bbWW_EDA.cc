@@ -1,6 +1,9 @@
 /// Includes
 #include "hh/MiniAOD_setup/HH_bbWW/plugins/HH_bbWW_EDA.h"
 
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+
 /// Constructor
 HH_bbWW_EDA::HH_bbWW_EDA(const edm::ParameterSet &iConfig)
 {
