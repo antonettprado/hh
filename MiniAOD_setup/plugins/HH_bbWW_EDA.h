@@ -76,7 +76,6 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
-#include "SimDataFormats/JetMatching/interface/JetFlavourInfoMatching.h"
 
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
