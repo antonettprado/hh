@@ -4,7 +4,9 @@
 #include "Math/Vector4D.h"
 #include "Math/Vector4Dfwd.h"
 #include <vector>
-
+#include <iostream>
+#include <string.h>
+ 
 using namespace ROOT::VecOps;
 
 // =====================================================================
@@ -267,8 +269,6 @@ RVec<int> refine_taus_sel(RVec<int> taus_sel, RVec<int> l_fakeable, RVec<float> 
 // =====================================================================
 // SL channel filters fucntions ========================================
 // =====================================================================
-
-
 bool sl_pt_eta_tight_cut(RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_eta, RVec<float> Muon_eta,
 	RVec<int> e_tight, RVec<int> mu_tight, float e_pt_cut, float mu_pt_cut, float e_eta_cut, float mu_eta_cut) {
 	
@@ -350,54 +350,93 @@ bool get_deltaR_pass(RVec<float> AK4_eta, RVec<float> AK4_phi, RVec<float> AK8_e
 	return false;
 }
 
-float define_sl_l_pt(RVec<float> lepton_pt, RVec<int> l_tight) {
+float define_sl_pt(RVec<float> lepton_pt, RVec<int> l_tight) {
 
-	float sl_e_pt;
+	float sl_pt;
 	for (int i = 0; i<l_tight.size(); i++) {
 		if (l_tight[i] == 1) {
-			sl_e_pt = lepton_pt[i];
+			sl_pt = lepton_pt[i];
 			break;
 		}
 	}
-	return sl_e_pt;
+	return sl_pt;
 }
 
-float define_sl_l_eta(RVec<float> lepton_eta, RVec<int> l_tight) {
+float define_sl_eta(RVec<float> lepton_eta, RVec<int> l_tight) {
 
-	float sl_l_eta;
+	float sl_eta;
 	for (int i = 0; i<l_tight.size(); i++) {
 		if (l_tight[i] == 1) {
-			sl_l_eta = lepton_eta[i];
+			sl_eta = lepton_eta[i];
 			break;
 		}
 	}
-	return sl_l_eta;
-
-}
-
-float define_sl_l_dxy(RVec<float> lepton_dxy, RVec<int> l_tight) {
-
-	float sl_l_dxy;
-	for (int i = 0; i<l_tight.size(); i++) {
-		if (l_tight[i] == 1) {
-			sl_l_dxy = lepton_dxy[i];
-			break;
-		}
-	}
-	return sl_l_dxy;
+	return sl_eta;
 
 }
 
-float define_sl_l_dz(RVec<float> lepton_dz, RVec<int> l_tight) {
+float define_sl_dxy(RVec<float> lepton_dxy, RVec<int> l_tight) {
 
-	float sl_l_dz;
+	float sl_dxy;
 	for (int i = 0; i<l_tight.size(); i++) {
 		if (l_tight[i] == 1) {
-			sl_l_dz = lepton_dz[i];
+			sl_dxy = lepton_dxy[i];
 			break;
 		}
 	}
-	return sl_l_dz;
+	return sl_dxy;
+
+}
+
+float define_sl_dz(RVec<float> lepton_dz, RVec<int> l_tight) {
+
+	float sl_dz;
+	for (int i = 0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			sl_dz = lepton_dz[i];
+			break;
+		}
+	}
+	return sl_dz;
+
+}
+
+float define_sl_sigma_d(RVec<float> lepton_sigma_d, RVec<int> l_tight) {
+
+	float sl_sigma_d;
+	for (int i = 0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			sl_sigma_d = lepton_sigma_d[i];
+			break;
+		}
+	}
+	return sl_sigma_d;
+
+}
+
+float define_sl_ip3d(RVec<float> lepton_ip3d, RVec<int> l_tight) {
+
+	float sl_ip3d;
+	for (int i = 0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			sl_ip3d = lepton_ip3d[i];
+			break;
+		}
+	}
+	return sl_ip3d;
+
+}
+
+float define_sl_significance_d(RVec<float> lepton_significance_d, RVec<int> l_tight) {
+
+	float sl_significance_d;
+	for (int i = 0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			sl_significance_d = lepton_significance_d[i];
+			break;
+		}
+	}
+	return sl_significance_d;
 
 }
 
@@ -447,63 +486,111 @@ bool dl_pt_charge_cut(RVec<int> l_tight, RVec<float> Lepton_pt, RVec<int> Lepton
 	return false;
 }
 
-RVec<float> define_dl_l_pt(RVec<float> Lepton_pt, RVec<int> l_tight) {
+RVec<float> define_dl_pt(RVec<float> Lepton_pt, RVec<int> l_tight) {
 
-	RVec<float> dl_l_pt_vals;
+	RVec<float> dl_pt_vals;
 	for (int i = 0; i<l_tight.size(); i++) {
 		if (l_tight[i] == 1)
-			dl_l_pt_vals.push_back(Lepton_pt[i]);
+			dl_pt_vals.push_back(Lepton_pt[i]);
 	}
-	auto dl_l_pt = Reverse(Sort(dl_l_pt_vals));
-	return dl_l_pt;
+	auto dl_pt = Reverse(Sort(dl_pt_vals));
+	return dl_pt;
 }
 
-RVec<float> define_dl_l_eta(RVec<float> Lepton_pt, RVec<float> Lepton_eta, RVec<int> l_tight) {
+RVec<float> define_dl_eta(RVec<float> Lepton_pt, RVec<float> Lepton_eta, RVec<int> l_tight) {
 
-	RVec<float> dl_l_pt_vals;
-	RVec<float> dl_l_eta_vals;
+	RVec<float> dl_pt_vals;
+	RVec<float> dl_eta_vals;
 	for (int i = 0; i<l_tight.size(); i++) {
 		if (l_tight[i] == 1) {
-			dl_l_pt_vals.push_back(Lepton_pt[i]);
-			dl_l_eta_vals.push_back(Lepton_eta[i]);
+			dl_pt_vals.push_back(Lepton_pt[i]);
+			dl_eta_vals.push_back(Lepton_eta[i]);
 		}
 	}
-	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_l_pt_vals));
-	RVec<float> dl_l_eta = Take(dl_l_eta_vals, arg_sorted_pt_dec);
+	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_pt_vals));
+	RVec<float> dl_eta = Take(dl_eta_vals, arg_sorted_pt_dec);
 	
-	return dl_l_eta;
+	return dl_eta;
 }
 
-RVec<float> define_dl_l_dxy(RVec<float> Lepton_pt, RVec<float> Lepton_dxy, RVec<int> l_tight) {
+RVec<float> define_dl_dxy(RVec<float> Lepton_pt, RVec<float> Lepton_dxy, RVec<int> l_tight) {
 
-	RVec<float> dl_l_pt_vals;
-	RVec<float> dl_l_dxy_vals;
+	RVec<float> dl_pt_vals;
+	RVec<float> dl_dxy_vals;
 	for (int i = 0; i<l_tight.size(); i++) {
 		if (l_tight[i] == 1) {
-			dl_l_pt_vals.push_back(Lepton_pt[i]);
-			dl_l_dxy_vals.push_back(Lepton_dxy[i]);
+			dl_pt_vals.push_back(Lepton_pt[i]);
+			dl_dxy_vals.push_back(Lepton_dxy[i]);
 		}
 	}
-	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_l_pt_vals));
-	RVec<float> dl_l_dxy = Take(dl_l_dxy_vals, arg_sorted_pt_dec);
+	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_pt_vals));
+	RVec<float> dl_dxy = Take(dl_dxy_vals, arg_sorted_pt_dec);
 	
-	return dl_l_dxy;
+	return dl_dxy;
 }
 
-RVec<float> define_dl_l_dz(RVec<float> Lepton_pt, RVec<float> Lepton_dz, RVec<int> l_tight) {
+RVec<float> define_dl_dz(RVec<float> Lepton_pt, RVec<float> Lepton_dz, RVec<int> l_tight) {
 
-	RVec<float> dl_l_pt_vals;
-	RVec<float> dl_l_dz_vals;
+	RVec<float> dl_pt_vals;
+	RVec<float> dl_dz_vals;
 	for (int i = 0; i<l_tight.size(); i++) {
 		if (l_tight[i] == 1) {
-			dl_l_pt_vals.push_back(Lepton_pt[i]);
-			dl_l_dz_vals.push_back(Lepton_dz[i]);
+			dl_pt_vals.push_back(Lepton_pt[i]);
+			dl_dz_vals.push_back(Lepton_dz[i]);
 		}
 	}
-	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_l_pt_vals));
-	RVec<float> dl_l_dz = Take(dl_l_dz_vals, arg_sorted_pt_dec);
+	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_pt_vals));
+	RVec<float> dl_dz = Take(dl_dz_vals, arg_sorted_pt_dec);
 	
-	return dl_l_dz;
+	return dl_dz;
+}
+
+RVec<float> define_dl_sigma_d(RVec<float> Lepton_pt, RVec<float> Lepton_sigma_d, RVec<int> l_tight) {
+
+	RVec<float> dl_pt_vals;
+	RVec<float> dl_sigma_d_vals;
+	for (int i = 0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			dl_pt_vals.push_back(Lepton_pt[i]);
+			dl_sigma_d_vals.push_back(Lepton_sigma_d[i]);
+		}
+	}
+	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_pt_vals));
+	RVec<float> dl_sigma_d = Take(dl_sigma_d_vals, arg_sorted_pt_dec);
+	
+	return dl_sigma_d;
+}
+
+RVec<float> define_dl_ip3d(RVec<float> Lepton_pt, RVec<float> Lepton_ip3d, RVec<int> l_tight) {
+
+	RVec<float> dl_pt_vals;
+	RVec<float> dl_ip3d_vals;
+	for (int i = 0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			dl_pt_vals.push_back(Lepton_pt[i]);
+			dl_ip3d_vals.push_back(Lepton_ip3d[i]);
+		}
+	}
+	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_pt_vals));
+	RVec<float> dl_ip3d = Take(dl_ip3d_vals, arg_sorted_pt_dec);
+	
+	return dl_ip3d;
+}
+
+RVec<float> define_dl_significance_d(RVec<float> Lepton_pt, RVec<float> Lepton_significance_d, RVec<int> l_tight) {
+
+	RVec<float> dl_pt_vals;
+	RVec<float> dl_significance_d_vals;
+	for (int i = 0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			dl_pt_vals.push_back(Lepton_pt[i]);
+			dl_significance_d_vals.push_back(Lepton_significance_d[i]);
+		}
+	}
+	RVec<int> arg_sorted_pt_dec = Reverse(Argsort(dl_pt_vals));
+	RVec<float> dl_significance_d = Take(dl_significance_d_vals, arg_sorted_pt_dec);
+	
+	return dl_significance_d;
 }
 
 int define_dl_ee_N(RVec<int> e_tight) {
@@ -528,6 +615,96 @@ int define_dl_emu_N(RVec<int> e_tight, RVec<int> mu_tight) {
 	if (Sum(e_tight)==1 && Sum(mu_tight)==1)
 		emu_event = 1;
 	return emu_event;
+}
+
+RVec<int> genPartFlav_dec(RVec<unsigned char> Lepton_genPartFlav) {
+
+	RVec<int> Lepton_genPartFlav_dec(Lepton_genPartFlav.size());
+	for (int i=0; i<Lepton_genPartFlav.size(); i++) {
+		unsigned char flav_hex_c = Lepton_genPartFlav[i];
+		int flav_dec = (int) flav_hex_c;
+		Lepton_genPartFlav_dec[i] = flav_dec;
+	}
+
+	return Lepton_genPartFlav_dec;
+}
+
+RVec<int> get_mother_flav(RVec<int> Lepton_genPartIdx, RVec<int> l_tight, RVec<int> GenPart_pdgId, RVec<int> GenPart_genPartIdxMother) {
+
+	RVec<int> mother_flav(l_tight.size());
+	for (int i=0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			int genPartIdx = Lepton_genPartIdx[i];
+			if (genPartIdx != -1) {
+				int IdxMother = GenPart_genPartIdxMother[genPartIdx];
+				int pdgIdMother = GenPart_pdgId[IdxMother];
+				mother_flav[i] = pdgIdMother;
+			}
+			else {
+				mother_flav[i] = -1;
+			}
+		}
+		else if (l_tight[i] == 0) {
+			mother_flav[i] = -9999;
+		}
+	}	
+
+	return mother_flav;
+}
+
+RVec<int> get_grandmother_flav(RVec<int> Lepton_genPartIdx, RVec<int> l_tight, RVec<int> GenPart_pdgId, RVec<int> GenPart_genPartIdxMother) {
+
+	RVec<int> grandmother_flav(l_tight.size());
+	for (int i=0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			int genPartIdx = Lepton_genPartIdx[i];
+			if (genPartIdx != -1) {
+				int IdxMother = GenPart_genPartIdxMother[genPartIdx];
+				int IdxGrandMother = GenPart_genPartIdxMother[IdxMother];
+				int pdgIdGrandMother = GenPart_pdgId[IdxGrandMother];
+				grandmother_flav[i] = pdgIdGrandMother;
+			}
+			else {
+				grandmother_flav[i] = -1;
+			}
+		}
+		else if (l_tight[i] == 0) {
+			grandmother_flav[i] = -9999;
+		}
+	}	
+
+	return grandmother_flav;
+}
+
+
+std::string toBinary(int n)
+{
+    std::string r;
+    while(n!=0) {r=(n%2==0 ?"0":"1")+r; n/=2;}
+    return r;
+}
+
+std::vector<std::string> get_gen_status_flag(RVec<int> GenPart_statusFlags, RVec<int> Lepton_genPartIdx, RVec<int> l_tight) {
+
+	std::vector<std::string>  gen_status_flag(l_tight.size());
+	for (int i=0; i<l_tight.size(); i++) {
+		if (l_tight[i] == 1) {
+			int genPartIdx = Lepton_genPartIdx[i];
+			if (genPartIdx != -1) {
+				int status_flag = GenPart_statusFlags[genPartIdx];
+				std::string status_flag_binary = toBinary(status_flag);
+				gen_status_flag[i] = status_flag_binary;
+			}
+			else {
+				gen_status_flag[i] = "-1";
+			}
+		}
+		else if (l_tight[i] == 0) {
+			gen_status_flag[i] = "-9999";
+		}
+	}	
+
+	return gen_status_flag;
 }
 
 // ======================================================================
@@ -569,4 +746,3 @@ float get_R(float pt) {
 		R = 0.20;
 	return R;
 }
-

@@ -1,6 +1,8 @@
 import ROOT
 import pandas as pd
 import numpy as np
+import math
+from HH_bbWW_hists_values import *
 
 # MET Filter Selection =================================================================
 def met_filter(df, sample_type):
@@ -30,59 +32,96 @@ def met_filter(df, sample_type):
     return df
 
 # Electron Selection ===================================================================
-def select_e_loose(df, e_loose_dict):
+def select_e_loose(df, e_loose_dict, dxy_cut=None, dz_cut=None, significance_d_cut=None):
+
+    if dxy_cut is None:
+        dxy_cut = e_loose_dict["max_dxy"]
+    if dz_cut is None:
+        dz_cut = e_loose_dict["max_dz"]
+    if significance_d_cut is None:
+        significance_d_cut = e_loose_dict["max_d_over_significance_d"]
+
+    print("\t dxy_cut is " + str(dxy_cut))
+    print("\t dz_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(dz_cut))
 
     definition = "Electron_pt > " + str(e_loose_dict["min_cone_pt"])
-    definition += " && abs(Electron_eta) <   " + str(e_loose_dict["max_eta"])
-    definition += " && abs(Electron_dxy) <   " + str(e_loose_dict["max_dxy"]) 
-    definition += " && abs(Electron_dz)  <   " + str(e_loose_dict["max_dz"])
-    definition += " && Electron_ip3d/Electron_sip3d    <   " + str(e_loose_dict["max_d_over_sigmad"])
+    definition += " && abs(Electron_eta) < " + str(e_loose_dict["max_eta"])
+    if dxy_cut != -9999:
+        definition += " && abs(Electron_dxy) < " + str(dxy_cut)
+    if dz_cut != -9999:
+        definition += " && abs(Electron_dz)  < " + str(dz_cut)
+    if significance_d_cut != -9999:
+        definition += " && Electron_sip3d < " + str(significance_d_cut)
     definition += " && Electron_pfRelIso03_all <  " + str(e_loose_dict["max_iso"])
     definition += " && Electron_lostHits <=  " + str(e_loose_dict["max_n_missing_hits"])
     definition += " && " + get_l_WP_id("e", e_loose_dict["id"]) 
     df = df.Define("e_loose", definition)
     df = df.Define("n_e_loose", "Sum(e_loose)")
+
     
     return df
 
-def select_e_fakeable(df, e_fakeable_dict):
+def select_e_fakeable(df, e_fakeable_dict, dxy_cut=None, dz_cut=None, significance_d_cut=None):
+
+    if dxy_cut is None:
+        dxy_cut = e_fakeable_dict["max_dxy"]
+    if dz_cut is None:
+        dz_cut = e_fakeable_dict["max_dz"]
+    if significance_d_cut is None:
+        significance_d_cut = e_fakeable_dict["max_d_over_significance_d"]
+
+    print("\t dxy_cut is " + str(dxy_cut))
+    print("\t dz_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(dz_cut))
 
     definition = "Electron_pt > " + str(e_fakeable_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) <   " + str(e_fakeable_dict["max_eta"])
-    definition += " && abs(Electron_dxy) <   " + str(e_fakeable_dict["max_dxy"])
-    definition += " && abs(Electron_dz)  <   " + str(e_fakeable_dict["max_dz"])
-    definition += " && Electron_ip3d/Electron_sip3d    <   " + str(e_fakeable_dict["max_d_over_sigmad"])
+    if dxy_cut != -9999:
+        definition += " && abs(Electron_dxy) <   " + str(dxy_cut)
+    if dz_cut != -9999:
+        definition += " && abs(Electron_dz)  <   " + str(dz_cut)
+    if significance_d_cut != -9999:
+        definition += " && Electron_sip3d    <   " + str(significance_d_cut)
     definition += " && Electron_pfRelIso03_all <  " + str(e_fakeable_dict["max_iso"])
     definition += " && Electron_hoe      <   " + str(e_fakeable_dict["max_h_over_e"])
     definition += " && Electron_eInvMinusPInv  >  " + str(e_fakeable_dict["min_e_p"])
     definition += " && Electron_lostHits    ==  " + str(e_fakeable_dict["max_n_missing_hits"])
     definition += " && Electron_convVeto    ==  " + str(e_fakeable_dict["conv_rej"])
     definition += " && " + get_l_WP_id("e", e_fakeable_dict["id"])
-    # definition += " && (abs(Electron_eta) < 1.479 && Electron_sieie > " + str(e_fakeable_dict["max_sigma_ieta_barrel"]) + ") ||  (abs(Electron_eta) >= 1.479 && Electron_sieie > " + str(e_fakeable_dict["max_sigma_ieta_endcap"]) + ")"
-    # df = df.Define("e_fakeable", definition)
-    # df = df.Redefine("e_fakeable", "sigma_ieta_pass(e_fakeable, Electron_eta, Electron_sieie, " + str(e_fakeable_dict["max_sigma_ieta_barrel"]) + ", " + str(e_fakeable_dict["max_sigma_ieta_endcap"]) + ")")
     df = df.Define("e_fakeable_prelim", definition)
     df = df.Define("e_fakeable", "sigma_ieta_pass(e_fakeable_prelim, Electron_eta, Electron_sieie, " + str(e_fakeable_dict["max_sigma_ieta_barrel"]) + ", " + str(e_fakeable_dict["max_sigma_ieta_endcap"]) + ")")
     df = df.Define("n_e_fakeable", "Sum(e_fakeable)")
 
     return df
 
-def select_e_tight(df, e_tight_dict):
+def select_e_tight(df, e_tight_dict, dxy_cut=None, dz_cut=None, significance_d_cut=None):
 
-    definition = "Electron_pt          >   " + str(e_tight_dict["min_cone_pt"])
-    definition += " && abs(Electron_eta)    <   " + str(e_tight_dict["max_eta"]) 
-    definition += " && abs(Electron_dxy)    <   " + str(e_tight_dict["max_dxy"]) 
-    definition += " && abs(Electron_dz)     <   " + str(e_tight_dict["max_dz"]) 
-    definition += " && Electron_ip3d/Electron_sip3d  < " + str(e_tight_dict["max_d_over_sigmad"])
-    definition += " && Electron_pfRelIso03_all <  " + str(e_tight_dict["max_iso"])
-    definition += " && Electron_hoe         <   " + str(e_tight_dict["max_h_over_e"]) 
-    definition += " && Electron_eInvMinusPInv   >   " + str(e_tight_dict["min_e_p"]) 
-    definition += " && Electron_lostHits    <=  " + str(e_tight_dict["max_n_missing_hits"]) 
-    definition += " && Electron_convVeto    ==  " + str(e_tight_dict["conv_rej"])
+    if dxy_cut is None:
+        dxy_cut = e_tight_dict["max_dxy"]
+    if dz_cut is None:
+        dz_cut = e_tight_dict["max_dz"]  
+    if significance_d_cut is None:
+        significance_d_cut = e_tight_dict["max_d_over_significance_d"]  
+
+    print("\t dxy_cut is " + str(dxy_cut))
+    print("\t dz_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(dz_cut))
+    
+    definition = "Electron_pt >   " + str(e_tight_dict["min_cone_pt"])
+    definition += " && abs(Electron_eta) <  " + str(e_tight_dict["max_eta"]) 
+    if dxy_cut != -9999:
+        definition += " && abs(Electron_dxy) < " + str(dxy_cut)
+    if dz_cut != -9999:
+        definition += " && abs(Electron_dz)  < " + str(dz_cut)
+    if significance_d_cut != -9999:
+        definition += " && Electron_sip3d  < " + str(significance_d_cut)
+    definition += " && Electron_pfRelIso03_all < " + str(e_tight_dict["max_iso"])
+    definition += " && Electron_hoe         <  " + str(e_tight_dict["max_h_over_e"]) 
+    definition += " && Electron_eInvMinusPInv   > " + str(e_tight_dict["min_e_p"]) 
+    definition += " && Electron_lostHits    <= " + str(e_tight_dict["max_n_missing_hits"]) 
+    definition += " && Electron_convVeto    == " + str(e_tight_dict["conv_rej"])
     definition += " && " + get_l_WP_id("e", e_tight_dict["id"])
-    # definition += " && (abs(Electron_eta) < 1.479 && Electron_sieie > " + str(e_tight_dict["max_sigma_ieta_barrel"]) + ") ||  (abs(Electron_eta) >= 1.479 && Electron_sieie > " + str(e_tight_dict["max_sigma_ieta_endcap"]) + ")"
-    # df = df.Define("e_tight", definition)
-    # df = df.Redefine("e_tight", "sigma_ieta_pass(e_tight, Electron_eta, Electron_sieie, " + str(e_tight_dict["max_sigma_ieta_barrel"]) + ", " + str(e_tight_dict["max_sigma_ieta_endcap"]) + ")")
     df = df.Define("e_tight_prelim", definition)
     df = df.Define("e_tight", "sigma_ieta_pass(e_tight_prelim, Electron_eta, Electron_sieie, " + str(e_tight_dict["max_sigma_ieta_barrel"]) + ", " + str(e_tight_dict["max_sigma_ieta_endcap"]) + ")")
     df = df.Define("n_e_tight", "Sum(e_tight)")
@@ -90,13 +129,27 @@ def select_e_tight(df, e_tight_dict):
     return df
 
 # Muon Selection =======================================================================
-def select_mu_loose(df, mu_loose_dict):
+def select_mu_loose(df, mu_loose_dict, dxy_cut=None, dz_cut=None, significance_d_cut=None):
+
+    if dxy_cut is None:
+        dxy_cut = mu_loose_dict["max_dxy"]
+    if dz_cut is None:
+        dz_cut = mu_loose_dict["max_dz"]
+    if significance_d_cut is None:
+        significance_d_cut = mu_loose_dict["max_d_over_significance_d"]
+
+    print("\t dxy_cut is " + str(dxy_cut))
+    print("\t dz_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(dz_cut))
     
-    definition = "Muon_pt          >   " + str(mu_loose_dict["min_pt"])
-    definition += " && abs(Muon_eta)    <   " + str(mu_loose_dict["max_eta"])
-    definition += " && abs(Muon_dxy)    <   " + str(mu_loose_dict["max_dxy"])
-    definition += " && abs(Muon_dz)     <   " + str(mu_loose_dict["max_dz"]) 
-    definition += " && Muon_ip3d/Muon_sip3d       <   " + str(mu_loose_dict["max_d_over_sigmad"]) 
+    definition = "Muon_pt > " + str(mu_loose_dict["min_pt"])
+    definition += " && abs(Muon_eta) < " + str(mu_loose_dict["max_eta"])
+    if dxy_cut != -9999:
+        definition += " && abs(Muon_dxy) < " + str(dxy_cut)
+    if dz_cut != -9999:
+        definition += " && abs(Muon_dz)  < " + str(dz_cut)
+    if significance_d_cut != -9999:
+        definition += " && Muon_sip3d <   " + str(significance_d_cut)
     definition += " && Muon_pfRelIso03_all <  " + str(mu_loose_dict["max_iso"])
     definition += " && " + get_l_WP_id("mu", mu_loose_dict["id"])
     df = df.Define("mu_loose", definition)
@@ -104,13 +157,27 @@ def select_mu_loose(df, mu_loose_dict):
 
     return df
 
-def select_mu_fakeable(df, mu_fakeable_dict):
+def select_mu_fakeable(df, mu_fakeable_dict, dxy_cut=None, dz_cut=None, significance_d_cut=None):
 
-    definition = "Muon_pt          >   " + str(mu_fakeable_dict["min_pt"])
-    definition += " && abs(Muon_eta)    <   " + str(mu_fakeable_dict["max_eta"])
-    definition += " && abs(Muon_dxy)    <   " + str(mu_fakeable_dict["max_dxy"])
-    definition += " && abs(Muon_dz)     <   " + str(mu_fakeable_dict["max_dz"]) 
-    definition += " && Muon_ip3d/Muon_sip3d       <   " + str(mu_fakeable_dict["max_d_over_sigmad"])  
+    if dxy_cut is None:
+        dxy_cut = mu_fakeable_dict["max_dxy"]
+    if dz_cut is None:
+        dz_cut = mu_fakeable_dict["max_dz"]
+    if significance_d_cut is None:
+        significance_d_cut = mu_fakeable_dict["max_d_over_significance_d"]
+
+    print("\t dxy_cut is " + str(dxy_cut))
+    print("\t dz_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(dz_cut))
+
+    definition = "Muon_pt >   " + str(mu_fakeable_dict["min_pt"])
+    definition += " && abs(Muon_eta) < " + str(mu_fakeable_dict["max_eta"])
+    if dxy_cut != -9999:
+        definition += " && abs(Muon_dxy) < " + str(dxy_cut)
+    if dz_cut != -9999:
+        definition += " && abs(Muon_dz)  < " + str(dz_cut)
+    if significance_d_cut != -9999:
+        definition += " && Muon_sip3d < " + str(significance_d_cut)
     definition += " && Muon_pfRelIso03_all <  " + str(mu_fakeable_dict["max_iso"])
     definition += " && " + get_l_WP_id("mu", mu_fakeable_dict["id"])
     df = df.Define("mu_fakeable", definition)
@@ -118,13 +185,27 @@ def select_mu_fakeable(df, mu_fakeable_dict):
 
     return df
 
-def select_mu_tight(df, mu_tight_dict):
+def select_mu_tight(df, mu_tight_dict, dxy_cut=None, dz_cut=None, significance_d_cut=None):
 
-    definition = "Muon_pt          >   " + str(mu_tight_dict["min_pt"])
-    definition += " && abs(Muon_eta)    <   " + str(mu_tight_dict["max_eta"])
-    definition += " && abs(Muon_dxy)    <   " + str(mu_tight_dict["max_dxy"])
-    definition += " && abs(Muon_dz)     <   " + str(mu_tight_dict["max_dz"])
-    definition += " && Muon_ip3d/Muon_sip3d       <   " + str(mu_tight_dict["max_d_over_sigmad"]) 
+    if dxy_cut is None:
+        dxy_cut = mu_tight_dict["max_dxy"]
+    if dz_cut is None:
+        dz_cut = mu_tight_dict["max_dz"]
+    if significance_d_cut is None:
+        significance_d_cut = mu_tight_dict["max_d_over_significance_d"]
+
+    print("\t dxy_cut is " + str(dxy_cut))
+    print("\t dz_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(dz_cut))
+
+    definition = "Muon_pt > " + str(mu_tight_dict["min_pt"])
+    definition += " && abs(Muon_eta) < " + str(mu_tight_dict["max_eta"])
+    if dxy_cut != -9999:
+        definition += " && abs(Muon_dxy) < " + str(dxy_cut)
+    if dz_cut != -9999:
+        definition += " && abs(Muon_dz)  < " + str(dz_cut)
+    if significance_d_cut != -9999:
+        definition += " && Muon_sip3d < " + str(significance_d_cut)
     definition += " && Muon_pfRelIso03_all <  " + str(mu_tight_dict["max_iso"])
     definition += " && " + get_l_WP_id("mu", mu_tight_dict["id"])
     df = df.Define("mu_tight", definition)
@@ -135,13 +216,21 @@ def select_mu_tight(df, mu_tight_dict):
 # Lepton Definition =====================================================================
 def select_leptons(df):
       
+    df = df.Define("e_sigma_d", "Electron_ip3d/Electron_sip3d")
+    df = df.Define("mu_sigma_d", "Muon_ip3d/Muon_sip3d")
+
     df = df.Define("Lepton_pt", "Concatenate(Electron_pt, Muon_pt)")
     df = df.Define("Lepton_eta", "Concatenate(Electron_eta, Muon_eta)")
     df = df.Define("Lepton_phi", "Concatenate(Electron_phi, Muon_phi)")
     df = df.Define("Lepton_dxy", "Concatenate(Electron_dxy, Muon_dxy)")
     df = df.Define("Lepton_dz", "Concatenate(Electron_dz, Muon_dz)")
+    df = df.Define("Lepton_sigma_d", "Concatenate(e_sigma_d, mu_sigma_d)")
+    df = df.Define("Lepton_ip3d", "Concatenate(Electron_ip3d, Muon_ip3d)")
+    df = df.Define("Lepton_significance_d", "Concatenate(Electron_sip3d, Muon_sip3d)")
     df = df.Define("Lepton_charge", "Concatenate(Electron_charge, Muon_charge)")
-    df = df.Define("nLepton", "nElectron+nMuon")
+    df = df.Define("Lepton_genPartFlav", "Concatenate(Electron_genPartFlav, Muon_genPartFlav)")
+    df = df.Define("Lepton_genPartIdx", "Concatenate(Electron_genPartIdx, Muon_genPartIdx)")
+    df = df.Define("nLepton", "nElectron+nMuon") 
 
     df = df.Define("l_loose", "Concatenate(e_loose, mu_loose)")
     df = df.Define("l_fakeable", "Concatenate(e_fakeable, mu_fakeable)")
@@ -253,15 +342,21 @@ def select_sl_channel(df, sl_event_dict):
         df_e = df_e.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
         df_mu = df_mu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
 
-    df_e = df_e.Define("l_pt_0", "define_sl_l_pt(Electron_pt, e_tight)")
-    df_e = df_e.Define("l_eta_0", "define_sl_l_eta(Electron_eta, e_tight)")
-    df_e = df_e.Define("l_dxy_0", "define_sl_l_dxy(Electron_dxy, e_tight)")
-    df_e = df_e.Define("l_dz_0", "define_sl_l_dz(Electron_dz, e_tight)")
+    df_e = df_e.Define("pt_0", "define_sl_pt(Electron_pt, e_tight)")
+    df_e = df_e.Define("eta_0", "define_sl_eta(Electron_eta, e_tight)")
+    df_e = df_e.Define("dxy_0", "define_sl_dxy(Electron_dxy, e_tight)")
+    df_e = df_e.Define("dz_0", "define_sl_dz(Electron_dz, e_tight)")
+    df_e = df_e.Define("sigma_d_0", "define_sl_sigma_d(e_sigma_d, e_tight)")
+    df_e = df_e.Define("ip3d_0", "define_sl_ip3d(Lepton_ip3d, e_tight)")
+    df_e = df_e.Define("significance_d_0", "define_sl_significance_d(Lepton_significance_d, e_tight)")
 
-    df_mu = df_mu.Define("l_pt_0", "define_sl_l_pt(Muon_pt, mu_tight)")
-    df_mu = df_mu.Define("l_eta_0", "define_sl_l_eta(Muon_eta, mu_tight)")
-    df_mu = df_mu.Define("l_dxy_0", "define_sl_l_dxy(Muon_dxy, mu_tight)")
-    df_mu = df_mu.Define("l_dz_0", "define_sl_l_dz(Muon_dz, mu_tight)")
+    df_mu = df_mu.Define("pt_0", "define_sl_pt(Muon_pt, mu_tight)")
+    df_mu = df_mu.Define("eta_0", "define_sl_eta(Muon_eta, mu_tight)")
+    df_mu = df_mu.Define("dxy_0", "define_sl_dxy(Muon_dxy, mu_tight)")
+    df_mu = df_mu.Define("dz_0", "define_sl_dz(Muon_dz, mu_tight)")
+    df_mu = df_mu.Define("sigma_d_0", "define_sl_sigma_d(mu_sigma_d, mu_tight)")
+    df_mu = df_mu.Define("ip3d_0", "define_sl_ip3d(Lepton_ip3d, mu_tight)")
+    df_mu = df_mu.Define("significance_d_0", "define_sl_significance_d(Lepton_significance_d, mu_tight)")
 
     df_e = df_e.Define("AK4_pt_0", "AK4_pt[0]")
     df_e = df_e.Define("AK4_pt_1", "AK4_pt[1]")
@@ -310,47 +405,74 @@ def select_dl_channel(df, dl_event_dict):
         df_emu = df_emu.Filter(common_filters[idx], 'common_fil_' + str(idx))
 
     if (True):
-        df_ee = df_ee.Define("l_pt","define_dl_l_pt(Lepton_pt, l_tight)")
-        df_ee = df_ee.Define("l_eta","define_dl_l_eta(Lepton_pt, Lepton_eta, l_tight)")
-        df_ee = df_ee.Define("l_dxy", "define_dl_l_dxy(Lepton_pt, Lepton_dxy, l_tight)")
-        df_ee = df_ee.Define("l_dz", "define_dl_l_dz(Lepton_pt, Lepton_dz, l_tight)")
+        df_ee = df_ee.Define("pt","define_dl_pt(Lepton_pt, l_tight)")
+        df_ee = df_ee.Define("eta","define_dl_eta(Lepton_pt, Lepton_eta, l_tight)")
+        df_ee = df_ee.Define("dxy", "define_dl_dxy(Lepton_pt, Lepton_dxy, l_tight)")
+        df_ee = df_ee.Define("dz", "define_dl_dz(Lepton_pt, Lepton_dz, l_tight)")
+        df_ee = df_ee.Define("sigma_d", "define_dl_sigma_d(Lepton_pt, Lepton_sigma_d, l_tight)")
+        df_ee = df_ee.Define("ip3d", "define_dl_ip3d(Lepton_pt, Lepton_ip3d, l_tight)")
+        df_ee = df_ee.Define("significance_d", "define_dl_significance_d(Lepton_pt, Lepton_significance_d, l_tight)")
+        
+        df_ee = df_ee.Define("pt_0", "pt[0]")
+        df_ee = df_ee.Define("pt_1", "pt[1]")
+        df_ee = df_ee.Define("eta_0", "eta[0]")
+        df_ee = df_ee.Define("eta_1", "eta[1]")
+        df_ee = df_ee.Define("dxy_0", "dxy[0]")
+        df_ee = df_ee.Define("dxy_1", "dxy[1]")
+        df_ee = df_ee.Define("dz_0", "dz[0]")
+        df_ee = df_ee.Define("dz_1", "dz[1]")
+        df_ee = df_ee.Define("sigma_d_0", "sigma_d[0]")
+        df_ee = df_ee.Define("sigma_d_1", "sigma_d[1]")
+        df_ee = df_ee.Define("ip3d_0", "ip3d[0]")
+        df_ee = df_ee.Define("ip3d_1", "ip3d[1]")
+        df_ee = df_ee.Define("significance_d_0", "significance_d[0]")
+        df_ee = df_ee.Define("significance_d_1", "significance_d[1]")
 
-        df_ee = df_ee.Define("l_pt_0", "l_pt[0]")
-        df_ee = df_ee.Define("l_pt_1", "l_pt[1]")
-        df_ee = df_ee.Define("l_eta_0", "l_eta[0]")
-        df_ee = df_ee.Define("l_eta_1", "l_eta[1]")
-        df_ee = df_ee.Define("l_dxy_0", "l_dxy[0]")
-        df_ee = df_ee.Define("l_dxy_1", "l_dxy[1]")
-        df_ee = df_ee.Define("l_dz_0", "l_dz[0]")
-        df_ee = df_ee.Define("l_dz_1", "l_dz[1]")
+        df_mumu = df_mumu.Define("pt","define_dl_pt(Lepton_pt, l_tight)")
+        df_mumu = df_mumu.Define("eta","define_dl_eta(Lepton_pt, Lepton_eta, l_tight)")
+        df_mumu = df_mumu.Define("dxy", "define_dl_dxy(Lepton_pt, Lepton_dxy, l_tight)")
+        df_mumu = df_mumu.Define("dz", "define_dl_dz(Lepton_pt, Lepton_dz, l_tight)")
+        df_mumu = df_mumu.Define("sigma_d", "define_dl_sigma_d(Lepton_pt, Lepton_sigma_d, l_tight)")
+        df_mumu = df_mumu.Define("ip3d", "define_dl_ip3d(Lepton_pt, Lepton_ip3d, l_tight)")
+        df_mumu = df_mumu.Define("significance_d", "define_dl_significance_d(Lepton_pt, Lepton_significance_d, l_tight)")
 
-        df_mumu = df_mumu.Define("l_pt","define_dl_l_pt(Lepton_pt, l_tight)")
-        df_mumu = df_mumu.Define("l_eta","define_dl_l_eta(Lepton_pt, Lepton_eta, l_tight)")
-        df_mumu = df_mumu.Define("l_dxy", "define_dl_l_dxy(Lepton_pt, Lepton_dxy, l_tight)")
-        df_mumu = df_mumu.Define("l_dz", "define_dl_l_dz(Lepton_pt, Lepton_dz, l_tight)")
+        df_mumu = df_mumu.Define("pt_0", "pt[0]")
+        df_mumu = df_mumu.Define("pt_1", "pt[1]")
+        df_mumu = df_mumu.Define("eta_0", "eta[0]")
+        df_mumu = df_mumu.Define("eta_1", "eta[1]")
+        df_mumu = df_mumu.Define("dxy_0", "dxy[0]")
+        df_mumu = df_mumu.Define("dxy_1", "dxy[1]")
+        df_mumu = df_mumu.Define("dz_0", "dz[0]")
+        df_mumu = df_mumu.Define("dz_1", "dz[1]")
+        df_mumu = df_mumu.Define("sigma_d_0", "sigma_d[0]")
+        df_mumu = df_mumu.Define("sigma_d_1", "sigma_d[1]")
+        df_mumu = df_mumu.Define("ip3d_0", "ip3d[0]")
+        df_mumu = df_mumu.Define("ip3d_1", "ip3d[1]")
+        df_mumu = df_mumu.Define("significance_d_0", "significance_d[0]")
+        df_mumu = df_mumu.Define("significance_d_1", "significance_d[1]")
 
-        df_mumu = df_mumu.Define("l_pt_0", "l_pt[0]")
-        df_mumu = df_mumu.Define("l_pt_1", "l_pt[1]")
-        df_mumu = df_mumu.Define("l_eta_0", "l_eta[0]")
-        df_mumu = df_mumu.Define("l_eta_1", "l_eta[1]")
-        df_mumu = df_mumu.Define("l_dxy_0", "l_dxy[0]")
-        df_mumu = df_mumu.Define("l_dxy_1", "l_dxy[1]")
-        df_mumu = df_mumu.Define("l_dz_0", "l_dz[0]")
-        df_mumu = df_mumu.Define("l_dz_1", "l_dz[1]")
+        df_emu = df_emu.Define("pt","define_dl_pt(Lepton_pt, l_tight)")
+        df_emu = df_emu.Define("eta","define_dl_eta(Lepton_pt, Lepton_eta, l_tight)")
+        df_emu = df_emu.Define("dxy", "define_dl_dxy(Lepton_pt, Lepton_dxy, l_tight)")
+        df_emu = df_emu.Define("dz", "define_dl_dz(Lepton_pt, Lepton_dz, l_tight)")
+        df_emu = df_emu.Define("sigma_d", "define_dl_sigma_d(Lepton_pt, Lepton_sigma_d, l_tight)")
+        df_emu = df_emu.Define("ip3d", "define_dl_ip3d(Lepton_pt, Lepton_ip3d, l_tight)")
+        df_emu = df_emu.Define("significance_d", "define_dl_significance_d(Lepton_pt, Lepton_significance_d, l_tight)")
 
-        df_emu = df_emu.Define("l_pt","define_dl_l_pt(Lepton_pt, l_tight)")
-        df_emu = df_emu.Define("l_eta","define_dl_l_eta(Lepton_pt, Lepton_eta, l_tight)")
-        df_emu = df_emu.Define("l_dxy", "define_dl_l_dxy(Lepton_pt, Lepton_dxy, l_tight)")
-        df_emu = df_emu.Define("l_dz", "define_dl_l_dz(Lepton_pt, Lepton_dz, l_tight)")
-
-        df_emu = df_emu.Define("l_pt_0", "l_pt[0]")
-        df_emu = df_emu.Define("l_pt_1", "l_pt[1]")
-        df_emu = df_emu.Define("l_eta_0", "l_eta[0]")
-        df_emu = df_emu.Define("l_eta_1", "l_eta[1]")
-        df_emu = df_emu.Define("l_dxy_0", "l_dxy[0]")
-        df_emu = df_emu.Define("l_dxy_1", "l_dxy[1]")
-        df_emu = df_emu.Define("l_dz_0", "l_dz[0]")
-        df_emu = df_emu.Define("l_dz_1", "l_dz[1]")
+        df_emu = df_emu.Define("pt_0", "pt[0]")
+        df_emu = df_emu.Define("pt_1", "pt[1]")
+        df_emu = df_emu.Define("eta_0", "eta[0]")
+        df_emu = df_emu.Define("eta_1", "eta[1]")
+        df_emu = df_emu.Define("dxy_0", "dxy[0]")
+        df_emu = df_emu.Define("dxy_1", "dxy[1]")
+        df_emu = df_emu.Define("dz_0", "dz[0]")
+        df_emu = df_emu.Define("dz_1", "dz[1]")
+        df_emu = df_emu.Define("sigma_d_0", "sigma_d[0]")
+        df_emu = df_emu.Define("sigma_d_1", "sigma_d[1]")
+        df_emu = df_emu.Define("ip3d_0", "ip3d[0]")
+        df_emu = df_emu.Define("ip3d_1", "ip3d[1]")
+        df_emu = df_emu.Define("significance_d_0", "significance_d[0]")
+        df_emu = df_emu.Define("significance_d_1", "significance_d[1]")
 
         df_ee = df_ee.Define("AK4_pt_0", "AK4_pt[0]")
         df_ee = df_ee.Define("AK4_pt_1", "AK4_pt[1]")
@@ -373,56 +495,95 @@ def select_dl_channel(df, dl_event_dict):
         df_emu = df_emu.Define("AK4_btag_pt_1", "AK4_pt[1]")
         df_emu = df_emu.Define("AK8_pt_0", "AK8_pt[0]")
 
+    df_ee = df_ee.Define("genPartFlav_dec", "genPartFlav_dec(Electron_genPartFlav)")
+    df_ee = df_ee.Define("mother_flav", "get_mother_flav(Electron_genPartIdx, e_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
+    df_ee = df_ee.Define("gen_status_flag", "get_gen_status_flag(GenPart_statusFlags, Electron_genPartIdx, e_tight)")
+
+    df_mumu = df_mumu.Define("genPartFlav_dec", "genPartFlav_dec(Muon_genPartFlav)")
+    df_mumu = df_mumu.Define("mother_flav", "get_mother_flav(Muon_genPartIdx, mu_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
+    df_mumu = df_mumu.Define("gen_status_flag", "get_gen_status_flag(GenPart_statusFlags, Muon_genPartIdx, mu_tight)")
+
+    df_emu = df_emu.Define("genPartFlav_dec_e", "genPartFlav_dec(Electron_genPartFlav)")
+    df_emu = df_emu.Define("mother_flav_e", "get_mother_flav(Electron_genPartIdx, e_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
+    df_emu = df_emu.Define("gen_status_flag_e", "get_gen_status_flag(GenPart_statusFlags, Electron_genPartIdx, e_tight)")
+
+    df_emu = df_emu.Define("genPartFlav_dec_mu", "genPartFlav_dec(Muon_genPartFlav)")
+    df_emu = df_emu.Define("mother_flav_mu", "get_mother_flav(Muon_genPartIdx, mu_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
+    df_emu = df_emu.Define("gen_status_flag_mu", "get_gen_status_flag(GenPart_statusFlags, Muon_genPartIdx, mu_tight)")
+
+    df_emu = df_emu.Define("genPartFlav_dec_l", "genPartFlav_dec(Lepton_genPartFlav)")
+    df_emu = df_emu.Define("mother_flav_l", "get_mother_flav(Lepton_genPartIdx, l_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
+    df_emu = df_emu.Define("gen_status_flag_l", "get_gen_status_flag(GenPart_statusFlags, Lepton_genPartIdx, l_tight)")
+
     return df_ee, df_mumu, df_emu
 
 # Save histograms to root file =========================================================
 def select_histos(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu):
 
-    save_histo(sl_e, "sl_e_pt_0", "l_pt_0", 300, -5, 295)
-    save_histo(sl_e, "sl_e_eta_0", "l_eta_0", 61, -3.05, 3.05)
-    save_histo(sl_e, "sl_e_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
-    save_histo(sl_e, "sl_e_dz_0", "l_dz_0", 410, -0.075, 0.075)
+    save_histo(sl_e, "sl_e_pt_0",   "pt_0", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(sl_e, "sl_e_eta_0",  "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(sl_e, "sl_e_dxy_0",  "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(sl_e, "sl_e_dz_0",   "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(sl_e, "sl_e_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(sl_e, "sl_e_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(sl_e, "sl_e_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
     print('... saving')
-    save_histo(sl_mu, "sl_mu_pt_0", "l_pt_0", 300, -5, 295)
-    save_histo(sl_mu, "sl_mu_eta_0", "l_eta_0", 61, -3.05, 3.05)
-    save_histo(sl_mu, "sl_mu_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
-    save_histo(sl_mu, "sl_mu_dz_0", "l_dz_0", 410, -0.075, 0.075)
+    save_histo(sl_mu, "sl_mu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(sl_mu, "sl_mu_eta_0","eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(sl_mu, "sl_mu_dxy_0","dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(sl_mu, "sl_mu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(sl_mu, "sl_mu_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(sl_mu, "sl_mu_ip3d_0",  "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(sl_mu, "sl_mu_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
     print('... saving')
-    save_histo(dl_ee, "dl_ee_pt_0", "l_pt_0", 300, -5, 295)
-    save_histo(dl_ee, "dl_ee_eta_0", "l_eta_0", 61, -3.05, 3.05)
-    save_histo(dl_ee, "dl_ee_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
-    save_histo(dl_ee, "dl_ee_dz_0", "l_dz_0", 410, -0.075, 0.075)
-    save_histo(dl_ee, "dl_ee_pt_1", "l_pt_1", 300, -5, 295)
-    save_histo(dl_ee, "dl_ee_eta_1", "l_eta_1", 61, -3.05, 3.05)
-    save_histo(dl_ee, "dl_ee_dxy_1", "l_dxy_1", 210, -0.0250, 0.0250)
-    save_histo(dl_ee, "dl_ee_dz_1", "l_dz_1", 410, -0.075, 0.075)
+    save_histo(dl_ee, "dl_ee_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(dl_ee, "dl_ee_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(dl_ee, "dl_ee_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(dl_ee, "dl_ee_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(dl_ee, "dl_ee_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(dl_ee, "dl_ee_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(dl_ee, "dl_ee_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
+    save_histo(dl_ee, "dl_ee_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(dl_ee, "dl_ee_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(dl_ee, "dl_ee_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(dl_ee, "dl_ee_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(dl_ee, "dl_ee_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(dl_ee, "dl_ee_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(dl_ee, "dl_ee_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
     print('... saving')
-    save_histo(dl_mumu, "dl_mumu_pt_0", "l_pt_0", 300, -5, 295)
-    save_histo(dl_mumu, "dl_mumu_eta_0", "l_eta_0", 61, -3.05, 3.05)
-    save_histo(dl_mumu, "dl_mumu_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
-    save_histo(dl_mumu, "dl_mumu_dz_0", "l_dz_0", 410, -0.075, 0.075)
-    save_histo(dl_mumu, "dl_mumu_pt_1", "l_pt_1", 300, -5, 295)
-    save_histo(dl_mumu, "dl_mumu_eta_1", "l_eta_1", 61, -3.05, 3.05)
-    save_histo(dl_mumu, "dl_mumu_dxy_1", "l_dxy_1", 210, -0.0250, 0.0250)
-    save_histo(dl_mumu, "dl_mumu_dz_1", "l_dz_1", 410, -0.075, 0.075)
+    save_histo(dl_mumu, "dl_mumu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(dl_mumu, "dl_mumu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(dl_mumu, "dl_mumu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(dl_mumu, "dl_mumu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(dl_mumu, "dl_mumu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(dl_mumu, "dl_mumu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(dl_mumu, "dl_mumu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
+    save_histo(dl_mumu, "dl_mumu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(dl_mumu, "dl_mumu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(dl_mumu, "dl_mumu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(dl_mumu, "dl_mumu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(dl_mumu, "dl_mumu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(dl_mumu, "dl_mumu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(dl_mumu, "dl_mumu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
     print('... saving')
-    save_histo(dl_emu, "dl_emu_pt_0", "l_pt_0", 300, -5, 295)
-    save_histo(dl_emu, "dl_emu_eta_0", "l_eta_0", 61, -3.05, 3.05)
-    save_histo(dl_emu, "dl_emu_dxy_0", "l_dxy_0", 210, -0.0250, 0.0250)
-    save_histo(dl_emu, "dl_emu_dz_0", "l_dz_0", 410, -0.075, 0.075)
-    save_histo(dl_emu, "dl_emu_pt_1", "l_pt_1", 300, -5, 295)
-    save_histo(dl_emu, "dl_emu_eta_1", "l_eta_1", 61, -3.05, 3.05)
-    save_histo(dl_emu, "dl_emu_dxy_1", "l_dxy_1", 210, -0.0250, 0.0250)
-    save_histo(dl_emu, "dl_emu_dz_1", "l_dz_1", 410, -0.075, 0.075)
+    save_histo(dl_emu, "dl_emu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(dl_emu, "dl_emu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(dl_emu, "dl_emu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(dl_emu, "dl_emu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(dl_emu, "dl_emu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(dl_emu, "dl_emu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(dl_emu, "dl_emu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
+    save_histo(dl_emu, "dl_emu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX)
+    save_histo(dl_emu, "dl_emu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX)
+    save_histo(dl_emu, "dl_emu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX)
+    save_histo(dl_emu, "dl_emu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX)
+    save_histo(dl_emu, "dl_emu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX)
+    save_histo(dl_emu, "dl_emu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX)
+    save_histo(dl_emu, "dl_emu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
 
 def save_histo(df, hist_name, obj_name, bins, x_min, x_max):
     h = df.Histo1D((hist_name,obj_name, bins, x_min, x_max), obj_name)
     h.Write()
-
-def output_csv(df, outFileName):
-    npy = df.AsNumpy()
-    df = pd.DataFrame(npy)
-    df.to_csv(outFileName)
 
 # ======================================================================================
 # ======================================================================================
