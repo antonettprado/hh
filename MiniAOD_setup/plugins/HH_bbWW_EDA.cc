@@ -47,24 +47,24 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         int gen_parent_pdgid = -9999;
         int gen_grandparent_pdgid = -9999;
         double gen_parent_vx = -9999;
-        double gen_parentvx = -9999;
-        double gen_parent_vx = -9999;
+        double gen_parent_vy = -9999;
+        double gen_parent_vz = -9999;
         double gen_grandparent_vx = -9999;
-        double gen_grandparentvx = -9999;
-        double gen_grandparent_vx = -9999;
+        double gen_grandparent_vy = -9999;
+        double gen_grandparent_vz = -9999;
         double gen_parent_flight_d = -9999;
         double gen_grandparent_flight_d = -9999;
 
-        if (iEle_gen.numberOfMothers > 0){
-            const reco::GenParticle iEle_parent_gen = *iEle_gen.mother(0);
+        if (iEle_gen.numberOfMothers() > 0){
+            const reco::Candidate iEle_parent_gen = *iEle_gen.mother(0);
             gen_parent_pdgid = iEle_parent_gen.pdgId();
             gen_parent_vx = iEle_parent_gen.vx();
             gen_parent_vy = iEle_parent_gen.vy();
             gen_parent_vz = iEle_parent_gen.vz();
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
-            if (iEle_parent_gen.numberOfMothers > 0){
-                const reco::GenParticle iEle_grandparent_gen = *iEle_parent_gen.mother(0);
+            if (iEle_parent_gen.numberOfMothers() > 0){
+                const reco::Candidate iEle_grandparent_gen = *iEle_parent_gen.mother(0);
                 gen_grandparent_pdgid = iEle_grandparent_gen.pdgId();
                 gen_grandparent_vx = iEle_grandparent_gen.vx();
                 gen_grandparent_vy = iEle_grandparent_gen.vy();
@@ -91,24 +91,24 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         int gen_parent_pdgid = -9999;
         int gen_grandparent_pdgid = -9999;
         double gen_parent_vx = -9999;
-        double gen_parentvx = -9999;
-        double gen_parent_vx = -9999;
+        double gen_parent_vy = -9999;
+        double gen_parent_vz = -9999;
         double gen_grandparent_vx = -9999;
-        double gen_grandparentvx = -9999;
-        double gen_grandparent_vx = -9999;
+        double gen_grandparent_vy = -9999;
+        double gen_grandparent_vz = -9999;
         double gen_parent_flight_d = -9999;
         double gen_grandparent_flight_d = -9999;
 
-        if (iMu_gen.numberOfMothers > 0){
-            const reco::GenParticle iMu_parent_gen = *iMu_gen.mother(0);
+        if (iMu_gen.numberOfMothers() > 0){
+            const reco::Candidate iMu_parent_gen = *iMu_gen.mother(0);
             gen_parent_pdgid = iMu_parent_gen.pdgId();
             gen_parent_vx = iMu_parent_gen.vx();
             gen_parent_vy = iMu_parent_gen.vy();
             gen_parent_vz = iMu_parent_gen.vz();
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
-            if (iMu_parent_gen.numberOfMothers > 0){
-                const reco::GenParticle iMu_grandparent_gen = *iMu_parent_gen.mother(0);
+            if (iMu_parent_gen.numberOfMothers() > 0){
+                const reco::Candidate iMu_grandparent_gen = *iMu_parent_gen.mother(0);
                 gen_grandparent_pdgid = iMu_grandparent_gen.pdgId();
                 gen_grandparent_vx = iMu_grandparent_gen.vx();
                 gen_grandparent_vy = iMu_grandparent_gen.vy();
