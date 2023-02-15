@@ -56,7 +56,7 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         double gen_grandparent_flight_d = -9999;
 
         if (iEle_gen.numberOfMothers() > 0){
-            const reco::Candidate iEle_parent_gen = *iEle_gen.mother(0);
+            auto iEle_parent_gen = *iEle_gen.mother(0);
             gen_parent_pdgid = iEle_parent_gen.pdgId();
             gen_parent_vx = iEle_parent_gen.vx();
             gen_parent_vy = iEle_parent_gen.vy();
@@ -64,12 +64,12 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
             if (iEle_parent_gen.numberOfMothers() > 0){
-                const reco::Candidate iEle_grandparent_gen = *iEle_parent_gen.mother(0);
+                auto iEle_grandparent_gen = *iEle_parent_gen.mother(0);
                 gen_grandparent_pdgid = iEle_grandparent_gen.pdgId();
                 gen_grandparent_vx = iEle_grandparent_gen.vx();
                 gen_grandparent_vy = iEle_grandparent_gen.vy();
                 gen_grandparent_vz = iEle_grandparent_gen.vz();
-                gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy)) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
+                gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
             }
         }
         std::cout<<"    pT (GeV) = "<<pt<<",  Eta = "<<eta<<",  PDG ID = "<<pdgid<<",  Gen PDG ID = "<<gen_pdgid<<",  Gen Parent PDG ID = "<<gen_parent_pdgid<<",  Gen Grandparent PDG ID = "<<gen_grandparent_pdgid<<",  Gen Parent Flight Distance (cm) = "<<gen_parent_flight_d<<",  Gen Grandparent Flight Distance (cm) = "<<gen_grandparent_flight_d<<"\n";
@@ -100,7 +100,7 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         double gen_grandparent_flight_d = -9999;
 
         if (iMu_gen.numberOfMothers() > 0){
-            const reco::Candidate iMu_parent_gen = *iMu_gen.mother(0);
+            auto iMu_parent_gen = *iMu_gen.mother(0);
             gen_parent_pdgid = iMu_parent_gen.pdgId();
             gen_parent_vx = iMu_parent_gen.vx();
             gen_parent_vy = iMu_parent_gen.vy();
@@ -108,12 +108,12 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
             if (iMu_parent_gen.numberOfMothers() > 0){
-                const reco::Candidate iMu_grandparent_gen = *iMu_parent_gen.mother(0);
+                auto iMu_grandparent_gen = *iMu_parent_gen.mother(0);
                 gen_grandparent_pdgid = iMu_grandparent_gen.pdgId();
                 gen_grandparent_vx = iMu_grandparent_gen.vx();
                 gen_grandparent_vy = iMu_grandparent_gen.vy();
                 gen_grandparent_vz = iMu_grandparent_gen.vz();
-                gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy)) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
+                gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
             }
         }
         std::cout<<"    pT (GeV) = "<<pt<<",  Eta = "<<eta<<",  PDG ID = "<<pdgid<<",  Gen PDG ID = "<<gen_pdgid<<",  Gen Parent PDG ID = "<<gen_parent_pdgid<<",  Gen Grandparent PDG ID = "<<gen_grandparent_pdgid<<",  Gen Parent Flight Distance (cm) = "<<gen_parent_flight_d<<",  Gen Grandparent Flight Distance (cm) = "<<gen_grandparent_flight_d<<"\n";
