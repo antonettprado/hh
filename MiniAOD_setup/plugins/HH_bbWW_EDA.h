@@ -134,6 +134,12 @@ class HH_bbWW_EDA : public edm::EDAnalyzer{
     edm::Handle<reco::GenParticleCollection> genparticles_handle;
 
     int event_count;
+
+    edm::Service<TFileService> fs_;
+    TTree *hh_bbww_tree;
+
+    std::vector<double> lepton_parent_flight_d;
+    std::vector<double> lepton_grandparent_flight_d;
 };
 
 #endif 

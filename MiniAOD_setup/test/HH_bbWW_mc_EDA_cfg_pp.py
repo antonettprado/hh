@@ -45,4 +45,8 @@ process.hh = cms.EDAnalyzer("HH_bbWW_EDA",
     genparticles = cms.InputTag("prunedGenParticles")
 )
 
+process.TFileService = cms.Service("TFileService",
+	fileName = cms.string('HH_bbWW_ntuple.root')
+)
+
 process.p = cms.Path(process.hh)
