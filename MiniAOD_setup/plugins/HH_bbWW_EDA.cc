@@ -62,7 +62,7 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
             gen_parent_vz = iEle_gen.mother(0)->vz();
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
-            if (iEle_parent_gen.numberOfMothers() > 0){
+            if (iEle_gen.mother(0)->numberOfMothers() > 0){
                 gen_grandparent_pdgid = iEle_gen.mother(0)->mother(0)->pdgId();
                 gen_grandparent_vx = iEle_gen.mother(0)->mother(0)->vx();
                 gen_grandparent_vy = iEle_gen.mother(0)->mother(0)->vy();
@@ -104,7 +104,7 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
             gen_parent_vz = iMu_gen.mother(0)->vz();
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
-            if (iMu_parent_gen.numberOfMothers() > 0){
+            if (iMu_gen.mother(0)->numberOfMothers() > 0){
                 gen_grandparent_pdgid = iMu_gen.mother(0)->mother(0)->pdgId();
                 gen_grandparent_vx = iMu_gen.mother(0)->mother(0)->vx();
                 gen_grandparent_vy = iMu_gen.mother(0)->mother(0)->vy();
