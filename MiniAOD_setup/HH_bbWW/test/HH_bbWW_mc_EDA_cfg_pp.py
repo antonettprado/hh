@@ -10,7 +10,7 @@ from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
 
 options = VarParsing("python")
 
-process = cms.Process("MAOD")
+process = cms.Process("HH_bbWW_EDA")
 
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('/store/mc/RunIIAutumn18MiniAOD/GluGluToHHTo2B2VTo2L2Nu_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/MINIAODSIM/102X_upgrade2018_realistic_v15-v1/110000/1161CC9B-A01E-6E43-9D4F-E6751419554B.root')
