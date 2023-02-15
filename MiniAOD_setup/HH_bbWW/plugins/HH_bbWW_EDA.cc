@@ -139,5 +139,12 @@ void HH_bbWW_EDA::endRun(const edm::Run &iRun, const edm::EventSetup &iSetup)
     return;
 }
 
+void HH_bbWW_EDA::fillDescriptions(edm::ConfigurationDescriptions &descriptions)
+{
+    edm::ParameterSetDescription desc;
+    desc.setUnknown();
+    descriptions.addDefault(desc);
+}
+
 // define this as a CMSSW plugin
 DEFINE_FWK_MODULE(HH_bbWW_EDA);
