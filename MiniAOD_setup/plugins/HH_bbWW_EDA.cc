@@ -56,19 +56,17 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         double gen_grandparent_flight_d = -9999;
 
         if (iEle_gen.numberOfMothers() > 0){
-            auto iEle_parent_gen = *iEle_gen.mother(0);
-            gen_parent_pdgid = iEle_parent_gen.pdgId();
-            gen_parent_vx = iEle_parent_gen.vx();
-            gen_parent_vy = iEle_parent_gen.vy();
-            gen_parent_vz = iEle_parent_gen.vz();
+            gen_parent_pdgid = iEle_gen.mother(0)->pdgId();
+            gen_parent_vx = iEle_gen.mother(0)->vx();
+            gen_parent_vy = iEle_gen.mother(0)->vy();
+            gen_parent_vz = iEle_gen.mother(0)->vz();
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
             if (iEle_parent_gen.numberOfMothers() > 0){
-                auto iEle_grandparent_gen = *iEle_parent_gen.mother(0);
-                gen_grandparent_pdgid = iEle_grandparent_gen.pdgId();
-                gen_grandparent_vx = iEle_grandparent_gen.vx();
-                gen_grandparent_vy = iEle_grandparent_gen.vy();
-                gen_grandparent_vz = iEle_grandparent_gen.vz();
+                gen_grandparent_pdgid = iEle_gen.mother(0)->mother(0)->pdgId();
+                gen_grandparent_vx = iEle_gen.mother(0)->mother(0)->vx();
+                gen_grandparent_vy = iEle_gen.mother(0)->mother(0)->vy();
+                gen_grandparent_vz = iEle_gen.mother(0)->mother(0)->vz();
                 gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
             }
         }
@@ -100,19 +98,17 @@ void HH_bbWW_EDA::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetu
         double gen_grandparent_flight_d = -9999;
 
         if (iMu_gen.numberOfMothers() > 0){
-            auto iMu_parent_gen = *iMu_gen.mother(0);
-            gen_parent_pdgid = iMu_parent_gen.pdgId();
-            gen_parent_vx = iMu_parent_gen.vx();
-            gen_parent_vy = iMu_parent_gen.vy();
-            gen_parent_vz = iMu_parent_gen.vz();
+            gen_parent_pdgid = iMu_gen.mother(0)->pdgId();
+            gen_parent_vx = iMu_gen.mother(0)->vx();
+            gen_parent_vy = iMu_gen.mother(0)->vy();
+            gen_parent_vz = iMu_gen.mother(0)->vz();
             gen_parent_flight_d = sqrt( (gen_parent_vx-gen_vx)*(gen_parent_vx-gen_vx) + (gen_parent_vy-gen_vy)*(gen_parent_vy-gen_vy) + (gen_parent_vz-gen_vz)*(gen_parent_vz-gen_vz) );
 
             if (iMu_parent_gen.numberOfMothers() > 0){
-                auto iMu_grandparent_gen = *iMu_parent_gen.mother(0);
-                gen_grandparent_pdgid = iMu_grandparent_gen.pdgId();
-                gen_grandparent_vx = iMu_grandparent_gen.vx();
-                gen_grandparent_vy = iMu_grandparent_gen.vy();
-                gen_grandparent_vz = iMu_grandparent_gen.vz();
+                gen_grandparent_pdgid = iMu_gen.mother(0)->mother(0)->pdgId();
+                gen_grandparent_vx = iMu_gen.mother(0)->mother(0)->vx();
+                gen_grandparent_vy = iMu_gen.mother(0)->mother(0)->vy();
+                gen_grandparent_vz = iMu_gen.mother(0)->mother(0)->vz();
                 gen_grandparent_flight_d = sqrt( (gen_grandparent_vx-gen_parent_vx)*(gen_grandparent_vx-gen_parent_vx) + (gen_grandparent_vy-gen_parent_vy)*(gen_grandparent_vy-gen_parent_vy) + (gen_grandparent_vz-gen_parent_vz)*(gen_grandparent_vz-gen_parent_vz) );
             }
         }
