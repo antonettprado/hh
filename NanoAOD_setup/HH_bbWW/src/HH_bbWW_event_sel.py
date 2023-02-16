@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--report", action="store", dest="report", help="y or n", default="n")
     parser.add_argument("-c", "--csv", action="store", dest="csv", help="y or n", default="n")
     parser.add_argument("-hi", "--hists", action="store", dest="hists", help="y or n", default="y")
+    parser.add_argument("-s_ip", "--significance_d", action="store", dest="significance_d", help="significance_d cut", default="8")
     args = parser.parse_args()
 
     df_list = []
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 
     dxy_cut = 0.05
     dz_cut = 0.1
-    significance_d_cut = 8
+    significance_d_cut = int(args.significance_d)
 
     print("\nThe cuts are: ")
     print("\t dxy_cut = " + str(dxy_cut))
@@ -77,6 +78,9 @@ if __name__ == "__main__":
     for df in df_list:
 
         N = df.Count().GetValue()
+        print_twice('Initial events: ')
+        print_twice('\t Total: ' + str(N))
+        print_twice()
 
         print("1) Basic Event Selection --------------------------------")
         df = df.Filter("PV_npvsGood>=1", "pr col vertex")    # Primary collision vertex
@@ -120,8 +124,8 @@ if __name__ == "__main__":
         is_sl = is_e + is_mu
         print_twice('\t Total is_e: ' + str(is_e))
         print_twice('\t Total is_mu: ' + str(is_mu))
-        print_twice('\t Total SL events: ' + str(is_sl))
-        print_twice('\n\t SL Yield = ' + str(round(is_sl/N, 4)))
+        print_twice('\t Total SL Yield: ' + str(is_sl))
+        print_twice('\n\t SL acceptance = ' + str(round(is_sl/N, 4)))
         print_twice()
 
         df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"])
@@ -132,11 +136,9 @@ if __name__ == "__main__":
         print_twice('\t Total is_ee: ' + str(is_ee))
         print_twice('\t Total is_mumu: ' + str(is_mumu))
         print_twice('\t Total is_emu: ' + str(is_emu))
-        print_twice('\t Total DL events: ' + str(is_dl))
-        print_twice('\n\t DL Yield = ' + str(round(is_dl/N, 4)))
+        print_twice('\t Total DL Yield: ' + str(is_dl))
+        print_twice('\n\t DL acceptance = ' + str(round(is_dl/N, 4)))
         print_twice()
-        print_twice('Initial events: ')
-        print_twice('\t Total: ' + str(N))
         print_twice('The cuts were: ')
         print_twice('\t |d_xy| < ' + str(dxy_cut) + ' and |d_z| < ' + str(dz_cut) + ' and s_d < ' + str(significance_d_cut))
         print_twice()

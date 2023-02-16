@@ -39,11 +39,11 @@ def select_e_loose(df, e_loose_dict, dxy_cut=None, dz_cut=None, significance_d_c
     if dz_cut is None:
         dz_cut = e_loose_dict["max_dz"]
     if significance_d_cut is None:
-        significance_d_cut = e_loose_dict["max_d_over_significance_d"]
+        significance_d_cut = e_loose_dict["max_d_over_sigma_d"]
 
     print("\t dxy_cut is " + str(dxy_cut))
     print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(significance_d_cut))
 
     definition = "Electron_pt > " + str(e_loose_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) < " + str(e_loose_dict["max_eta"])
@@ -69,11 +69,11 @@ def select_e_fakeable(df, e_fakeable_dict, dxy_cut=None, dz_cut=None, significan
     if dz_cut is None:
         dz_cut = e_fakeable_dict["max_dz"]
     if significance_d_cut is None:
-        significance_d_cut = e_fakeable_dict["max_d_over_significance_d"]
+        significance_d_cut = e_fakeable_dict["max_d_over_sigma_d"]
 
     print("\t dxy_cut is " + str(dxy_cut))
     print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(significance_d_cut))
 
     definition = "Electron_pt > " + str(e_fakeable_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) <   " + str(e_fakeable_dict["max_eta"])
@@ -102,11 +102,11 @@ def select_e_tight(df, e_tight_dict, dxy_cut=None, dz_cut=None, significance_d_c
     if dz_cut is None:
         dz_cut = e_tight_dict["max_dz"]  
     if significance_d_cut is None:
-        significance_d_cut = e_tight_dict["max_d_over_significance_d"]  
+        significance_d_cut = e_tight_dict["max_d_over_sigma_d"]  
 
     print("\t dxy_cut is " + str(dxy_cut))
     print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(significance_d_cut))
     
     definition = "Electron_pt >   " + str(e_tight_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) <  " + str(e_tight_dict["max_eta"]) 
@@ -136,11 +136,11 @@ def select_mu_loose(df, mu_loose_dict, dxy_cut=None, dz_cut=None, significance_d
     if dz_cut is None:
         dz_cut = mu_loose_dict["max_dz"]
     if significance_d_cut is None:
-        significance_d_cut = mu_loose_dict["max_d_over_significance_d"]
+        significance_d_cut = mu_loose_dict["max_d_over_sigma_d"]
 
     print("\t dxy_cut is " + str(dxy_cut))
     print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(significance_d_cut))
     
     definition = "Muon_pt > " + str(mu_loose_dict["min_pt"])
     definition += " && abs(Muon_eta) < " + str(mu_loose_dict["max_eta"])
@@ -164,11 +164,11 @@ def select_mu_fakeable(df, mu_fakeable_dict, dxy_cut=None, dz_cut=None, signific
     if dz_cut is None:
         dz_cut = mu_fakeable_dict["max_dz"]
     if significance_d_cut is None:
-        significance_d_cut = mu_fakeable_dict["max_d_over_significance_d"]
+        significance_d_cut = mu_fakeable_dict["max_d_over_sigma_d"]
 
     print("\t dxy_cut is " + str(dxy_cut))
     print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(significance_d_cut))
 
     definition = "Muon_pt >   " + str(mu_fakeable_dict["min_pt"])
     definition += " && abs(Muon_eta) < " + str(mu_fakeable_dict["max_eta"])
@@ -192,11 +192,11 @@ def select_mu_tight(df, mu_tight_dict, dxy_cut=None, dz_cut=None, significance_d
     if dz_cut is None:
         dz_cut = mu_tight_dict["max_dz"]
     if significance_d_cut is None:
-        significance_d_cut = mu_tight_dict["max_d_over_significance_d"]
+        significance_d_cut = mu_tight_dict["max_d_over_sigma_d"]
 
     print("\t dxy_cut is " + str(dxy_cut))
     print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(dz_cut))
+    print("\t significance_d_cut is " + str(significance_d_cut))
 
     definition = "Muon_pt > " + str(mu_tight_dict["min_pt"])
     definition += " && abs(Muon_eta) < " + str(mu_tight_dict["max_eta"])
