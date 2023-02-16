@@ -9,7 +9,7 @@ OUT_PATH = 'Histograms/'
 
 dxy_cut = 0.05
 dz_cut = 0.1
-significance_d_cut = 8
+significance_d_cut = -9999
 
 def add_sl_hists(f1, obs, bins, h_xmin, h_xmax, titles):
     h_e = f1.Get("sl_e_" + obs)
@@ -18,7 +18,7 @@ def add_sl_hists(f1, obs, bins, h_xmin, h_xmax, titles):
     h_total = ROOT.TH1F("hist","", bins, h_xmin, h_xmax)
     h_total.SetTitle(titles[0])
     h_total.GetXaxis().SetTitle(titles[1])
-    h_total.GetXaxis().SetTitle(titles[2])
+    h_total.GetYaxis().SetTitle(titles[2])
     h_total.Add(h_e)
     h_total.Add(h_mu)
 
@@ -35,7 +35,7 @@ def add_dl_hists(f1, obs, bins, h_xmin, h_xmax, titles):
     h_total = ROOT.TH1F("hist","", bins, h_xmin, h_xmax)
     h_total.SetTitle(titles[0])
     h_total.GetXaxis().SetTitle(titles[1])
-    h_total.GetXaxis().SetTitle(titles[2])
+    h_total.GetYaxis().SetTitle(titles[2])
     h_total.Add(h_ee)
     h_total.Add(h_mumu)
     h_total.Add(h_emu)
