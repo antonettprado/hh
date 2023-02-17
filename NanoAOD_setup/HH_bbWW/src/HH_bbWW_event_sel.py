@@ -1,18 +1,19 @@
-import sys, os, glob
+import sys, os
 import argparse
 import ROOT
 import json
+from pathlib import Path
 from HH_bbWW_event_sel_funcs import *
 from helper_functions import *
-from pathlib import Path
-import csv
+
 
 import warnings 
 warnings.filterwarnings("ignore")
 
 helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_event_sel_funcs_cpp.cc")
 ROOT.gInterpreter.ProcessLine('#include "{}"'.format(helper_func_path))
-# ROOT.EnableImplicitMT()
+
+ROOT.EnableImplicitMT()
 
 opts = ROOT.RDF.RSnapshotOptions()
 opts.fMode = "UPDATE"
