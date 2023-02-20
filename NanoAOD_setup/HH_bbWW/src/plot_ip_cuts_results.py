@@ -89,7 +89,7 @@ print()
 
 sample1_dir = "hh_bbWW_dl_cHHH1_" + str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut)
 sample2_dir = "hh_bbtautau_cHHH1_" + str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut)
-out_file_prefix = str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut) + "_"
+out_file_prefix = str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut) + "_weighted_"
 
 # filenames = glob.glob(r'hists/hists_hh_bbtautau_*_10to10.root')
 filenames = [ sample1_dir + '/hists.root', sample2_dir + '/hists.root']

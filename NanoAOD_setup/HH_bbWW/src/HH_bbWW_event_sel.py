@@ -6,14 +6,13 @@ from pathlib import Path
 from HH_bbWW_event_sel_funcs import *
 from helper_functions import *
 
-
 import warnings 
 warnings.filterwarnings("ignore")
 
 helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_event_sel_funcs_cpp.cc")
 ROOT.gInterpreter.ProcessLine('#include "{}"'.format(helper_func_path))
 
-ROOT.EnableImplicitMT()
+# ROOT.EnableImplicitMT()
 
 opts = ROOT.RDF.RSnapshotOptions()
 opts.fMode = "UPDATE"
@@ -83,6 +82,12 @@ if __name__ == "__main__":
         print_twice('\t Total: ' + str(N))
         print_twice()
 
+        N_sum_genWeight = df.Sum("genWeight").GetValue()
+        print_twice('N_sum_genWeight = ' + str(round(N_sum_genWeight, 4)))
+        print_twice()
+
+        df = df.Define("weight_over_norm", "get_weight_over_norm(genWeight, " + str(N_sum_genWeight) + ")")
+
         print("1) Basic Event Selection --------------------------------")
         df = df.Filter("PV_npvsGood>=1", "pr col vertex")    # Primary collision vertex
         df = met_filter(df, args.type)
@@ -109,43 +114,37 @@ if __name__ == "__main__":
         print("8) Tau Selection ----------------------------------------")
         df = select_taus(df, cuts["taus"])
 
-        # bbWW sample
-        # df = df.Filter("event == 198 || event == 183 || event == 138 || event == 143 || event == 136 || event == 32 || event == 24 || event == 4 || event == 15 || event == 20 || event == 41 || event == 42 || event == 44 || event == 46 || event == 11 || event == 25 || event == 51 || event == 52 || event == 43 || event == 57 || event == 62")
-
-        # bbtautau sample
-        # df = df.Filter("event == 2219 || event == 2295 || event == 28371 || event ==  44700 || event == 44747 || event == 44750 || event == 51464 || event == 2202 || event == 2393 || event == 28202 || event == 38553 || event == 38573 || event == 55559 || event == 55582 || event == 2353 || event == 2383 || event == 28269 || event == 28341 || event == 28384 || event == 28400 || event == 38414")
-
         print("9) Final Event Selection -------------------------------")
         df_sl = df    
         df_dl = df
 
         df_e, df_mu = select_sl_channel(df_sl, cuts["single_lepton_event"])
-        is_e = df_e.Count().GetValue()
-        is_mu = df_mu.Count().GetValue()
-        is_sl = is_e + is_mu
-        print_twice('\t Total is_e: ' + str(is_e))
-        print_twice('\t Total is_mu: ' + str(is_mu))
-        print_twice('\t Total SL Yield: ' + str(is_sl))
-        print_twice('\n\t SL acceptance = ' + str(round(is_sl/N, 4)))
+        e_sum_genWeight = df_e.Sum("genWeight").GetValue()
+        mu_sum_genWeight = df_mu.Sum("genWeight").GetValue()
+        sl_sum_genWeight = e_sum_genWeight + mu_sum_genWeight
+        print_twice('\t Weighted is_e: ' + str(round(e_sum_genWeight, 4)))
+        print_twice('\t Weighted is_mu: ' + str(round(mu_sum_genWeight, 4)))
+        print_twice('\t Weighted SL Yield: ' + str(round(sl_sum_genWeight, 4)))
+        print_twice('\n\t Weighted SL acceptance = ' + str(round(sl_sum_genWeight/N_sum_genWeight, 4)))
         print_twice()
 
         df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"])
-        is_ee = df_ee.Count().GetValue()
-        is_mumu = df_mumu.Count().GetValue()
-        is_emu = df_emu.Count().GetValue()
-        is_dl = is_ee + is_mumu + is_emu
-        print_twice('\t Total is_ee: ' + str(is_ee))
-        print_twice('\t Total is_mumu: ' + str(is_mumu))
-        print_twice('\t Total is_emu: ' + str(is_emu))
-        print_twice('\t Total DL Yield: ' + str(is_dl))
-        print_twice('\n\t DL acceptance = ' + str(round(is_dl/N, 4)))
+        ee_sum_genWeight = df_ee.Sum("genWeight").GetValue()
+        mumu_sum_genWeight = df_mumu.Sum("genWeight").GetValue()
+        emu_sum_genWeight = df_emu.Sum("genWeight").GetValue()
+        dl_sum_genWeight = ee_sum_genWeight + mumu_sum_genWeight + emu_sum_genWeight
+        print_twice('\t Weighted is_ee: ' + str(round(ee_sum_genWeight, 4)))
+        print_twice('\t Weighted is_mumu: ' + str(round(mumu_sum_genWeight, 4)))
+        print_twice('\t Weighted is_emu: ' + str(round(emu_sum_genWeight, 4)))
+        print_twice('\t Weighted DL Yield: ' + str(round(dl_sum_genWeight, 4)))
+        print_twice('\n\t Weighted DL acceptance = ' + str(round(dl_sum_genWeight/N_sum_genWeight, 4)))
         print_twice()
         print_twice('The cuts were: ')
         print_twice('\t |d_xy| < ' + str(dxy_cut) + ' and |d_z| < ' + str(dz_cut) + ' and s_d < ' + str(significance_d_cut))
         print_twice()
-        
+
         if (args.report == "y"):
-            print("10) Saving histograms to root file------------------------")
+            print("10) Print channel reports --------------------------------")
             print_twice('SL Report: ')
             print_twice('\t sl_e')
             df_e.Report().Print()

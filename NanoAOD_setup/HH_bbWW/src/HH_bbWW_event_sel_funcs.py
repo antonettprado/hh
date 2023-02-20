@@ -578,7 +578,7 @@ def select_histos(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu):
     save_histo(dl_emu, "dl_emu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX)
 
 def save_histo(df, hist_name, obj_name, bins, x_min, x_max):
-    h = df.Histo1D((hist_name,obj_name, bins, x_min, x_max), obj_name)
+    h = df.Histo1D((hist_name,obj_name, bins, x_min, x_max), obj_name, "weight_over_norm")
     h.Write()
 
 # ======================================================================================

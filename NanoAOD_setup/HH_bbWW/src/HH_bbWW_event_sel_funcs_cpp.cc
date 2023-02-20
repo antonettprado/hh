@@ -5,6 +5,11 @@
  
 using namespace ROOT::VecOps;
 
+
+float get_weight_over_norm(float genWeight, float N_sum_genWeight) {
+	return genWeight/N_sum_genWeight;
+}
+
 // =====================================================================
 // Common functions ====================================================
 // =====================================================================
