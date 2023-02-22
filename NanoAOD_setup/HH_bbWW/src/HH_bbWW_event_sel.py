@@ -72,20 +72,6 @@ if __name__ == "__main__":
     print_twice('\t Total: ' + str(N))
     print_twice()
 
-    N_f1 = df.Filter("genWeight <= 0.3").Count().GetValue()
-    N_f2 = df.Filter("0.3 < genWeight && genWeight <= 10").Count().GetValue()
-    N_f3 = df.Filter("10 < genWeight && genWeight <= 100").Count().GetValue()
-    N_f4 = df.Filter("100 < genWeight && genWeight <= 300").Count().GetValue()
-    N_f5 = df.Filter("300 <= genWeight ").Count().GetValue()
-
-    print("GenWeights:")
-    print("\t N(genWeight <= 0.3) " + str(N_f1))
-    print("\t N(0.3 < genWeight <= 10) " + str(N_f2))
-    print("\t N(10 < genWeight <= 100)) " + str(N_f3))
-    print("\t N(100 < genWeight <= 300)) " + str(N_f4))
-    print("\t N(300 <= genWeight) " + str(N_f5))
-    print()
-
     N_sum_genWeight = df.Sum("genWeight").GetValue()
     print_twice('N_sum_genWeight = ' + str(round(N_sum_genWeight, 4)))
     print_twice()
