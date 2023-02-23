@@ -2,27 +2,27 @@
     "hh_bbWW_sl_cHHH1":{
         "2016": [],
         "2017": [],
-        "2018": ["src/bbWW_sl_DS_1.txt"]
+        "2018": ["data/bbWW_sl_DS_1.txt"]
     },
     "hh_bbWW_dl_cHHH1":{
         "2016": [],
         "2017": [],
-        "2018": ["src/bbWW_dl_DS_1.txt"]
+        "2018": ["data/bbWW_dl_DS_1.txt"]
     },
     "hh_bbtautau_cHHH1":{
         "2016": [],
         "2017": [],
-        "2018": ["src/bbtautau_DS_1.txt"]
+        "2018": ["data/bbtautau_DS_1.txt"]
     },
     "ttjets_sl":{
         "2016": [],
         "2017": [],
-        "2018": ["src/ttjets_sl_DS_1.txt", "src/ttjets_sl_DS_2.txt"]
+        "2018": ["data/ttjets_sl_DS_1.txt", "data/ttjets_sl_DS_2.txt"]
     },
     "ttjets_dl":{
         "2016": [],
         "2017": [],
-        "2018": ["src/ttjets_dl_DS_1.txt"]
+        "2018": ["data/ttjets_dl_DS_1.txt"]
     }
 }
 
