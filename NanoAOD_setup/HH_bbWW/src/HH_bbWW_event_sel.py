@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from HH_bbWW_event_sel_funcs import *
 from helper_functions import *
-
+ROOT.EnableImplicitMT()
 #==========================================
 # from distributed import Client
 # from dask_lxplus import CernCluster
@@ -36,8 +36,6 @@ from helper_functions import *
 
 helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_event_sel_funcs_cpp.cc")
 ROOT.gInterpreter.ProcessLine('#include "{}"'.format(helper_func_path))
-
-ROOT.EnableImplicitMT()
 
 if __name__ == "__main__":
 
