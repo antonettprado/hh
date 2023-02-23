@@ -21,7 +21,7 @@ ROOT.EnableImplicitMT()
 #     lcg = True,
 #     nanny = False,
 #     container_runtime = 'none',
-#     log_directory = '/eos/user/b/ben/condor/log',
+#     log_directory = '/eos/user/a/anunezde/condor/log',
 #     scheduler_options = {
 #         'port': 8786,
 #         'host': socket.gethostname(),
