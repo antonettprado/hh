@@ -1,6 +1,30 @@
 import warnings 
 warnings.filterwarnings("ignore")
+#==========================================
+# from distributed import Client
+# from dask_lxplus import CernCluster
+# import socket
 
+# cluster = CernCluster(
+#     cores = 1,
+#     memory = '2000MB',
+#     disk = '10GB',
+#     death_timeout = '60',
+#     lcg = True,
+#     nanny = False,
+#     container_runtime = 'none',
+#     log_directory = '/eos/user/b/ben/condor/log',
+#     scheduler_options = {
+#         'port': 8786,
+#         'host': socket.gethostname(),
+#     },
+#     job_extra = {
+#         'MY.JobFlavour': '"longlunch"',
+#     },
+# )
+# client = cluster
+# RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+#==========================================
 import sys, os
 import argparse
 import ROOT
@@ -41,8 +65,13 @@ if __name__ == "__main__":
         print ("Year not present in json")
         sys.exit()
     
-    files = input_json_file[args.sample][args.year]
-    df = ROOT.RDataFrame("Events", files)
+    input_dataset = input_json_file[args.sample][args.year]
+    all_root_files = set()
+    for dataset in input_dataset:
+        for line in open(dataset):
+            all_root_files.add('root://cms-xrd-global.cern.ch//' + line.strip())
+    
+    df = ROOT.RDataFrame("Events", all_root_files)
 
     cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
