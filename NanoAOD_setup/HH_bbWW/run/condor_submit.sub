@@ -1,0 +1,11 @@
+universe   = vanilla
+executable = condor_HH_bbWW_event_sel.sh
+run_as_owner = true
+arguments = data/input_HH_bbWW_mc.json mc $(sample) 2018
+output = logs/job.output.$(Cluster)-$(ProcId) 
+error = logs/job.error.$(Cluster)-$(ProcId) 
+log = logs/job.log.$(Cluster)-$(ProcId)
++MaxRuntime = 10800
+should_transfer_files = IF_NEEDED
+
+queue sample from condor_input.txt
