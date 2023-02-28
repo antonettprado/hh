@@ -6,8 +6,8 @@
 using namespace ROOT::VecOps;
 
 
-float get_weight_over_norm(float genWeight, float N_sum_genWeight) {
-	return genWeight/N_sum_genWeight;
+float get_weight_factor(float genWeight, float sum_genWeight) {
+	return genWeight/sum_genWeight;
 }
 
 // =====================================================================

@@ -1,4 +1,57 @@
+import warnings 
+warnings.filterwarnings("ignore")
+
+import ROOT
+import sys, argparse, os
+import json
+from helper_functions import *
 from HH_bbWW_hists_values import *
+
+def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, run):
+
+    # Processing C++ functions -------------------------------------
+    ROOT.gInterpreter.ProcessLine('#include \"src/HH_bbWW_event_sel_funcs_cpp.cc\"')
+
+    # Get dataframe and cuts ---------------------------------------
+    print_twice('Input datasets: ', input_datasets)
+    print_twice()
+
+    all_root_files = set()
+
+    if (run == 'local'):
+        all_root_files = input_datasets
+    elif (run == 'cluster'):
+        for dataset in input_datasets:
+            for line in open(dataset):
+                all_root_files.add('root://cms-xrd-global.cern.ch//' + line.strip())
+
+    df = ROOT.RDataFrame("Events", all_root_files)
+    runs = ROOT.RDataFrame("Runs", all_root_files)
+    cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
+
+    # Creating output directory & resetting log file ---------------
+    OUT_DIR = sample + "_" + str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut)
+    if not os.path.isdir(OUT_DIR):
+        os.makedirs(OUT_DIR)
+    os.chdir(OUT_DIR)
+    reset_log_file()
+
+    return df, runs, cuts
+
+def preselection(df, runs):
+
+    N_events = df.Count().GetValue()
+    sum_genWeight = df.Sum("genWeight").GetValue()
+    Sum_genEventSumw = runs.Sum("genEventSumw").GetValue()
+
+    print_twice('Initial events: ' + str(N_events))
+    print_twice('sum_genWeight = ' + str(round(sum_genWeight, 4)))
+    print_twice('Sum_genEventSumw = ' + str(round(Sum_genEventSumw, 4)))
+    print_twice()
+
+    df = df.Define("weight_factor", "get_weight_factor(genWeight, " + str(sum_genWeight) + ")")
+
+    return df, sum_genWeight
 
 # MET Filter Selection =================================================================
 def met_filter(df, sample_type):
@@ -37,10 +90,6 @@ def select_e_loose(df, e_loose_dict, dxy_cut=None, dz_cut=None, significance_d_c
     if significance_d_cut is None:
         significance_d_cut = e_loose_dict["max_d_over_sigma_d"]
 
-    print("\t dxy_cut is " + str(dxy_cut))
-    print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(significance_d_cut))
-
     definition = "Electron_pt > " + str(e_loose_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) < " + str(e_loose_dict["max_eta"])
     if dxy_cut != -9999:
@@ -66,10 +115,6 @@ def select_e_fakeable(df, e_fakeable_dict, dxy_cut=None, dz_cut=None, significan
         dz_cut = e_fakeable_dict["max_dz"]
     if significance_d_cut is None:
         significance_d_cut = e_fakeable_dict["max_d_over_sigma_d"]
-
-    print("\t dxy_cut is " + str(dxy_cut))
-    print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(significance_d_cut))
 
     definition = "Electron_pt > " + str(e_fakeable_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) <   " + str(e_fakeable_dict["max_eta"])
@@ -99,10 +144,6 @@ def select_e_tight(df, e_tight_dict, dxy_cut=None, dz_cut=None, significance_d_c
         dz_cut = e_tight_dict["max_dz"]  
     if significance_d_cut is None:
         significance_d_cut = e_tight_dict["max_d_over_sigma_d"]  
-
-    print("\t dxy_cut is " + str(dxy_cut))
-    print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(significance_d_cut))
     
     definition = "Electron_pt >   " + str(e_tight_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) <  " + str(e_tight_dict["max_eta"]) 
@@ -133,10 +174,6 @@ def select_mu_loose(df, mu_loose_dict, dxy_cut=None, dz_cut=None, significance_d
         dz_cut = mu_loose_dict["max_dz"]
     if significance_d_cut is None:
         significance_d_cut = mu_loose_dict["max_d_over_sigma_d"]
-
-    print("\t dxy_cut is " + str(dxy_cut))
-    print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(significance_d_cut))
     
     definition = "Muon_pt > " + str(mu_loose_dict["min_pt"])
     definition += " && abs(Muon_eta) < " + str(mu_loose_dict["max_eta"])
@@ -162,10 +199,6 @@ def select_mu_fakeable(df, mu_fakeable_dict, dxy_cut=None, dz_cut=None, signific
     if significance_d_cut is None:
         significance_d_cut = mu_fakeable_dict["max_d_over_sigma_d"]
 
-    print("\t dxy_cut is " + str(dxy_cut))
-    print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(significance_d_cut))
-
     definition = "Muon_pt >   " + str(mu_fakeable_dict["min_pt"])
     definition += " && abs(Muon_eta) < " + str(mu_fakeable_dict["max_eta"])
     if dxy_cut != -9999:
@@ -189,10 +222,6 @@ def select_mu_tight(df, mu_tight_dict, dxy_cut=None, dz_cut=None, significance_d
         dz_cut = mu_tight_dict["max_dz"]
     if significance_d_cut is None:
         significance_d_cut = mu_tight_dict["max_d_over_sigma_d"]
-
-    print("\t dxy_cut is " + str(dxy_cut))
-    print("\t dz_cut is " + str(dz_cut))
-    print("\t significance_d_cut is " + str(significance_d_cut))
 
     definition = "Muon_pt > " + str(mu_tight_dict["min_pt"])
     definition += " && abs(Muon_eta) < " + str(mu_tight_dict["max_eta"])
@@ -305,7 +334,7 @@ def select_taus(df, taus_dict):
     return df
 
 # Single Lepton Channel Selection =======================================================
-def select_sl_channel(df, sl_event_dict):
+def select_sl_channel(df, sl_event_dict, sum_genWeight):
 
     print("SL channel:")
 
@@ -349,10 +378,19 @@ def select_sl_channel(df, sl_event_dict):
     df_mu = df_mu.Define("ip3d_0", "define_sl_ip3d(Lepton_ip3d, mu_tight)")
     df_mu = df_mu.Define("significance_d_0", "define_sl_significance_d(Lepton_significance_d, mu_tight)")
 
+    e_sum_genWeight = df_e.Sum("genWeight").GetValue()
+    mu_sum_genWeight = df_mu.Sum("genWeight").GetValue()
+    sl_sum_genWeight = e_sum_genWeight + mu_sum_genWeight
+    print_twice('\t Weighted is_e: ' + str(round(e_sum_genWeight, 4)))
+    print_twice('\t Weighted is_mu: ' + str(round(mu_sum_genWeight, 4)))
+    print_twice('\t Weighted SL Yield: ' + str(round(sl_sum_genWeight, 4)))
+    print_twice('\n\t Weighted SL acceptance = ' + str(round(sl_sum_genWeight/sum_genWeight, 4)))
+    print_twice()
+
     return df_e, df_mu
 
 # Double Lepton Channel Selection =======================================================
-def select_dl_channel(df, dl_event_dict):
+def select_dl_channel(df, dl_event_dict, sum_genWeight):
 
     print("DL channel:")
 
@@ -472,71 +510,92 @@ def select_dl_channel(df, dl_event_dict):
     df_emu = df_emu.Define("mother_flav_l", "get_mother_flav(Lepton_genPartIdx, l_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
     df_emu = df_emu.Define("gen_status_flag_l", "get_gen_status_flag(GenPart_statusFlags, Lepton_genPartIdx, l_tight)")
 
+    ee_sum_genWeight = df_ee.Sum("genWeight").GetValue()
+    mumu_sum_genWeight = df_mumu.Sum("genWeight").GetValue()
+    emu_sum_genWeight = df_emu.Sum("genWeight").GetValue()
+    dl_sum_genWeight = ee_sum_genWeight + mumu_sum_genWeight + emu_sum_genWeight
+    print_twice('\t Weighted is_ee: ' + str(round(ee_sum_genWeight, 4)))
+    print_twice('\t Weighted is_mumu: ' + str(round(mumu_sum_genWeight, 4)))
+    print_twice('\t Weighted is_emu: ' + str(round(emu_sum_genWeight, 4)))
+    print_twice('\t Weighted DL Yield: ' + str(round(dl_sum_genWeight, 4)))
+    print_twice('\n\t Weighted DL acceptance = ' + str(round(dl_sum_genWeight/sum_genWeight, 4)))
+    print_twice()
+
     return df_ee, df_mumu, df_emu
 
 # Save histograms to root file =========================================================
+def output_hists_root_file(hists, df_e, df_mu, df_ee, df_mumu, df_emu):
+    if (hists == 'y'):
+        outHistFileName = "hists.root"
+        outHistFile = ROOT.TFile.Open(outHistFileName ,"RECREATE")
+        outHistFile.cd()
+        save_hists_v2(df_e, df_mu, df_ee, df_mumu, df_emu)
+        outHistFile.Close()
+        print_twice("hists.root was saved")
+        print_twice()
+        
 def save_hists_v1(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu):
 
-    h01 = sl_e.Histo1D(("sl_e_pt_0",   "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm")
-    h02 = sl_e.Histo1D(("sl_e_eta_0",  "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm")
-    h03 = sl_e.Histo1D(("sl_e_dxy_0",  "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm")
-    h04 = sl_e.Histo1D(("sl_e_dz_0",   "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm")
-    h05 = sl_e.Histo1D(("sl_e_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm")
-    h06 = sl_e.Histo1D(("sl_e_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm")
-    h07 = sl_e.Histo1D(("sl_e_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm")
+    h01 = sl_e.Histo1D(("sl_e_pt_0",   "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor")
+    h02 = sl_e.Histo1D(("sl_e_eta_0",  "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor")
+    h03 = sl_e.Histo1D(("sl_e_dxy_0",  "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor")
+    h04 = sl_e.Histo1D(("sl_e_dz_0",   "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor")
+    h05 = sl_e.Histo1D(("sl_e_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor")
+    h06 = sl_e.Histo1D(("sl_e_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor")
+    h07 = sl_e.Histo1D(("sl_e_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor")
 
-    h08 = sl_mu.Histo1D(("sl_mu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm")
-    h09 = sl_mu.Histo1D(("sl_mu_eta_0","eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm")
-    h10 = sl_mu.Histo1D(("sl_mu_dxy_0","dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm")
-    h11 = sl_mu.Histo1D(("sl_mu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm")
-    h12 = sl_mu.Histo1D(("sl_mu_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm")
-    h13 = sl_mu.Histo1D(("sl_mu_ip3d_0",  "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm")
-    h14 = sl_mu.Histo1D(("sl_mu_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm")
+    h08 = sl_mu.Histo1D(("sl_mu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor")
+    h09 = sl_mu.Histo1D(("sl_mu_eta_0","eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor")
+    h10 = sl_mu.Histo1D(("sl_mu_dxy_0","dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor")
+    h11 = sl_mu.Histo1D(("sl_mu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor")
+    h12 = sl_mu.Histo1D(("sl_mu_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor")
+    h13 = sl_mu.Histo1D(("sl_mu_ip3d_0",  "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor")
+    h14 = sl_mu.Histo1D(("sl_mu_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor")
 
-    h15 = dl_ee.Histo1D(("dl_ee_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm")
-    h16 = dl_ee.Histo1D(("dl_ee_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm")
-    h17 = dl_ee.Histo1D(("dl_ee_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm")
-    h18 = dl_ee.Histo1D(("dl_ee_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm")
-    h19 = dl_ee.Histo1D(("dl_ee_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm")
-    h20 = dl_ee.Histo1D(("dl_ee_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm")
-    h21 = dl_ee.Histo1D(("dl_ee_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm")
-    h22 = dl_ee.Histo1D(("dl_ee_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_over_norm")
-    h23 = dl_ee.Histo1D(("dl_ee_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_over_norm")
-    h24 = dl_ee.Histo1D(("dl_ee_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_over_norm")
-    h25 = dl_ee.Histo1D(("dl_ee_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_over_norm")
-    h26 = dl_ee.Histo1D(("dl_ee_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_over_norm")
-    h27 = dl_ee.Histo1D(("dl_ee_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_over_norm")
-    h28 = dl_ee.Histo1D(("dl_ee_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_over_norm")
+    h15 = dl_ee.Histo1D(("dl_ee_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor")
+    h16 = dl_ee.Histo1D(("dl_ee_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor")
+    h17 = dl_ee.Histo1D(("dl_ee_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor")
+    h18 = dl_ee.Histo1D(("dl_ee_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor")
+    h19 = dl_ee.Histo1D(("dl_ee_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor")
+    h20 = dl_ee.Histo1D(("dl_ee_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor")
+    h21 = dl_ee.Histo1D(("dl_ee_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor")
+    h22 = dl_ee.Histo1D(("dl_ee_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_factor")
+    h23 = dl_ee.Histo1D(("dl_ee_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_factor")
+    h24 = dl_ee.Histo1D(("dl_ee_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_factor")
+    h25 = dl_ee.Histo1D(("dl_ee_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_factor")
+    h26 = dl_ee.Histo1D(("dl_ee_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_factor")
+    h27 = dl_ee.Histo1D(("dl_ee_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_factor")
+    h28 = dl_ee.Histo1D(("dl_ee_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_factor")
 
-    h29 = dl_mumu.Histo1D(("dl_mumu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm")
-    h30 = dl_mumu.Histo1D(("dl_mumu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm")
-    h31 = dl_mumu.Histo1D(("dl_mumu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm")
-    h32 = dl_mumu.Histo1D(("dl_mumu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm")
-    h33 = dl_mumu.Histo1D(("dl_mumu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm")
-    h34 = dl_mumu.Histo1D(("dl_mumu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm")
-    h35 = dl_mumu.Histo1D(("dl_mumu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm")
-    h36 = dl_mumu.Histo1D(("dl_mumu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_over_norm")
-    h37 = dl_mumu.Histo1D(("dl_mumu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_over_norm")
-    h38 = dl_mumu.Histo1D(("dl_mumu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_over_norm")
-    h39 = dl_mumu.Histo1D(("dl_mumu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_over_norm")
-    h40 = dl_mumu.Histo1D(("dl_mumu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_over_norm")
-    h41 = dl_mumu.Histo1D(("dl_mumu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_over_norm")
-    h42 = dl_mumu.Histo1D(("dl_mumu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_over_norm")
+    h29 = dl_mumu.Histo1D(("dl_mumu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor")
+    h30 = dl_mumu.Histo1D(("dl_mumu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor")
+    h31 = dl_mumu.Histo1D(("dl_mumu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor")
+    h32 = dl_mumu.Histo1D(("dl_mumu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor")
+    h33 = dl_mumu.Histo1D(("dl_mumu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor")
+    h34 = dl_mumu.Histo1D(("dl_mumu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor")
+    h35 = dl_mumu.Histo1D(("dl_mumu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor")
+    h36 = dl_mumu.Histo1D(("dl_mumu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_factor")
+    h37 = dl_mumu.Histo1D(("dl_mumu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_factor")
+    h38 = dl_mumu.Histo1D(("dl_mumu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_factor")
+    h39 = dl_mumu.Histo1D(("dl_mumu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_factor")
+    h40 = dl_mumu.Histo1D(("dl_mumu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_factor")
+    h41 = dl_mumu.Histo1D(("dl_mumu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_factor")
+    h42 = dl_mumu.Histo1D(("dl_mumu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_factor")
 
-    h43 = dl_emu.Histo1D(("dl_emu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm")
-    h44 = dl_emu.Histo1D(("dl_emu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm")
-    h45 = dl_emu.Histo1D(("dl_emu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm")
-    h46 = dl_emu.Histo1D(("dl_emu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm")
-    h47 = dl_emu.Histo1D(("dl_emu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm")
-    h48 = dl_emu.Histo1D(("dl_emu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm")
-    h49 = dl_emu.Histo1D(("dl_emu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm")
-    h50 = dl_emu.Histo1D(("dl_emu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_over_norm")
-    h51 = dl_emu.Histo1D(("dl_emu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_over_norm")
-    h52 = dl_emu.Histo1D(("dl_emu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_over_norm")
-    h53 = dl_emu.Histo1D(("dl_emu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_over_norm")
-    h54 = dl_emu.Histo1D(("dl_emu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_over_norm")
-    h55 = dl_emu.Histo1D(("dl_emu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_over_norm")
-    h56 = dl_emu.Histo1D(("dl_emu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_over_norm")
+    h43 = dl_emu.Histo1D(("dl_emu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor")
+    h44 = dl_emu.Histo1D(("dl_emu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor")
+    h45 = dl_emu.Histo1D(("dl_emu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor")
+    h46 = dl_emu.Histo1D(("dl_emu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor")
+    h47 = dl_emu.Histo1D(("dl_emu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor")
+    h48 = dl_emu.Histo1D(("dl_emu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor")
+    h49 = dl_emu.Histo1D(("dl_emu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor")
+    h50 = dl_emu.Histo1D(("dl_emu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_factor")
+    h51 = dl_emu.Histo1D(("dl_emu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_factor")
+    h52 = dl_emu.Histo1D(("dl_emu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_factor")
+    h53 = dl_emu.Histo1D(("dl_emu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_factor")
+    h54 = dl_emu.Histo1D(("dl_emu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_factor")
+    h55 = dl_emu.Histo1D(("dl_emu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_factor")
+    h56 = dl_emu.Histo1D(("dl_emu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_factor")
 
     h01.Write()
     h02.Write()
@@ -597,66 +656,66 @@ def save_hists_v1(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu):
 
 def save_hists_v2(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu):
     hist_list = []
-    hist_list.append(sl_e.Histo1D(("sl_e_pt_0",   "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm"))
-    hist_list.append(sl_e.Histo1D(("sl_e_eta_0",  "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm"))
-    hist_list.append(sl_e.Histo1D(("sl_e_dxy_0",  "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm"))
-    hist_list.append(sl_e.Histo1D(("sl_e_dz_0",   "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm"))
-    hist_list.append(sl_e.Histo1D(("sl_e_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm"))
-    hist_list.append(sl_e.Histo1D(("sl_e_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm"))
-    hist_list.append(sl_e.Histo1D(("sl_e_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm"))
+    hist_list.append(sl_e.Histo1D(("sl_e_pt_0",   "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor"))
+    hist_list.append(sl_e.Histo1D(("sl_e_eta_0",  "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor"))
+    hist_list.append(sl_e.Histo1D(("sl_e_dxy_0",  "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor"))
+    hist_list.append(sl_e.Histo1D(("sl_e_dz_0",   "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor"))
+    hist_list.append(sl_e.Histo1D(("sl_e_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor"))
+    hist_list.append(sl_e.Histo1D(("sl_e_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor"))
+    hist_list.append(sl_e.Histo1D(("sl_e_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor"))
 
-    hist_list.append(sl_mu.Histo1D(("sl_mu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_eta_0","eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_dxy_0","dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_ip3d_0",  "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm"))
+    hist_list.append(sl_mu.Histo1D(("sl_mu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor"))
+    hist_list.append(sl_mu.Histo1D(("sl_mu_eta_0","eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor"))
+    hist_list.append(sl_mu.Histo1D(("sl_mu_dxy_0","dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor"))
+    hist_list.append(sl_mu.Histo1D(("sl_mu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor"))
+    hist_list.append(sl_mu.Histo1D(("sl_mu_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor"))
+    hist_list.append(sl_mu.Histo1D(("sl_mu_ip3d_0",  "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor"))
+    hist_list.append(sl_mu.Histo1D(("sl_mu_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor"))
 
-    hist_list.append(dl_ee.Histo1D(("dl_ee_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_over_norm"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_over_norm"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_factor"))
+    hist_list.append(dl_ee.Histo1D(("dl_ee_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_factor"))
 
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_over_norm"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_over_norm"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_factor"))
+    hist_list.append(dl_mumu.Histo1D(("dl_mumu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_factor"))
 
-    hist_list.append(dl_emu.Histo1D(("dl_emu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_over_norm"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_over_norm"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "weight_factor"))
+    hist_list.append(dl_emu.Histo1D(("dl_emu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "weight_factor"))
 
     for hist in hist_list:
         hist.Write()

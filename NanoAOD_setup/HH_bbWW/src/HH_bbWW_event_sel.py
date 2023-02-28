@@ -1,41 +1,5 @@
-import warnings 
-warnings.filterwarnings("ignore")
-import sys, os
-import argparse
-import ROOT
-import json
-from pathlib import Path
 from HH_bbWW_event_sel_funcs import *
-from helper_functions import *
 ROOT.EnableImplicitMT()
-#==========================================
-# from distributed import Client
-# from dask_lxplus import CernCluster
-# import socket
-
-# cluster = CernCluster(
-#     cores = 1,
-#     memory = '2000MB',
-#     disk = '10GB',
-#     death_timeout = '60',
-#     lcg = True,
-#     nanny = False,
-#     container_runtime = 'none',
-#     log_directory = '/eos/user/a/anunezde/condor/log',
-#     scheduler_options = {
-#         'port': 8786,
-#         'host': socket.gethostname(),
-#     },
-#     job_extra = {
-#         'MY.JobFlavour': '"longlunch"',
-#     },
-# )
-# client = cluster
-# RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-#==========================================
-
-helper_func_path = os.path.join(Path.cwd(),"src/HH_bbWW_event_sel_funcs_cpp.cc")
-ROOT.gInterpreter.ProcessLine('#include "{}"'.format(helper_func_path))
 
 if __name__ == "__main__":
 
@@ -47,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("-y", "--year", action="store", dest="year", help="year = 2016, 2017 or 2018")
     parser.add_argument("-hi", "--hists", action="store", dest="hists", help="y or n", default="y")
     parser.add_argument("-s_ip", "--significance_d", action="store", dest="significance_d", help="significance_d cut", default="8")
+    parser.add_argument("-r", "--run", action="store", dest="run", help="local or cluster", default="cluster")
     args = parser.parse_args()
 
     df_list = []
@@ -57,55 +22,37 @@ if __name__ == "__main__":
         print ("Type does not match with json filename")
         sys.exit()
     input_json_file = json.load(open(args.input_json))
+    input_datasets = input_json_file[args.sample][args.year]
     if args.sample not in input_json_file:
         print ("Sample not present in json")
         sys.exit()
     if args.year not in input_json_file[args.sample]:
         print ("Year not present in json")
         sys.exit()
-    
-    input_dataset = input_json_file[args.sample][args.year]
-    all_root_files = set()
-    for dataset in input_dataset:
-        for line in open(dataset):
-            all_root_files.add('root://cms-xrd-global.cern.ch//' + line.strip())
-    
-    df = ROOT.RDataFrame("Events", all_root_files)
 
-    cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
+    # Select the cuts =============================================================
 
     dxy_cut = 0.05
     dz_cut = 0.1
     significance_d_cut = int(args.significance_d)
 
-    # Changing to output directory and resetting the output file ==================
-    OUT_DIR = args.sample + "_" + str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut)
-    if not os.path.isdir(OUT_DIR):
-        os.makedirs(OUT_DIR)
-    os.chdir(OUT_DIR)
+    # =============================================================================
+    # =============================================================================
+    # =============================================================================
 
-    reset_log_file()
-
-    # Running the event selection =================================================
     print("\nRunning HH bbWW event selection for %s sample: %s for year %s"%(args.type, args.sample, args.year))
 
-    print("\nThe cuts are: ")
+    print("\nThe cuts chosen are: ")
     print("\t dxy_cut = " + str(dxy_cut))
     print("\t dz_cut = " + str(dz_cut))
     print("\t significance_d_cut = " + str(significance_d_cut))
     print()
-
-    N = df.Count().GetValue()
-    print_twice('Initial events: ')
-    print_twice('\t Total: ' + str(N))
-    print_twice()
-
-    N_sum_genWeight = df.Sum("genWeight").GetValue()
-    print_twice('N_sum_genWeight = ' + str(round(N_sum_genWeight, 4)))
-    print_twice()
-
-    df = df.Define("weight_over_norm", "get_weight_over_norm(genWeight, " + str(N_sum_genWeight) + ")")
-
+    
+    df, runs, cuts = initializing(input_datasets, args.sample, dxy_cut, dz_cut, significance_d_cut, args.run)
+    
+    print("0) Preselection -----------------------------------------")
+    df, sum_genWeight = preselection(df, runs)
+    
     print("1) Basic Event Selection --------------------------------")
     df = df.Filter("PV_npvsGood>=1", "pr col vertex")    # Primary collision vertex
     df = met_filter(df, args.type)
@@ -135,40 +82,11 @@ if __name__ == "__main__":
     print("9) Final Event Selection --------------------------------")
     df_sl = df    
     df_dl = df
-
-    df_e, df_mu = select_sl_channel(df_sl, cuts["single_lepton_event"])
-    e_sum_genWeight = df_e.Sum("genWeight").GetValue()
-    mu_sum_genWeight = df_mu.Sum("genWeight").GetValue()
-    sl_sum_genWeight = e_sum_genWeight + mu_sum_genWeight
-    print_twice('\t Weighted is_e: ' + str(round(e_sum_genWeight, 4)))
-    print_twice('\t Weighted is_mu: ' + str(round(mu_sum_genWeight, 4)))
-    print_twice('\t Weighted SL Yield: ' + str(round(sl_sum_genWeight, 4)))
-    print_twice('\n\t Weighted SL acceptance = ' + str(round(sl_sum_genWeight/N_sum_genWeight, 4)))
-    print_twice()
-
-    df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"])
-    ee_sum_genWeight = df_ee.Sum("genWeight").GetValue()
-    mumu_sum_genWeight = df_mumu.Sum("genWeight").GetValue()
-    emu_sum_genWeight = df_emu.Sum("genWeight").GetValue()
-    dl_sum_genWeight = ee_sum_genWeight + mumu_sum_genWeight + emu_sum_genWeight
-    print_twice('\t Weighted is_ee: ' + str(round(ee_sum_genWeight, 4)))
-    print_twice('\t Weighted is_mumu: ' + str(round(mumu_sum_genWeight, 4)))
-    print_twice('\t Weighted is_emu: ' + str(round(emu_sum_genWeight, 4)))
-    print_twice('\t Weighted DL Yield: ' + str(round(dl_sum_genWeight, 4)))
-    print_twice('\n\t Weighted DL acceptance = ' + str(round(dl_sum_genWeight/N_sum_genWeight, 4)))
-    print_twice()
-    print_twice('The cuts were: ')
-    print_twice('\t |d_xy| < ' + str(dxy_cut) + ' and |d_z| < ' + str(dz_cut) + ' and s_d < ' + str(significance_d_cut))
-    print_twice()
+    df_e, df_mu = select_sl_channel(df_sl, cuts["single_lepton_event"], sum_genWeight)
+    df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"], sum_genWeight)
     
-    if (args.hists == "y"):
-        print("10) Saving histograms to root file -----------------")
-        outHistFileName = "hists.root"
-        outHistFile = ROOT.TFile.Open(outHistFileName ,"RECREATE")
-        outHistFile.cd()
-        save_hists_v2(df_e, df_mu, df_ee, df_mumu, df_emu)
-        outHistFile.Close()
-        print_twice("hists.root was saved")
+    print("10) Saving histograms to root file -----------------")
+    output_hists_root_file(args.hists, df_e, df_mu, df_ee, df_mumu, df_emu)
 
     print("Event selections: COMPLETED")
         
