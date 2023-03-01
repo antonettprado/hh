@@ -7,16 +7,16 @@ import json
 from helper_functions import *
 from HH_bbWW_hists_values import *
 
-def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, run):
+def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, file_access):
 
     # Processing C++ functions -------------------------------------
     ROOT.gInterpreter.ProcessLine('#include \"src/HH_bbWW_event_sel_funcs_cpp.cc\"')
 
     all_root_files = set()
-    if (run == 'local'):
+    if (file_access == 'local'):
         print('Running locally ...\n')
         all_root_files = input_datasets
-    elif (run == 'cluster'):
+    elif (file_access == 'eos'):
         print('Running in the cluster ...\n')
         for dataset in input_datasets:
             for line in open(dataset):
