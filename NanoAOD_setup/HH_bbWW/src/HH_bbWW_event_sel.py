@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("-y", "--year", action="store", dest="year", help="year = 2016, 2017 or 2018")
     parser.add_argument("-hi", "--hists", action="store", dest="hists", help="y or n", default="y")
     parser.add_argument("-s_ip", "--significance_d", action="store", dest="significance_d", help="significance_d cut", default="8")
-    parser.add_argument("-r", "--run", action="store", dest="run", help="local or cluster", default="cluster")
+    parser.add_argument("-f", "--file_access", action="store", dest="file_access", help="local or eos", default="eos")
     args = parser.parse_args()
 
     df_list = []
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     print("\t significance_d_cut = " + str(significance_d_cut))
     print()
     
-    df, runs, cuts = initializing(input_datasets, args.sample, dxy_cut, dz_cut, significance_d_cut, args.run)
+    df, runs, cuts = initializing(input_datasets, args.sample, dxy_cut, dz_cut, significance_d_cut, args.file_access)
     
     print("0) Preselection -----------------------------------------")
     df, sum_genWeight = preselection(df, runs)
