@@ -85,7 +85,7 @@ if __name__ == "__main__":
     df_e, df_mu = select_sl_channel(df_sl, cuts["single_lepton_event"], sum_genWeight)
     df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"], sum_genWeight)
     
-    print("10) Saving histograms to root file -----------------")
+    print("10) Saving histograms to root file ----------------------")
     output_hists_root_file(args.hists, df_e, df_mu, df_ee, df_mumu, df_emu)
 
     print("Event selections: COMPLETED")

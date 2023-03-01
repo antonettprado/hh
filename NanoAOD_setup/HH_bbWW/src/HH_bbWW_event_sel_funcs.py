@@ -12,15 +12,12 @@ def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, ru
     # Processing C++ functions -------------------------------------
     ROOT.gInterpreter.ProcessLine('#include \"src/HH_bbWW_event_sel_funcs_cpp.cc\"')
 
-    # Get dataframe and cuts ---------------------------------------
-    print_twice('Input datasets: ', input_datasets)
-    print_twice()
-
     all_root_files = set()
-
     if (run == 'local'):
+        print('Running locally ...\n')
         all_root_files = input_datasets
     elif (run == 'cluster'):
+        print('Running in the cluster ...\n')
         for dataset in input_datasets:
             for line in open(dataset):
                 all_root_files.add('root://cms-xrd-global.cern.ch//' + line.strip())
@@ -35,6 +32,10 @@ def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, ru
         os.makedirs(OUT_DIR)
     os.chdir(OUT_DIR)
     reset_log_file()
+
+    # Get dataframe and cuts ---------------------------------------
+    print_twice('Input datasets: ', input_datasets)
+    print_twice()
 
     return df, runs, cuts
 
@@ -533,7 +534,7 @@ def output_hists_root_file(hists, df_e, df_mu, df_ee, df_mumu, df_emu):
         outHistFile.Close()
         print_twice("hists.root was saved")
         print_twice()
-        
+
 def save_hists_v1(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu):
 
     h01 = sl_e.Histo1D(("sl_e_pt_0",   "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "weight_factor")
