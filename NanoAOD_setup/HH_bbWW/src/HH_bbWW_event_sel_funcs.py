@@ -14,10 +14,10 @@ def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, fi
 
     all_root_files = set()
     if (file_access == 'local'):
-        print('Running locally ...\n')
+        print('File access: Local\n')
         all_root_files = input_datasets
     elif (file_access == 'eos'):
-        print('Running in the cluster ...\n')
+        print('File access: eos\n')
         for dataset in input_datasets:
             for line in open(dataset):
                 all_root_files.add('root://cms-xrd-global.cern.ch//' + line.strip())
