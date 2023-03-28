@@ -51,7 +51,7 @@ if __name__ == "__main__":
     df, runs, cuts = initializing(input_datasets, args.sample, dxy_cut, dz_cut, significance_d_cut, args.file_access)
     
     print("0) Preselection -----------------------------------------")
-    df, sum_genWeight = preselection(df, runs)
+    df, Sum_genEventSumw = preselection(df, runs)
     
     print("1) Basic Event Selection --------------------------------")
     df = df.Filter("PV_npvsGood>=1", "pr col vertex")    # Primary collision vertex
@@ -82,11 +82,10 @@ if __name__ == "__main__":
     print("9) Final Event Selection --------------------------------")
     df_sl = df    
     df_dl = df
-    df_e, df_mu = select_sl_channel(df_sl, cuts["single_lepton_event"], sum_genWeight)
-    df_ee, df_mumu, df_emu = select_dl_channel(df_dl, cuts["dilepton_event"], sum_genWeight)
+    df_e, df_mu, sl_sum_genWeight = select_sl_channel(df_sl, cuts["single_lepton_event"])
+    df_ee, df_mumu, df_emu, dl_sum_genWeight = select_dl_channel(df_dl, cuts["dilepton_event"])
     
     print("10) Saving histograms to root file ----------------------")
-    output_hists_root_file(args.hists, df_e, df_mu, df_ee, df_mumu, df_emu)
-
+    output_hists_root_file(args.hists, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
+    
     print("Event selections: COMPLETED")
-        
