@@ -1,11 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-cd /afs/cern.ch/work/a/abdatta/HH_Analysis/CMSSW_12_0_1/src/hh/NanoAOD_setup/HH_bbWW/ 
+export X509_USER_PROXY=$1
+voms-proxy-info -all
+voms-proxy-info -all -file $1
 
-input_file=$1
-input_type=$2
-input_sample=$3
-input_year=$4
+cd /afs/cern.ch/user/a/anunezde/HH_Analysis/CMSSW_12_0_1/src/hh/NanoAOD_setup/HH_bbWW
+
+input_file=$2
+input_type=$3
+input_sample=$4
+input_year=$5
 workdir=$(pwd)
 echo "Work directory : " $workdir
 

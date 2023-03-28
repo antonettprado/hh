@@ -1,11 +1,15 @@
 universe   = vanilla
-executable = condor_HH_bbWW_event_sel.sh
 run_as_owner = true
-arguments = data/input_HH_bbWW_mc.json mc $(sample) 2018
+
+Proxy_path = /afs/cern.ch/user/a/anunezde/private/x509up_u137372
+arguments = $(Proxy_path) data/input_HH_bbWW_mc.json mc $(sample) 2018
+executable = run/condor_HH_bbWW_event_sel.sh
+
 output = logs/job.output.$(Cluster)-$(ProcId) 
 error = logs/job.error.$(Cluster)-$(ProcId) 
 log = logs/job.log.$(Cluster)-$(ProcId)
-+MaxRuntime = 10800
+
++MaxRuntime = 40000
 should_transfer_files = IF_NEEDED
 
-queue sample from condor_input.txt
+queue sample from run/condor_input.txt
