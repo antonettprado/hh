@@ -27,7 +27,7 @@ def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, fi
     cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
     # Creating output directory & resetting log file ---------------
-    OUT_DIR = sample + "_" + str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut)
+    OUT_DIR = sample + "_" + str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut) + "_V2"
     if not os.path.isdir(OUT_DIR):
         os.makedirs(OUT_DIR)
     os.chdir(OUT_DIR)
@@ -359,25 +359,10 @@ def select_sl_channel(df, sl_event_dict):
         df_e = df_e.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
         df_mu = df_mu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
 
-    df_e = df_e.Define("pt_0", "define_sl_pt(Electron_pt, e_tight)")
-    df_e = df_e.Define("eta_0", "define_sl_eta(Electron_eta, e_tight)")
-    df_e = df_e.Define("dxy_0", "define_sl_dxy(Electron_dxy, e_tight)")
-    df_e = df_e.Define("dz_0", "define_sl_dz(Electron_dz, e_tight)")
-    df_e = df_e.Define("sigma_d_0", "define_sl_sigma_d(e_sigma_d, e_tight)")
-    df_e = df_e.Define("ip3d_0", "define_sl_ip3d(Lepton_ip3d, e_tight)")
-    df_e = df_e.Define("significance_d_0", "define_sl_significance_d(Lepton_significance_d, e_tight)")
-
-    df_mu = df_mu.Define("pt_0", "define_sl_pt(Muon_pt, mu_tight)")
-    df_mu = df_mu.Define("eta_0", "define_sl_eta(Muon_eta, mu_tight)")
-    df_mu = df_mu.Define("dxy_0", "define_sl_dxy(Muon_dxy, mu_tight)")
-    df_mu = df_mu.Define("dz_0", "define_sl_dz(Muon_dz, mu_tight)")
-    df_mu = df_mu.Define("sigma_d_0", "define_sl_sigma_d(mu_sigma_d, mu_tight)")
-    df_mu = df_mu.Define("ip3d_0", "define_sl_ip3d(Lepton_ip3d, mu_tight)")
-    df_mu = df_mu.Define("significance_d_0", "define_sl_significance_d(Lepton_significance_d, mu_tight)")
-
     e_sum_genWeight = df_e.Sum("genWeight").GetValue()
     mu_sum_genWeight = df_mu.Sum("genWeight").GetValue()
     sl_sum_genWeight = e_sum_genWeight + mu_sum_genWeight
+
     print_twice('\t Weighted is_e: ' + str(round(e_sum_genWeight, 4)))
     print_twice('\t Weighted is_mu: ' + str(round(mu_sum_genWeight, 4)))
     print_twice('\t Weighted SL Yield: ' + str(round(sl_sum_genWeight, 4)))
@@ -414,100 +399,11 @@ def select_dl_channel(df, dl_event_dict):
         df_mumu = df_mumu.Filter(common_filters[idx], 'common_fil_' + str(idx))
         df_emu = df_emu.Filter(common_filters[idx], 'common_fil_' + str(idx))
 
-    if (True):
-        df_ee = df_ee.Define("pt","define_dl_pt(Lepton_pt, l_tight)")
-        df_ee = df_ee.Define("eta","define_dl_eta(Lepton_pt, Lepton_eta, l_tight)")
-        df_ee = df_ee.Define("dxy", "define_dl_dxy(Lepton_pt, Lepton_dxy, l_tight)")
-        df_ee = df_ee.Define("dz", "define_dl_dz(Lepton_pt, Lepton_dz, l_tight)")
-        df_ee = df_ee.Define("sigma_d", "define_dl_sigma_d(Lepton_pt, Lepton_sigma_d, l_tight)")
-        df_ee = df_ee.Define("ip3d", "define_dl_ip3d(Lepton_pt, Lepton_ip3d, l_tight)")
-        df_ee = df_ee.Define("significance_d", "define_dl_significance_d(Lepton_pt, Lepton_significance_d, l_tight)")
-        
-        df_ee = df_ee.Define("pt_0", "pt[0]")
-        df_ee = df_ee.Define("pt_1", "pt[1]")
-        df_ee = df_ee.Define("eta_0", "eta[0]")
-        df_ee = df_ee.Define("eta_1", "eta[1]")
-        df_ee = df_ee.Define("dxy_0", "dxy[0]")
-        df_ee = df_ee.Define("dxy_1", "dxy[1]")
-        df_ee = df_ee.Define("dz_0", "dz[0]")
-        df_ee = df_ee.Define("dz_1", "dz[1]")
-        df_ee = df_ee.Define("sigma_d_0", "sigma_d[0]")
-        df_ee = df_ee.Define("sigma_d_1", "sigma_d[1]")
-        df_ee = df_ee.Define("ip3d_0", "ip3d[0]")
-        df_ee = df_ee.Define("ip3d_1", "ip3d[1]")
-        df_ee = df_ee.Define("significance_d_0", "significance_d[0]")
-        df_ee = df_ee.Define("significance_d_1", "significance_d[1]")
-
-        df_mumu = df_mumu.Define("pt","define_dl_pt(Lepton_pt, l_tight)")
-        df_mumu = df_mumu.Define("eta","define_dl_eta(Lepton_pt, Lepton_eta, l_tight)")
-        df_mumu = df_mumu.Define("dxy", "define_dl_dxy(Lepton_pt, Lepton_dxy, l_tight)")
-        df_mumu = df_mumu.Define("dz", "define_dl_dz(Lepton_pt, Lepton_dz, l_tight)")
-        df_mumu = df_mumu.Define("sigma_d", "define_dl_sigma_d(Lepton_pt, Lepton_sigma_d, l_tight)")
-        df_mumu = df_mumu.Define("ip3d", "define_dl_ip3d(Lepton_pt, Lepton_ip3d, l_tight)")
-        df_mumu = df_mumu.Define("significance_d", "define_dl_significance_d(Lepton_pt, Lepton_significance_d, l_tight)")
-
-        df_mumu = df_mumu.Define("pt_0", "pt[0]")
-        df_mumu = df_mumu.Define("pt_1", "pt[1]")
-        df_mumu = df_mumu.Define("eta_0", "eta[0]")
-        df_mumu = df_mumu.Define("eta_1", "eta[1]")
-        df_mumu = df_mumu.Define("dxy_0", "dxy[0]")
-        df_mumu = df_mumu.Define("dxy_1", "dxy[1]")
-        df_mumu = df_mumu.Define("dz_0", "dz[0]")
-        df_mumu = df_mumu.Define("dz_1", "dz[1]")
-        df_mumu = df_mumu.Define("sigma_d_0", "sigma_d[0]")
-        df_mumu = df_mumu.Define("sigma_d_1", "sigma_d[1]")
-        df_mumu = df_mumu.Define("ip3d_0", "ip3d[0]")
-        df_mumu = df_mumu.Define("ip3d_1", "ip3d[1]")
-        df_mumu = df_mumu.Define("significance_d_0", "significance_d[0]")
-        df_mumu = df_mumu.Define("significance_d_1", "significance_d[1]")
-
-        df_emu = df_emu.Define("pt","define_dl_pt(Lepton_pt, l_tight)")
-        df_emu = df_emu.Define("eta","define_dl_eta(Lepton_pt, Lepton_eta, l_tight)")
-        df_emu = df_emu.Define("dxy", "define_dl_dxy(Lepton_pt, Lepton_dxy, l_tight)")
-        df_emu = df_emu.Define("dz", "define_dl_dz(Lepton_pt, Lepton_dz, l_tight)")
-        df_emu = df_emu.Define("sigma_d", "define_dl_sigma_d(Lepton_pt, Lepton_sigma_d, l_tight)")
-        df_emu = df_emu.Define("ip3d", "define_dl_ip3d(Lepton_pt, Lepton_ip3d, l_tight)")
-        df_emu = df_emu.Define("significance_d", "define_dl_significance_d(Lepton_pt, Lepton_significance_d, l_tight)")
-
-        df_emu = df_emu.Define("pt_0", "pt[0]")
-        df_emu = df_emu.Define("pt_1", "pt[1]")
-        df_emu = df_emu.Define("eta_0", "eta[0]")
-        df_emu = df_emu.Define("eta_1", "eta[1]")
-        df_emu = df_emu.Define("dxy_0", "dxy[0]")
-        df_emu = df_emu.Define("dxy_1", "dxy[1]")
-        df_emu = df_emu.Define("dz_0", "dz[0]")
-        df_emu = df_emu.Define("dz_1", "dz[1]")
-        df_emu = df_emu.Define("sigma_d_0", "sigma_d[0]")
-        df_emu = df_emu.Define("sigma_d_1", "sigma_d[1]")
-        df_emu = df_emu.Define("ip3d_0", "ip3d[0]")
-        df_emu = df_emu.Define("ip3d_1", "ip3d[1]")
-        df_emu = df_emu.Define("significance_d_0", "significance_d[0]")
-        df_emu = df_emu.Define("significance_d_1", "significance_d[1]")
-
-    df_ee = df_ee.Define("genPartFlav_dec", "genPartFlav_dec(Electron_genPartFlav)")
-    df_ee = df_ee.Define("mother_flav", "get_mother_flav(Electron_genPartIdx, e_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
-    df_ee = df_ee.Define("gen_status_flag", "get_gen_status_flag(GenPart_statusFlags, Electron_genPartIdx, e_tight)")
-
-    df_mumu = df_mumu.Define("genPartFlav_dec", "genPartFlav_dec(Muon_genPartFlav)")
-    df_mumu = df_mumu.Define("mother_flav", "get_mother_flav(Muon_genPartIdx, mu_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
-    df_mumu = df_mumu.Define("gen_status_flag", "get_gen_status_flag(GenPart_statusFlags, Muon_genPartIdx, mu_tight)")
-
-    df_emu = df_emu.Define("genPartFlav_dec_e", "genPartFlav_dec(Electron_genPartFlav)")
-    df_emu = df_emu.Define("mother_flav_e", "get_mother_flav(Electron_genPartIdx, e_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
-    df_emu = df_emu.Define("gen_status_flag_e", "get_gen_status_flag(GenPart_statusFlags, Electron_genPartIdx, e_tight)")
-
-    df_emu = df_emu.Define("genPartFlav_dec_mu", "genPartFlav_dec(Muon_genPartFlav)")
-    df_emu = df_emu.Define("mother_flav_mu", "get_mother_flav(Muon_genPartIdx, mu_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
-    df_emu = df_emu.Define("gen_status_flag_mu", "get_gen_status_flag(GenPart_statusFlags, Muon_genPartIdx, mu_tight)")
-
-    df_emu = df_emu.Define("genPartFlav_dec_l", "genPartFlav_dec(Lepton_genPartFlav)")
-    df_emu = df_emu.Define("mother_flav_l", "get_mother_flav(Lepton_genPartIdx, l_tight, GenPart_pdgId, GenPart_genPartIdxMother)")
-    df_emu = df_emu.Define("gen_status_flag_l", "get_gen_status_flag(GenPart_statusFlags, Lepton_genPartIdx, l_tight)")
-
     ee_sum_genWeight = df_ee.Sum("genWeight").GetValue()
     mumu_sum_genWeight = df_mumu.Sum("genWeight").GetValue()
     emu_sum_genWeight = df_emu.Sum("genWeight").GetValue()
     dl_sum_genWeight = ee_sum_genWeight + mumu_sum_genWeight + emu_sum_genWeight
+
     print_twice('\t Weighted is_ee: ' + str(round(ee_sum_genWeight, 4)))
     print_twice('\t Weighted is_mumu: ' + str(round(mumu_sum_genWeight, 4)))
     print_twice('\t Weighted is_emu: ' + str(round(emu_sum_genWeight, 4)))
@@ -516,18 +412,67 @@ def select_dl_channel(df, dl_event_dict):
 
     return df_ee, df_mumu, df_emu, dl_sum_genWeight
 
+def sl_definitions(df_e, df_mu):
+
+    defs = []
+    defs.append(["pt_0", "define_sl_pt(Lepton_pt, l_tight)"])
+    defs.append(["eta_0", "define_sl_eta(Lepton_eta, l_tight)"])
+    defs.append(["dxy_0", "define_sl_dxy(Lepton_dxy, l_tight)"])
+    defs.append(["dz_0", "define_sl_dz(Lepton_dz, l_tight)"])
+    defs.append(["sigma_d_0", "define_sl_sigma_d(Lepton_sigma_d, l_tight)"])
+    defs.append(["ip3d_0", "define_sl_ip3d(Lepton_ip3d, l_tight)"])
+    defs.append(["significance_d_0", "define_sl_significance_d(Lepton_significance_d, l_tight)"])
+
+    for def_i in defs:
+        df_e = df_e.Define(def_i[0], def_i[1])
+        df_mu = df_mu.Define(def_i[0], def_i[1])
+
+    return df_e, df_mu
+
+def dl_definitions(df_ee, df_mumu, df_emu):
+
+    defs = []
+    defs.append(["pt", "define_dl_pt(Lepton_pt, l_tight)"])
+    defs.append(["eta", "define_dl_eta(Lepton_pt, Lepton_eta, l_tight)"])
+    defs.append(["dxy", "define_dl_dxy(Lepton_pt, Lepton_dxy, l_tight)"])
+    defs.append(["dz", "define_dl_dz(Lepton_pt, Lepton_dz, l_tight)"])
+    defs.append(["sigma_d", "define_dl_sigma_d(Lepton_pt, Lepton_sigma_d, l_tight)"])
+    defs.append(["ip3d", "define_dl_ip3d(Lepton_pt, Lepton_ip3d, l_tight)"])
+    defs.append(["significance_d", "define_dl_significance_d(Lepton_pt, Lepton_significance_d, l_tight)"])
+    defs.append(["pt_0", "pt[0]"])
+    defs.append(["pt_1", "pt[1]"])
+    defs.append(["eta_0", "eta[0]"])
+    defs.append(["eta_1", "eta[1]"])
+    defs.append(["dxy_0", "dxy[0]"])
+    defs.append(["dxy_1", "dxy[1]"])
+    defs.append(["dz_0", "dz[0]"])
+    defs.append(["dz_1", "dz[1]"])
+    defs.append(["sigma_d_0", "sigma_d[0]"])
+    defs.append(["sigma_d_1", "sigma_d[1]"])
+    defs.append(["ip3d_0", "ip3d[0]"])
+    defs.append(["ip3d_1", "ip3d[1]"])
+    defs.append(["significance_d_0", "significance_d[0]"])
+    defs.append(["significance_d_1", "significance_d[1]"])
+
+    for def_i in defs:
+        df_ee = df_ee.Define(def_i[0], def_i[1])
+        df_mumu = df_mumu.Define(def_i[0], def_i[1])
+        df_emu = df_emu.Define(def_i[0], def_i[1])
+
+    return df_ee, df_mumu, df_emu
+
 # Save histograms to root file =========================================================
 def output_hists_root_file(hists, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
     if (hists == 'y'):
         outHistFileName = "hists.root"
         outHistFile = ROOT.TFile.Open(outHistFileName ,"RECREATE")
         outHistFile.cd()
-        save_hists(df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
+        write_hists(df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
         outHistFile.Close()
         print_twice("hists.root was saved")
         print_twice()
 
-def save_hists(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
+def write_hists(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
     
     h_sl_sum_genWeight = ROOT.TH1F("h_sl_sum_genWeight","h_sl_sum_genWeight",3,-0.5,2.5)
     h_sl_sum_genWeight.Fill(1, sl_sum_genWeight)
@@ -537,73 +482,32 @@ def save_hists(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_gen
 
     h_Sum_genEventsumw = ROOT.TH1F("h_Sum_genEventsumw","h_Sum_genEventsumw",3,-0.5,2.5)
     h_Sum_genEventsumw.Fill(1, Sum_genEventSumw)
-    
-    hist_list = []
 
+    hist_list = []
     hist_list.append(h_sl_sum_genWeight)
     hist_list.append(h_dl_sum_genWeight)
     hist_list.append(h_Sum_genEventsumw)
 
-    hist_list.append(sl_e.Histo1D(("sl_e_pt_0",   "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "genWeight"))
-    hist_list.append(sl_e.Histo1D(("sl_e_eta_0",  "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "genWeight"))
-    hist_list.append(sl_e.Histo1D(("sl_e_dxy_0",  "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "genWeight"))
-    hist_list.append(sl_e.Histo1D(("sl_e_dz_0",   "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "genWeight"))
-    hist_list.append(sl_e.Histo1D(("sl_e_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "genWeight"))
-    hist_list.append(sl_e.Histo1D(("sl_e_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "genWeight"))
-    hist_list.append(sl_e.Histo1D(("sl_e_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "genWeight"))
+    hist_defs = []
+    hist_defs.append(["pt", PT_BINS, PT_XMIN, PT_XMAX])
+    hist_defs.append(["eta", ETA_BINS, ETA_XMIN, ETA_XMAX])
+    hist_defs.append(["dxy", DXY_BINS, DXY_XMIN, DXY_XMAX])
+    hist_defs.append(["dz", DZ_BINS, DZ_XMIN, DZ_XMAX])
+    hist_defs.append(["sigma_d", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX])
+    hist_defs.append(["ip3d", IP3D_BINS, IP3D_XMIN, IP3D_XMAX])
+    hist_defs.append(["significance_d",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX])
 
-    hist_list.append(sl_mu.Histo1D(("sl_mu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "genWeight"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_eta_0","eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "genWeight"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_dxy_0","dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "genWeight"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "genWeight"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_sigma_d_0","sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "genWeight"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_ip3d_0",  "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "genWeight"))
-    hist_list.append(sl_mu.Histo1D(("sl_mu_significance_d_0","significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "genWeight"))
-
-    hist_list.append(dl_ee.Histo1D(("dl_ee_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "genWeight"))
-    hist_list.append(dl_ee.Histo1D(("dl_ee_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "genWeight"))
-
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "genWeight"))
-    hist_list.append(dl_mumu.Histo1D(("dl_mumu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "genWeight"))
-
-    hist_list.append(dl_emu.Histo1D(("dl_emu_pt_0", "pt_0", PT_BINS, PT_XMIN, PT_XMAX), "pt_0", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_eta_0", "eta_0", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_0", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dxy_0", "dxy_0", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_0", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dz_0", "dz_0", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_0", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_sigma_d_0", "sigma_d_0", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_0", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_ip3d_0", "ip3d_0", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_0", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_significance_d_0", "significance_d_0",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_0", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_pt_1", "pt_1", PT_BINS, PT_XMIN, PT_XMAX), "pt_1", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_eta_1", "eta_1", ETA_BINS, ETA_XMIN, ETA_XMAX), "eta_1", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dxy_1", "dxy_1", DXY_BINS, DXY_XMIN, DXY_XMAX), "dxy_1", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_dz_1", "dz_1", DZ_BINS, DZ_XMIN, DZ_XMAX), "dz_1", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_sigma_d_1", "sigma_d_1", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX), "sigma_d_1", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_ip3d_1", "ip3d_1", IP3D_BINS, IP3D_XMIN, IP3D_XMAX), "ip3d_1", "genWeight"))
-    hist_list.append(dl_emu.Histo1D(("dl_emu_significance_d_1", "significance_d_1",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX), "significance_d_1", "genWeight"))
+    for h_def in hist_defs:
+        h_def_0 = h_def[0] + "_0"
+        h_def_1 = h_def[0] + "_1"
+        hist_list.append(sl_e.Histo1D(("sl_e_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
+        hist_list.append(sl_mu.Histo1D(("sl_mu_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
+        hist_list.append(dl_ee.Histo1D(("dl_ee_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
+        hist_list.append(dl_ee.Histo1D(("dl_ee_" + h_def_1, h_def_1, h_def[1], h_def[2], h_def[3]), h_def_1, "genWeight"))
+        hist_list.append(dl_mumu.Histo1D(("dl_mumu_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
+        hist_list.append(dl_mumu.Histo1D(("dl_mumu_" + h_def_1, h_def_1, h_def[1], h_def[2], h_def[3]), h_def_1, "genWeight"))
+        hist_list.append(dl_emu.Histo1D(("dl_emu_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
+        hist_list.append(dl_emu.Histo1D(("dl_emu_" + h_def_1, h_def_1, h_def[1], h_def[2], h_def[3]), h_def_1, "genWeight"))
 
     for hist in hist_list:
         hist.Write()
