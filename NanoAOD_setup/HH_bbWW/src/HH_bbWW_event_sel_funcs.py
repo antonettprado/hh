@@ -7,7 +7,9 @@ import json
 from helper_functions import *
 from HH_bbWW_hists_values import *
 
-def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, file_access):
+N_EVENTS = 0
+
+def initializing(input_datasets, sample, significance_d_cut, file_access):
 
     # Processing C++ functions -------------------------------------
     ROOT.gInterpreter.ProcessLine('#include \"src/HH_bbWW_event_sel_funcs_cpp.cc\"')
@@ -27,7 +29,7 @@ def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, fi
     cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
     # Creating output directory & resetting log file ---------------
-    OUT_DIR = sample + "_" + str(dxy_cut) + "_" + str(dz_cut) + "_" + str(significance_d_cut) + "_V2"
+    OUT_DIR = sample + "_" + str(significance_d_cut)
     if not os.path.isdir(OUT_DIR):
         os.makedirs(OUT_DIR)
     os.chdir(OUT_DIR)
@@ -41,11 +43,12 @@ def initializing(input_datasets, sample, dxy_cut, dz_cut, significance_d_cut, fi
 
 def preselection(df, runs):
 
-    N_events = df.Count().GetValue()
+    global N_EVENTS
+    N_EVENTS = df.Count().GetValue()
     sum_genWeight = df.Sum("genWeight").GetValue()
     Sum_genEventSumw = runs.Sum("genEventSumw").GetValue()
 
-    print_twice('Initial events: ' + str(N_events))
+    print_twice('Initial events: ' + str(N_EVENTS))
     print_twice('sum_genWeight = ' + str(round(sum_genWeight, 4)))
     print_twice('Sum_genEventSumw = ' + str(round(Sum_genEventSumw, 4)))
     print_twice()
@@ -144,7 +147,7 @@ def select_e_tight(df, e_tight_dict, dxy_cut=None, dz_cut=None, significance_d_c
     if significance_d_cut is None:
         significance_d_cut = e_tight_dict["max_d_over_sigma_d"]  
     
-    definition = "Electron_pt >   " + str(e_tight_dict["min_cone_pt"])
+    definition = "Electron_pt > " + str(e_tight_dict["min_cone_pt"])
     definition += " && abs(Electron_eta) <  " + str(e_tight_dict["max_eta"]) 
     if dxy_cut != -9999:
         definition += " && abs(Electron_dxy) < " + str(dxy_cut)
@@ -332,7 +335,7 @@ def select_taus(df, taus_dict):
     df = df.Define("n_taus_sel", "Sum(taus_sel)")
     return df
 
-# Single Lepton Channel Selection =======================================================
+# Channel Selections ====================================================================
 def select_sl_channel(df, sl_event_dict):
 
     print("SL channel:")
@@ -342,8 +345,8 @@ def select_sl_channel(df, sl_event_dict):
     mu_pt_cut = str(sl_event_dict['sl_mu_pt'])
     mu_eta_cut = str(sl_event_dict['sl_mu_eta'])
 
-    df_e = df.Filter('n_e_tight == 1 && n_mu_tight == 0', "1 e_tight")
-    df_e = df_e.Filter('s_e_pt_eta_tight_cut(Electron_pt, Electron_eta, e_tight, ' + e_pt_cut + ", " + e_eta_cut +')', 'pt_eta_cut')
+    df_e = df.Filter("n_e_tight == 1 && n_mu_tight == 0" , "1 e_tight")
+    df_e = df_e.Filter("s_e_pt_eta_tight_cut(Electron_pt, Electron_eta, e_tight, " + e_pt_cut + ", " + e_eta_cut +')', 'pt_eta_cut')
     df_e = df_e.Filter(get_triggers('sl_e_triggers'), "s_e trigger")
 
     df_mu = df.Filter('n_e_tight == 0 && n_mu_tight == 1', "1 mu_tight")
@@ -359,6 +362,7 @@ def select_sl_channel(df, sl_event_dict):
         df_e = df_e.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
         df_mu = df_mu.Filter(common_filters[idx], 'common_fil_' + str(idx+1))
 
+    # Calculate weighted yields ------------------------------------
     e_sum_genWeight = df_e.Sum("genWeight").GetValue()
     mu_sum_genWeight = df_mu.Sum("genWeight").GetValue()
     sl_sum_genWeight = e_sum_genWeight + mu_sum_genWeight
@@ -368,9 +372,14 @@ def select_sl_channel(df, sl_event_dict):
     print_twice('\t Weighted SL Yield: ' + str(round(sl_sum_genWeight, 4)))
     print_twice()
 
+    sl_e_events = df_e.Count().GetValue()
+    sl_mu_events = df_mu.Count().GetValue()
+    sl_sum_events = sl_e_events + sl_mu_events
+    print_twice('\t SL events: ' + str(sl_sum_events) + ' (' + str(round(sl_sum_events/N_EVENTS,2)) +')')
+    print_twice()
+
     return df_e, df_mu, sl_sum_genWeight
 
-# Double Lepton Channel Selection =======================================================
 def select_dl_channel(df, dl_event_dict):
 
     print("DL channel:")
@@ -399,6 +408,7 @@ def select_dl_channel(df, dl_event_dict):
         df_mumu = df_mumu.Filter(common_filters[idx], 'common_fil_' + str(idx))
         df_emu = df_emu.Filter(common_filters[idx], 'common_fil_' + str(idx))
 
+    # Calculate weighted yields ------------------------------------
     ee_sum_genWeight = df_ee.Sum("genWeight").GetValue()
     mumu_sum_genWeight = df_mumu.Sum("genWeight").GetValue()
     emu_sum_genWeight = df_emu.Sum("genWeight").GetValue()
@@ -410,8 +420,16 @@ def select_dl_channel(df, dl_event_dict):
     print_twice('\t Weighted DL Yield: ' + str(round(dl_sum_genWeight, 4)))
     print_twice()
 
+    dl_ee_events = df_ee.Count().GetValue()
+    dl_mumu_events = df_mumu.Count().GetValue()
+    dl_emu_events = df_emu.Count().GetValue()
+    dl_sum_events = dl_ee_events + dl_mumu_events + dl_emu_events
+    print_twice('\t DL events: ' + str(dl_sum_events) + ' (' + str(round(dl_sum_events/N_EVENTS,2)) +')')
+    print_twice()
+
     return df_ee, df_mumu, df_emu, dl_sum_genWeight
 
+# New defintions ========================================================================
 def sl_definitions(df_e, df_mu):
 
     defs = []
@@ -461,18 +479,49 @@ def dl_definitions(df_ee, df_mumu, df_emu):
 
     return df_ee, df_mumu, df_emu
 
-# Save histograms to root file =========================================================
-def output_hists_root_file(hists, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
-    if (hists == 'y'):
-        outHistFileName = "hists.root"
-        outHistFile = ROOT.TFile.Open(outHistFileName ,"RECREATE")
-        outHistFile.cd()
-        write_hists(df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
-        outHistFile.Close()
-        print_twice("hists.root was saved")
-        print_twice()
+# =======================================================================================
+def gen_level_vars_and_cuts(df):
 
-def write_hists(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
+    df = df.Filter("jet_pt_cut(GenJet_pt, 20)", "GenJets with pt > 20")
+
+    df = df.Define("bGenJets", "get_b_jets(GenJet_hadronFlavour)")
+    df = df.Filter("Sum(bGenJets) == 2", "Only 2b GenJets in event")
+
+    df = df.Define("GenJets_idx_for_mbb", "get_jets_idx_for_mbb(bGenJets)")
+    df = df.Define("GenParts_idx_for_mbb", "get_GenParts_idx_for_mbb(GenPart_pdgId, GenPart_genPartIdxMother)")
+
+    # Find deltaR bewteen GenJet and GenPart
+    df = df.Define("deltaR_vals_ROOT", "get_deltaR_vals_ROOT(GenJets_idx_for_mbb, GenParts_idx_for_mbb, GenJet_eta, GenJet_phi, GenPart_eta, GenPart_phi)")
+    df = df.Define("deltaR_vals", "get_deltaR_vals(GenJets_idx_for_mbb, GenParts_idx_for_mbb, GenJet_eta, GenJet_phi, GenPart_eta, GenPart_phi)")
+    df = df.Define("two_deltaR_ROOT", "get_two_deltaR(deltaR_vals_ROOT)")
+    df = df.Define("two_deltaR", "get_two_deltaR(deltaR_vals)")
+    df = df.Define("two_deltaR_part_jet_idx", "get_two_deltaR_part_jet_idx(deltaR_vals, GenJets_idx_for_mbb, GenParts_idx_for_mbb)")
+    df = df.Define("two_eta_combo", "get_two_eta_combo(two_deltaR_part_jet_idx, GenPart_eta, GenJet_eta)")
+    df = df.Define("two_phi_combo", "get_two_phi_combo(two_deltaR_part_jet_idx, GenPart_phi, GenJet_phi)")
+    df = df.Define("two_deltaEta", "get_two_deltaVar(two_eta_combo)")
+    df = df.Define("two_deltaPhi", "get_two_deltaVar(two_phi_combo)")
+    df = df.Filter("get_cut_genJet_deltaR_with_GenParts(two_deltaR_ROOT)", "Only jets w dR<0.4 w H-daughter b's")
+
+    df = df.Filter("get_cut_deltaR_bgenJets(bGenJets, GenJet_eta, GenJet_phi)", "deltaR_for_bGenJets")
+
+    df = df.Define("GenJets_mbb", "get_jets_mbb(GenJets_idx_for_mbb, GenJet_pt, GenJet_eta, GenJet_phi, GenJet_mass)")
+
+    df.Report().Print()
+
+    return df
+
+# Save histograms to root file ==========================================================
+def output_hists_root_file(df_gen, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
+
+    outHistFileName = "hists.root"
+    outHistFile = ROOT.TFile.Open(outHistFileName ,"RECREATE")
+    outHistFile.cd()
+    write_hists(df_gen, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
+    outHistFile.Close()
+    print_twice("hists.root was saved")
+    print_twice()
+
+def write_hists(df_gen, sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
     
     h_sl_sum_genWeight = ROOT.TH1F("h_sl_sum_genWeight","h_sl_sum_genWeight",3,-0.5,2.5)
     h_sl_sum_genWeight.Fill(1, sl_sum_genWeight)
@@ -488,16 +537,17 @@ def write_hists(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_ge
     hist_list.append(h_dl_sum_genWeight)
     hist_list.append(h_Sum_genEventsumw)
 
-    hist_defs = []
-    hist_defs.append(["pt", PT_BINS, PT_XMIN, PT_XMAX])
-    hist_defs.append(["eta", ETA_BINS, ETA_XMIN, ETA_XMAX])
-    hist_defs.append(["dxy", DXY_BINS, DXY_XMIN, DXY_XMAX])
-    hist_defs.append(["dz", DZ_BINS, DZ_XMIN, DZ_XMAX])
-    hist_defs.append(["sigma_d", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX])
-    hist_defs.append(["ip3d", IP3D_BINS, IP3D_XMIN, IP3D_XMAX])
-    hist_defs.append(["significance_d",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX])
+    # Per particle in each final state in each channel ----------------
+    hist_defs_pp = []
+    hist_defs_pp.append(["pt", PT_BINS, PT_XMIN, PT_XMAX])
+    hist_defs_pp.append(["eta", ETA_BINS, ETA_XMIN, ETA_XMAX])
+    hist_defs_pp.append(["dxy", DXY_BINS, DXY_XMIN, DXY_XMAX])
+    hist_defs_pp.append(["dz", DZ_BINS, DZ_XMIN, DZ_XMAX])
+    hist_defs_pp.append(["sigma_d", SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX])
+    hist_defs_pp.append(["ip3d", IP3D_BINS, IP3D_XMIN, IP3D_XMAX])
+    hist_defs_pp.append(["significance_d",  SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX])
 
-    for h_def in hist_defs:
+    for h_def in hist_defs_pp:
         h_def_0 = h_def[0] + "_0"
         h_def_1 = h_def[0] + "_1"
         hist_list.append(sl_e.Histo1D(("sl_e_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
@@ -509,12 +559,27 @@ def write_hists(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_ge
         hist_list.append(dl_emu.Histo1D(("dl_emu_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
         hist_list.append(dl_emu.Histo1D(("dl_emu_" + h_def_1, h_def_1, h_def[1], h_def[2], h_def[3]), h_def_1, "genWeight"))
 
+    # Plots hists pertaining gen-level inforamtion -------------------
+    hist_defs_gen = []
+    hist_defs_gen.append(["nGenJet", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX])  
+    hist_defs_gen.append(["nGenJetAK8", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX]) 
+    hist_defs_gen.append(["two_deltaR", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])  
+    hist_defs_gen.append(["two_deltaR_ROOT", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])
+    hist_defs_gen.append(["two_deltaEta", DELTAETA_BINS, DELTAETA_XMIN, DELTAETA_XMAX ])
+    hist_defs_gen.append(["two_deltaPhi", DELTAPHI_BINS, DELTAPHI_XMIN, DELTAPHI_XMAX ])
+    hist_defs_gen.append(["GenJets_mbb", MBB_BINS, MBB_XMIN, MBB_XMAX]) 
+
+    for h_def in hist_defs_gen:
+        hist_list.append(df_gen.Histo1D(("df_gen_"+ h_def[0], h_def[0], h_def[1], h_def[2], h_def[3]), h_def[0]))
+    
+    # Writing all histograms in the list ----------------------------
     for hist in hist_list:
         hist.Write()
+        print(hist)
 
-# ======================================================================================
-# ======================================================================================
-# ======================================================================================
+# =======================================================================================
+# =======================================================================================
+# =======================================================================================
 def get_l_WP_id(part, key):
     WP_id = ''
     if (part == "e"):
