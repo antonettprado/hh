@@ -104,7 +104,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         mllSel = noSel.refine("mll_cut", cut=[op.rng_len(loose_ee_pair) == 0, op.rng_len(loose_mumu_pair) == 0])
 
         # Final Event Selection
-        
+        SLSel = sl_event_selection(mllSel, electrons, muons ...)
         
 
         # Selections
