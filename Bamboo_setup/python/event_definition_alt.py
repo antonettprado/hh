@@ -1,22 +1,26 @@
 from bamboo import treefunctions as op
 
 #Must be taus_to_veto
-def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel):
+def get_sl(sel, tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon):
 
-    sl_e = sel.refine("Has one e", cut=[op.AND(
-        op.rng_len(tight_Electron) == 1, 
-        op.rgn_len(tight_Muon) == 0,
-        tight_Electron[0].pt > 32,
-        tight_Electron[0].eta < 2.5 )])
-    sl_e = sl_e.refine("Has no tau_h", cut=[op.rng_len(Tau) == 0])
-    sl_e = sl_e.refine("Num. of jets", cut=[op.OR(
+    sl_e = sel.refine("sl_e", cut=[
         op.AND(
-            op.rgn_len(AK4) >= 1, 
-            op.rgn_len(AK8) >= 1,               
-            op.rng_any(AK4, lambda ak4: op.rng_any(AK8, lambda ak8: op.deltaR(ak4.pt, ak8.pt) > 1.2))),
-        op.AND(
-            op.rgn_len(AK4) >= 3, 
-            op.rng_len(AK4_btagged) >= 1))])
+            op.rng_len(tight_Electron) == 1,
+            op.rgn_len(tight_Muon) == 0,
+            tight_Electron[0].pt > 32,
+            tight_Electron[0].eta < 2.5,
+            op.rng_len(Tau) == 0,
+            op.OR(
+                op.AND(
+                    op.rgn_len(AK4) >= 1, 
+                    op.rgn_len(AK8) >= 1,               
+                    op.rng_any(AK4, lambda ak4: op.rng_any(AK8, lambda ak8: op.deltaR(ak4.pt, ak8.pt) > 1.2))),
+                op.AND(
+                    op.rgn_len(AK4) >= 3, 
+                    op.rng_len(AK4_btagged) >= 1))
+            # sl_e triggers
+        )]
+    )
 
     sl_mu = se.refine("sl_mu", cut=[
         op.AND(
@@ -37,9 +41,10 @@ def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electro
         )]
     )
 
+return sl_e, sl_mu
 
 #Must be tight electron, muon; taus_to_veto
-def get_dl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel):
+def get_dl(sel, tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon):
 
     tight_Electron = op.sort(tight_Electron, lambda l: -l.pt)
     tight_Muon = op.sort(tight_Muon, lambda l: -l.pt)
@@ -85,3 +90,4 @@ def get_dl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electro
             # dl_ee triggers
         )]
     )
+    return dl_ee, dl_mumu, dl_emu
