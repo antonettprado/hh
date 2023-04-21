@@ -19,33 +19,35 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         yields.add(noSel, 'Basic Event Selection')
 
         # Select Electrons
-        electrons = op.sort(
-            op.select(tree.Electron, lambda el: object_defs.electron_basic_selection(el)),
-            lambda el: -object_defs.elConePt(tree.Electron)[el.idx]
-        )
+        electrons = object_defs.electron_basic_selection(tree.Electron)
+        electron_ConePt = object_defs.elConePt(tree.Electron)
+        electrons = op.sort(electrons, lambda el: -electron_ConePt[el.idx])
+
+        # TO DO: do we need to clean electrons from muons?
+
         # Select Loose Electrons
-        loose_electrons = object_defs.electron_loose_selection(electrons, tree.Jet)
+        loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet)
 
         # Select Fakeable Electrons
-        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, tree.Jet)
+        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, electron_ConePt, tree.Jet)
 
         # Select Tight Electrons
-        tight_electrons = object_defs.electron_tight_selection(electrons, tree.Jet)
+        tight_electrons = object_defs.electron_tight_selection(electrons, electron_ConePt, tree.Jet)
 
 
         # Select Muons
-        muons = op.sort(
-            op.select(tree.Muon, lambda mu: object_defs.muon_basic_selection(mu)),
-            lambda mu: -object_defs.muonConePt(tree.Muon)[mu.idx]
-        )
+        muons = object_defs.muon_basic_selection(tree.Muon)
+        muon_ConePt = object_defs.muConePt(tree.Muon)
+        muons = op.sort(muons, lambda mu: -muon_ConePt[mu.idx])
+
         # Select Loose Muons
-        loose_muons = object_defs.muon_loose_selection(muons, tree.Jet)
+        loose_muons = object_defs.muon_loose_selection(muons, muon_ConePt, tree.Jet)
 
         # Select Fakeable Muons
-        fakeable_muons = object_defs.muon_fakeable_selection(muons, tree.Jet)
+        fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet)
 
         # Select Tight Muons
-        tight_muons = object_defs.muon_tight_selection(muons, tree.Jet)
+        tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet)
 
 
         # Select Taus
@@ -99,10 +101,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # TO DO: S_min
 
         # mll Selection
-        loose_ee_pair = op.combine(loose_electrons, N=2, pred=lambda el1,el2: (el1.charge != el2.charge) and (op.invariant_mass(el1.p4, el2.p4) < 12 or op.abs(op.invariant_mass(el1.p4, el2.p4)) < 10))
-        loose_mumu_pair = op.combine(loose_muons, N=2, pred=lambda mu1,mu2: (mu1.charge != mu2.charge) and (op.invariant_mass(mu1.p4, mu2.p4) < 12 or op.abs(op.invariant_mass(mu1.p4, mu2.p4)) < 10))
-        mllSel = noSel.refine("mll_cut", cut=[op.rng_len(loose_ee_pair) == 0, op.rng_len(loose_mumu_pair) == 0])
-
+        mllSel = event_defs.mll_selection(noSel, loose_electrons, loose_muons)
+        
         # Final Event Selection
         SLSel = sl_event_selection(mllSel, electrons, muons ...)
         

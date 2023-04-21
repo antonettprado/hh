@@ -1,5 +1,27 @@
 from bamboo import treefunctions as op
 
+def mll_selection(Sel, electrons, muons):
+    loose_ee_pair = op.combine(
+        electrons, N=2, pred=lambda el1,el2: op.AND(
+            el1.charge != el2.charge, 
+            op.OR(
+                op.invariant_mass(el1.p4, el2.p4) < 12,
+                op.abs(op.invariant_mass(el1.p4, el2.p4)) < 10
+            )
+        )
+    )
+    loose_mumu_pair = op.combine(
+        muons, N=2, pred=lambda mu1,mu2: op.AND(
+            mu1.charge != mu2.charge, 
+            op.OR(
+                op.invariant_mass(mu1.p4, mu2.p4) < 12,
+                op.abs(op.invariant_mass(mu1.p4, mu2.p4)) < 10
+            )
+        )
+    )
+    mllSel = Sel.refine("mll_cut", cut=[op.rng_len(loose_ee_pair) == 0, op.rng_len(loose_mumu_pair) == 0])
+    return mllSel
+
 #Must be taus_to_veto
 def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel):
 

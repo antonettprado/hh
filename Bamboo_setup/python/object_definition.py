@@ -1,8 +1,35 @@
 from bamboo import treefunctions as op
 
-def select_e_loose(Electron):
-    return op.select(Electron, lambda el: op.AND(
-        el.pt > 7,
+def elConePt(electrons):
+    return op.map(electrons, lambda lep: op.multiSwitch(
+        (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
+        (op.AND(op.abs(lep.pdgId) == 11, lep.mvaTTH > 0.30), lep.pt),
+        0.9*lep.pt*(1.+lep.jetRelIso) # TO DO: Check definition of cone pT
+        )
+    )
+
+def muonConePt(muons):
+    return op.map(muons, lambda lep: op.multiSwitch(
+        (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
+        (op.AND(op.abs(lep.pdgId) == 13, lep.mvaTTH > 0.50), lep.pt),
+        0.9*lep.pt*(1.+lep.jetRelIso) # TO DO: Check definition of cone pT
+        )
+    )
+
+def nearbyBtag(el, jets, btag_WP):
+    return op.rng_any(
+        jets, lambda j: op.AND(
+            op.deltaR(el.p4, j.p4) < 0.4,
+            j.btagDeepFlavB > btag_WP
+        )            
+    )
+        
+def electron_basic_selection(electrons):
+    return op.select(electrons, lambda el: el.mvaFall17V2noIso_WPL)
+
+def electron_loose_selection(electrons, electron_ConePt, jets):
+    return op.select(electrons, lambda el: op.AND(
+        electron_ConePt[el.idx] > 7, # TO DO: Clean electrons (from muons) for cone-pT? does idx refer to the index in the original tree.Electron?
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
@@ -13,50 +40,51 @@ def select_e_loose(Electron):
         )
     )
 
-def select_e_fakeable(Electron):
-    return op.select(Electron, lambda el: op.AND(
-        el.pt > 10,
+def electron_fakeable_selection(electrons, electron_ConePt, jets):
+    return op.select(electrons, lambda el: op.AND(
+        electron_ConePt[el.idx] > 10, # TO DO: Clean electrons (from muons) for cone-pT? does idx refer to the index in the original tree.Electron?
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
         el.pfRelIso03_all < 0.4,
-        op.OR(          # <==== el.deltaEtaSC also?
-            op.AND(op.abs(el.eta) <= 1.479, el.sieie <= 0.011),
-            op.AND(op.abs(el.eta) > 1.479, el.sieie <= 0.030))
+        op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
         el.hoe < 0.10,
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
         el.lostHits == 0,
-        el.mvaFall17V2noIso_WPL
-        # deepJet WP
-        # Jet rel iso
+        el.mvaFall17V2noIso_WPL,
+        op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
+        op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7),
+        op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))
         )
     )
 
-def select_e_tight(Electron):
-    return op.select(Electron, lambda el: op.AND(
-        el.pt > 10,
+def electron_tight_selection(electrons, electron_ConePt, jets):
+    return op.select(electrons, lambda el: op.AND(
+        electron_ConePt[el.idx] > 10, # TO DO: Clean electrons (from muons) for cone-pT? does idx refer to the index in the original tree.Electron?
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
         el.pfRelIso03_all < 0.4,
-        op.OR(         # <==== el.deltaEtaSC also?
-            op.AND(op.abs(el.eta) <= 1.479, el.sieie <= 0.011),
-            op.AND(op.abs(el.eta) > 1.479, el.sieie <= 0.030))
+        op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
         el.hoe < 0.10,
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
-        el.lostHits == 0
-        # deepJet WP
-        # Prompt-e MVA
+        el.lostHits == 0,
+        el.mvaFall17V2noIso_WPL,
+        op.NOT(nearbyBtag(el, jets, 0.2770)),
+        el.mvaTTH > 0.3
         )
     )
 
-def select_mu_loose(Muon):
-    return op.select(Muon, lambda mu: op.AND(
-        mu.pt > 5,
+def electron_basic_selection(muons):
+    return op.select(muons, lambda mu: mu.looseId)
+
+def select_mu_loose(muons, muon_ConePt, jets):
+    return op.select(muons, lambda mu: op.AND(
+        muon_ConePt[mu.idx] > 5, # TO DO: does idx refer to the index in the original tree.Muon?
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
@@ -66,31 +94,31 @@ def select_mu_loose(Muon):
         )
     )
 
-def select_mu_fakeable(Muon)
-    return op.select(Muon, lambda mu: op.AND(
-        mu.pt > 10,
+def select_mu_fakeable(muons, muon_ConePt, jets)
+    return op.select(muons, lambda mu: op.AND(
+        muon_ConePt[mu.idx] > 10, # TO DO: does idx refer to the index in the original tree.Muon?
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         mu.pfRelIso03_all < 0.4,
         mu.looseId
-        # deepJet WP
-        # Jet rel iso
+        op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8),
+        op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, 0.2770)), op.NOT(nearbyBtag(mu, jets, 0.7264))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
         )
     )
 
-def select_mu_tight(Muon): 
-    return op.select(Muon, lambda mu: op.AND(
-        mu.pt > 10,
+def select_mu_tight(muons, muon_ConePt, jets): 
+    return op.select(muons, lambda mu: op.AND(
+        muon_ConePt[mu.idx] > 10, # TO DO: does idx refer to the index in the original tree.Muon?
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         mu.pfRelIso03_all < 0.4,
-        mu.mediumId
-        # deepJet WP
-        # Prompt-mu MVA
+        mu.mediumId,
+        op.NOT(nearbyBtag(mu, jets, 0.2770)),
+        mu.mvaTTH > 0.5
         )
     )
 
