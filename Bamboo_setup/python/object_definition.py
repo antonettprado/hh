@@ -27,7 +27,7 @@ def nearbyBtag(el, jets, btag_WP):
 def electron_basic_selection(electrons):
     return op.select(electrons, lambda el: el.mvaFall17V2noIso_WPL)
 
-def electron_loose_selection(electrons, electron_ConePt, jets):
+def electron_loose_selection(electrons, jets):
     return op.select(electrons, lambda el: op.AND(
         electron_ConePt[el.idx] > 7, # TO DO: Clean electrons (from muons) for cone-pT? does idx refer to the index in the original tree.Electron?
         op.abs(el.eta) < 2.5,

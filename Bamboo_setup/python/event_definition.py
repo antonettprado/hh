@@ -23,8 +23,9 @@ def mll_selection(Sel, electrons, muons):
     return mllSel
 
 #Must be taus_to_veto
-def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel):
+def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel, sample_type, HLT):
 
+    # Selection of single-electron SL events
     sl_e = sel.refine("Has one e", cut=[op.AND(
         op.rng_len(tight_Electron) == 1, 
         op.rgn_len(tight_Muon) == 0,
@@ -39,71 +40,78 @@ def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electro
         op.AND(
             op.rgn_len(AK4) >= 3, 
             op.rng_len(AK4_btagged) >= 1))])
+    if (sample_type == 'mc'):
+        sl_e = sl_e.refine("Triggers", cut=[HLT.Ele32_WPTight_Gsf])
 
-    sl_mu = se.refine("sl_mu", cut=[
+    # Selection of single-muon SL events
+    sl_mu = sel.refine("Has one mu", cut=[op.AND(
+        op.rng_len(Muon) == 1,
+        op.rgn_len(Electron) == 0,
+        Muon[0].pt > 25,
+        Muon[0].eta < 2.4)])
+    sl_mu = sl_mu.refine("Has no tau_h", cut=[op.AND(op.rng_len(Tau) == 0)])
+    sl_mu = sl_mu.refine("Num. of jets", cut=[op.OR(
         op.AND(
-            op.rng_len(Muon) == 1,
-            op.rgn_len(Electron) == 0,
-            Muon[0].pt > 25,
-            Muon[0].eta < 2.4,
-            op.rng_len(Tau) == 0,
-            op.OR(
-                op.AND(
-                    op.rgn_len(AK4) >= 1, 
-                    op.rgn_len(AK8) >= 1,               
-                    op.rng_any(AK4, lambda ak4: op.rng_any(AK8, lambda ak8: op.deltaR(ak4.pt, ak8.pt) > 1.2))),
-                op.AND(
-                    op.rgn_len(AK4) >= 3, 
-                    op.rng_len(AK4_btagged) >= 1))
-            # sl_mu triggers
-        )]
-    )
+            op.rgn_len(AK4) >= 1, 
+            op.rgn_len(AK8) >= 1,               
+            op.rng_any(AK4, lambda ak4: op.rng_any(AK8, lambda ak8: op.deltaR(ak4.pt, ak8.pt) > 1.2))),
+        op.AND(
+            op.rgn_len(AK4) >= 3, 
+            op.rng_len(AK4_btagged) >= 1))])
+    if (sample_type == 'mc'):
+        sl_mu = sl_mu.refine("Triggers", cut=[op.OR(HLT.IsoMu24, HLT.IsoMu27)])
+
+    return sl_e, sl_mu
 
 
 #Must be tight electron, muon; taus_to_veto
-def get_dl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel):
+def get_dl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel, sample_type, HLT):
 
     tight_Electron = op.sort(tight_Electron, lambda l: -l.pt)
     tight_Muon = op.sort(tight_Muon, lambda l: -l.pt)
 
-    dl_ee = sel.refine("dl_ee", cut=[
-        op.AND(
-            op.rng_len(tight_Electron) == 2,
-            op.rgn_len(tight_Muon) == 0,
-            tight_Electron[0].pt > 25,
-            tight_Electron[1].pt > 15,
-            op.sum(tight_Electron[0].charge, tight_Electron[1].charge) == 0,
-            op.OR(
-                op.rgn_len(AK4) >= 1, 
-                op.rng_len(AK8) >= 1)
-            # dl_ee triggers
-        )]
-    )
+    # Selection of double-electron DL events
+    dl_ee = sel.refine("Has two e", cut=[op.AND(
+        op.rng_len(tight_Electron) == 2,
+        op.rgn_len(tight_Muon) == 0,
+        tight_Electron[0].pt > 25,
+        tight_Electron[1].pt > 15,
+        op.sum(tight_Electron[0].charge, tight_Electron[1].charge) == 0 )])
+    dl_ee = dl_ee.refine("Num. of jets", cut=[op.OR(
+        op.rgn_len(AK4) >= 1, 
+        op.rng_len(AK8) >= 1)])
+    if (sample_type == 'mc'):
+        dl_ee = dl_ee.refine("Triggers", cut=[op.OR(HLT.Ele32_WPTight_Gsf, Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)])
 
-    dl_mumu = sel.refine("dl_mumu", cut=[
-        op.AND(
-            op.rng_len(tight_Muon) == 2,
-            op.rgn_len(tight_Electron) == 0,
-            tight_Muon[0].pt > 25,
-            tight_Muon[1].pt > 15,
-            op.sum(tight_Muon[0].charge, tight_Muon[1].charge) == 0,
-            op.OR(
-                op.rgn_len(AK4) >= 1, 
-                op.rng_len(AK8) >= 1)
-            # dl_ee triggers
-        )]
-    )
+    # Selection of double-muon DL events
+    dl_mumu = sel.refine("Has two mu", cut=[op.AND(
+        op.rng_len(tight_Muon) == 2,
+        op.rgn_len(tight_Electron) == 0,
+        tight_Muon[0].pt > 25,
+        tight_Muon[1].pt > 15,
+        op.sum(tight_Muon[0].charge, tight_Muon[1].charge) == 0 )])
+    dl_mumu = sel.refine("Num. of jets", cut=[op.OR(
+        op.rgn_len(AK4) >= 1, 
+        op.rng_len(AK8) >= 1 )])
+    if (sample_type == 'mc'):
+        dl_mumu = dl_mumu.refine("Triggers", cut=[op.OR(
+            HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8, 
+            op.OR(HLT.IsoMu24, HLT.IsoMu27))])
 
-    dl_emu = sel.refine("dl_emu", cut=[
-        op.AND(
-            op.rng_len(tight_Muon) == 1,
-            op.rgn_len(tight_Electron) == 1,
-            op.OR(tight_Electron[0].pt > 25, tight_Muon[0].pt > 25),
-            op.OR(tight_Electron[0].pt > 15, tight_Muon[0].pt > 15),
-            op.sum(tight_Electron[0].charge, tight_Muon[0].charge) == 0,
-            op.OR(
-                op.rgn_len(AK4) >= 1, 
-                op.rng_len(AK8) >= 1)
-            # dl_ee triggers
-        )]
-    )
+    # Selection of electron-muon DL events
+    dl_emu = sel.refine("Has 1e & 1mu", cut=[op.AND(
+        op.rng_len(tight_Muon) == 1,
+        op.rgn_len(tight_Electron) == 1,
+        op.OR(tight_Electron[0].pt > 25, tight_Muon[0].pt > 25),
+        op.OR(tight_Electron[0].pt > 15, tight_Muon[0].pt > 15),
+        op.sum(tight_Electron[0].charge, tight_Muon[0].charge) == 0 )])
+    dl_emu = dl_emu.refine("Num. of jets", cut=[op.OR(
+        op.rgn_len(AK4) >= 1, 
+        op.rng_len(AK8) >= 1)])
+    if (sample_type == 'mc'):
+        dl_emu = dl_emu.refine("Triggers", cut=[op.OR(
+            HLT.Ele32_WPTight_Gsf,
+            op.OR(HLT.IsoMu24, HLT.IsoMu27),
+            HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ)])
+
+    return dl_ee, dl_mumu, dl_emu
