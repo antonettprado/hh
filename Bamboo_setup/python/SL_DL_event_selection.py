@@ -94,105 +94,24 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # mll Selection
         mllSel = event_defs.mll_selection(noSel, loose_electrons, loose_muons)
         
-
-
-
-
-
-        
         # Final Event Selection
-        SLSel = sl_event_selection(mllSel, electrons, muons ...)
+        SL_e_Sel = event_defs.sl_e_event_selection(mllSel, tight_electrons, tight_muons, cleaned_taus, cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_jets, cleaned_ak8_btags, self.is_MC, sample, tree.HLT)
+        SL_mu_Sel = event_defs.sl_mu_event_selection(mllSel, tight_electrons, tight_muons, cleaned_taus, cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_jets, cleaned_ak8_btags, self.is_MC, sample, tree.HLT)
+        DL_ee_Sel = event_defs.dl_ee_event_selection(mllSel, tight_electrons, tight_muons, cleaned_taus, cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_jets, cleaned_ak8_btags, self.is_MC, sample, tree.HLT)
+        DL_emu_Sel = event_defs.dl_emu_event_selection(mllSel, tight_electrons, tight_muons, cleaned_taus, cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_jets, cleaned_ak8_btags, self.is_MC, sample, tree.HLT)
+        DL_mumu_Sel = event_defs.dl_mumu_event_selection(mllSel, tight_electrons, tight_muons, cleaned_taus, cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_jets, cleaned_ak8_btags, self.is_MC, sample, tree.HLT)
         
+        #emuPair = op.combine((clElectrons, muons), N=2,
+        #                     pred=lambda el, mu: el.charge != mu.charge)
+        #eePair = op.combine(clElectrons, N=2, pred=lambda el1,
+        #                    el2: el1.charge != el2.charge)
+        #mumuPair = op.combine(muons, N=2, pred=lambda mu1,
+        #                      mu2: mu1.charge != mu2.charge)
 
-        # Selections
-
-        # has at least one electron pair
-        hasElEl = noSel.refine("hasOSElEl", cut=[op.rng_len(clElectrons) >= 2,
-                                                 clElectrons[0].charge != clElectrons[1].charge, clElectrons[0].pt > 20., clElectrons[1].pt > 10.])
-        # and at least two ak4 jets
-        hasTwoJetsElEl = hasElEl.refine(
-            "hasTwoJetsElEl", cut=[op.rng_len(ak4Jets) >= 2])
-        # and two b jets
-        hasTwoBJetsElEl = hasTwoJetsElEl.refine(
-            "hasTwoBJetsElEl", cut=[op.rng_len(ak4bJets) >= 2])
-        # has at least one muon pair
-        hasMuMu = noSel.refine("hasOSMuMu", cut=[op.rng_len(muons) >= 2,
-                                                 muons[0].charge != muons[1].charge, muons[0].pt > 20., muons[1].pt > 10.])
-        # and at least two ak4 jets
-        hasTwoJetsMuMu = hasMuMu.refine(
-            'hasTwoJetsMuMu', cut=[op.rng_len(ak4Jets) >= 2])
-        # and two b jets
-        hasTwoBJetsMuMu = hasTwoJetsMuMu.refine(
-            'hasTwoBJetsMuMu', cut=[op.rng_len(ak4bJets) >= 2])
-        # has at least one ak4 jet
-        hasOneJet = noSel.refine('hasOneJet', cut=[op.rng_len(ak4Jets) >= 1])
-        # has at least two ak4 jets
-        hasTwoJets = noSel.refine('hasTwoJets', cut=[op.rng_len(ak4Jets) >= 2])
-
-        ### Di-leptonic channel ###
-
-        # has exactly two leptons
-        hasTwoL = noSel.refine('hasTwoL', cut=(
-            op.OR(
-                op.AND(op.rng_len(clElectrons) == 2, op.rng_len(muons) == 0,
-                       clElectrons[0].charge != clElectrons[1].charge, clElectrons[0].pt > 25., clElectrons[1].pt > 15.),
-                op.AND(op.rng_len(muons) == 2, op.rng_len(clElectrons) == 0,
-                       muons[0].charge != muons[1].charge, muons[0].pt > 25., muons[1].pt > 15.),
-                op.AND(op.rng_len(clElectrons) == 1, op.rng_len(muons) == 1,
-                       clElectrons[0].charge != muons[0].charge, op.OR(op.AND(clElectrons[0].pt > 25., muons[0].pt > 15.), op.AND(clElectrons[0].pt > 15., muons[0].pt > 25.)))
-            )
-        ))
-
-        emuPair = op.combine((clElectrons, muons), N=2,
-                             pred=lambda el, mu: el.charge != mu.charge)
-        eePair = op.combine(clElectrons, N=2, pred=lambda el1,
-                            el2: el1.charge != el2.charge)
-        mumuPair = op.combine(muons, N=2, pred=lambda mu1,
-                              mu2: mu1.charge != mu2.charge)
-
-        firstEMUpair = emuPair[0]
-        firstEEpair = eePair[0]
-        firstMUMUpair = mumuPair[0]
-        # boosted -> and at least one b-tagged ak8 jet
-        DL_boosted = hasTwoL.refine(
-            'DL_boosted', cut=(op.rng_len(ak8bJets) >= 1))
-
-        # resolved -> and at least two ak4 jets with at least one b-tagged and no ak8 jets
-        DL_resolved = hasTwoL.refine('DL_resolved', cut=(op.AND(op.rng_len(
-            ak4Jets) >= 2, op.rng_len(ak4bJets) >= 1, op.rng_len(ak8Jets) == 0)))
-
-        ### Semi-leptonic channel ###
-        # has exactly one lepton
-        hasOneL = noSel.refine('hasOneL', cut=(op.OR(
-            op.AND(
-                op.rng_len(clElectrons) == 1,
-                op.rng_len(muons) == 0,
-                clElectrons[0].pt > 32.),
-            op.AND(
-                op.rng_len(muons) == 1,
-                op.rng_len(clElectrons) == 0,
-                muons[0].pt > 25.)
-        )))
-
-        ak4ak4bJetPair = op.combine((ak4Jets, ak4bJets), N=2, pred=lambda j1, j2:
-                                    op.deltaR(j1.p4, j2.p4) > 0.8)
-        firstJetPair = ak4ak4bJetPair[0]
-
-        ak4ak8bPair = op.combine((ak4Jets, ak8bJets), N=2, pred=lambda ak4, ak8b: op.AND(
-            op.deltaR(ak4.p4, ak8b.p4) >= 1.2))
-        firstAK4AK8bPair = ak4ak8bPair[0]
-
-        # boosted -> and at least one b-tagged ak8 jet and at least one ak4 jet outside the b-tagged ak8 jet
-        SL_boosted = hasOneL.refine('SL_boosted', cut=(op.AND(
-            op.rng_len(ak8bJets) >= 1,
-            op.rng_len(ak4Jets) >= 1,
-            op.deltaR(ak4Jets[0].p4, ak8bJets[0].p4) >= 1.2)
-        ))
-        # resolved -> and at least three ak4 jets with at least one b-tagged and no ak8 jets
-        SL_resolved = hasOneL.refine('SL_resolved', cut=(op.AND(op.rng_len(
-            ak4Jets) >= 3, op.rng_len(ak4bJets) >= 1, op.rng_len(ak8Jets) == 0)
-        ))
-
+        #firstEMUpair = emuPair[0]
+        #firstEEpair = eePair[0]
+        #firstMUMUpair = mumuPair[0]
+        
         #############################################################################
         #                                 Plots                                     #
         #############################################################################

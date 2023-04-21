@@ -23,26 +23,34 @@ def mll_selection(Sel, electrons, muons):
     mllSel = Sel.refine("mll_cut", cut=[op.rng_len(loose_ee_pair) == 0, op.rng_len(loose_mumu_pair) == 0])
     return mllSel
 
-#Must be taus_to_veto
-def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel, sample_type, HLT):
+def sl_e_event_selection(Sel, electrons, muons, taus, ak4_jets, ak4_btags, ak8_jets, ak8_btags, is_mc, sample, HLT):
 
     # Selection of single-electron SL events
-    sl_e = sel.refine("Has one e", cut=[op.AND(
-        op.rng_len(tight_Electron) == 1, 
-        op.rgn_len(tight_Muon) == 0,
-        tight_Electron[0].pt > 32,
-        tight_Electron[0].eta < 2.5 )])
-    sl_e = sl_e.refine("Has no tau_h", cut=[op.rng_len(Tau) == 0])
-    sl_e = sl_e.refine("Num. of jets", cut=[op.OR(
-        op.AND(
-            op.rgn_len(AK4) >= 1, 
-            op.rgn_len(AK8) >= 1,               
-            op.rng_any(AK4, lambda ak4: op.rng_any(AK8, lambda ak8: op.deltaR(ak4.pt, ak8.pt) > 1.2))),
-        op.AND(
-            op.rgn_len(AK4) >= 3, 
-            op.rng_len(AK4_btagged) >= 1))])
-    if (sample_type == 'mc'):
-        sl_e = sl_e.refine("Triggers", cut=[HLT.Ele32_WPTight_Gsf])
+    SL_e_Sel = Sel.refine("Has one e", cut=[op.AND(
+        op.rng_len(electrons) == 1, 
+        op.rng_len(muons) == 0,
+        electrons[0].pt > 32,
+        op.abs(electrons[0].eta) < 2.5 
+        )]
+    )
+    SL_e_Sel = SL_e_Sel.refine("Triggers", cut=[HLT.Ele32_WPTight_Gsf])
+    SL_e_Sel = SL_e_Sel.refine("Tau veto", cut=[op.rng_len(taus) == 0])
+    SL_e_Sel = SL_e_Sel.refine("Num. of jets", cut=[op.switch(
+        op.rng_len(ak8_btags) >= 1,
+        op.AND( # boosted case
+            op.rng_len(ak4_jets) >= 1,              
+            op.rng_any(ak4_jets, lambda ak4: op.rng_any(ak8_btags, lambda ak8: op.deltaR(ak4.p4, ak8.p4) > 1.2))
+            ),
+        op.AND( # resolved case
+            op.rng_len(ak4_jets) >= 3, 
+            op.rng_len(ak4_btags) >= 1
+            )
+        )]
+    )
+    return SL_e_Sel
+
+
+
 
     # Selection of single-muon SL events
     sl_mu = sel.refine("Has one mu", cut=[op.AND(
@@ -66,7 +74,7 @@ def get_sl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electro
 
 
 #Must be tight electron, muon; taus_to_veto
-def get_dl(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel, sample_type, HLT):
+def dl_event_selection(tight_Electron, tight_Muon, Tau, AK4, AK4_btagged, AK8, loose_Electron, loose_Muon, sel, sample_type, HLT):
 
     tight_Electron = op.sort(tight_Electron, lambda l: -l.pt)
     tight_Muon = op.sort(tight_Muon, lambda l: -l.pt)
