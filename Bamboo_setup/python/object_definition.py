@@ -4,7 +4,7 @@ def elConePt(electrons):
     return op.map(electrons, lambda lep: op.multiSwitch(
         (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
         (op.AND(op.abs(lep.pdgId) == 11, lep.mvaTTH > 0.30), lep.pt),
-        0.9*lep.pt*(1.+lep.jetRelIso) # TO DO: Check definition of cone pT
+        0.9*lep.pt*(1.+lep.jetRelIso) ## TO DO: Check definition of cone pT
         )
     )
 
@@ -12,7 +12,7 @@ def muonConePt(muons):
     return op.map(muons, lambda lep: op.multiSwitch(
         (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
         (op.AND(op.abs(lep.pdgId) == 13, lep.mvaTTH > 0.50), lep.pt),
-        0.9*lep.pt*(1.+lep.jetRelIso) # TO DO: Check definition of cone pT
+        0.9*lep.pt*(1.+lep.jetRelIso) ## TO DO: Check definition of cone pT
         )
     )
 
@@ -23,13 +23,37 @@ def nearbyBtag(el, jets, btag_WP):
             j.btagDeepFlavB > btag_WP
         )            
     )
+
+def find_subjets(fatjet, subjets):
+    return op.sort(
+        op.select(subjets, lambda sjet: op.OR(
+            sjet.idx == fatjet.subJetIdx1, sjet.idx == fatjet.subJetIdx2)
+        ), 
+        lambda sjet: -sjet.pt
+    )
+
+def calculate_met_quantities(jets, electrons, muons, met_pt):
+    ht_jets = 0
+    mht_jets = 0
+    mht_electrons = 0
+    mht_muons = 0
+    mht = 0
+    met_ld = 0
+    ht_jets = op.rng_sum(jets, lambda jet: jet.pt)
+    mht_jets = op.rng_sum(jets, lambda jet: jet.p4)
+    mht_electrons = op.rng_sum(electrons, lambda el: el.p4)
+    mht_muons = op.rng_sum(muons, lambda mu: mu.p4)
+    mht = op.sum(mht_jets, mht_electrons, mht_muons)
+    met_ld = op.sum(op.product(0.6, met_pt), op.product(0.4, mht))
+    return ht_jets, mht, met_ld
+
         
 def electron_basic_selection(electrons):
     return op.select(electrons, lambda el: el.mvaFall17V2noIso_WPL)
 
 def electron_loose_selection(electrons, jets):
     return op.select(electrons, lambda el: op.AND(
-        electron_ConePt[el.idx] > 7, # TO DO: Clean electrons (from muons) for cone-pT? does idx refer to the index in the original tree.Electron?
+        electron_ConePt[el.idx] > 7, ## TO DO: Clean electrons (from muons) for cone-pT?
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
@@ -42,7 +66,7 @@ def electron_loose_selection(electrons, jets):
 
 def electron_fakeable_selection(electrons, electron_ConePt, jets):
     return op.select(electrons, lambda el: op.AND(
-        electron_ConePt[el.idx] > 10, # TO DO: Clean electrons (from muons) for cone-pT? does idx refer to the index in the original tree.Electron?
+        electron_ConePt[el.idx] > 10, ## TO DO: Clean electrons (from muons) for cone-pT?
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
@@ -62,7 +86,7 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets):
 
 def electron_tight_selection(electrons, electron_ConePt, jets):
     return op.select(electrons, lambda el: op.AND(
-        electron_ConePt[el.idx] > 10, # TO DO: Clean electrons (from muons) for cone-pT? does idx refer to the index in the original tree.Electron?
+        electron_ConePt[el.idx] > 10, ## TO DO: Clean electrons (from muons) for cone-pT?
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
@@ -79,12 +103,12 @@ def electron_tight_selection(electrons, electron_ConePt, jets):
         )
     )
 
-def electron_basic_selection(muons):
+def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
 
 def select_mu_loose(muons, muon_ConePt, jets):
     return op.select(muons, lambda mu: op.AND(
-        muon_ConePt[mu.idx] > 5, # TO DO: does idx refer to the index in the original tree.Muon?
+        muon_ConePt[mu.idx] > 5,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
@@ -94,9 +118,9 @@ def select_mu_loose(muons, muon_ConePt, jets):
         )
     )
 
-def select_mu_fakeable(muons, muon_ConePt, jets)
+def select_mu_fakeable(muons, muon_ConePt, jets):
     return op.select(muons, lambda mu: op.AND(
-        muon_ConePt[mu.idx] > 10, # TO DO: does idx refer to the index in the original tree.Muon?
+        muon_ConePt[mu.idx] > 10,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
@@ -110,7 +134,7 @@ def select_mu_fakeable(muons, muon_ConePt, jets)
 
 def select_mu_tight(muons, muon_ConePt, jets): 
     return op.select(muons, lambda mu: op.AND(
-        muon_ConePt[mu.idx] > 10, # TO DO: does idx refer to the index in the original tree.Muon?
+        muon_ConePt[mu.idx] > 10,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
@@ -122,51 +146,100 @@ def select_mu_tight(muons, muon_ConePt, jets):
         )
     )
 
-#Must be fakeable electrons, muons
-def select_AK4_jets(Jet, Electron, Muon):
-    return op.select(Jet, lambda jet: op.AND(
-        jet.pt > 25,
-        op.abs(jet.eta) < 2.4,
-        jet.jetId >= 2,
-        op.NOT(
-            op.OR(
-                op.rng_any(Electron.jetIdx, lambda idx : idx == jet.idx),
-                op.rng_any(Muon.jetIdx, lambda idx : idx == jet.idx)))
+def tau_selection(taus):
+    return op.select(taus, lambda tau: op.AND(
+        tau.pt > 20,
+        op.abs(tau.eta) < 2.3,
+        tau.idDeepTau2017v2p1VSjet > 16, # WP_M
+        op.OR( ## TO DO: check tau decay modes
+            tau.decayMode == 0,
+            tau.decayMode == 1,
+            tau.decayMode == 2,
+            tau.decayMode == 10,
+            tau.decayMode == 11,
+            )
         )
     )
 
-def select_AK4_btagged_jets(Jet):
-    WP_M = 0.2770
-    return op.select(Jet, lambda jet: jet.btagDeepFlavB > WP_M)
+def tau_cleaning(taus, leptons, deltar_cut=0.3):
+    return op.select(taus, lambda tau: op.NOT(
+            op.rng_any(leptons, lambda lep: op.deltaR(lep.p4, tau.p4) < deltar_cut)
+        )
+    )
 
-def select_AK8_jets(Jet, Electron, Muon):
-    return op.select(Jet, lambda jet: op.AND(
+def ak4_jet_selection(jets):
+    return op.select(jets, lambda jet: op.AND(
+        jet.pt > 25,
+        op.abs(jet.eta) < 2.4,
+        jet.jetId >= 2 # WP_T
+        )
+    )
+
+def ak4_vbf_jet_selection(jets):
+    return op.select(jets, lambda jet: op.AND(
+        op.switch(op.AND(op.abs(jet.eta) > 2.7, op.abs(jet.eta) , 3.0), jet.pt > 60, jet.pt > 30),
+        op.abs(jet.eta) < 4.7,
+        jet.jetId >= 2 # WP_T
+        )
+    )
+       
+def ak4_jet_cleaning(jets, leptons):
+    return op.select(jets, lambda jet: op.NOT(
+        op.rng_any(leptons, lambda lep: jet.idx == lep.jetIdx)
+        )
+    )
+
+def ak4_jet_jet_cleaning(jets, btags, deltar_cut):
+    return op.select(jets, lambda jet: op.NOT(
+        op.rng_any(btags, lambda btag: op.deltaR(btag.p4, jet.p4) < deltar_cut)
+        )
+    )
+
+def ak4_vbf_jet_cleaning(vbf_jets, jets, btags, deltar_cut, type):
+    mW = 80.4
+    w_jets = op.select(jets, lambda jet: op.NOT(
+        op.rng_any(btags, lambda btag: btag.idx != jet.idx)
+        )
+    )
+    if type == "nonresonant":
+        w_jets = op.select(w_jets, lambda jet1: op.NOT(
+            op.rng_any(w_jets, lambda jet2: op.abs(op.invariant_mass(jet1.p4, jet2.p4) - mW) < 15)
+            )
+        )
+    return op.select(vbf_jets, lambda vjet: op.NOT(
+        op.rng_any(w_jets, lambda wjet: op.deltaR(wjet.p4, vjet.p4) < deltar_cut)
+        )
+    )
+
+def ak4_btag_selection(jets):
+    return op.select(jets, lambda jet: jet.btagDeepFlavB > 0.2770) # WP_M
+
+def ak8_jet_selection(fatjets, subjets):
+    return op.select(fatjets, lambda jet: op.AND(
         jet.pt > 200,
         op.abs(jet.eta) < 2.4,
-        jet.subJet1.pt > 20,
-        jet.subJet2.pt > 20,
-        op.OR(jet.subJet1.pt > 30, jet.subJet2.pt > 30),
-        op.abs(jet.subJet1.eta) <= 2.4,
-        op.abs(jet.subJet2.eta) <= 2.4,
+        jet.subJetIdx1 >= 0,
+        jet.subJetIdx2 >= 0,
+        find_subjets(jet, subjets)[0].pt > 30,
+        find_subjets(jet, subjets)[1].pt > 20,
+        op.abs(find_subjets(jet, subjets)[0].eta) < 2.4,
+        op.abs(find_subjets(jet, subjets)[1].eta) < 2.4,
         jet.msoftdrop >= 30,
         jet.msoftdrop <= 210,
         jet.tau2/jet.tau1 <= 0.75,
-        op.NOT(
-            op.OR(
-                op.rng_any(Electron, lambda l: op.deltaR(l.p4,jet.p4) > 0.8),
-                op.rng_any(Muon, lambda l: op.deltaR(l.p4, jet.p4) > 0.8)))
         )
     )
 
-#Must be fakeable electrons, muons
-def select_taus_to_veto(Tau, Electron, Muon):
-    WP_M = 16
-    return op.select(Tau, lambda tau: op.AND(
-        tau.pt > 20,
-        op.abs(tau.eta) < 2.3,
-        tau.idDeepTau2017v2p1VSjet > WP_M,
-        op.OR(
-            op.rng_any(Electron, lambda l: op.deltaR(l.p4,Tau.p4) < 0.3),
-            op.rng_any(Muon, lambda l: op.deltaR(l.p4,Tau.p4) < 0.3))
+def ak8_jet_cleaning(fatjets, leptons, deltar_cut=0.8):
+    return op.select(fatjets, lambda jet: op.NOT(
+        op.rng_any(leptons, lambda lep: op.deltaR(lep.p4, jet.p4) < deltar_cut)
         )
     )
+
+def ak8_btag_selection(fatjets, subjets):
+    return op.select(fatjets, lambda jet: op.OR(
+        find_subjets(jet, subjets)[0].btagDeepB > 0.2770, # WP_M
+        op.AND(find_subjets(jet, subjets)[1].pt > 30, find_subjets(jet, subjets)[1].btagDeepB > 0.2770) # WP_M
+        )
+    )
+

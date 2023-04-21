@@ -23,7 +23,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         electron_ConePt = object_defs.elConePt(tree.Electron)
         electrons = op.sort(electrons, lambda el: -electron_ConePt[el.idx])
 
-        # TO DO: do we need to clean electrons from muons?
+        ## TO DO: do we need to clean electrons from muons?
 
         # Select Loose Electrons
         loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet)
@@ -49,42 +49,33 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # Select Tight Muons
         tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet)
 
-
         # Select Taus
-        taus = op.sort(
-            op.select(tree.Tau, lambda tau: object_defs.tau_selection(tau)),
-            lambda tau: -tau.pt
-        )
+        taus = object_defs.tau_selection(tree.Tau)
+        taus = op.sort(taus, lambda tau: -tau.pt)
         cleaned_taus = object_defs.tau_cleaning(taus, fakeable_electrons, 0.3)
         cleaned_taus = object_defs.tau_cleaning(cleaned_taus, fakeable_muons, 0.3)
 
         # Select AK4 Jets
-        ak4_jets = op.sort(
-            op.select(tree.Jet, lambda jet: object_defs.ak4_jet_selection(jet)), 
-            lambda jet: -jet.pt
-        )
+        ak4_jets = object_defs.ak4_jet_selection(tree.Jet)
+        ak4_jets = op.sort(ak4_jets, lambda jet: -jet.pt)
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(ak4_jets, fakeable_electrons)
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_jets, fakeable_muons)
 
         # Select AK4 b-tags
-        cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets, "WP_M")
+        cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets)
 
         # Select AK8 Jets
-        ak8_jets = op.sort(
-            op.select(tree.FatJet, lambda jet: object_defs.ak8_jet_selection(jet)), 
-            lambda jet: -jet.pt
-        )
+        ak8_jets = object_defs.ak8_jet_selection(tree.FatJet, tree.SubJet)
+        ak8_jets = op.sort(ak8_jets, lambda jet: -jet.pt)
         cleaned_ak8_jets = object_defs.ak8_jet_cleaning(ak8_jets, fakeable_electrons, 0.8)
         cleaned_ak8_jets = object_defs.ak8_jet_cleaning(cleaned_ak8_jets, fakeable_muons, 0.8)
 
         # Select AK8 b-tags
-        cleaned_ak8_btags = object_defs.ak8_btag_selection(cleaned_ak8_jets, "WP_M")
+        cleaned_ak8_btags = object_defs.ak8_btag_selection(cleaned_ak8_jets, tree.SubJet)
 
         # Select AK4 VBF Jets
-        ak4_vbf_jets = op.sort(
-            op.select(tree.Jet, lambda jet: object_defs.ak4_jet_selection(jet, "ak4_vbf")), 
-            lambda jet: -jet.pt
-        )
+        ak4_vbf_jets = object_defs.ak4_vbf_jet_selection(tree.Jet)
+        ak4_vbf_jets = op.sort(ak4_vbf_jets, lambda jet: -jet.pt)
         cleaned_ak4_vbf_jets = object_defs.ak4_jet_cleaning(ak4_vbf_jets, fakeable_electrons)
         cleaned_ak4_vbf_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_vbf_jets, fakeable_muons)
         cleaned_ak4_vbf_jets = object_defs.ak4_jet_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak8_btags, 1.2)
@@ -92,16 +83,22 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         cleaned_ak4_vbf_resonant_jets = object_defs.ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "resonant")
         cleaned_ak4_vbf_nonresonant_jets = object_defs.ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "nonresonant")
 
-        # MET and MHT (how to add event level variables? using op?)
-        #met_pt = tree.MET.pt
-        #met_phi = tree.MET.phi
-        #ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, tree.MET)
+        # MET and MHT
+        met_pt = tree.MET.pt
+        met_phi = tree.MET.phi
+        ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met_pt)
 
         # TO DO: Heavy Mass Estimator
         # TO DO: S_min
 
         # mll Selection
         mllSel = event_defs.mll_selection(noSel, loose_electrons, loose_muons)
+        
+
+
+
+
+
         
         # Final Event Selection
         SLSel = sl_event_selection(mllSel, electrons, muons ...)

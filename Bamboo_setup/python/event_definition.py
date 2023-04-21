@@ -1,12 +1,13 @@
 from bamboo import treefunctions as op
 
 def mll_selection(Sel, electrons, muons):
+    mZ = 91.2
     loose_ee_pair = op.combine(
         electrons, N=2, pred=lambda el1,el2: op.AND(
             el1.charge != el2.charge, 
             op.OR(
                 op.invariant_mass(el1.p4, el2.p4) < 12,
-                op.abs(op.invariant_mass(el1.p4, el2.p4)) < 10
+                op.abs(op.invariant_mass(el1.p4, el2.p4) - mZ) < 10
             )
         )
     )
@@ -15,7 +16,7 @@ def mll_selection(Sel, electrons, muons):
             mu1.charge != mu2.charge, 
             op.OR(
                 op.invariant_mass(mu1.p4, mu2.p4) < 12,
-                op.abs(op.invariant_mass(mu1.p4, mu2.p4)) < 10
+                op.abs(op.invariant_mass(mu1.p4, mu2.p4) - mZ) < 10
             )
         )
     )
