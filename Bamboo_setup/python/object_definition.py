@@ -51,7 +51,7 @@ def calculate_met_quantities(jets, electrons, muons, met_pt):
 def electron_basic_selection(electrons):
     return op.select(electrons, lambda el: el.mvaFall17V2noIso_WPL)
 
-def electron_loose_selection(electrons, jets):
+def electron_loose_selection(electrons, electron_ConePt, jets):
     return op.select(electrons, lambda el: op.AND(
         electron_ConePt[el.idx] > 7, ## TO DO: Clean electrons (from muons) for cone-pT?
         op.abs(el.eta) < 2.5,
