@@ -8,7 +8,7 @@ def elConePt(electrons):
         )
     )
 
-def muonConePt(muons):
+def muConePt(muons):
     return op.map(muons, lambda lep: op.multiSwitch(
         (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
         (op.AND(op.abs(lep.pdgId) == 13, lep.mvaTTH > 0.50), lep.pt),
@@ -79,7 +79,7 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets):
         el.lostHits == 0,
         el.mvaFall17V2noIso_WPL,
         op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
-        op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7),
+        op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, True),
         op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))
         )
     )
@@ -106,7 +106,7 @@ def electron_tight_selection(electrons, electron_ConePt, jets):
 def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
 
-def select_mu_loose(muons, muon_ConePt, jets):
+def muon_loose_selection(muons, muon_ConePt, jets):
     return op.select(muons, lambda mu: op.AND(
         muon_ConePt[mu.idx] > 5,
         op.abs(mu.eta) < 2.4,
@@ -118,7 +118,7 @@ def select_mu_loose(muons, muon_ConePt, jets):
         )
     )
 
-def select_mu_fakeable(muons, muon_ConePt, jets):
+def muon_fakeable_selection(muons, muon_ConePt, jets):
     return op.select(muons, lambda mu: op.AND(
         muon_ConePt[mu.idx] > 10,
         op.abs(mu.eta) < 2.4,
@@ -126,13 +126,13 @@ def select_mu_fakeable(muons, muon_ConePt, jets):
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         mu.pfRelIso03_all < 0.4,
-        mu.looseId
-        op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8),
+        mu.looseId,
+        op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, True),
         op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, 0.2770)), op.NOT(nearbyBtag(mu, jets, 0.7264))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
         )
     )
 
-def select_mu_tight(muons, muon_ConePt, jets): 
+def muon_tight_selection(muons, muon_ConePt, jets): 
     return op.select(muons, lambda mu: op.AND(
         muon_ConePt[mu.idx] > 10,
         op.abs(mu.eta) < 2.4,
@@ -183,7 +183,7 @@ def ak4_vbf_jet_selection(jets):
         )
     )
        
-def ak4_jet_cleaning(jets, leptons):
+def ak4_jet_cleaning(jets, leptons, deltar_cut=0.4):
     return op.select(jets, lambda jet: op.NOT(
         op.rng_any(leptons, lambda lep: jet.idx == lep.jetIdx)
         )

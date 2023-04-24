@@ -14,6 +14,10 @@ Execute these each time you start from a clean shell:
 ```bash
 source /cvmfs/sft.cern.ch/lcg/views/LCG_102/x86_64-centos7-gcc11-opt/setup.sh
 source (path to your bamboo installation)/bamboovenv/bin/activate
+```
+
+Execute this from hh/Bamboo_setup/:
+```bash 
 export PYTHONPATH="${PYTHONPATH}:${PWD}/python/"
 ```
 
@@ -24,7 +28,10 @@ voms-proxy-init --voms cms -rfc --valid 192:00
 export X509_USER_PROXY=$(voms-proxy-info -path)
 ```
 
-
+To run the code:
+```bash
+bambooRun -m python/SL_DL_event_selection.py config/analysis_2018_test.yml -o testResults --envConfig config/cern.ini
+```
 
 
 
