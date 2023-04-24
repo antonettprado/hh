@@ -30,7 +30,7 @@ export X509_USER_PROXY=$(voms-proxy-info -path)
 
 To run the code:
 ```bash
-bambooRun -m python/SL_DL_event_selection.py config/analysis_2018_test.yml -o testResults --envConfig config/cern.ini
+bambooRun -m python/SL_DL_event_selection.py config/analysis_2018.yml -o testResults --envConfig config/cern.ini
 ```
 
 
