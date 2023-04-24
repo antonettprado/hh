@@ -65,7 +65,7 @@ def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
         )
     )
 
-def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, taus, is_mc, sample, HLT):
+def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, sample, HLT):
     return (op.AND(
         op.rng_len(electrons) == 2,
         op.rng_len(muons) == 0,
@@ -76,7 +76,7 @@ def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, taus, is_mc,
         )
     )
 
-def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, taus, is_mc, sample, HLT):
+def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, sample, HLT):
     return (op.AND(
         op.rng_len(electrons) == 1,
         op.rng_len(muons) == 1,
@@ -93,7 +93,7 @@ def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, taus, is_mc
         )
     )
 
-def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, taus, is_mc, sample, HLT):
+def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, sample, HLT):
     return (op.AND(
         op.rng_len(muons) == 2,
         op.rng_len(electrons) == 0,

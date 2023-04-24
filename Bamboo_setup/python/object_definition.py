@@ -27,7 +27,7 @@ def nearbyBtag(el, jets, btag_WP):
 def find_subjets(fatjet, subjets):
     return op.sort(
         op.select(subjets, lambda sjet: op.OR(
-            sjet.idx == fatjet.subJetIdx1, sjet.idx == fatjet.subJetIdx2)
+            sjet.idx == fatjet.subJet1.idx, sjet.idx == fatjet.subJet2.idx)
         ), 
         lambda sjet: -sjet.pt
     )
@@ -185,7 +185,7 @@ def ak4_vbf_jet_selection(jets):
        
 def ak4_jet_cleaning(jets, leptons, deltar_cut=0.4):
     return op.select(jets, lambda jet: op.NOT(
-        op.rng_any(leptons, lambda lep: jet.idx == lep.jetIdx)
+        op.rng_any(leptons, lambda lep: jet.idx == lep.jet.idx)
         )
     )
 
@@ -218,8 +218,8 @@ def ak8_jet_selection(fatjets, subjets):
     return op.select(fatjets, lambda jet: op.AND(
         jet.pt > 200,
         op.abs(jet.eta) < 2.4,
-        jet.subJetIdx1 >= 0,
-        jet.subJetIdx2 >= 0,
+        jet.subJet1.idx >= 0,
+        jet.subJet2.idx >= 0,
         find_subjets(jet, subjets)[0].pt > 30,
         find_subjets(jet, subjets)[1].pt > 20,
         op.abs(find_subjets(jet, subjets)[0].eta) < 2.4,

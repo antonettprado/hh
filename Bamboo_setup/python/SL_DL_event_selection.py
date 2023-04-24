@@ -113,8 +113,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # Single Lepton
         SL_lep_only_sel = mllSel.refine("SL lepton only selection", 
             cut=[op.OR(
-                event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, self.is_MC, sample, tree.HLT),
-                event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, self.is_MC, sample, tree.HLT))])
+                event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, sample, tree.HLT),
+                event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, sample, tree.HLT))])
         SL_lep_resolved_sel = SL_lep_only_sel.refine("SL resolved jet selection", 
             cut=[event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_lep_boosted_sel = SL_lep_only_sel.refine("SL boosted jet selection", 
@@ -125,8 +125,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Double Electron
-        DL_ee_only_sel = mllSel.refine("DL ee only selection", cut=[
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, sample, tree.HLT)])
+        DL_ee_only_sel = mllSel.refine("DL ee only selection", 
+            cut=[event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, sample, tree.HLT)])
         DL_ee_resolved_sel = DL_ee_only_sel.refine("DL ee resolved jet selection", 
             cut=[event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_ee_boosted_sel = DL_ee_only_sel.refine("DL ee boosted jet selection", 
@@ -191,7 +191,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         #############################################################################
         plots.extend([
             
-            Plot.make1D("SL_e_pt", tree.Electron[0].pt, SL_e_Sel, EqBin(10000, 0, 1000), title="pT", xTitle="pT")
+            Plot.make1D("SL_e_pt", tree.Electron[0].pt, SL_e_sel, EqBin(10000, 0, 1000), title="pT", xTitle="pT")
             # Plot.make1D("SL_e_eta", tree.Electron[0].eta, SL_e_Sel, EqBin(100, -3, 3), title="eta", xTitle="eta")
             # Plot.make1D("SL_e_dxy", tree.Electron[0].dxy, SL_e_Sel, EqBin(10000, -10, 10), title="dxy", xTitle="dxy")
             # Plot.make1D("SL_e_dz", tree.Electron[0].dz, SL_e_Sel, EqBin(10000, -10, 10), title="dz", xTitle="dz")
