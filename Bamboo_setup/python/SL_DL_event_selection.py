@@ -18,6 +18,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(yields)
         yields.add(noSel, 'Basic Event Selection')
 
+        # ===============================================================================
+        # ============================= Object Selection ================================
+        # ===============================================================================
+
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)
         electron_ConePt = object_defs.elConePt(tree.Electron)
@@ -84,7 +88,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # mll Selection
         mllSel = noSel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
         
-        # Final Event Selection ========================================================
+        # ===============================================================================
+        # ========================== Final Event Selection ==============================
+        # ===============================================================================
 
         # Single Electron
         SL_e_only_sel = mllSel.refine("SL electron only selection", 
@@ -185,78 +191,46 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         #firstEMUpair = emuPair[0]
         #firstEEpair = eePair[0]
         #firstMUMUpair = mumuPair[0]
-        
-        #############################################################################
-        #                                 Plots                                     #
-        #############################################################################
-        plots.extend([
-            
-            Plot.make1D("SL_e_pt", tree.Electron[0].pt, SL_e_sel, EqBin(10000, 0, 1000), title="pT", xTitle="pT")
-            # Plot.make1D("SL_e_eta", tree.Electron[0].eta, SL_e_Sel, EqBin(100, -3, 3), title="eta", xTitle="eta")
-            # Plot.make1D("SL_e_dxy", tree.Electron[0].dxy, SL_e_Sel, EqBin(10000, -10, 10), title="dxy", xTitle="dxy")
-            # Plot.make1D("SL_e_dz", tree.Electron[0].dz, SL_e_Sel, EqBin(10000, -10, 10), title="dz", xTitle="dz")
-            # Plot.make1D("SL_e_sip3d", tree.Electron[0].sip3d, SL_e_Sel, EqBin(10000, -10, 10), title="significance_IP3d", xTitle="sip3d")
-            # Plot.make1D("SL_e_AK4_pt_0", tree.Jet.pt[0], SL_e_Sel, EqBin(10000, 0, 10000), title="pT of leading AK4", xTitle="pT")
-            # Plot.make1D("SL_e_AK4_pt_1", tree.Jet.pt[1], SL_e_Sel, EqBin(10000, 0, 10000), title="pT of sub-leading AK4", xTitle="pT")
-            # # AK4 btag pt[0]
-            # # AK4 btag pt[1]
-            # Plot.make1D("SL_e_AK8_pt_0", tree.FatJet.pt[0], SL_e_Sel, EqBin(10000, 0, 10000), title="pT of leading AK8", xTitle="pT")
-            # Plot.make1D("SL_e_AK8_pt_1", tree.FatJet.pt[1], SL_e_Sel, EqBin(10000, 0, 10000), title="pT of sub-leading AK8", xTitle="pT")
-            # # MET pt
-            # # HT
 
-            # Plot.make1D("SL_mu_pt", Electron[0].pt, SL_mu_Sel, EqBin(10000, 0, 1000), title="pT", xTitle="pT")
-            # Plot.make1D("SL_mu_eta", tree.Electron[0].eta, SL_mu_Sel, EqBin(100, -3, 3), title="eta", xTitle="eta")
-            # Plot.make1D("SL_mu_dxy", tree.Electron[0].dxy, SL_mu_Sel, EqBin(10000, -10, 10), title="dxy", xTitle="dxy")
-            # Plot.make1D("SL_mu_dz", tree.Electron[0].dz, SL_mu_Sel, EqBin(10000, -10, 10), title="dz", xTitle="dz")
-            # Plot.make1D("SL_mu_sip3d", tree.Electron[0].sip3d, SL_mu_Sel, EqBin(10000, -10, 10), title="significance_IP3d", xTitle="sip3d")
-            # Plot.make1D("SL_mu_AK4_pt_0", tree.Jet.pt[0], SL_mu_Sel, EqBin(10000, 0, 10000), title="pT of leading AK4", xTitle="pT")
-            # Plot.make1D("SL_mu_AK4_pt_1", tree.Jet.pt[1], SL_mu_Sel, EqBin(10000, 0, 10000), title="pT of sub-leading AK4", xTitle="pT")
-            # # AK4 btag pt[0]
-            # # AK4 btag pt[1]
-            # Plot.make1D("SL_mu_AK8_pt_0", tree.FatJet.pt[0], SL_mu_Sel, EqBin(10000, 0, 10000), title="pT of leading AK8", xTitle="pT")
-            # Plot.make1D("SL_mu_AK8_pt_1", tree.FatJet.pt[1], SL_mu_Sel, EqBin(10000, 0, 10000), title="pT of sub-leading AK8", xTitle="pT")
-            # # MET pt
-            # # HT
+        # ===============================================================================
+        # ================================== Plots ======================================
+        # ===============================================================================
 
-            #---------------------------------------------------------------------------------------------------------------
-            
-            # Plot.make1D("DL_InvM_emu_boosted", op.invariant_mass(firstEMUpair[0].p4, firstEMUpair[1].p4), DL_boosted, EqBin(
-                # 160, 40., 200.), title="InvM(ll)", xTitle="Invariant Mass of electron-muon pair (boosted) (GeV/c^2)"),
-            # Plot.make1D("DL_InvM_ee_boosted", op.invariant_mass(firstEEpair[0].p4, firstEEpair[1].p4), DL_boosted, EqBin(
-            #     160, 40., 200.), title="InvM(ll)", xTitle="Invariant Mass of electrons (boosted) (GeV/c^2)"),
-            # Plot.make1D("DL_InvM_mumu_boosted", op.invariant_mass(firstMUMUpair[0].p4, firstMUMUpair[1].p4), DL_boosted, EqBin(
-            #     160, 40., 200.), title="InvM(ll)", xTitle="Invariant Mass of muons (boosted) (GeV/c^2)"),
-            # Plot.make1D("DL_InvM_jj_boosted", op.invariant_mass(ak8Jets[0].subJet1.p4, ak8Jets[0].subJet2.p4), DL_boosted, EqBin(
-            #     160, 40., 200.), title="InvM(jj)", xTitle="Invariant Mass of jets (GeV/c^2)"),
+        plot_sel = []
+        plot_sel.append(["SL_e", SL_e_sel])
+        plot_sel.append(["SL_mu", SL_mu_sel])
+        plot_sel.append(["DL_ee", DL_ee_sel])
+        plot_sel.append(["DL_emu", DL_emu_sel])
+        plot_sel.append(["DL_mumu", DL_mumu_sel])
+        plot_sel.append(["SL", SL_lep_sel])
+        plot_sel.append(["DL", DL_lep_sel])
 
-            # Plot.make1D("DL_InvM_emu_resolved", op.invariant_mass(firstEMUpair[0].p4, firstEMUpair[1].p4), DL_resolved, EqBin(
-            #     160, 40., 200.), title="InvM(ll)", xTitle="Invariant Mass of electron-muon pair (resolved) (GeV/c^2)"),
-            # Plot.make1D("DL_InvM_ee_resolved", op.invariant_mass(firstEEpair[0].p4, firstEEpair[1].p4), DL_resolved, EqBin(
-            #     160, 40., 200.), title="InvM(ll)", xTitle="Invariant Mass of electrons (resolved) (GeV/c^2)"),
-            # Plot.make1D("DL_InvM_mumu_resolved", op.invariant_mass(firstMUMUpair[0].p4, firstMUMUpair[1].p4), DL_resolved, EqBin(
-            #     160, 40., 200.), title="InvM(ll)", xTitle="Invariant Mass of muons (resolved) (GeV/c^2)"),
-            # Plot.make1D("DL_InvM_jj_resolved", op.invariant_mass(firstJetPair[0].p4, firstJetPair[1].p4), SL_resolved, EqBin(
-            #     160, 40., 200.), title="InvM(jj)", xTitle="Invariant Mass of jets (GeV/c^2)"),
+        for sel in plot_sel:
+            plots.extend([
+                Plot.make1D(sel[0] + "_pt", tight_electrons[0].pt, sel[1], EqBin(250, 0, 500), title="pT", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_eta", tight_electrons[0].eta, sel[1], EqBin(100, -3, 3), title="eta", xTitle="eta"),
+                Plot.make1D(sel[0] + "_dxy", tight_electrons[0].dxy, sel[1], EqBin(100, -0.05, 0.05), title="dxy", xTitle="dxy (cm)"),
+                Plot.make1D(sel[0] + "_dz", tight_electrons[0].dz, sel[1], EqBin(1000, -0.1, 0.1), title="dz", xTitle="dz (cm)"),
+                Plot.make1D(sel[0] + "_sip3d", tight_electrons[0].sip3d, sel[1], EqBin(100, 0, 8), title="significance_IP3d", xTitle="sip3d"),
+                Plot.make1D(sel[0] + "_AK4_pt_0", cleaned_ak4_jets[0].pt, sel[1], EqBin(300, 0, 600), title="pT of leading AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_pt_1", cleaned_ak4_jets[1].pt, sel[1], EqBin(300, 0, 600), title="pT of sub-leading AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_btag_pt_0", cleaned_ak4_btags[0].pt, sel[1], EqBin(250, 0, 500), title="pT of leading b-tagged AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_btag_pt_1", cleaned_ak4_btags[1].pt, sel[1], EqBin(250, 0, 500), title="pT of sub-leading b-tagged AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK8_pt_0", cleaned_ak8_jets[0].pt, sel[1], EqBin(500, 0, 1000), title="pT of leading AK8", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK8_pt_1", cleaned_ak8_jets[1].pt, sel[1], EqBin(500, 0, 1000), title="pT of sub-leading AK8", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_MET_pt", met_pt, sel[1], EqBin(250, 0, 500), title="MET pT", xTitle="MET pT (GeV)"),
+                Plot.make1D(sel[0] + "_HT", ht_jets, sel[1], EqBin(500, 0, 1000), title="HT", xTitle="pT (GeV)")
+            ])
 
-            # Plot.make1D("SL_InvM_jj_resolved", op.invariant_mass(firstJetPair[0].p4, firstJetPair[1].p4), SL_resolved, EqBin(
-            #     160, 40., 200.), title="InvM(jj)", xTitle="Invariant Mass of jets (GeV/c^2)"),
-            # Plot.make1D("SL_InvM_jj_boosted", op.invariant_mass(ak8bJets[0].subJet1.p4, ak8bJets[0].subJet2.p4), SL_boosted, EqBin(
-            #     160, 40., 200.), title="InvM(jj)", xTitle="Invariant Mass of jets (GeV/c^2)"),
-            # Plot.make1D("fakeElectronPt", fakeElectrons[0].pt, hasTwoJets, EqBin(250, 0., 250.), title="fake electron p_T",)
-        ])
-
-        # Cutflow report
-        # yields.add(hasElEl, 'two electrons')
-        # yields.add(hasTwoJetsElEl, 'two el. two jets')
-        # yields.add(hasTwoBJetsElEl, 'two el. two Bjets')
-        # yields.add(hasMuMu, 'two muons')
-        # yields.add(hasTwoJetsMuMu, 'two muons two jets')
-        # yields.add(hasTwoBJetsMuMu, 'two muons two Bjets')
-        # yields.add(hasTwoL, 'two leptons')
-        # yields.add(DL_boosted, 'DL boosted')
-        # yields.add(DL_resolved, 'DL resolved')
-        # yields.add(SL_boosted, 'SL boosted')
-        # yields.add(SL_resolved, 'SL resolved')
+        # ===============================================================================
+        # ============================= Cutflow Report ==================================
+        # ===============================================================================
+        yields.add(SL_e_sel, 'one electron')
+        yields.add(SL_mu_sel, 'one muon')
+        yields.add(DL_ee_sel, 'two electrons')
+        yields.add(DL_emu_sel, 'one elect, one muon')
+        yields.add(DL_mumu_sel, 'two electrons')
+        yields.add(SL_lep_sel, 'one lepton')
+        yields.add(DL_lep_sel, 'two leptons')
 
         return plots
