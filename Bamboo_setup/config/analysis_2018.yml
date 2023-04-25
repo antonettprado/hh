@@ -16,7 +16,7 @@ samples:
   
   bbWW_dl:
     era: "2018"
-    group: "bbWW"
+    group: "HH_bbWW"
     db: das:/GluGluToHHTo2B2VTo2L2Nu_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
     type: mc
     cross-section: 0.777396389
@@ -25,7 +25,7 @@ samples:
 
   bbtautau:
     era: "2018"
-    group: "bbtautau"
+    group: "HH_bbtautau"
     db: das:/GluGluToHHTo2B2Tau_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM 
     type: mc
     cross-section: 2.2695357
@@ -78,6 +78,9 @@ plotIt:
       legend: data
     HH_bbWW:
       legend: HH_bbWW
+      fill-color: "#EDC951"
+    HH_bbtautau:
+      legend: HH_bbtautau
       fill-color: "#EDC951"
     TTbar:
       legend: TTbar
