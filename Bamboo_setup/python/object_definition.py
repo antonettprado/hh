@@ -1,17 +1,19 @@
 from bamboo import treefunctions as op
 
-def elConePt(electrons):
+def elConePt(electrons, jets):
     return op.map(electrons, lambda lep: op.multiSwitch(
         (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
         (op.AND(op.abs(lep.pdgId) == 11, lep.mvaTTH > 0.30), lep.pt),
+        (op.rng_any(jets, lambda j: op.deltaR(lep.p4, j.p4) < 0.4), 0.9*lep.pt*lep.jetRelIso),
         0.9*lep.pt*(1.+lep.jetRelIso) ## TO DO: Check definition of cone pT
         )
     )
 
-def muConePt(muons):
+def muConePt(muons, jets):
     return op.map(muons, lambda lep: op.multiSwitch(
         (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
         (op.AND(op.abs(lep.pdgId) == 13, lep.mvaTTH > 0.50), lep.pt),
+        (op.rng_any(jets, lambda j: op.deltaR(lep.p4, j.p4) < 0.4), 0.9*lep.pt*lep.jetRelIso),
         0.9*lep.pt*(1.+lep.jetRelIso) ## TO DO: Check definition of cone pT
         )
     )

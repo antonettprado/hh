@@ -88,7 +88,7 @@ def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, samp
             electron_ConePt[electrons[0].idx] > 25,
             muon_ConePt[muons[0].idx] > 25
             ),
-        op.sum(electrons[0].charge, muons[1].charge) == 0,
+        op.sum(electrons[0].charge, muons[0].charge) == 0,
         op.OR(HLT.Ele32_WPTight_Gsf, HLT.IsoMu24, HLT.IsoMu27, HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ) # do we want HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL for impact parameter study
         )
     )

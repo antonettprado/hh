@@ -10,27 +10,27 @@ samples:
     group: "HH_bbWW"
     db: das:/GluGluToHHTo2B2VLNu2J_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM 
     type: mc
-    cross-section:  3.348368343
+    cross-section:  0.00334825583
     generated-events: genEventSumw
-    split: 25
+    split: 1
   
   bbWW_dl:
     era: "2018"
     group: "HH_bbWW"
     db: das:/GluGluToHHTo2B2VTo2L2Nu_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
     type: mc
-    cross-section: 0.777396389
+    cross-section: 0.000777396389
     generated-events: genEventSumw
-    split: 25
+    split: 1
 
   bbtautau:
     era: "2018"
     group: "HH_bbtautau"
     db: das:/GluGluToHHTo2B2Tau_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM 
     type: mc
-    cross-section: 2.2695357
+    cross-section: 0.0022695357
     generated-events: genEventSumw
-    split: 25
+    split: 1
 
 
   # bkg #
@@ -39,18 +39,18 @@ samples:
     group: "TTbar"
     db: [das:/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM, das:/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext3-v1/NANOAODSIM]
     type: mc
-    cross-section: 366000
+    cross-section: 366
     generated-events: genEventSumw
-    split: 25
+    split: 300
 
-  TTbar_dl:
+  # TTbar_dl:
     era: "2018"
     group: "TTbar"
     db: das:/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
     type: mc
-    cross-section: 88400
+    cross-section: 88.4
     generated-events: genEventSumw
-    split: 25
+    split: 64
 
 # Plotting configuration parameters ====================================================
 
