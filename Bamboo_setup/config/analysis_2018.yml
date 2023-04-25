@@ -2,12 +2,12 @@ tree: Events
 eras:
   "2018":
     luminosity: 59700 # pb^-1 
-dbcache: dascache
+#dbcache: dascache
 samples:
   # Signal MC
   bbWW_sl:
     era: "2018"
-    group: "bbWW"
+    group: "HH_bbWW"
     db: das:/GluGluToHHTo2B2VLNu2J_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM 
     type: mc
     cross-section:  3.348368343
@@ -64,7 +64,7 @@ plotIt:
     margin-bottom: 0.15
     luminosity-label: '%1$.2f fb^{-1} (13.6 TeV)'
     experiment: CMS
-    extra-label: Run 3 (2022) - Work in progress
+    extra-label: Run 2 (2018) - Work in progress
     error-fill-style: 3154
     error-fill-color: "#ee556270"
     ratio-fit-error-fill-style: 1001
@@ -76,6 +76,9 @@ plotIt:
   groups:
     data:
       legend: data
+    HH_bbWW:
+      legend: HH_bbWW
+      fill-color: "#EDC951"
     TTbar:
       legend: TTbar
       fill-color: "#99ccff"
