@@ -196,31 +196,31 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # ================================== Plots ======================================
         # ===============================================================================
 
-        # plot_sel = []
-        # plot_sel.append(["SL_e", SL_e_sel])
-        # plot_sel.append(["SL_mu", SL_mu_sel])
-        # plot_sel.append(["DL_ee", DL_ee_sel])
-        # plot_sel.append(["DL_emu", DL_emu_sel])
-        # plot_sel.append(["DL_mumu", DL_mumu_sel])
-        # plot_sel.append(["SL", SL_lep_sel])
-        # plot_sel.append(["DL", DL_lep_sel])
+        plot_sel = []
+        plot_sel.append(["SL_e", SL_e_sel])
+        plot_sel.append(["SL_mu", SL_mu_sel])
+        plot_sel.append(["DL_ee", DL_ee_sel])
+        plot_sel.append(["DL_emu", DL_emu_sel])
+        plot_sel.append(["DL_mumu", DL_mumu_sel])
+        plot_sel.append(["SL", SL_lep_sel])
+        plot_sel.append(["DL", DL_lep_sel])
 
-        # for sel in plot_sel:
-        #     plots.extend([
-        #         Plot.make1D(sel[0] + "_pt", tight_electrons[0].pt, sel[1], EqBin(250, 0, 500), title="pT", xTitle="pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_eta", tight_electrons[0].eta, sel[1], EqBin(100, -3, 3), title="eta", xTitle="eta"),
-        #         Plot.make1D(sel[0] + "_dxy", tight_electrons[0].dxy, sel[1], EqBin(100, -0.05, 0.05), title="dxy", xTitle="dxy (cm)"),
-        #         Plot.make1D(sel[0] + "_dz", tight_electrons[0].dz, sel[1], EqBin(1000, -0.1, 0.1), title="dz", xTitle="dz (cm)"),
-        #         Plot.make1D(sel[0] + "_sip3d", tight_electrons[0].sip3d, sel[1], EqBin(100, 0, 8), title="significance_IP3d", xTitle="sip3d"),
-        #         Plot.make1D(sel[0] + "_AK4_pt_0", cleaned_ak4_jets[0].pt, sel[1], EqBin(300, 0, 600), title="pT of leading AK4", xTitle="pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_AK4_pt_1", cleaned_ak4_jets[1].pt, sel[1], EqBin(300, 0, 600), title="pT of sub-leading AK4", xTitle="pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_AK4_btag_pt_0", cleaned_ak4_btags[0].pt, sel[1], EqBin(250, 0, 500), title="pT of leading b-tagged AK4", xTitle="pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_AK4_btag_pt_1", cleaned_ak4_btags[1].pt, sel[1], EqBin(250, 0, 500), title="pT of sub-leading b-tagged AK4", xTitle="pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_AK8_pt_0", cleaned_ak8_jets[0].pt, sel[1], EqBin(500, 0, 1000), title="pT of leading AK8", xTitle="pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_AK8_pt_1", cleaned_ak8_jets[1].pt, sel[1], EqBin(500, 0, 1000), title="pT of sub-leading AK8", xTitle="pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_MET_pt", met_pt, sel[1], EqBin(250, 0, 500), title="MET pT", xTitle="MET pT (GeV)"),
-        #         Plot.make1D(sel[0] + "_HT", ht_jets, sel[1], EqBin(500, 0, 1000), title="HT", xTitle="pT (GeV)")
-        #     ])
+        for sel in plot_sel:
+            plots.extend([
+                Plot.make1D(sel[0] + "_pt", tight_electrons[0].pt, sel[1], EqBin(250, 0, 500), title="pT", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_eta", tight_electrons[0].eta, sel[1], EqBin(100, -3, 3), title="eta", xTitle="eta"),
+                Plot.make1D(sel[0] + "_dxy", tight_electrons[0].dxy, sel[1], EqBin(100, -0.05, 0.05), title="dxy", xTitle="dxy (cm)"),
+                Plot.make1D(sel[0] + "_dz", tight_electrons[0].dz, sel[1], EqBin(1000, -0.1, 0.1), title="dz", xTitle="dz (cm)"),
+                Plot.make1D(sel[0] + "_sip3d", tight_electrons[0].sip3d, sel[1], EqBin(100, 0, 8), title="significance_IP3d", xTitle="sip3d"),
+                Plot.make1D(sel[0] + "_AK4_pt_0", cleaned_ak4_jets[0].pt, sel[1], EqBin(300, 0, 600), title="pT of leading AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_pt_1", cleaned_ak4_jets[1].pt, sel[1], EqBin(300, 0, 600), title="pT of sub-leading AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_btag_pt_0", cleaned_ak4_btags[0].pt, sel[1], EqBin(250, 0, 500), title="pT of leading b-tagged AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_btag_pt_1", cleaned_ak4_btags[1].pt, sel[1], EqBin(250, 0, 500), title="pT of sub-leading b-tagged AK4", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK8_pt_0", cleaned_ak8_jets[0].pt, sel[1], EqBin(500, 0, 1000), title="pT of leading AK8", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK8_pt_1", cleaned_ak8_jets[1].pt, sel[1], EqBin(500, 0, 1000), title="pT of sub-leading AK8", xTitle="pT (GeV)"),
+                Plot.make1D(sel[0] + "_MET_pt", met_pt, sel[1], EqBin(250, 0, 500), title="MET pT", xTitle="MET pT (GeV)"),
+                Plot.make1D(sel[0] + "_HT", ht_jets, sel[1], EqBin(500, 0, 1000), title="HT", xTitle="pT (GeV)")
+            ])
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
