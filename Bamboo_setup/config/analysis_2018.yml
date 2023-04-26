@@ -12,7 +12,7 @@ samples:
     type: mc
     cross-section:  0.00334825583
     generated-events: genEventSumw
-    split: 1
+    split: -1
   
   bbWW_dl:
     era: "2018"
@@ -21,7 +21,7 @@ samples:
     type: mc
     cross-section: 0.000777396389
     generated-events: genEventSumw
-    split: 1
+    split: -1
 
   bbtautau:
     era: "2018"
@@ -30,7 +30,7 @@ samples:
     type: mc
     cross-section: 0.0022695357
     generated-events: genEventSumw
-    split: 1
+    split: -1
 
 
   # bkg #
@@ -41,16 +41,16 @@ samples:
     type: mc
     cross-section: 366
     generated-events: genEventSumw
-    split: 300
+    split: -1
 
-  # TTbar_dl:
+  TTbar_dl:
     era: "2018"
     group: "TTbar"
     db: das:/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
     type: mc
     cross-section: 88.4
     generated-events: genEventSumw
-    split: 64
+    split: -1
 
 # Plotting configuration parameters ====================================================
 
