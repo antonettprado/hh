@@ -25,7 +25,8 @@ and the followings before submitting to the batch system:
 
 ```bash
 voms-proxy-init --voms cms -rfc --valid 192:00 
-export X509_USER_PROXY=$(voms-proxy-info -path)
+cp $(voms-proxy-info -p) ~/private/x509up
+export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
 To run the code:
