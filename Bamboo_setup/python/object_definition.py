@@ -79,7 +79,6 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets):
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
         el.lostHits == 0,
-        el.mvaFall17V2noIso_WPL,
         op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
         op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
         op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))
