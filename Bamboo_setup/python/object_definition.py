@@ -5,7 +5,7 @@ def elConePt(electrons, jets):
         (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
         (op.AND(op.abs(lep.pdgId) == 11, lep.mvaTTH > 0.30), lep.pt),
         (op.rng_any(jets, lambda j: op.deltaR(lep.p4, j.p4) < 0.4), 0.9*lep.pt*lep.jetRelIso),
-        0.9*lep.pt*(1.+lep.jetRelIso) ## TO DO: Check definition of cone pT
+        0.9*lep.pt*(1.+lep.jetRelIso)
         )
     )
 
@@ -14,7 +14,7 @@ def muConePt(muons, jets):
         (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
         (op.AND(op.abs(lep.pdgId) == 13, lep.mvaTTH > 0.50), lep.pt),
         (op.rng_any(jets, lambda j: op.deltaR(lep.p4, j.p4) < 0.4), 0.9*lep.pt*lep.jetRelIso),
-        0.9*lep.pt*(1.+lep.jetRelIso) ## TO DO: Check definition of cone pT
+        0.9*lep.pt*(1.+lep.jetRelIso)
         )
     )
 
