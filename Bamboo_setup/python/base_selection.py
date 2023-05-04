@@ -43,7 +43,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                                                                                  sample=sample,
                                                                                  sampleCfg=sampleCfg,
                                                                                  description=getNanoAODDescription(),
-                                                                                 backend="lazy")
+                                                                                 backend=backend)
         
         # PV Selection
         noSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
