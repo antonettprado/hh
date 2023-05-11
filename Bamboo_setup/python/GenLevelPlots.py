@@ -90,15 +90,15 @@ class GenLevelPlots(NanoAODHistoModule):
             Plot.make1D("n_genJets", op.rng_len(genJets), BOTH_sels, EqBin(20, 0, 20), title="deltaR", xTitle="Nbr. of genJets"),
             Plot.make1D("n_nonbJets", op.rng_len(nonbJets), BOTH_sels, EqBin(20, 0, 20), title="deltaR", xTitle="Nbr. of nonbJets"),
             Plot.make1D("n_bJets", op.rng_len(bJets), BOTH_sels, EqBin(20, 0, 20), title="deltaR", xTitle="Nbr. of bJets"),
-            Plot.make1D("bjets_mbb", mbb, BOTH_sels, EqBin(150, 0, 300), title="b-GenJets m_{bb}", xTitle="m_{bb} (GeV)"),
-            Plot.make1D("bjets0_pT", bJets[0].pt, BOTH_sels, EqBin(500,0,500), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
-            Plot.make1D("bjets1_pT", bJets[1].pt, BOTH_sels, EqBin(500,0,500), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
+            Plot.make1D("bjets_mbb", mbb, BOTH_sels, EqBin(250, 0, 500), title="b-GenJets m_{bb}", xTitle="m_{bb} (GeV)"),
+            Plot.make1D("bjets0_pT", bJets[0].pt, BOTH_sels, EqBin(250,0,500), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
+            Plot.make1D("bjets1_pT", bJets[1].pt, BOTH_sels, EqBin(250,0,500), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
         ])
 
         def get_m_top_for_SL(bJets, nonbJets, electrons, muons, MET):
 
             m_top = 172.76
-            b1jj_combos = op.combine((bJets, nonbJets, nonbJets), N=3)
+            b1jj_combos = op.combine((bJets, nonbJets, nonbJets), N=3, samePred=lambda j1,j2: j1.idx<j2.idx)
             b1jj_combos_inv_mass = op.map(b1jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4, combo[2].p4))
             t1_m0_b1jj_index = op.rng_min_element_index(b1jj_combos_inv_mass, lambda bjj: op.abs(bjj-m_top))
             t1_m0_b1jj = b1jj_combos_inv_mass[t1_m0_b1jj_index]
@@ -119,7 +119,7 @@ class GenLevelPlots(NanoAODHistoModule):
         m_top_sel = SL_sel.refine("m_top_sel", cut=[op.rng_len(nonbJets)>=2])
         t1_m0, t2_mT, tops_m_avg = get_m_top_for_SL(bJets, nonbJets, genElectrons, genMuons, MET)
         plots.extend([
-            Plot.make1D("t1_m0", t1_m0, m_top_sel, EqBin(1000, -500, 500), title="", xTitle="m_{0} for top1 (GeV)"),
+            Plot.make1D("t1_m0", t1_m0, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{0} for top1 (GeV)"),
             Plot.make1D("t2_mT", t2_mT, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{T} for top2 (GeV)"),
             Plot.make1D("tops_m_avg", tops_m_avg, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{avg} for tops (GeV)"),
         ])
@@ -147,15 +147,15 @@ class GenLevelPlots(NanoAODHistoModule):
 
         all_sT, all_m0, all_mT = get_final_state_totals(genElectrons, genMuons, genJets, MET)
         plots.extend([
-            Plot.make1D("all_sT_SL", all_sT, SL_sel, EqBin(2000,0,2000), title="sT_all (SL)", xTitle="s_{T} (GeV)"),
-            Plot.make1D("all_sT_DL", all_sT, DL_sel, EqBin(2000,0,2000), title="sT_all (DL)", xTitle="s_{T} (GeV)"),
-            Plot.make1D("all_sT_both", all_sT, BOTH_sels, EqBin(2000,0,2000), title="sT_all (Both)", xTitle="s_{T} (GeV)"),
-            Plot.make1D("all_m0_SL", all_m0, SL_sel, EqBin(300,0,300), title="sT_all (SL)", xTitle="m_{0} (GeV)"),
-            Plot.make1D("all_m0_DL", all_m0, DL_sel, EqBin(300,0,300), title="sT_all (DL)", xTitle="m_{0} (GeV)"),
-            Plot.make1D("all_m0_both", all_m0, BOTH_sels, EqBin(300,0,300), title="sT_all (Both)", xTitle="m_{0} (GeV)"),
-            Plot.make1D("all_mT_SL", all_mT, SL_sel, EqBin(1000,0,1000), title="sT_all (SL)", xTitle="m_{T} (GeV)"),
-            Plot.make1D("all_mT_DL", all_mT, DL_sel, EqBin(1000,0,1000), title="sT_all (DL)", xTitle="m_{T} (GeV)"),
-            Plot.make1D("all_mT_both", all_mT, BOTH_sels, EqBin(1000,0,1000), title="sT_all (Both)", xTitle="m_{T} (GeV)"),
+            Plot.make1D("all_sT_SL", all_sT, SL_sel, EqBin(1000,0,2000), title="sT_all (SL)", xTitle="s_{T} (GeV)"),
+            Plot.make1D("all_sT_DL", all_sT, DL_sel, EqBin(1000,0,2000), title="sT_all (DL)", xTitle="s_{T} (GeV)"),
+            Plot.make1D("all_sT_both", all_sT, BOTH_sels, EqBin(1000,0,2000), title="sT_all (Both)", xTitle="s_{T} (GeV)"),
+            Plot.make1D("all_m0_SL", all_m0, SL_sel, EqBin(150,0,300), title="sT_all (SL)", xTitle="m_{0} (GeV)"),
+            Plot.make1D("all_m0_DL", all_m0, DL_sel, EqBin(150,0,300), title="sT_all (DL)", xTitle="m_{0} (GeV)"),
+            Plot.make1D("all_m0_both", all_m0, BOTH_sels, EqBin(150,0,300), title="sT_all (Both)", xTitle="m_{0} (GeV)"),
+            Plot.make1D("all_mT_SL", all_mT, SL_sel, EqBin(500,0,1000), title="sT_all (SL)", xTitle="m_{T} (GeV)"),
+            Plot.make1D("all_mT_DL", all_mT, DL_sel, EqBin(500,0,1000), title="sT_all (DL)", xTitle="m_{T} (GeV)"),
+            Plot.make1D("all_mT_both", all_mT, BOTH_sels, EqBin(500,0,1000), title="sT_all (Both)", xTitle="m_{T} (GeV)"),
         ])
 
         def get_bjets_params(bJets):
@@ -169,9 +169,9 @@ class GenLevelPlots(NanoAODHistoModule):
 
         bjets_mean_pT, bjets_deltaPhi, bjets_deltaR = get_bjets_params(bJets)
         plots.extend([
-            Plot.make1D("bjets_mean_pT", bjets_mean_pT, BOTH_sels, EqBin(500, 0, 500), title="", xTitle="<p_{T}> for bjets (GeV)"),
-            Plot.make1D("bjets_deltaPhi", bjets_deltaPhi, BOTH_sels, EqBin(500, 0, 10), title="", xTitle="deltaPhi for bjets"),
-            Plot.make1D("bjets_deltaR", bjets_deltaR, BOTH_sels, EqBin(500, 0, 10), title="", xTitle="deltaR for bjets")
+            Plot.make1D("bjets_mean_pT", bjets_mean_pT, BOTH_sels, EqBin(250, 0, 500), title="", xTitle="<p_{T}> for bjets (GeV)"),
+            Plot.make1D("bjets_deltaPhi", bjets_deltaPhi, BOTH_sels, EqBin(100, 0, 4), title="", xTitle="deltaPhi for bjets"),
+            Plot.make1D("bjets_deltaR", bjets_deltaR, BOTH_sels, EqBin(350, 0, 7), title="", xTitle="deltaR for bjets")
         ])
         
         return plots
