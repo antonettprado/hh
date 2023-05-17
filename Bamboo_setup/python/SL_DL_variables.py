@@ -4,11 +4,11 @@ from bamboo import treefunctions as op
 from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
-from SL_DL_event_selection_v2 import SL_DL_event_selection
+from SL_DL_event_selection import SL_DL_event_selection
 import object_definition as object_defs
 import event_definition as event_defs
 
-class RecoPlots(SL_DL_event_selection):
+class SL_DL_variables(SL_DL_event_selection):
     def __init__(self, args):
         super(RecoPlots, self).__init__(args)
 

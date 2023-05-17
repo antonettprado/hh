@@ -7,7 +7,7 @@ from bamboo.analysismodules import NanoAODHistoModule
 import object_definition as object_defs
 import event_definition as event_defs
 
-class GenLevelPlots(NanoAODHistoModule):
+class gen_variables(NanoAODHistoModule):
 
     def __init__(self, args):
         super(GenLevelPlots, self).__init__(args)

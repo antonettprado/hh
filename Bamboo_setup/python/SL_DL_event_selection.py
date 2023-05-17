@@ -12,12 +12,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_event_selection, self).__init__(args)
 
-    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
-        plots = []
-        yields = CutFlowReport("yields", printInLog=True, recursive=False)
-        plots.append(yields)
-        yields.add(noSel, 'Basic Event Selection')
-
+    def object_and_event_selection(self, tree, noSel):
         # ===============================================================================
         # ============================= Object Selection ================================
         # ===============================================================================
@@ -180,30 +175,38 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             cut=[op.OR(
                 event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                 event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
-        
-        #emuPair = op.combine((clElectrons, muons), N=2,
-        #                     pred=lambda el, mu: el.charge != mu.charge)
-        #eePair = op.combine(clElectrons, N=2, pred=lambda el1,
-        #                    el2: el1.charge != el2.charge)
-        #mumuPair = op.combine(muons, N=2, pred=lambda mu1,
-        #                      mu2: mu1.charge != mu2.charge)
 
-        #firstEMUpair = emuPair[0]
-        #firstEEpair = eePair[0]
-        #firstMUMUpair = mumuPair[0]
+        objects = [tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak8_jets, met_pt, ht_jets]
+        selections = [SL_e_sel, SL_mu_sel, DL_ee_sel, DL_emu_sel, DL_mumu_sel, SL_lep_sel, DL_lep_sel]
+        resolved_sels = [SL_lep_resolved_sel, DL_lep_resolved_sel]
 
+        return objects, selections, resolved_sels
+
+    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+        plots = []
+        yields = CutFlowReport("yields", printInLog=True, recursive=False)
+        plots.append(yields)
+        yields.add(noSel, 'Basic Event Selection')
+
+        objects, selections = object_and_event_selection(self, tree, noSel)
+        tight_electrons = objects[0]
+        tight_muons = objects[1]
+        cleaned_ak4_jets = object[2]
+        cleaned_ak8_jets = objects[3]
+        met_pt = object[4]
+        ht_jets = object[5]
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
 
         plot_sel = []
-        plot_sel.append(["SL_e", SL_e_sel])
-        plot_sel.append(["SL_mu", SL_mu_sel])
-        plot_sel.append(["DL_ee", DL_ee_sel])
-        plot_sel.append(["DL_emu", DL_emu_sel])
-        plot_sel.append(["DL_mumu", DL_mumu_sel])
-        plot_sel.append(["SL", SL_lep_sel])
-        plot_sel.append(["DL", DL_lep_sel])
+        plot_sel.append(["SL_e", selections[0]])
+        plot_sel.append(["SL_mu", selections[1]])
+        plot_sel.append(["DL_ee", selections[2]])
+        plot_sel.append(["DL_emu", selections[3]])
+        plot_sel.append(["DL_mumu", selections[4]])
+        plot_sel.append(["SL", selections[5]])
+        plot_sel.append(["DL", selections[6]])
 
         for sel in plot_sel:
             plots.extend([
