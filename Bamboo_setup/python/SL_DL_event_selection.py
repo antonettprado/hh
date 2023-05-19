@@ -162,19 +162,28 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Dilepton 
-        DL_lep_only_sel = mllSel.refine("DL only selection", 
-            cut=[op.OR(
-                event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
-                event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
-                event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT))])
-        DL_lep_resolved_sel = DL_lep_only_sel.refine("DL resolved jet selection", 
-            cut=[event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_lep_boosted_sel = DL_lep_only_sel.refine("DL boosted jet selection", 
-            cut=[event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_lep_sel = DL_lep_only_sel.refine("DL selection", 
-            cut=[op.OR(
-                event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
-                event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        DL_lep_only_sel = mllSel.refine("DL only selection", cut=[op.OR(
+            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
+            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
+            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT))])
+        DL_lep_resolved_sel = DL_lep_only_sel.refine("DL resolved jet selection", cut=[
+            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        DL_lep_boosted_sel = DL_lep_only_sel.refine("DL boosted jet selection", cut=[
+            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        DL_lep_sel = DL_lep_only_sel.refine("DL selection", cut=[op.OR(
+            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
+            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+
+        # Both
+        # SL_and_DL_only_sel = mllSel.refine("SL or DL only selection", cut=[op.OR(
+        #     event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
+        #     event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
+        #     event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
+        #     event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
+        #     event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT))])
+        # SL_and_DL_resolved_sel = SL_and_DL_only_sel.refine("SL and DL resolved", cut=[op.OR(
+        #     event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
+        #     event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         objects = [tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak8_jets, met_pt, ht_jets]
         selections = [SL_e_sel, SL_mu_sel, DL_ee_sel, DL_emu_sel, DL_mumu_sel, SL_lep_sel, DL_lep_sel]
