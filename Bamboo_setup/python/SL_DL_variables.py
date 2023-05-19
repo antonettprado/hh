@@ -5,12 +5,13 @@ from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
 from SL_DL_event_selection import SL_DL_event_selection
+from variable_ranges import *
 import object_definition as object_defs
 import event_definition as event_defs
 
 class SL_DL_variables(SL_DL_event_selection):
     def __init__(self, args):
-        super(RecoPlots, self).__init__(args)
+        super(SL_DL_variables, self).__init__(args)
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
         plots = []
@@ -60,9 +61,9 @@ class SL_DL_variables(SL_DL_event_selection):
 
             sel, tag = get_selection(sel_string)
             plots.extend([
-                Plot.make1D("bjets_mean_pT"+tag, bjets_mean_pT, sel, EqBin(250, 0, 500), title="", xTitle="<p_{T}> for bjets (GeV)"),
-                Plot.make1D("bjets_deltaPhi"+tag, bjets_deltaPhi, sel, EqBin(100, 0, 4), title="", xTitle="deltaPhi for bjets"),
-                Plot.make1D("bjets_deltaR"+tag, bjets_deltaR, sel, EqBin(350, 0, 7), title="", xTitle="deltaR for bjets")
+                Plot.make1D("bjets_mean_pT"+tag, bjets_mean_pT, sel, EqBin(BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
+                Plot.make1D("bjets_deltaPhi"+tag, bjets_deltaPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="deltaPhi for bjets"),
+                Plot.make1D("bjets_deltaR"+tag, bjets_deltaR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="deltaR for bjets")
             ])
 
         def get_m_top_for_SL(bJets, nonbJets, electrons, muons, MET, sel_string):
@@ -88,16 +89,16 @@ class SL_DL_variables(SL_DL_event_selection):
             sel, tag = get_selection(sel_string)
             m_top_sel = sel.refine("m_top_sel", cut=[op.rng_len(nonbJets)>=2])
             plots.extend([
-                Plot.make1D("t1_mInv_b1_jj"+tag, t1_mInv_b1_jj, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
-                Plot.make1D("t2_mT"+tag, t2_mT, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D("tops_m_avg"+tag, tops_m_avg, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{avg} for tops (GeV)"),
+                Plot.make1D("t1_mInv_b1_jj"+tag, t1_mInv_b1_jj, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX ), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
+                Plot.make1D("t2_mT"+tag, t2_mT, m_top_sel, EqBin(T2_BINS, T2_MIN, T2_MAX ), title="", xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D("tops_m_avg"+tag, tops_m_avg, m_top_sel, EqBin(T_AVG_BINS, T_AVG_MIN, T_AVG_MAX), title="", xTitle="m_{avg} for tops (GeV)"),
             ])
 
         def get_final_state_totals(electrons, muons, jets, MET, sel_string):
             
             total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
             total_mu_pt = op.rng_sum(muons, lambda mu: mu.pt)
-            total_jet_pt = op.rng_sum(genJets, lambda jet: jet.pt)
+            total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
             all_sT = op.sum(total_e_pt, total_mu_pt, total_jet_pt, MET.pt)
 
             total_el_p4_start = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
@@ -115,11 +116,11 @@ class SL_DL_variables(SL_DL_event_selection):
 
             sel, tag = get_selection(sel_string)
             plots.extend([
-                Plot.make1D("all_mInv_noMET"+tag, all_mInv_noMET, sel, EqBin(1500,0,3000), title="mInv_all", xTitle="m_{inv} (GeV)"),
-                Plot.make1D("all_mT_noMET"+tag, all_mT_noMET, sel, EqBin(1500,0,3000), title="mT_all", xTitle="m_{T} (GeV)"),
-                Plot.make1D("all_mInv"+tag, all_mInv, sel, EqBin(1500,0,3000), title="mInv_all", xTitle="m_{inv} (GeV)"),
-                Plot.make1D("all_mT"+tag, all_mT, sel, EqBin(1500,0,3000), title="mT_all", xTitle="m_{T} (GeV)"),
-                Plot.make1D("all_sT"+tag, all_sT, sel, EqBin(1000,0,2000), title="sT_all", xTitle="s_{T} (GeV)"),
+                Plot.make1D("all_mInv_noMET"+tag, all_mInv_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX ), title="mInv_all", xTitle="m_{inv} (GeV)"),
+                Plot.make1D("all_mT_noMET"+tag, all_mT_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX ), title="mT_all", xTitle="m_{T} (GeV)"),
+                Plot.make1D("all_mInv"+tag, all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX ), title="mInv_all", xTitle="m_{inv} (GeV)"),
+                Plot.make1D("all_mT"+tag, all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
+                Plot.make1D("all_sT"+tag, all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
             ])
 
         get_bjets_params(bJets, "SL_sel")
