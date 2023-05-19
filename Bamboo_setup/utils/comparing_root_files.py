@@ -2,11 +2,17 @@ import ROOT
 import os
 from pathlib import Path
 from variable_ranges import *
+import os
+
+SOURCE_DIR = 'results_reco_tests/results/'
+OUT_PATH = 'Comparisons/'
+
+if not os.path.exists(OUT_PATH):
+    os.makedirs(OUT_PATH)
 
 # ROOT.gStyle.SetOptStat(111111)
 ROOT.gStyle.SetPalette(1)
-SOURCE_DIR = 'results_reco_tests/results/'
-OUT_PATH = 'Comparisons/'
+
 
 def add_chanels(object_name, f, bins, h_xmin, h_xmax):
     full_object_name_SL = object_name + '_SL'
@@ -24,7 +30,7 @@ def add_chanels(object_name, f, bins, h_xmin, h_xmax):
     return hist_both
 
 def add_signal(bbWW_sl, bbWW_dl, bbtautau, object_name, bins, h_xmin, h_xmax, titles, add_channels=False):
-    print(object_name)
+
     if add_channels is True:
         hist_bbWW_sl = add_chanels(object_name, bbWW_sl, bins, h_xmin, h_xmax)
         hist_bbWW_dl = add_chanels(object_name, bbWW_dl, bins, h_xmin, h_xmax)
