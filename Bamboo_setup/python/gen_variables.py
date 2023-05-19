@@ -4,13 +4,14 @@ from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
 from bamboo.analysismodules import NanoAODHistoModule
+from variable_ranges import *
 import object_definition as object_defs
 import event_definition as event_defs
 
 class gen_variables(NanoAODHistoModule):
 
     def __init__(self, args):
-        super(GenLevelPlots, self).__init__(args)
+        super(gen_variables, self).__init__(args)
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
         return super(NanoAODHistoModule, self).prepareTree(tree=tree,
@@ -99,9 +100,9 @@ class gen_variables(NanoAODHistoModule):
                 Plot.make1D("n_genJets", op.rng_len(genJets), sel, EqBin(20, 0, 20), title="", xTitle="Nbr. of genJets"),
                 Plot.make1D("n_nonbJets", op.rng_len(nonbJets), sel, EqBin(20, 0, 20), title="", xTitle="Nbr. of nonbJets"),
                 Plot.make1D("n_bJets", op.rng_len(bJets), sel, EqBin(20, 0, 20), title="", xTitle="Nbr. of bJets"),
-                Plot.make1D("bjets_mbb", mbb, sel, EqBin(250, 0, 500), title="b-GenJets m_{bb}", xTitle="m_{bb} (GeV)"),
-                Plot.make1D("bjets0_pT", bJets[0].pt, sel, EqBin(250,0,500), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
-                Plot.make1D("bjets1_pT", bJets[1].pt, sel, EqBin(250,0,500), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
+                Plot.make1D("bjets_mbb", mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b-GenJets m_{bb}", xTitle="m_{bb} (GeV)"),
+                Plot.make1D("bjets0_pT", bJets[0].pt, sel, EqBin(BJET0_PT_BINS, BJET0_MIN, BJET0_MAX), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
+                Plot.make1D("bjets1_pT", bJets[1].pt, sel, EqBin(BJET1_PT_BINS, BJET1_MIN, BJET1_MAX), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
             ])
         
         def get_bjets_params(bJets, sel_string):
@@ -113,9 +114,9 @@ class gen_variables(NanoAODHistoModule):
 
             sel, tag = get_selection(sel_string)
             plots.extend([
-                Plot.make1D("bjets_mean_pT"+tag, bjets_mean_pT, sel, EqBin(250, 0, 500), title="", xTitle="<p_{T}> for bjets (GeV)"),
-                Plot.make1D("bjets_deltaPhi"+tag, bjets_deltaPhi, sel, EqBin(100, 0, 4), title="", xTitle="deltaPhi for bjets"),
-                Plot.make1D("bjets_deltaR"+tag, bjets_deltaR, sel, EqBin(350, 0, 7), title="", xTitle="deltaR for bjets")
+                Plot.make1D("bjets_mean_pT"+tag, bjets_mean_pT, sel, EqBin(BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
+                Plot.make1D("bjets_deltaPhi"+tag, bjets_deltaPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="deltaPhi for bjets"),
+                Plot.make1D("bjets_deltaR"+tag, bjets_deltaR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="deltaR for bjets")
             ])
 
         def get_m_top_for_SL(bJets, nonbJets, electrons, muons, MET, sel_string):
@@ -141,9 +142,9 @@ class gen_variables(NanoAODHistoModule):
             sel, tag = get_selection(sel_string)
             m_top_sel = sel.refine("m_top_sel", cut=[op.rng_len(nonbJets)>=2])
             plots.extend([
-                Plot.make1D("t1_mInv_b1_jj"+tag, t1_mInv_b1_jj, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
-                Plot.make1D("t2_mT"+tag, t2_mT, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D("tops_m_avg"+tag, tops_m_avg, m_top_sel, EqBin(500, 0, 500), title="", xTitle="m_{avg} for tops (GeV)"),
+                Plot.make1D("t1_mInv_b1_jj"+tag, t1_mInv_b1_jj, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
+                Plot.make1D("t2_mT"+tag, t2_mT, m_top_sel, EqBin(T2_BINS, T2_MIN, T2_MAX), title="", xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D("tops_m_avg"+tag, tops_m_avg, m_top_sel, EqBin(T_AVG_BINS, T_AVG_MIN, T_AVG_MAX), title="", xTitle="m_{avg} for tops (GeV)"),
             ])
 
         def get_final_state_totals(electrons, muons, jets, MET, sel_string):
@@ -168,14 +169,16 @@ class gen_variables(NanoAODHistoModule):
 
             sel, tag = get_selection(sel_string)
             plots.extend([
-                Plot.make1D("all_mInv_noMET"+tag, all_mInv_noMET, sel, EqBin(1500,0,3000), title="mInv_all", xTitle="m_{inv} (GeV)"),
-                Plot.make1D("all_mT_noMET"+tag, all_mT_noMET, sel, EqBin(1500,0,3000), title="mT_all", xTitle="m_{T} (GeV)"),
-                Plot.make1D("all_mInv"+tag, all_mInv, sel, EqBin(1500,0,3000), title="mInv_all", xTitle="m_{inv} (GeV)"),
-                Plot.make1D("all_mT"+tag, all_mT, sel, EqBin(1500,0,3000), title="mT_all", xTitle="m_{T} (GeV)"),
-                Plot.make1D("all_sT"+tag, all_sT, sel, EqBin(1000,0,2000), title="sT_all", xTitle="s_{T} (GeV)"),
+                Plot.make1D("all_mInv_noMET"+tag, all_mInv_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
+                Plot.make1D("all_mT_noMET"+tag, all_mT_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
+                Plot.make1D("all_mInv"+tag, all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
+                Plot.make1D("all_mT"+tag, all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
+                Plot.make1D("all_sT"+tag, all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
             ])
 
         get_m_H(bParts_from_H, bJets, "BOTH_sels")
+        get_bjets_params(bJets, "SL_sel")
+        get_bjets_params(bJets, "DL_sel")
         get_bjets_params(bJets, "BOTH_sels")
         get_m_top_for_SL(bJets, nonbJets, genElectrons, genMuons, MET, "SL_sel")
         get_final_state_totals(genElectrons, genMuons, selected_genJets, MET, "SL_sel")
