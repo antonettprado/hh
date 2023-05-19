@@ -1,50 +1,81 @@
 import ROOT
 import os
 from pathlib import Path
-from HH_bbWW_hists_values import *
+from variable_ranges import *
 
 # ROOT.gStyle.SetOptStat(111111)
 ROOT.gStyle.SetPalette(1)
+SOURCE_DIR = 'results_reco_tests/results/'
 OUT_PATH = 'Comparisons/'
 
-def add_sl_hists(f1, obs, bins, h_xmin, h_xmax, titles):
-    h_e = f1.Get("sl_e_" + obs)
-    h_mu = f1.Get("sl_mu_" + obs)
+def add_chanels(object_name, f, bins, h_xmin, h_xmax):
+    full_object_name_SL = object_name + '_SL'
+    full_object_name_DL = object_name + '_DL'
 
-    h_total = ROOT.TH1F("hist","", bins, h_xmin, h_xmax)
-    h_total.SetTitle(titles[0])
-    h_total.GetXaxis().SetTitle(titles[1])
-    h_total.GetYaxis().SetTitle(titles[2])
-    h_total.Add(h_e)
-    h_total.Add(h_mu)
+    hist_SL = f.Get(full_object_name_SL)
+    hist_DL = f.Get(full_object_name_DL)
+    hist_both = ROOT.TH1F("hist","", bins, h_xmin, h_xmax)
+    hist_both.Add(hist_SL)
+    hist_both.Add(hist_DL)
 
-    h_total = ROOT.gDirectory.Get("hist")
-    h_total.SetDirectory(0)
+    hist_both = ROOT.gDirectory.Get("hist")
+    hist_both.SetDirectory(0)
 
-    return h_total
+    return hist_both
 
-def add_dl_hists(f1, obs, bins, h_xmin, h_xmax, titles):
-    h_ee = f1.Get("dl_ee_" + obs)
-    h_mumu = f1.Get("dl_mumu_" + obs)
-    h_emu = f1.Get("dl_emu_" + obs)
+def add_signal(bbWW_sl, bbWW_dl, bbtautau, object_name, bins, h_xmin, h_xmax, titles, add_channels=False):
+    print(object_name)
+    if add_channels is True:
+        hist_bbWW_sl = add_chanels(object_name, bbWW_sl, bins, h_xmin, h_xmax)
+        hist_bbWW_dl = add_chanels(object_name, bbWW_dl, bins, h_xmin, h_xmax)
+        hist_bbtautau = add_chanels(object_name, bbtautau, bins, h_xmin, h_xmax)
+    else:
+        hist_bbWW_sl = bbWW_sl.Get(object_name)
+        hist_bbWW_dl = bbWW_dl.Get(object_name)
+        hist_bbtautau = bbtautau.Get(object_name)
 
-    h_total = ROOT.TH1F("hist","", bins, h_xmin, h_xmax)
-    h_total.SetTitle(titles[0])
-    h_total.GetXaxis().SetTitle(titles[1])
-    h_total.GetYaxis().SetTitle(titles[2])
-    h_total.Add(h_ee)
-    h_total.Add(h_mumu)
-    h_total.Add(h_emu)
+    total_signal = ROOT.TH1F("total_signal","", bins, h_xmin, h_xmax)
+    total_signal.SetTitle(titles[0])
+    total_signal.GetXaxis().SetTitle(titles[1])
+    total_signal.GetYaxis().SetTitle(titles[2])
 
-    h_total = ROOT.gDirectory.Get("hist")
-    h_total.SetDirectory(0)
+    total_signal.Add(hist_bbWW_sl,1)
+    total_signal.Add(hist_bbWW_dl,1)
+    total_signal.Add(hist_bbtautau,1)
 
-    return h_total
+    total_signal = ROOT.gDirectory.Get("total_signal")
+    total_signal.SetDirectory(0)
 
-def draw_hists(h1, h2, r_xmin, r_xmax, obs, channel):
+    return total_signal
+    
+def add_background(ttbar_sl, ttbar_dl, object_name, bins, h_xmin, h_xmax, titles, add_channels=False):
+
+    if add_channels is True:
+        hist_ttbar_sl = add_chanels(object_name, ttbar_sl, bins, h_xmin, h_xmax)
+        hist_ttbar_dl = add_chanels(object_name, ttbar_dl, bins, h_xmin, h_xmax)
+    else:
+        hist_ttbar_sl = ttbar_sl.Get(object_name)
+        hist_ttbar_dl = ttbar_dl.Get(object_name)
+
+    total = ROOT.TH1F("backg","", bins, h_xmin, h_xmax)
+    total.SetTitle(titles[0])
+    total.GetXaxis().SetTitle(titles[1])
+    total.GetYaxis().SetTitle(titles[2])
+    total.Add(hist_ttbar_sl)
+    total.Add(hist_ttbar_dl)
+
+    total = ROOT.gDirectory.Get("backg")
+    total.SetDirectory(0)
+
+    return total
+
+def draw_hists(h1, h2, r_xmin, r_xmax, obs):
+
+    h1.Scale(1.0/h1.Integral())
+    h2.Scale(1.0/h2.Integral())
 
     canvas= ROOT.TCanvas('canvas', '', 200, 200)
-    canvas.SetLogy()
+    # canvas.SetLogy()
     canvas.SetGrid()
 
     h1.SetLineColor(ROOT.kBlue)
@@ -53,7 +84,7 @@ def draw_hists(h1, h2, r_xmin, r_xmax, obs, channel):
     h2.SetLineWidth(3)
 
     h1.GetXaxis().SetRangeUser(r_xmin, r_xmax)
-    h1.GetYaxis().SetRangeUser(1, 1.1*max(h1.GetMaximum(), h2.GetMaximum()))
+    h1.GetYaxis().SetRangeUser(0, 1.1*max(h1.GetMaximum(), h2.GetMaximum()))
     h1.Draw()
     h2.Draw("sames")
     canvas.Update()
@@ -70,114 +101,75 @@ def draw_hists(h1, h2, r_xmin, r_xmax, obs, channel):
     s2.SetX2NDC(s1.GetX2NDC())
     s2.SetY2NDC(0.6)
 
-    if channel == "sl":
-        out_file = "sl_" + obs + '.pdf'
-    elif channel == "dl":
-        out_file = "dl_" + obs + '.pdf'
+    canvas.SaveAs(OUT_PATH + obs + '.pdf')
 
-    canvas.SaveAs(OUT_PATH + out_file)
+f1 = ROOT.TFile.Open(SOURCE_DIR + "bbWW_sl.root", 'read')
+f2 = ROOT.TFile.Open(SOURCE_DIR + "bbWW_dl.root", 'read')
+f3 = ROOT.TFile.Open(SOURCE_DIR + "bbtautau.root", 'read')
+f4 = ROOT.TFile.Open(SOURCE_DIR + "TTbar_sl.root", 'read')
+f5 = ROOT.TFile.Open(SOURCE_DIR + "TTbar_dl.root", 'read')
 
-root_file = "bbWW_sl.root"
-source_dir_gen = "results_gen_tests/results/"
-source_dir_reco = "results_reco_tests/results/"
+object_name = "bjets_mean_pT"
+titles = ['bJets mean pT', 'pT (GeV)', '']
+bins, h_xmin, h_xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, True)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, True)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-filename1 = source_dir_gen + root_file
-filename2 = source_dir_reco + root_file
+object_name = "bjets_deltaPhi"
+titles = ['bJets Delta Phi', 'Delta Phi', '']
+bins, h_xmin, h_xmax = BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX 
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, True)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, True)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-f1 = ROOT.TFile.Open(filename1, 'read')
-f2 = ROOT.TFile.Open(filename2, 'read')
+object_name = "bjets_deltaR"
+titles = ['bJets DeltaR', 'DeltaR', '']
+bins, h_xmin, h_xmax = BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, True)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, True)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-print(" SL plots -----------------------------------------------")
-obs = "dxy_0"
-titles = ['dxy - SL', 'dxy', 'Frequency']
-h_bbWW_sl_dxy_0 = add_sl_hists(f1, obs, DXY_BINS, DXY_XMIN, DXY_XMAX , titles)
-h_bbtautau_sl_dxy_0 = add_sl_hists(f2, obs, DXY_BINS, DXY_XMIN, DXY_XMAX, titles)
-draw_hists(h_bbWW_sl_dxy_0, h_bbtautau_sl_dxy_0, -0.1, 0.1, obs, "sl")
+#=========================================================================
+object_name = "t1_mInv_b1_jj_SL"
+titles = ['Inv. mass for t1', 'm_{inv} (GeV)', '']
+bins, h_xmin, h_xmax = T1_BINS, T1_MIN, T1_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-obs = "dz_0"
-titles = ['dz - SL', 'dz', 'Frequency']
-h_bbWW_sl_dz_0 = add_sl_hists(f1, obs, DZ_BINS, DZ_XMIN, DZ_XMAX, titles)
-h_bbtautau_sl_dz_0 = add_sl_hists(f2, obs, DZ_BINS, DZ_XMIN, DZ_XMAX, titles)
-draw_hists(h_bbWW_sl_dz_0, h_bbtautau_sl_dz_0, -0.15, 0.15, obs, "sl")
+object_name = "t2_mT_SL"
+titles = ['Inv. mass for t1', 'm_{inv} (GeV)', '']
+bins, h_xmin, h_xmax = T2_BINS, T2_MIN, T2_MAX 
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-obs = "sigma_d_0"
-titles = ['sigma_d - SL', 'sigma_d', 'Frequency']
-h_bbWW_sl_sigma_d_0 = add_sl_hists(f1, obs, SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX, titles)
-h_bbtautau_sl_sigma_d_0 = add_sl_hists(f2, obs, SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX, titles)
-draw_hists(h_bbWW_sl_sigma_d_0, h_bbtautau_sl_sigma_d_0, 0, 0.1, obs, "sl")
+object_name = "tops_m_avg_SL"
+titles = ['Inv. mass for t1', 'm_{inv} (GeV)', '']
+bins, h_xmin, h_xmax = T_AVG_BINS, T_AVG_MIN, T_AVG_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-obs = "ip3d_0"
-titles = ['ip3d - SL', 'ip3d', 'Frequency']
-h_bbWW_sl_ip3d_0 = add_sl_hists(f1, obs, IP3D_BINS, IP3D_XMIN, IP3D_XMAX, titles)
-h_bbtautau_sl_ip3d_0 = add_sl_hists(f2, obs, IP3D_BINS, IP3D_XMIN, IP3D_XMAX, titles)
-draw_hists(h_bbWW_sl_ip3d_0, h_bbtautau_sl_ip3d_0, 0, 0.1, obs, "sl")
+#=========================================================================
+object_name = "all_mInv"
+titles = ['Inv. mass for all', 'm_{inv}', '']
+bins, h_xmin, h_xmax = ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, True)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, True)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-obs = "significance_d_0"
-titles = ['significance_d - SL', 'significance_d', 'Frequency']
-h_bbWW_sl_significance_d_0 = add_sl_hists(f1, obs, SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX, titles)
-h_bbtautau_sl_significance_d_0 = add_sl_hists(f2, obs, SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX, titles)
-draw_hists(h_bbWW_sl_significance_d_0, h_bbtautau_sl_significance_d_0, 0, 25, obs, "sl")
- 
-print(" DL plots -----------------------------------------------")
-obs = "dxy_0"
-titles = ['dxy - DL (Leading lepton)', 'dxy', 'Frequency']
-h_bbWW_dl_dxy_0 = add_dl_hists(f1, obs, DXY_BINS, DXY_XMIN, DXY_XMAX , titles)
-h_bbtautau_dl_dxy_0 = add_dl_hists(f2, obs, DXY_BINS, DXY_XMIN, DXY_XMAX , titles)
-draw_hists(h_bbWW_dl_dxy_0, h_bbtautau_dl_dxy_0, -0.1, 0.1, obs, "dl")
+object_name = "all_mT"
+titles = ['Transv. mass for all', 'm_{T}', '']
+bins, h_xmin, h_xmax = ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX 
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, True)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, True)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
 
-obs = "dz_0"
-titles = ['dz - DL (Leading lepton)', 'dz', 'Frequency']
-h_bbWW_dl_dz_0 = add_dl_hists(f1, obs, DZ_BINS, DZ_XMIN, DZ_XMAX, titles)
-h_bbtautau_dl_dz_0 = add_dl_hists(f2, obs, DZ_BINS, DZ_XMIN, DZ_XMAX, titles)
-draw_hists(h_bbWW_dl_dz_0, h_bbtautau_dl_dz_0, -0.15, 0.15, obs, "dl")
-
-obs = "sigma_d_0"
-titles = ['sigma_d - DL (Leading lepton)', 'sigma_d', 'Frequency']
-h_bbWW_dl_sigma_d_0 = add_dl_hists(f1, obs, SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX, titles)
-h_bbtautau_dl_sigma_d_0 = add_dl_hists(f2, obs, SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX, titles)
-draw_hists(h_bbWW_dl_sigma_d_0, h_bbtautau_dl_sigma_d_0, 0, 0.1, obs, "dl")
-
-obs = "ip3d_0"
-titles = ['ip3d - DL (Leading lepton)', 'ip3d', 'Frequency']
-h_bbWW_dl_ip3d_0 = add_dl_hists(f1, obs, IP3D_BINS, IP3D_XMIN, IP3D_XMAX, titles)
-h_bbtautau_dl_ip3d_0 = add_dl_hists(f2, obs, IP3D_BINS, IP3D_XMIN, IP3D_XMAX, titles)
-draw_hists(h_bbWW_dl_ip3d_0, h_bbtautau_dl_ip3d_0, 0, 0.1, obs, "dl")
-
-obs = "significance_d_0"
-titles = ['significance_d - DL (Leading lepton)', 'significance_d', 'Frequency']
-h_bbWW_dl_significance_d_0 = add_dl_hists(f1, obs, SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX, titles)
-h_bbtautau_dl_significance_d_0 = add_dl_hists(f2, obs, SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX, titles)
-draw_hists(h_bbWW_dl_significance_d_0, h_bbtautau_dl_significance_d_0, 0, 25, obs, "dl")
-
-# -----------------------------------
-
-obs = "dxy_1"
-titles = ['dxy - DL (Subleading lepton)', 'dxy', 'Frequency']
-h_bbWW_dl_dxy_0 = add_dl_hists(f1, obs, DXY_BINS, DXY_XMIN, DXY_XMAX , titles)
-h_bbtautau_dl_dxy_0 = add_dl_hists(f2, obs, DXY_BINS, DXY_XMIN, DXY_XMAX , titles)
-draw_hists(h_bbWW_dl_dxy_0, h_bbtautau_dl_dxy_0, -0.1, 0.1, obs, "dl")
-
-obs = "dz_1"
-titles = ['dz - DL (Subleading lepton)', 'dz', 'Frequency']
-h_bbWW_dl_dz_0 = add_dl_hists(f1, obs, DZ_BINS, DZ_XMIN, DZ_XMAX, titles)
-h_bbtautau_dl_dz_0 = add_dl_hists(f2, obs, DZ_BINS, DZ_XMIN, DZ_XMAX, titles)
-draw_hists(h_bbWW_dl_dz_0, h_bbtautau_dl_dz_0, -0.15, 0.15, obs, "dl")
-
-obs = "sigma_d_1"
-titles = ['sigma_d - DL (Subleading lepton)', 'sigma_d', 'Frequency']
-h_bbWW_dl_sigma_d_0 = add_dl_hists(f1, obs, SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX, titles)
-h_bbtautau_dl_sigma_d_0 = add_dl_hists(f2, obs, SIGMA_D_BINS, SIGMA_D_XMIN, SIGMA_D_XMAX, titles)
-draw_hists(h_bbWW_dl_sigma_d_0, h_bbtautau_dl_sigma_d_0, 0, 0.1, obs, "dl")
-
-obs = "ip3d_1"
-titles = ['ip3d - DL (Subleading lepton)', 'ip3d', 'Frequency']
-h_bbWW_dl_ip3d_0 = add_dl_hists(f1, obs, IP3D_BINS, IP3D_XMIN, IP3D_XMAX, titles)
-h_bbtautau_dl_ip3d_0 = add_dl_hists(f2, obs, IP3D_BINS, IP3D_XMIN, IP3D_XMAX, titles)
-draw_hists(h_bbWW_dl_ip3d_0, h_bbtautau_dl_ip3d_0, 0, 0.1, obs, "dl")
-
-obs = "significance_d_1"
-titles = ['significance_d - DL (Subleading lepton)', 'significance_d', 'Frequency']
-h_bbWW_dl_significance_d_0 = add_dl_hists(f1, obs, SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX, titles)
-h_bbtautau_dl_significance_d_0 = add_dl_hists(f2, obs, SIGNIFICANCE_D_BINS, SIGNIFICANCE_D_XMIN, SIGNIFICANCE_D_XMAX, titles)
-draw_hists(h_bbWW_dl_significance_d_0, h_bbtautau_dl_significance_d_0, 0, 25, obs, "dl")
-
+object_name = "all_sT"
+titles = ['s_{T} for all', 's_{T}', '']
+bins, h_xmin, h_xmax = ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, True)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, True)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
