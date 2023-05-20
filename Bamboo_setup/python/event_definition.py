@@ -57,6 +57,22 @@ def sl_resolved_jet_selection(ak4_jets, ak4_btags, ak8_btags):
         )
     )
 
+def sl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
+    return (op.AND(
+        op.rng_len(ak8_btags) == 0,
+        op.rng_len(ak4_jets) >= 3, 
+        op.rng_len(ak4_btags) == 1
+        )
+    )
+
+def sl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
+    return (op.AND(
+        op.rng_len(ak8_btags) == 0,
+        op.rng_len(ak4_jets) >= 3, 
+        op.rng_len(ak4_btags) >= 2
+        )
+    )
+
 def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) >= 1,
@@ -109,6 +125,22 @@ def dl_resolved_jet_selection(ak4_jets, ak4_btags, ak8_btags):
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 1, 
         op.rng_len(ak4_btags) >= 1
+        )
+    )
+
+def dl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
+    return (op.AND(
+        op.rng_len(ak8_btags) == 0,
+        op.rng_len(ak4_jets) >= 1, 
+        op.rng_len(ak4_btags) == 1
+        )
+    )
+
+def dl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
+    return (op.AND(
+        op.rng_len(ak8_btags) == 0,
+        op.rng_len(ak4_jets) >= 1, 
+        op.rng_len(ak4_btags) >= 2
         )
     )
 
