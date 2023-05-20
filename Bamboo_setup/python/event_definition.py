@@ -139,7 +139,7 @@ def dl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
 def dl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
-        op.rng_len(ak4_jets) >= 1, 
+        op.rng_len(ak4_jets) >= 2, 
         op.rng_len(ak4_btags) >= 2
         )
     )

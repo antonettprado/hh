@@ -195,12 +195,71 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
+        objects = {}
+        selections = {}
 
-        objects = [tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak8_jets, met_pt, ht_jets]
-        selections = [SL_e_sel, SL_mu_sel, DL_ee_sel, DL_emu_sel, DL_mumu_sel, SL_lep_sel, DL_lep_sel]
-        resolved_sels = [SL_lep_resolved_sel, DL_lep_resolved_sel]
+        objects["tight_electrons"] = tight_electrons
+        objects["tight_muons"] = tight_muons
+        objects["cleaned_ak4_jets"] = cleaned_ak4_jets
+        objects["cleaned_ak4_btags"] = cleaned_ak4_btags
+        objects["cleaned_ak8_btags"] = cleaned_ak8_btags
+        objects["met_pt"] = met_pt
+        objects["met_phi"] = met_phi
+        objects["ht_jets"] = ht_jets
+        objects["mht"] = mht 
+        objects["met_ld"] = met_ld
 
-        return objects, selections, resolved_sels
+        selections["SL_e"] = {}
+        selections["SL_mu"] = {} 
+        selections["SL"] = {} 
+        selections["DL_ee"] = {}
+        selections["DL_emu"] = {}
+        selections["DL_mumu"] = {}
+        selections["DL"] = {}
+
+        selections["SL_e"]["SL_e_resolved_1b_sel"] = SL_e_resolved_1b_sel
+        selections["SL_e"]["SL_e_resolved_2b_sel"] = SL_e_resolved_2b_sel
+        selections["SL_e"]["SL_e_resolved_sel"] = SL_e_resolved_sel
+        selections["SL_e"]["SL_e_boosted_sel"] = SL_e_boosted_sel
+        selections["SL_e"]["SL_e_sel"] = SL_e_sel
+
+        selections["SL_mu"]["SL_mu_resolved_1b_sel"] = SL_mu_resolved_1b_sel
+        selections["SL_mu"]["SL_mu_resolved_2b_sel"] = SL_mu_resolved_2b_sel
+        selections["SL_mu"]["SL_mu_resolved_sel"] = SL_mu_resolved_sel
+        selections["SL_mu"]["SL_mu_boosted_sel"] = SL_mu_boosted_sel
+        selections["SL_mu"]["SL_mu_sel"] = SL_mu_sel
+
+        selections["SL"]["SL_lep_resolved_1b_sel"] = SL_lep_resolved_1b_sel
+        selections["SL"]["SL_lep_resolved_2b_sel"] = SL_lep_resolved_2b_sel
+        selections["SL"]["SL_lep_resolved_sel"] = SL_lep_resolved_sel
+        selections["SL"]["SL_lep_boosted_sel"] = SL_lep_boosted_sel
+        selections["SL"]["SL_lep_sel"] = SL_lep_sel
+
+        selections["DL_ee"]["DL_ee_resolved_1b_sel"] = DL_ee_resolved_1b_sel
+        selections["DL_ee"]["DL_ee_resolved_2b_sel"] = DL_ee_resolved_2b_sel
+        selections["DL_ee"]["DL_ee_resolved_sel"] = DL_ee_resolved_sel
+        selections["DL_ee"]["DL_ee_boosted_sel"] = DL_ee_boosted_sel
+        selections["DL_ee"]["DL_ee_sel"] = DL_ee_sel
+
+        selections["DL_emu"]["DL_emu_resolved_1b_sel"] = DL_emu_resolved_1b_sel
+        selections["DL_emu"]["DL_emu_resolved_2b_sel"] = DL_emu_resolved_2b_sel
+        selections["DL_emu"]["DL_emu_resolved_sel"] = DL_emu_resolved_sel
+        selections["DL_emu"]["DL_emu_boosted_sel"] = DL_emu_boosted_sel
+        selections["DL_emu"]["DL_emu_sel"] = DL_emu_sel
+
+        selections["DL_mumu"]["DL_mumu_resolved_1b_sel"] = DL_mumu_resolved_1b_sel
+        selections["DL_mumu"]["DL_mumu_resolved_2b_sel"] = DL_mumu_resolved_2b_sel
+        selections["DL_mumu"]["DL_mumu_resolved_sel"] = DL_mumu_resolved_sel
+        selections["DL_mumu"]["DL_mumu_boosted_sel"] = DL_mumu_boosted_sel
+        selections["DL_mumu"]["DL_mumu_sel"] = DL_mumu_sel
+
+        selections["DL"]["DL_lep_resolved_1b_sel"] = DL_lep_resolved_1b_sel
+        selections["DL"]["DL_lep_resolved_2b_sel"] = DL_lep_resolved_2b_sel
+        selections["DL"]["DL_lep_resolved_sel"] = DL_lep_resolved_sel
+        selections["DL"]["DL_lep_boosted_sel"] = DL_lep_boosted_sel
+        selections["DL"]["DL_lep_sel"] = DL_lep_sel
+
+        return objects, selections
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
         plots = []
@@ -208,53 +267,101 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(yields)
         yields.add(noSel, 'Basic Event Selection')
 
-        objects, selections = object_and_event_selection(self, tree, noSel)
-        tight_electrons = objects[0]
-        tight_muons = objects[1]
-        cleaned_ak4_jets = object[2]
-        cleaned_ak8_jets = objects[3]
-        met_pt = object[4]
-        ht_jets = object[5]
+        objects, selections = self.object_and_event_selection(self, tree, noSel)
+        tight_electrons = objects["tight_electrons"]
+        tight_muons = objects["tight_muons"]
+        cleaned_ak4_jets = objects["cleaned_ak4_jets"]
+        cleaned_ak4_btags = objects["cleaned_ak4_btags"]
+        cleaned_ak8_btags = objects["cleaned_ak8_btags"]
+        met_pt = objects["met_pt"]
+        met_phi = objects["met_phi"]
+        ht_jets = objects["ht_jets"]
+        mht = objects["mht"] 
+        met_ld = objects["met_ld"]
+
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
 
         plot_sel = []
-        plot_sel.append(["SL_e", selections[0]])
-        plot_sel.append(["SL_mu", selections[1]])
-        plot_sel.append(["DL_ee", selections[2]])
-        plot_sel.append(["DL_emu", selections[3]])
-        plot_sel.append(["DL_mumu", selections[4]])
-        plot_sel.append(["SL", selections[5]])
-        plot_sel.append(["DL", selections[6]])
+        plot_sel.append(["SL_e", selections["SL_e"]["SL_e_sel"]])
+        plot_sel.append(["SL_mu", selections["SL_e"]["SL_mu_sel"]])
+        plot_sel.append(["DL_ee", selections["DL_ee"]["DL_ee_sel"]])
+        plot_sel.append(["DL_emu", selections["DL_emu"]["DL_emu_sel"]])
+        plot_sel.append(["DL_mumu", selections["DL_mumu"]["DL_mumu_sel"]])
+        plot_sel.append(["SL", selections["SL"]["SL_lep_sel"]])
+        plot_sel.append(["DL", selections["DL"]["DL_lep_sel"]])
+
+        plots.extend([
+            Plot.make1D("SL_e_pt", tight_electrons[0].pt, selections["SL_e"]["SL_e_sel"], EqBin(250, 0, 500), title="", xTitle="Electron pT (GeV)"),
+            Plot.make1D("SL_e_eta", tight_electrons[0].eta, selections["SL_e"]["SL_e_sel"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
+            Plot.make1D("SL_e_dxy", tight_electrons[0].dxy, selections["SL_e"]["SL_e_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
+            Plot.make1D("SL_e_dz", tight_electrons[0].dz, selections["SL_e"]["SL_e_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
+            Plot.make1D("SL_e_sip3d", tight_electrons[0].sip3d, selections["SL_e"]["SL_e_sel"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
+
+            Plot.make1D("SL_mu_pt", tight_muons[0].pt, selections["SL_mu"]["SL_mu_sel"], EqBin(250, 0, 500), title="", xTitle="Muon pT (GeV)"),
+            Plot.make1D("SL_mu_eta", tight_muons[0].eta, selections["SL_mu"]["SL_mu_sel"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
+            Plot.make1D("SL_mu_dxy", tight_muons[0].dxy, selections["SL_mu"]["SL_mu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
+            Plot.make1D("SL_mu_dz", tight_muons[0].dz, selections["SL_mu"]["SL_mu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
+            Plot.make1D("SL_mu_sip3d", tight_muons[0].sip3d, selections["SL_mu"]["SL_mu_sel"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
+
+            Plot.make1D("DL_ee_leading_pt", tight_electrons[0].pt, selections["DL_ee"]["DL_ee_sel"], EqBin(250, 0, 500), title="", xTitle="Leading electron pT (GeV)"),
+            Plot.make1D("DL_ee_leading_eta", tight_electrons[0].eta, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -3, 3), title= "", xTitle="Leading electron eta"),
+            Plot.make1D("DL_ee_leading_dxy", tight_electrons[0].dxy, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading electron dxy (cm)"),
+            Plot.make1D("DL_ee_leading_dz", tight_electrons[0].dz, selections["DL_ee"]["DL_ee_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading electron dz (cm)"),
+            Plot.make1D("DL_ee_leading_sip3d", tight_electrons[0].sip3d, selections["DL_ee"]["DL_ee_sel"], EqBin(100, 0, 8), title="", xTitle="Leading electron sip3d"),
+
+            Plot.make1D("DL_ee_subleading_pt", tight_electrons[1].pt, selections["DL_ee"]["DL_ee_sel"], EqBin(250, 0, 500), title="", xTitle="Subleading electron pT (GeV)"),
+            Plot.make1D("DL_ee_subleading_eta", tight_electrons[1].eta, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -3, 3), title= "", xTitle="Subleading electron eta"),
+            Plot.make1D("DL_ee_subleading_dxy", tight_electrons[1].dxy, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading electron dxy (cm)"),
+            Plot.make1D("DL_ee_subleading_dz", tight_electrons[1].dz, selections["DL_ee"]["DL_ee_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading electron dz (cm)"),
+            Plot.make1D("DL_ee_subleading_sip3d", tight_electrons[1].sip3d, selections["DL_ee"]["DL_ee_sel"], EqBin(100, 0, 8), title="", xTitle="Subleading electron sip3d"),
+
+            Plot.make1D("DL_emu_electron_pt", tight_electrons[0].pt, selections["DL_emu"]["DL_emu_sel"], EqBin(250, 0, 500), title="", xTitle="Electron pT (GeV)"),
+            Plot.make1D("DL_emu_electron_eta", tight_electrons[0].eta, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
+            Plot.make1D("DL_emu_electron_dxy", tight_electrons[0].dxy, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
+            Plot.make1D("DL_emu_electron_dz", tight_electrons[0].dz, selections["DL_emu"]["DL_emu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
+            Plot.make1D("DL_emu_electron_sip3d", tight_electrons[0].sip3d, selections["DL_emu"]["DL_emu_sel"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
+
+            Plot.make1D("DL_emu_muon_pt", tight_muons[0].pt, selections["DL_emu"]["DL_emu_sel"], EqBin(250, 0, 500), title="", xTitle="Muon pT (GeV)"),
+            Plot.make1D("DL_emu_muon_eta", tight_muons[0].eta, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
+            Plot.make1D("DL_emu_muon_dxy", tight_muons[0].dxy, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
+            Plot.make1D("DL_emu_muon_dz", tight_muons[0].dz, selections["DL_emu"]["DL_emu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
+            Plot.make1D("DL_emu_muon_sip3d", tight_muons[0].sip3d, selections["DL_emu"]["DL_emu_sel"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
+
+            Plot.make1D("DL_mumu_leading_pt", tight_muons[0].pt, selections["DL_mumu"]["DL_mumu_sel"], EqBin(250, 0, 500), title="", xTitle="Leading muon pT (GeV)"),
+            Plot.make1D("DL_mumu_leading_eta", tight_muons[0].eta, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -3, 3), title= "", xTitle="Leading muon eta"),
+            Plot.make1D("DL_mumu_leading_dxy", tight_muons[0].dxy, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading muon dxy (cm)"),
+            Plot.make1D("DL_mumu_leading_dz", tight_muons[0].dz, selections["DL_mumu"]["DL_mumu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading muon dz (cm)"),
+            Plot.make1D("DL_mumu_leading_sip3d", tight_muons[0].sip3d, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, 0, 8), title="", xTitle="Leading muon sip3d"),
+
+            Plot.make1D("DL_mumu_subleading_pt", tight_muons[1].pt, selections["DL_mumu"]["DL_mumu_sel"], EqBin(250, 0, 500), title="", xTitle="Subleading muon pT (GeV)"),
+            Plot.make1D("DL_mumu_subleading_eta", tight_muons[1].eta, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -3, 3), title= "", xTitle="Subleading muon eta"),
+            Plot.make1D("DL_mumu_subleading_dxy", tight_muons[1].dxy, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading muon dxy (cm)"),
+            Plot.make1D("DL_mumu_subleading_dz", tight_muons[1].dz, selections["DL_mumu"]["DL_mumu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading muon dz (cm)"),
+            Plot.make1D("DL_mumu_subleading_sip3d", tight_muons[1].sip3d, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, 0, 8), title="", xTitle="Subleading muon sip3d"),
+        ])
 
         for sel in plot_sel:
             plots.extend([
-                Plot.make1D(sel[0] + "_pt", tight_electrons[0].pt, sel[1], EqBin(250, 0, 500), title="pT", xTitle="pT (GeV)"),
-                Plot.make1D(sel[0] + "_eta", tight_electrons[0].eta, sel[1], EqBin(100, -3, 3), title="eta", xTitle="eta"),
-                Plot.make1D(sel[0] + "_dxy", tight_electrons[0].dxy, sel[1], EqBin(100, -0.05, 0.05), title="dxy", xTitle="dxy (cm)"),
-                Plot.make1D(sel[0] + "_dz", tight_electrons[0].dz, sel[1], EqBin(1000, -0.1, 0.1), title="dz", xTitle="dz (cm)"),
-                Plot.make1D(sel[0] + "_sip3d", tight_electrons[0].sip3d, sel[1], EqBin(100, 0, 8), title="significance_IP3d", xTitle="sip3d"),
-                Plot.make1D(sel[0] + "_AK4_pt_0", cleaned_ak4_jets[0].pt, sel[1], EqBin(300, 0, 600), title="pT of leading AK4", xTitle="pT (GeV)"),
-                Plot.make1D(sel[0] + "_AK4_pt_1", cleaned_ak4_jets[1].pt, sel[1], EqBin(300, 0, 600), title="pT of sub-leading AK4", xTitle="pT (GeV)"),
-                Plot.make1D(sel[0] + "_AK4_btag_pt_0", cleaned_ak4_btags[0].pt, sel[1], EqBin(250, 0, 500), title="pT of leading b-tagged AK4", xTitle="pT (GeV)"),
-                Plot.make1D(sel[0] + "_AK4_btag_pt_1", cleaned_ak4_btags[1].pt, sel[1], EqBin(250, 0, 500), title="pT of sub-leading b-tagged AK4", xTitle="pT (GeV)"),
-                Plot.make1D(sel[0] + "_AK8_pt_0", cleaned_ak8_jets[0].pt, sel[1], EqBin(500, 0, 1000), title="pT of leading AK8", xTitle="pT (GeV)"),
-                Plot.make1D(sel[0] + "_AK8_pt_1", cleaned_ak8_jets[1].pt, sel[1], EqBin(500, 0, 1000), title="pT of sub-leading AK8", xTitle="pT (GeV)"),
-                Plot.make1D(sel[0] + "_MET_pt", met_pt, sel[1], EqBin(250, 0, 500), title="MET pT", xTitle="MET pT (GeV)"),
-                Plot.make1D(sel[0] + "_HT", ht_jets, sel[1], EqBin(500, 0, 1000), title="HT", xTitle="pT (GeV)")
+                Plot.make1D(sel[0] + "_AK4_pt_0", cleaned_ak4_jets[0].pt, sel[1], EqBin(300, 0, 600), title="", xTitle="Leading AK4 jet pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_pt_1", cleaned_ak4_jets[1].pt, sel[1], EqBin(300, 0, 600), title="", xTitle="Subleading AK4 jet pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_btag_pt_0", cleaned_ak4_btags[0].pt, sel[1], EqBin(250, 0, 500), title="", xTitle="Leading AK4 b-tagged jet pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK4_btag_pt_1", cleaned_ak4_btags[1].pt, sel[1], EqBin(250, 0, 500), title="", xTitle="Subleading AK4 b-tagged jet pT (GeV)"),
+                Plot.make1D(sel[0] + "_AK8_pt_0", cleaned_ak8_btags[0].pt, sel[1], EqBin(500, 0, 1000), title="", xTitle="Leading AK8 b-tagged jet pT (GeV)"),
+                Plot.make1D(sel[0] + "_MET_pt", met_pt, sel[1], EqBin(250, 0, 500), title="", xTitle="MET pT (GeV)"),
+                Plot.make1D(sel[0] + "_HT", ht_jets, sel[1], EqBin(500, 0, 1000), title="", xTitle="HT (GeV)")
             ])
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
-        yields.add(SL_e_sel, 'one electron')
-        yields.add(SL_mu_sel, 'one muon')
-        yields.add(DL_ee_sel, 'two electrons')
-        yields.add(DL_emu_sel, 'one elect, one muon')
-        yields.add(DL_emu_only_sel, 'two electrons')
-        yields.add(DL_mumu_sel, 'two electrons')
-        yields.add(SL_lep_sel, 'one lepton')
-        yields.add(DL_lep_sel, 'two leptons')
+        yields.add(selections["SL_e"]["SL_e_sel"], 'one electron')
+        yields.add(selections["SL_mu"]["SL_mu_sel"], 'one muon')
+        yields.add(selections["DL_ee"]["DL_ee_sel"], 'two electrons')
+        yields.add(selections["DL_emu"]["DL_emu_sel"], 'one elect, one muon')
+        yields.add(selections["DL_mumu"]["DL_mumu_sel"], 'two muons')
+        yields.add(selections["SL"]["SL_lep_sel"], 'one lepton')
+        yields.add(selections["DL"]["DL_lep_sel"], 'two leptons')
 
         return plots
