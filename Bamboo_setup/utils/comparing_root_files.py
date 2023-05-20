@@ -4,8 +4,9 @@ from pathlib import Path
 from variable_ranges import *
 import os
 
-SOURCE_DIR = 'results_reco_tests/results/'
-OUT_PATH = 'Comparisons/'
+
+SOURCE_DIR = 'results_gen_tests/results/'
+OUT_PATH = 'Comparisons/gen/'
 
 if not os.path.exists(OUT_PATH):
     os.makedirs(OUT_PATH)
@@ -114,6 +115,34 @@ f2 = ROOT.TFile.Open(SOURCE_DIR + "bbWW_dl.root", 'read')
 f3 = ROOT.TFile.Open(SOURCE_DIR + "bbtautau.root", 'read')
 f4 = ROOT.TFile.Open(SOURCE_DIR + "TTbar_sl.root", 'read')
 f5 = ROOT.TFile.Open(SOURCE_DIR + "TTbar_dl.root", 'read')
+
+
+#=========================================================================
+# Comment out if comparing reco plots
+
+object_name = "bjets_mbb"
+titles = ['bJets Inv. mass', 'm_{bb} (GeV)', '']
+bins, h_xmin, h_xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, False)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, False)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
+
+object_name = "bjets0_pT"
+titles = ['bJet0 pT', 'pT (GeV)', '']
+bins, h_xmin, h_xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, False)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, False)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
+
+object_name = "bjets1_pT"
+titles = ['bJet1 pT', 'pT (GeV)', '']
+bins, h_xmin, h_xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
+total_signal = add_signal(f1, f2, f3, object_name, bins, h_xmin, h_xmax, titles, False)
+total_background = add_background(f4, f5, object_name, bins, h_xmin, h_xmax, titles, False)
+draw_hists(total_signal, total_background, h_xmin, h_xmax, object_name)
+
+
+#=========================================================================
 
 object_name = "bjets_mean_pT"
 titles = ['bJets mean pT', 'pT (GeV)', '']
