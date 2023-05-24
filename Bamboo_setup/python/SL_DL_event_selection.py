@@ -267,7 +267,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(yields)
         yields.add(noSel, 'Basic Event Selection')
 
-        objects, selections = self.object_and_event_selection(self, tree, noSel)
+        objects, selections = self.object_and_event_selection(tree, noSel)
         tight_electrons = objects["tight_electrons"]
         tight_muons = objects["tight_muons"]
         cleaned_ak4_jets = objects["cleaned_ak4_jets"]
