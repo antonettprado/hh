@@ -285,7 +285,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         plot_sel = []
         plot_sel.append(["SL_e", selections["SL_e"]["SL_e_sel"]])
-        plot_sel.append(["SL_mu", selections["SL_e"]["SL_mu_sel"]])
+        plot_sel.append(["SL_mu", selections["SL_mu"]["SL_mu_sel"]])
         plot_sel.append(["DL_ee", selections["DL_ee"]["DL_ee_sel"]])
         plot_sel.append(["DL_emu", selections["DL_emu"]["DL_emu_sel"]])
         plot_sel.append(["DL_mumu", selections["DL_mumu"]["DL_mumu_sel"]])
