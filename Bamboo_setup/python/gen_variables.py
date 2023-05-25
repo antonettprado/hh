@@ -118,10 +118,10 @@ class gen_variables(NanoAODHistoModule):
             jj_combos = op.combine((nonbJets),N=2)
             b1_jj_combos = op.combine((bJets, jj_combos), N=2)
             b1_jj_combos_mInv = op.map(b1_jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1][0].p4, combo[1][1].p4))
-            t1_mInv_b1_jj_index = op.rng_min_element_index(b1_jj_combos_mInv, lambda bjj: op.abs(bjj-m_top))
-            t1_mInv_b1_jj = b1_jj_combos_mInv[t1_mInv_b1_jj_index]
+            t1_mInv_index = op.rng_min_element_index(b1_jj_combos_mInv, lambda bjj: op.abs(bjj-m_top))
+            t1_mInv = b1_jj_combos_mInv[t1_mInv_index]
 
-            t1_mInv_combo = b1_jj_combos[t1_mInv_b1_jj_index]
+            t1_mInv_combo = b1_jj_combos[t1_mInv_index]
             b1 = t1_mInv_combo[0]
             b2 = op.rng_find(bJets, lambda bjet: op.NOT(bjet.idx == b1.idx))  
             if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
@@ -129,12 +129,12 @@ class gen_variables(NanoAODHistoModule):
             if op.rng_len(electrons)==0 and op.rng_len(muons)==1:
                 t2_mT = (b2.p4 + muons[0].p4 + MET.p4).Mt()
 
-            tops_m_avg = (t1_mInv_b1_jj + t2_mT)/2
+            tops_m_avg = (t1_mInv + t2_mT)/2
         
             sel, tag = get_selection(sel_string)
             m_top_sel = sel.refine("m_top_sel", cut=[op.rng_len(nonbJets)>=2])
             plots.extend([
-                Plot.make1D("t1_mInv_b1_jj"+tag, t1_mInv_b1_jj, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
+                Plot.make1D("t1_mInv"+tag, t1_mInv, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
                 Plot.make1D("t2_mT"+tag, t2_mT, m_top_sel, EqBin(T2_BINS, T2_MIN, T2_MAX), title="", xTitle="m_{T} for top2 (GeV)"),
                 Plot.make1D("tops_m_avg"+tag, tops_m_avg, m_top_sel, EqBin(T_AVG_BINS, T_AVG_MIN, T_AVG_MAX), title="", xTitle="m_{avg} for tops (GeV)"),
             ])

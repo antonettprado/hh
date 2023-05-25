@@ -128,7 +128,7 @@ class SL_DL_variables(SL_DL_event_selection):
 
             tops_m_avg = (t1_mInv + t2_mT)/2
         
-            m_top_sel = sel.refine("m_top_sel", cut=[op.rng_len(nonbtags)>=2])
+            m_top_sel = sel.refine("m_top_sel"+tag, cut=[op.rng_len(nonbtags)>=2])
             plots.extend([
                 Plot.make1D("t1_mInv"+tag, t1_mInv, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX ), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
                 Plot.make1D("t2_mT"+tag, t2_mT, m_top_sel, EqBin(T2_BINS, T2_MIN, T2_MAX ), title="", xTitle="m_{T} for top2 (GeV)"),
@@ -172,9 +172,9 @@ class SL_DL_variables(SL_DL_event_selection):
         get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "DL_lep_resolved_2b_sel")
         get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "DL_lep_resolved_sel")
         
-        # get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_1b_sel")
-        # get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_2b_sel")
-        # get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_sel")
+        get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_1b_sel")
+        get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_2b_sel")
+        get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_sel")
 
         get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "SL_lep_resolved_1b_sel")
         get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "SL_lep_resolved_2b_sel")
