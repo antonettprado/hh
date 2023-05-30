@@ -84,19 +84,20 @@ if __name__ == "__main__":
     df = select_taus(df, cuts["taus"])
 
     print("9) Final Event Selection --------------------------------")
-    df_sl = df    
-    df_dl = df
-    df_e, df_mu, sl_sum_genWeight = select_sl_channel(df_sl, cuts["single_lepton_event"])
-    df_ee, df_mumu, df_emu, dl_sum_genWeight = select_dl_channel(df_dl, cuts["dilepton_event"])
+    # df_sl = df    
+    # df_dl = df
+    # df_e, df_mu, sl_sum_genWeight = select_sl_channel(df_sl, cuts["single_lepton_event"])
+    # df_ee, df_mumu, df_emu, dl_sum_genWeight = select_dl_channel(df_dl, cuts["dilepton_event"])
 
     print("10) New definitions -------------------------------------")
-    df_e, df_mu = sl_definitions(df_e, df_mu)
-    df_ee, df_mumu, df_emu = dl_definitions(df_ee, df_mumu, df_emu)
+    # df_e, df_mu = sl_definitions(df_e, df_mu)
+    # df_ee, df_mumu, df_emu = dl_definitions(df_ee, df_mumu, df_emu)
 
     print("11) Generator level -------------------------------------")
-    df_gen = gen_level_vars_and_cuts(df)
+    df_SL, df_DL = gen_variables(df)
 
-    print("12) Saving histograms to root file ----------------------")
-    output_hists_root_file(df_gen, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
-
+    print("12) Saving histograms to root file ----------------------")   
+    output_gen_variables_hists(df_SL, df_DL)
+    # output_SL_DL_variables_hists(df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
+    
     print("Event selections: COMPLETED")

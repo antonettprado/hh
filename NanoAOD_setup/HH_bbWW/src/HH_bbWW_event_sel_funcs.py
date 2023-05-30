@@ -510,18 +510,69 @@ def gen_level_vars_and_cuts(df):
 
     return df
 
+def gen_variables(df):
+
+    df = df.Define("genElectrons", "get_genLeptons(11, GenPart_pdgId, GenPart_genPartIdxMother)")
+    df = df.Define("genMuons", "get_genLeptons(13, GenPart_pdgId, GenPart_genPartIdxMother)")
+    df = df.Define("selected_genJets", "get_selected_genJets(GenJet_pt)")
+    df = df.Define("bJets", "get_selected_bJets(selected_genJets, GenJet_hadronFlavour)")
+    df = df.Define("nonbJets", "get_selected_nonbJets(selected_genJets, GenJet_hadronFlavour)")
+
+    df = df.Filter("Sum(bJets) == 2", "Only 2 b GenJets in event")
+
+    df = df.Define("bjets_deltaEta", "get_bjets_deltaEta(bJets, GenJet_eta)")
+    df = df.Define("bjets_deltaPhi", "get_bjets_deltaPhi(bJets, GenJet_phi)")
+    df = df.Define("bjets_deltaR", "get_bjets_deltaR(bjets_deltaEta, bjets_deltaPhi)")
+    df = df.Define("bjets_deltaR_v2", "get_bjets_deltaR_v2(bJets, GenJet_eta, GenJet_phi)")
+
+    df_SL = df.Filter("(Sum(genElectrons)==1 && Sum(genMuons)==0) || (Sum(genElectrons)==0 && Sum(genMuons)==1)")
+    df_DL = df.Filter("(Sum(genElectrons)==2 && Sum(genMuons)==0) || (Sum(genElectrons)==0 && Sum(genMuons)==2) || (Sum(genElectrons)==1 && Sum(genMuons)==1)")
+
+    return df_SL, df_DL
+
 # Save histograms to root file ==========================================================
-def output_hists_root_file(df_gen, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
+def output_gen_variables_hists(df_SL, df_DL):
 
     outHistFileName = "hists.root"
     outHistFile = ROOT.TFile.Open(outHistFileName ,"RECREATE")
     outHistFile.cd()
-    write_hists(df_gen, df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
+    write_gen_variables(df_SL, df_DL)
     outHistFile.Close()
     print_twice("hists.root was saved")
     print_twice()
 
-def write_hists(df_gen, sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
+def output_SL_DL_variables_hists(df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
+
+    outHistFileName = "hists.root"
+    outHistFile = ROOT.TFile.Open(outHistFileName ,"UPDATE")
+    outHistFile.cd()
+    write_SL_DL_variables(df_e, df_mu, df_ee, df_mumu, df_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw)
+    outHistFile.Close()
+    print_twice("hists.root was saved")
+    print_twice()
+
+def write_gen_variables(df_SL, df_DL):
+
+    hist_list = []
+
+    hist_defs_gen = []
+    hist_defs_gen.append(["nGenJet", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX])  
+    hist_defs_gen.append(["nGenJetAK8", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX]) 
+    hist_defs_gen.append(["bjets_deltaR", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])
+    hist_defs_gen.append(["bjets_deltaEta", DELTAETA_BINS, DELTAETA_XMIN, DELTAETA_XMAX ])
+    hist_defs_gen.append(["bjets_deltaPhi", DELTAPHI_BINS, DELTAPHI_XMIN, DELTAPHI_XMAX ])
+    hist_defs_gen.append(["bjets_deltaR_v2", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])
+
+    for h_def in hist_defs_gen:
+        hist_list.append(df_SL.Histo1D(("SL_gen_"+ h_def[0], h_def[0], h_def[1], h_def[2], h_def[3]), h_def[0]))
+        hist_list.append(df_DL.Histo1D(("DL_gen_"+ h_def[0], h_def[0], h_def[1], h_def[2], h_def[3]), h_def[0]))
+    
+    # Writing all histograms in the list ----------------------------
+    for hist in hist_list:
+        hist.Write()
+        print(hist)
+
+def write_SL_DL_variables(sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, dl_sum_genWeight, Sum_genEventSumw):
     
     h_sl_sum_genWeight = ROOT.TH1F("h_sl_sum_genWeight","h_sl_sum_genWeight",3,-0.5,2.5)
     h_sl_sum_genWeight.Fill(1, sl_sum_genWeight)
@@ -559,23 +610,23 @@ def write_hists(df_gen, sl_e, sl_mu, dl_ee, dl_mumu, dl_emu, sl_sum_genWeight, d
         hist_list.append(dl_emu.Histo1D(("dl_emu_" + h_def_0, h_def_0, h_def[1], h_def[2], h_def[3]), h_def_0, "genWeight"))
         hist_list.append(dl_emu.Histo1D(("dl_emu_" + h_def_1, h_def_1, h_def[1], h_def[2], h_def[3]), h_def_1, "genWeight"))
 
-    # Plots hists pertaining gen-level inforamtion -------------------
-    hist_defs_gen = []
-    hist_defs_gen.append(["nGenJet", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX])  
-    hist_defs_gen.append(["nGenJetAK8", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX]) 
-    hist_defs_gen.append(["two_deltaR", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])  
-    hist_defs_gen.append(["two_deltaR_ROOT", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])
-    hist_defs_gen.append(["two_deltaEta", DELTAETA_BINS, DELTAETA_XMIN, DELTAETA_XMAX ])
-    hist_defs_gen.append(["two_deltaPhi", DELTAPHI_BINS, DELTAPHI_XMIN, DELTAPHI_XMAX ])
-    hist_defs_gen.append(["GenJets_mbb", MBB_BINS, MBB_XMIN, MBB_XMAX]) 
+    # # Plots hists pertaining gen-level inforamtion -------------------
+    # hist_defs_gen = []
+    # hist_defs_gen.append(["nGenJet", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX])  
+    # hist_defs_gen.append(["nGenJetAK8", NGENJET_BINS, NGENJET_XMIN, NGENJET_XMAX]) 
+    # hist_defs_gen.append(["two_deltaR", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])  
+    # hist_defs_gen.append(["two_deltaR_ROOT", DELTAR_BINS, DELTAR_XMIN, DELTAR_XMAX ])
+    # hist_defs_gen.append(["two_deltaEta", DELTAETA_BINS, DELTAETA_XMIN, DELTAETA_XMAX ])
+    # hist_defs_gen.append(["two_deltaPhi", DELTAPHI_BINS, DELTAPHI_XMIN, DELTAPHI_XMAX ])
+    # hist_defs_gen.append(["GenJets_mbb", MBB_BINS, MBB_XMIN, MBB_XMAX]) 
 
-    for h_def in hist_defs_gen:
-        hist_list.append(df_gen.Histo1D(("df_gen_"+ h_def[0], h_def[0], h_def[1], h_def[2], h_def[3]), h_def[0]))
+    # for h_def in hist_defs_gen:
+    #     hist_list.append(df_gen.Histo1D(("df_gen_"+ h_def[0], h_def[0], h_def[1], h_def[2], h_def[3]), h_def[0]))
     
-    # Writing all histograms in the list ----------------------------
-    for hist in hist_list:
-        hist.Write()
-        print(hist)
+    # # Writing all histograms in the list ----------------------------
+    # for hist in hist_list:
+    #     hist.Write()
+    #     print(hist)
 
 # =======================================================================================
 # =======================================================================================

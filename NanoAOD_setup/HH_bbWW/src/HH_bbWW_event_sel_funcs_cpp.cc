@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string.h>
 #include <map>
+#include "TMath.h"
  
 using namespace ROOT::VecOps;
 
@@ -16,7 +17,16 @@ float get_weight_factor(float genWeight, float sum_genWeight) {
 // =====================================================================
 
 float get_deltaR(float eta1_val, float eta2_val, float phi1_val, float phi2_val) {
-	return std::sqrt((eta1_val-eta2_val)*(eta1_val-eta2_val) + (phi1_val-phi2_val)*(phi1_val-phi2_val));
+
+	float dEta = eta1_val - eta2_val;
+	float dPhi = phi1_val-phi2_val;
+
+		if (dPhi > TMath::Pi()) 
+			dPhi -= 2.0*TMath::Pi();	
+		else if (dPhi <= -TMath::Pi())
+			dPhi += 2.0*TMath::Pi();
+
+	return std::sqrt(dEta*dEta + dPhi*dPhi);
 }
 
 float get_inv_mass(float pt1, float eta1, float phi1, float mass1, float pt2, float eta2, float phi2, float mass2) {
@@ -1031,42 +1041,120 @@ bool get_cut_deltaR_bgenJets(RVec<int> bGenJets, RVec<float> GenJet_eta, RVec<fl
 
 }
 
-// ======================================================================
-// Yet to complete
-RVec<float> get_cone_pt(RVec<float> lepton_pt, RVec<float> lepton_eta) {
+// =====================================================================
+// =============== Replciating Bamboo_setup results ====================
+// =====================================================================
+RVec<int> get_genLeptons(int lepton_type, RVec<int> GenPart_pdgId, RVec<int> GenPart_genPartIdxMother) {
 
-	RVec<float> cone_pt = 0.9*lepton_pt;
-	return cone_pt;
+	RVec<int> genLeptons(GenPart_pdgId.size(), 0);
+
+	int lep_pdgId = 0;
+	if (lepton_type == 11)
+		lep_pdgId = 11;
+	else if (lepton_type == 13)
+		lep_pdgId = 13;
+
+	for (int idx=0; idx<GenPart_pdgId.size(); idx++) {
+		if (GenPart_pdgId[idx] == lep_pdgId) {
+			int mother_idx = GenPart_genPartIdxMother[idx];
+			if (std::abs(GenPart_pdgId[mother_idx]) == 24)
+				genLeptons[idx] = 1;
+		}
+	}
+	return genLeptons;
 }
 
-// A is the effective area correction
-float get_A(float eta) {
-	float A;
-	if (0.0 <= eta && eta < 1.0)
-		A = 0.1440;
-	if (1.0 <= eta && eta < 1.479)
-		A = 0.1562;
-	if (1.479 <= eta && eta < 2.0)
-		A = 0.1032;
-	if (2.0 <= eta && eta < 2.2)
-		A = 0.0859;
-	if (2.2 <= eta && eta < 2.3)
-		A = 0.1116;
-	if (2.3 <= eta && eta < 2.4)
-		A = 0.1321;
-	if (2.4 <= eta && eta <= 2.5)
-		A = 0.1321;
-	return A;
+RVec<int> get_selected_genJets(RVec<float> GenJet_pt) {
+
+	RVec<int> genJets(GenJet_pt.size(), 0);
+	for(int idx=0; idx<GenJet_pt.size(); idx++) {
+		if (GenJet_pt[idx] > 25)
+			genJets[idx] = 1;
+	}
+
+	return genJets;
 }
 
-// R is the size of the cone
-float get_R(float pt) {
-	float R;
-	if (pt > 200)
-		R = 0.05;
-	else if (pt > 50 && pt < 200)
-		R = 10/pt;
-	else if (pt < 50)
-		R = 0.20;
-	return R;
+RVec<int> get_selected_bJets(RVec<int> selected_genJets, RVec<int> GenJet_hadronFlavour) {
+
+	RVec<int> bJets(selected_genJets.size(), 0);
+	for(int idx=0; idx<selected_genJets.size(); idx++) {
+		if (selected_genJets[idx] == 1) {
+			if (GenJet_hadronFlavour[idx] == 5)
+				bJets[idx] = 1;
+		}
+	}
+
+	return bJets;
 }
+
+RVec<int> get_selected_nonbJets(RVec<int> selected_genJets, RVec<int> GenJet_hadronFlavour) {
+
+	RVec<int> nonbJets(selected_genJets.size(), 0);
+	for(int idx=0; idx<selected_genJets.size(); idx++) {
+		if (selected_genJets[idx] == 1) {
+			if (GenJet_hadronFlavour[idx] != 5)
+				nonbJets[idx] = 1;
+		}
+	}
+
+	return nonbJets;
+}
+
+float get_bjets_deltaEta(RVec<int> bJets, RVec<float> GenJet_eta) {
+
+	RVec<float> Eta_vals;
+	for (int idx=0; idx<bJets.size(); idx++) {
+		if (bJets[idx] == 1) {
+			Eta_vals.push_back(GenJet_eta[idx]);
+		}
+	}
+	float deltaEta = Eta_vals[0] - Eta_vals[1];
+	return deltaEta;
+}
+
+float get_bjets_deltaPhi(RVec<int> bJets, RVec<float> GenJet_phi) {
+
+	RVec<float> Phi_vals;
+	for (int idx=0; idx<bJets.size(); idx++) {
+		if (bJets[idx] == 1)
+			Phi_vals.push_back(GenJet_phi[idx]);
+	}
+	float deltaPhi = Phi_vals[0] - Phi_vals[1];
+
+	if (deltaPhi > TMath::Pi()) 
+		deltaPhi -= 2.0*TMath::Pi();
+	else if (deltaPhi <= -TMath::Pi())
+		deltaPhi += 2.0*TMath::Pi();
+
+	return deltaPhi;
+}
+
+float get_bjets_deltaR(float deltaEta, float deltaPhi) {
+
+	return std::sqrt(deltaEta*deltaEta + deltaPhi*deltaPhi);
+}
+
+float get_bjets_deltaR_v2(RVec<int> bJets, RVec<float> GenJet_eta, RVec<float> GenJet_phi) {
+
+	RVec<float> Eta_vals;
+	RVec<float> Phi_vals;
+
+	for (int idx = 0; idx < bJets.size(); idx++) {
+		if (bJets[idx] == 1) {
+			Eta_vals.push_back(GenJet_eta[idx]);
+			Phi_vals.push_back(GenJet_phi[idx]);
+		}
+	}
+
+	RVec<float> eta1 = {Eta_vals[0]};
+	RVec<float> eta2 = {Eta_vals[1]};
+	RVec<float> phi1 = {Phi_vals[0]};
+	RVec<float> phi2 = {Phi_vals[1]};
+
+	RVec<float> deltaR_vals = DeltaR(eta1, eta2, phi1, phi2);
+	float deltaR = deltaR_vals[0];
+
+	return deltaR;
+}
+// float get_bjets_mbb(RVec<int> bJets, RVec<float)
