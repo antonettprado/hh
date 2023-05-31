@@ -1,0 +1,28 @@
+{
+    "hh_bbWW_sl_cHHH1":{
+        "2016": [],
+        "2017": [],
+        "2018": ["/afs/cern.ch/user/a/anunezde/MC_Samples/bbWW_sl/25C1B160-490E-BA4C-A841-139813C01EB3.root"]
+    },
+    "hh_bbWW_dl_cHHH1":{
+        "2016": [],
+        "2017": [],
+        "2018": []
+    },
+    "hh_bbtautau_cHHH1":{
+        "2016": [],
+        "2017": [],
+        "2018": []
+    },
+    "ttjets_sl":{
+        "2016": [],
+        "2017": [],
+        "2018": ["/afs/cern.ch/user/a/anunezde/MC_Samples/ttjets_sl/0F060BF3-3E6F-3A4D-AF00-D05A1BCE2CF2.root"]
+    },
+    "ttjets_dl":{
+        "2016": [],
+        "2017": [],
+        "2018": []
+    }
+}
+
