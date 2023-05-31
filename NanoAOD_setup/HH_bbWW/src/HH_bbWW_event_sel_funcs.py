@@ -528,6 +528,11 @@ def gen_variables(df):
     df_SL = df.Filter("(Sum(genElectrons)==1 && Sum(genMuons)==0) || (Sum(genElectrons)==0 && Sum(genMuons)==1)")
     df_DL = df.Filter("(Sum(genElectrons)==2 && Sum(genMuons)==0) || (Sum(genElectrons)==0 && Sum(genMuons)==2) || (Sum(genElectrons)==1 && Sum(genMuons)==1)")
 
+    df_SL.Display({"event", "bJets", "GenJet_hadronFlavour", "GenJet_pt"}).Print()
+    df_SL.Display({"event", "bJets", "GenJet_phi", "bjets_deltaPhi"}).Print()
+    df_SL.Display({"event", "bJets", "GenJet_eta", "bjets_deltaEta"}).Print()
+    df_SL.Display({"event", "bjets_deltaEta", "bjets_deltaPhi", "bjets_deltaR"}).Print()
+
     return df_SL, df_DL
 
 # Save histograms to root file ==========================================================
