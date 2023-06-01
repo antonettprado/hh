@@ -3,7 +3,7 @@ from HH_bbWW_event_sel_funcs import *
 import ROOT 
 
 # Enable multithreading
-ROOT.EnableImplicitMT()
+# ROOT.EnableImplicitMT()
 
 if __name__ == "__main__":
 
