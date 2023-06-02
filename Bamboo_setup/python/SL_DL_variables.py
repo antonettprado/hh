@@ -35,16 +35,18 @@ class SL_DL_variables(SL_DL_event_selection):
 
         SL_lep_resolved_1b_sel = selections["SL"]["SL_lep_resolved_1b_sel"]
         SL_lep_resolved_2b_sel = selections["SL"]["SL_lep_resolved_2b_sel"]
+        SL_lep_resolved_3b_sel = selections["SL"]["SL_lep_resolved_3b_sel"]
         SL_lep_resolved_sel = selections["SL"]["SL_lep_resolved_sel"]
         
         DL_lep_resolved_1b_sel = selections["DL"]["DL_lep_resolved_1b_sel"]
         DL_lep_resolved_2b_sel = selections["DL"]["DL_lep_resolved_2b_sel"]
+        DL_lep_resolved_3b_sel = selections["DL"]["DL_lep_resolved_3b_sel"]
         DL_lep_resolved_sel = selections["DL"]["DL_lep_resolved_sel"]
         # ================================================================
         
         cleaned_ak4_nonbtags = op.select(cleaned_ak4_jets, lambda ak4: op.NOT(op.rng_any(cleaned_ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
-        sorted_ak4_nonbtags = op.sort(cleaned_ak4_nonbtags, lambda jet: -jet.btagDeepFlavB)
-        sorted_ak4_btags = op.sort(cleaned_ak4_btags, lambda jet: -jet.btagDeepFlavB)
+        sorted_ak4_nonbtags = op.sort(cleaned_ak4_nonbtags, lambda jet: -jet.pt)
+        sorted_ak4_btags = op.sort(cleaned_ak4_btags, lambda jet: -jet.pt)
 
         def get_selection_and_tag(sel_string):
             if "SL" in sel_string:
@@ -54,6 +56,9 @@ class SL_DL_variables(SL_DL_event_selection):
                 elif "resolved_2b" in sel_string:
                     sel = SL_lep_resolved_2b_sel
                     tag = "_SL_res_2b"
+                elif "resolved_3b" in sel_string:
+                    sel = SL_lep_resolved_3b_sel
+                    tag = "_SL_res_3b"
                 elif "resolved" in sel_string:
                     sel = SL_lep_resolved_sel
                     tag = "_SL_res"
@@ -64,36 +69,40 @@ class SL_DL_variables(SL_DL_event_selection):
                 elif "resolved_2b" in sel_string:
                     sel = DL_lep_resolved_2b_sel
                     tag = "_DL_res_2b"
+                elif "resolved_3b" in sel_string:
+                    sel = DL_lep_resolved_3b_sel
+                    tag = "_DL_res_3b"
                 elif "resolved" in sel_string:
                     sel = DL_lep_resolved_sel
                     tag = "_DL_res"
             return sel, tag
         
-        def get_bjets_params(btags, sorted_nonbtags, sorted_btags, sel_string):
-            
-            sel, tag = get_selection_and_tag(sel_string)
+        def get_bjets_params(btags, sorted_btags, sorted_nonbtags, sel_string):
 
-            if "resolved_1b" in sel_string or op.rng_len(btags)==1:
+            sel, tag = get_selection_and_tag(sel_string)
+            # sel = sel.refine("bjets_params_"+tag, cut=op.rng_len(btags)==2)
+
+            bjet0 = btags[0]
+            bjet1 = btags[1]
+            # ------------------------
+            if "resolved_1b" in sel_string:
                 bjet0 = btags[0]
                 bjet1 = sorted_nonbtags[0]
-            elif "resolved_2b" in sel_string or op.rng_len(btags)>=2:
-                if op.rng_len(btags)==2:
-                    bjet0 = sorted_btags[0]
-                    bjet1 = sorted_btags[1]
-                    if "resolved_2b" in sel_string:
-                        tag += 'only'
-                elif op.rng_len(btags)>2:
-                    m_H = 125.35
-                    bb_combos = op.combine((btags), N=2)
-                    bb_combos_mInv = op.map(bb_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4))
-                    H_mInv_bb_index = op.rng_min_element_index(bb_combos_mInv, lambda bb: op.abs(bb - m_H))
-                    mbb_combo = bb_combos[H_mInv_bb_index]
-                    bjet0 = mbb_combo[0]
-                    bjet1 = mbb_combo[1]
-                    if "resolved_2b" in sel_string:
-                        tag += 'more'
+            elif "resolved_2b" in sel_string:
+                bjet0 = sorted_btags[0]
+                bjet1 = sorted_btags[1]
+            elif "resolved_3b" in sel_string:
+                m_H = 125.35
+                bb_combos = op.combine((btags), N=2)
+                bb_combos_mInv = op.map(bb_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4))
+                H_mInv_bb_index = op.rng_min_element_index(bb_combos_mInv, lambda bb: op.abs(bb - m_H))
+                mbb_combo = bb_combos[H_mInv_bb_index]
+                bjet0 = mbb_combo[0]
+                bjet1 = mbb_combo[1]
+            # ------------------------
 
             bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
+            bjets_deltaEta = bjet0.eta - bjet1.eta
             bjets_deltaPhi = op.deltaPhi(bjet0.p4, bjet1.p4)
             bjets_deltaR = op.deltaR(bjet0.p4, bjet1.p4)
             mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
@@ -102,14 +111,17 @@ class SL_DL_variables(SL_DL_event_selection):
                 Plot.make1D("bjets0_pT"+tag, bjet0.pt, sel, EqBin(BJET0_PT_BINS, BJET0_MIN, BJET0_MAX), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
                 Plot.make1D("bjets1_pT"+tag, bjet1.pt, sel, EqBin(BJET1_PT_BINS, BJET1_MIN, BJET1_MAX), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
                 Plot.make1D("bjets_mean_pT"+tag, bjets_mean_pT, sel, EqBin(BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
+                Plot.make1D("bjets_deltaEta"+tag, bjets_deltaEta, sel, EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), title="", xTitle="deltaEta for bjets"),
                 Plot.make1D("bjets_deltaPhi"+tag, bjets_deltaPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="deltaPhi for bjets"),
                 Plot.make1D("bjets_deltaR"+tag, bjets_deltaR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="deltaR for bjets"),
-                Plot.make1D("bjets_mbb"+tag, mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)")
+                Plot.make1D("bjets_mbb"+tag, mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)"),
+                Plot.make2D("bjets_twoD"+tag, [bjets_deltaEta, bjets_deltaPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
             ])
 
         def get_m_top_for_SL(btags, nonbtags, electrons, muons, met, sel_string):
 
             sel, tag = get_selection_and_tag(sel_string)
+            # sel = sel.refine("mtop_"+tag, cut=op.rng_len(btags)==2)
 
             m_top = 172.76
             jj_combos = op.combine((nonbtags),N=2)
@@ -135,9 +147,10 @@ class SL_DL_variables(SL_DL_event_selection):
                 Plot.make1D("tops_m_avg"+tag, tops_m_avg, m_top_sel, EqBin(T_AVG_BINS, T_AVG_MIN, T_AVG_MAX), title="", xTitle="m_{avg} for tops (GeV)"),
             ])
 
-        def get_final_state_totals(electrons, muons, jets, met, sel_string):
+        def get_final_state_totals(electrons, muons, jets, btags, met, sel_string):
             
             sel, tag = get_selection_and_tag(sel_string)
+            # sel = sel.refine("final_totals_"+tag, cut=op.rng_len(btags)==2)
 
             total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
             total_mu_pt = op.rng_sum(muons, lambda mu: mu.pt)
@@ -165,23 +178,39 @@ class SL_DL_variables(SL_DL_event_selection):
                 Plot.make1D("all_sT"+tag, all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
             ])
 
-        get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "SL_lep_resolved_1b_sel")
-        get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "SL_lep_resolved_2b_sel")
-        get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "SL_lep_resolved_sel")
-        get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "DL_lep_resolved_1b_sel")
-        get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "DL_lep_resolved_2b_sel")
-        get_bjets_params(cleaned_ak4_btags, sorted_ak4_nonbtags, sorted_ak4_btags, "DL_lep_resolved_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "SL_lep_resolved_1b_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "SL_lep_resolved_2b_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "SL_lep_resolved_3b_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "SL_lep_resolved_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "DL_lep_resolved_1b_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "DL_lep_resolved_2b_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "DL_lep_resolved_3b_sel")
+        get_bjets_params(cleaned_ak4_btags, sorted_ak4_btags, sorted_ak4_nonbtags, "DL_lep_resolved_sel")
         
         get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_1b_sel")
         get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_2b_sel")
+        get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_3b_sel")
         get_m_top_for_SL(cleaned_ak4_btags, cleaned_ak4_nonbtags, tight_electrons, tight_muons, met, "SL_lep_resolved_sel")
 
-        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "SL_lep_resolved_1b_sel")
-        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "SL_lep_resolved_2b_sel")
-        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "SL_lep_resolved_sel")
-        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "DL_lep_resolved_1b_sel")
-        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "DL_lep_resolved_2b_sel")
-        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, met, "DL_lep_resolved_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "SL_lep_resolved_1b_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "SL_lep_resolved_2b_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "SL_lep_resolved_3b_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "SL_lep_resolved_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "DL_lep_resolved_1b_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "DL_lep_resolved_2b_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "DL_lep_resolved_3b_sel")
+        get_final_state_totals(tight_electrons, tight_muons, cleaned_ak4_jets, cleaned_ak4_btags, met, "DL_lep_resolved_sel")
         
+        # ===============================================================================
+        # ============================= Cutflow Report ==================================
+        # ===============================================================================
+        yields.add(SL_lep_resolved_1b_sel, 'SL_lep_resolved_1b_sel')
+        yields.add(SL_lep_resolved_2b_sel, 'SL_lep_resolved_2b_sel')
+        yields.add(SL_lep_resolved_3b_sel, 'SL_lep_resolved_3b_sel')
+        yields.add(SL_lep_resolved_sel, 'SL_lep_resolved_sel')
+        yields.add(DL_lep_resolved_1b_sel, 'DL_lep_resolved_1b_sel')
+        yields.add(DL_lep_resolved_2b_sel, 'DL_lep_resolved_2b_sel')
+        yields.add(DL_lep_resolved_3b_sel, 'DL_lep_resolved_3b_sel')
+        yields.add(DL_lep_resolved_sel, 'DL_lep_resolved_sel')
 
         return plots

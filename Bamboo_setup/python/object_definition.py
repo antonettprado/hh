@@ -48,8 +48,7 @@ def calculate_met_quantities(jets, electrons, muons, met_pt):
     mht = op.sum(mht_jets, mht_electrons, mht_muons)
     met_ld = op.sum(op.product(0.6, met_pt), op.product(0.4, mht))
     return ht_jets, mht, met_ld
-
-        
+       
 def electron_basic_selection(electrons):
     return op.select(electrons, lambda el: el.mvaFall17V2noIso_WPL)
 
@@ -214,6 +213,9 @@ def ak4_vbf_jet_cleaning(vbf_jets, jets, btags, deltar_cut, type):
 
 def ak4_btag_selection(jets):
     return op.select(jets, lambda jet: jet.btagDeepFlavB > 0.2770) # WP_M
+
+def ak4_true_bjet_selection(jets):
+    return op.select(jets, lambda jet: jet.hadronFlavour == 5)
 
 def ak8_jet_selection(fatjets, subjets):
     return op.select(fatjets, lambda jet: op.AND(
