@@ -12,7 +12,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_event_selection, self).__init__(args)
 
-    def object_and_event_selection(self, tree, noSel):
+    def object_and_event_selection(self, tree, noSel, MC_bjets=False):
         # ===============================================================================
         # ============================= Object Selection ================================
         # ===============================================================================
@@ -51,8 +51,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_jets, fakeable_muons)
 
         # Select AK4 b-tags
-        cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets)
-        # cleaned_ak4_btags = object_defs.ak4_true_bjet_selection(cleaned_ak4_jets)
+        if MC_bjets is True:
+            cleaned_ak4_btags = object_defs.ak4_true_bjet_selection(cleaned_ak4_jets)
+        else:
+            cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets)
 
         # Select AK8 Jets
         ak8_jets = object_defs.ak8_jet_selection(tree.FatJet, tree.SubJet)
@@ -291,7 +293,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(yields)
         yields.add(noSel, 'Basic Event Selection')
 
-        objects, selections = self.object_and_event_selection(tree, noSel)
+        objects, selections = self.object_and_event_selection(tree, noSel, MC_bjets=True)
         tight_electrons = objects["tight_electrons"]
         tight_muons = objects["tight_muons"]
         cleaned_ak4_jets = objects["cleaned_ak4_jets"]

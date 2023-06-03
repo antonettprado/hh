@@ -245,4 +245,3 @@ def ak8_btag_selection(fatjets, subjets):
         op.AND(find_subjets(jet, subjets)[1].pt > 30, find_subjets(jet, subjets)[1].btagDeepB > 0.2770) # WP_M
         )
     )
-
