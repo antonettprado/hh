@@ -43,8 +43,12 @@ class SL_DL_variables(SL_DL_event_selection):
         sorted_ak4_btags = op.sort(cleaned_ak4_btags, lambda jet: -jet.pt)
         cleaned_ak4_nonbtags = op.select(cleaned_ak4_jets, lambda ak4: op.NOT(op.rng_any(cleaned_ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
 
-        SL_lep_resolved_sel = SL_lep_resolved_sel.refine("Only "+str(NUM_BJETS)+" bJets/event", cut=[op.rng_count(cleaned_ak4_btags) >= NUM_BJETS])
-        DL_lep_resolved_sel = DL_lep_resolved_sel.refine("Only "+str(NUM_BJETS)+" bJets/eventt", cut=[op.rng_count(cleaned_ak4_btags) >= NUM_BJETS])
+        if NUM_BJETS == 2:
+            SL_lep_resolved_sel = SL_lep_resolved_sel.refine("Only "+str(NUM_BJETS)+" bJets/event", cut=[op.rng_count(cleaned_ak4_btags) == NUM_BJETS])
+            DL_lep_resolved_sel = DL_lep_resolved_sel.refine("Only "+str(NUM_BJETS)+" bJets/eventt", cut=[op.rng_count(cleaned_ak4_btags) == NUM_BJETS])
+        elif NUM_BJETS == 3:
+            SL_lep_resolved_sel = SL_lep_resolved_sel.refine("Only "+str(NUM_BJETS)+" bJets/event", cut=[op.rng_count(cleaned_ak4_btags) >= NUM_BJETS])
+            DL_lep_resolved_sel = DL_lep_resolved_sel.refine("Only "+str(NUM_BJETS)+" bJets/eventt", cut=[op.rng_count(cleaned_ak4_btags) >= NUM_BJETS])
 
         def get_selection_and_tag(sel_string):
             if "SL" in sel_string:
