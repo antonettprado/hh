@@ -12,16 +12,14 @@ class gen_variables(NanoAODHistoModule):
 
     def __init__(self, args):
         super(gen_variables, self).__init__(args)
+        self.jets_pt_cut = None
+        self.bjets_num = None
 
     def addArgs(self, parser):
         super(gen_variables, self).addArgs(parser)
         parser.add_argument("--jets_pt_cut", action='store',type=int, default=25, help='Pt cut for all jets')
         parser.add_argument("--bjets_num", action='store', type=int, default=2, help='Number of bjets per event')
-        print("====================================")
-        print(f"Jets pt cut: {parser.jets_pt_cut}")
-        print(f"Num. of bjets/event: {parser.bjets_num}")
-        print("====================================")
-        
+
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
         return super(NanoAODHistoModule, self).prepareTree(tree=tree,
                                                             sample=sample,
@@ -31,8 +29,11 @@ class gen_variables(NanoAODHistoModule):
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
-        JETS_PT_CUT=self.parser.jets_pt_cut
-        BJETS_NUM = self.parser.bjets_num
+        print(f'Pt cut for all jets: {self.args.jets_pt_cut}')
+        print(f'Num. of bjets/event: {self.args.bjets_num}')
+
+        JETS_PT_CUT=self.args.jets_pt_cut
+        BJETS_NUM = self.args.bjets_num
 
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
@@ -45,16 +46,16 @@ class gen_variables(NanoAODHistoModule):
         genMuons = op.select(genParts, lambda part: op.AND(op.abs(part.pdgId)==13, op.abs(part.genPartMother.pdgId)==24))
         met = tree.GenMET
         # ================================================================
-        selected_genJets = op.select(genJets, lambda jet: jet.pt > JETPT_CUT)
+        selected_genJets = op.select(genJets, lambda jet: jet.pt > JETS_PT_CUT)
 
         bJets = op.select(selected_genJets, lambda jet: jet.hadronFlavour==5)
         sorted_bJets = op.sort(bJets, lambda jet: -jet.pt)
         nonbJets = op.select(selected_genJets, lambda jet: op.NOT(jet.hadronFlavour == 5))
 
-        if NUM_BJETS == 2:
-            basicSel = noSel.refine("Only "+str(NUM_BJETS)+" bJets/event", cut=[op.rng_count(bJets) == BJETS_NUM])
-        elif NUM_BJETS == 3:
-            basicSel = noSel.refine("Only "+str(NUM_BJETS)+" bJets/event", cut=[op.rng_count(bJets) >= BJETS_NUM])
+        if BJETS_NUM == 2:
+            basicSel = noSel.refine("Only "+str(BJETS_NUM)+" bJets/event", cut=[op.rng_count(bJets) == BJETS_NUM])
+        elif BJETS_NUM == 3:
+            basicSel = noSel.refine("Only "+str(BJETS_NUM)+" bJets/event", cut=[op.rng_count(bJets) >= BJETS_NUM])
         
         SL_sel = basicSel.refine("SL_sel", cut=[op.OR(
             op.AND(op.rng_len(genElectrons) == 1, op.rng_len(genMuons) == 0),
@@ -64,10 +65,20 @@ class gen_variables(NanoAODHistoModule):
             op.AND(op.rng_len(genElectrons)==0, op.rng_len(genMuons) == 2),
             op.AND(op.rng_len(genElectrons)==1, op.rng_len(genMuons) == 1))])
 
-        def get_nH_and_nT(genParts, bJets, sel):
+        def get_selection_and_tag(sel_string):
+            if "SL" in sel_string:
+                sel, tag = SL_sel, "SL_"
+            elif "DL" in sel_string:
+                sel, tag = DL_sel, "DL_"
+            elif "basicSel" in sel_string:
+                sel, tag = basicSel, "basicSel_"
+            return sel, tag
+        
+        def get_from_basicSel(genParts, sorted_bjets, sel_string):
+
+            sel, tag = get_selection_and_tag(sel_string)
 
             bParts = op.select(genParts, lambda part: op.OR(part.pdgId == 5, part.pdgId == -5))
-
             bParts_from_H = op.select(bParts, lambda b: b.genPartMother.pdgId == 25)
             bParts_from_T = op.select(bParts, lambda b: op.abs(b.genPartMother.pdgId) == 6)
             n_b_from_H = op.rng_len(bParts_from_H)
@@ -76,14 +87,14 @@ class gen_variables(NanoAODHistoModule):
             n_T = op.rng_count(genParts, lambda part: op.abs(part.pdgId) == 6)
 
             plots.extend([
-                Plot.make1D("n_b_from_H", n_b_from_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from H"),
-                Plot.make1D("n_b_from_T", n_b_from_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from T"),
-                Plot.make1D("n_H", n_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of H"),
-                Plot.make1D("n_T", n_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of T"),
+                Plot.make1D(tag+"n_b_from_H", n_b_from_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from H"),
+                Plot.make1D(tag+"n_b_from_T", n_b_from_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from T"),
+                Plot.make1D(tag+"n_H", n_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of H"),
+                Plot.make1D(tag+"n_T", n_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of T"),
             ])
 
             # #------------------ Get deltaR between b-particle and b-jet --------------------
-            jet_part_pairs = op.combine((bJets, bParts_from_H), N=2)
+            jet_part_pairs = op.combine((sorted_bjets, bParts_from_H), N=2)
             deltaR_of_pairs = op.map(jet_part_pairs, lambda pair: op.deltaR(pair[0].p4, pair[1].p4))
 
             idx_of_min_pair = op.rng_min_element_index(deltaR_of_pairs, lambda dR: dR)
@@ -99,54 +110,64 @@ class gen_variables(NanoAODHistoModule):
                 op.deltaR(jet_of_min_pair.p4, part_of_min_pair.p4) == dR,
                 op.deltaR(jet_of_conj_pair.p4, part_of_conj_pair.p4) == dR))
 
-            # deltaR_0_plot = Plot.make1D("two_deltaR_sel0", two_deltaR[0], BOTH_sels, EqBin(100, 0, 1), title="deltaR", xTitle="")
-            # deltaR_1_plot = Plot.make1D("two_deltaR_sel1", two_deltaR[1], BOTH_sels, EqBin(100, 0, 1), title="deltaR", xTitle="")
+            # deltaR_0_plot = Plot.make1D(tag+"two_deltaR_sel0", two_deltaR[0], BOTH_sels, EqBin(100, 0, 1), title="deltaR", xTitle="")
+            # deltaR_1_plot = Plot.make1D(tag+"two_deltaR_sel1", two_deltaR[1], BOTH_sels, EqBin(100, 0, 1), title="deltaR", xTitle="")
             # two_deltaR_plot = SummedPlot("two_deltaR", [deltaR_0_plot, deltaR_1_plot], xTitle="")
             # plots.extend[(two_deltaR_plot)]
-            # #-------------------------------------------------------------------------------
+
+            # #---------------------- Get 2D plots of bquarks from H ---------------------------
+            bParts_from_H_dEta = bParts_from_H[0].eta - bParts_from_H[1].eta
+            bParts_from_H_dPhi = op.deltaPhi(bParts_from_H[0].p4, bParts_from_H[1].p4)
+            bParts_from_H_deltaR = op.deltaR(bParts_from_H[0].p4, bParts_from_H[1].p4)
+
+            bjet0 = sorted_bjets[0]
+            bjet1 = sorted_bjets[1]
+            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
             
-        def get_selection_and_tag(sel_string):
-            if "SL" in sel_string:
-                sel, tag = SL_sel, "_SL"
-            elif "DL" in sel_string:
-                sel, tag = DL_sel, "_DL"
-            return sel, tag
-        
+            plots.extend([
+                Plot.make2D(tag+"bPartsH_dPhi_vs_dEta", [bParts_from_H_dEta, bParts_from_H_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bPartsH_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dEta], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="deltaEta"),
+                Plot.make2D(tag+"bPartsH_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dPhi], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bPartsH_deltaR_vs_bjets_mbb", [bjets_mbb, bParts_from_H_deltaR], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="deltaR"),
+            ])
+
+            # #---------------------- Get 2D plots of bquarks from T ---------------------------
+            bParts_from_T_dEta = bParts_from_T[0].eta - bParts_from_T[1].eta
+            bParts_from_T_dPhi = op.deltaPhi(bParts_from_T[0].p4, bParts_from_T[1].p4)
+            bParts_from_T_deltaR = op.deltaR(bParts_from_T[0].p4, bParts_from_T[1].p4)
+
+            bjet0 = sorted_bjets[0]
+            bjet1 = sorted_bjets[1]
+            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
+            
+            plots.extend([
+                Plot.make2D(tag+"bPartsT_dPhi_vs_dEta", [bParts_from_T_dEta, bParts_from_T_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bPartsT_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dEta], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="deltaEta"),
+                Plot.make2D(tag+"bPartsT_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dPhi], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bPartsT_deltaR_vs_bjets_mbb", [bjets_mbb, bParts_from_T_deltaR], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="deltaR"),
+            ])
+            
         def get_bjets_params(sorted_bjets, sel_string):
             
             sel, tag = get_selection_and_tag(sel_string)
 
             bjet0 = sorted_bjets[0]
             bjet1 = sorted_bjets[1]
-
             bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
             bjets_deltaPhi = op.deltaPhi(bjet0.p4, bjet1.p4)
             bjets_deltaEta = bjet0.eta - bjet1.eta
             bjets_deltaR = op.deltaR(bjet0.p4, bjet1.p4)
-            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
+            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
 
             plots.extend([
-                Plot.make1D("bjets0_pT"+tag, bjet0.pt, sel, EqBin(BJET0_PT_BINS, BJET0_MIN, BJET0_MAX), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
-                Plot.make1D("bjets1_pT"+tag, bjet1.pt, sel, EqBin(BJET1_PT_BINS, BJET1_MIN, BJET1_MAX), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
-                Plot.make1D("bjets_mean_pT"+tag, bjets_mean_pT, sel, EqBin(BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
-                Plot.make1D("bjets_deltaEta"+tag, bjets_deltaEta, sel, EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), title="", xTitle="deltaEta for bjets"),
-                Plot.make1D("bjets_deltaPhi"+tag, bjets_deltaPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="deltaPhi for bjets"),
-                Plot.make1D("bjets_deltaR"+tag, bjets_deltaR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="deltaR for bjets"),
-                Plot.make1D("bjets_mbb"+tag, bjets_mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)"),
-                Plot.make2D("bjets_twoD"+tag, [bjets_deltaEta, bjets_deltaPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
-            ])
-
-            bParts = op.select(genParts, lambda part: op.OR(part.pdgId == 5, part.pdgId == -5))
-            bParts_from_H = op.select(bParts, lambda b: b.genPartMother.pdgId == 25)
-            bParts_from_H_dEta = bParts_from_H[0].eta - bParts_from_H[1].eta
-            bParts_from_H_dPhi = op.deltaPhi(bParts_from_H[0].p4, bParts_from_H[1].p4)
-            bParts_from_H_deltaR = op.deltaR(bParts_from_H[0].p4, bParts_from_H[1].p4)
-
-            plots.extend([
-                Plot.make2D("bParts_dEta_vs_dPhi"+tag, [bParts_from_H_dEta, bParts_from_H_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
-                Plot.make2D("bjets_mbb_vs_bParts_dEta"+tag, [bjets_mbb, bParts_from_H_dEta], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="deltaEta"),
-                Plot.make2D("bjets_mbb_vs_bParts_dPhi"+tag, [bjets_mbb, bParts_from_H_dPhi], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="deltaPhi"),
-                Plot.make2D("bjets_mbb_vs_bParts_deltaR"+tag, [bjets_mbb, bParts_from_H_deltaR], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="deltaR"),
+                Plot.make1D(tag+"bjets0_pT", bjet0.pt, sel, EqBin(BJET0_PT_BINS, BJET0_MIN, BJET0_MAX), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
+                Plot.make1D(tag+"bjets1_pT", bjet1.pt, sel, EqBin(BJET1_PT_BINS, BJET1_MIN, BJET1_MAX), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
+                Plot.make1D(tag+"bjets_mean_pT", bjets_mean_pT, sel, EqBin(BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
+                Plot.make1D(tag+"bjets_deltaEta", bjets_deltaEta, sel, EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), title="", xTitle="deltaEta for bjets"),
+                Plot.make1D(tag+"bjets_deltaPhi", bjets_deltaPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="deltaPhi for bjets"),
+                Plot.make1D(tag+"bjets_deltaR", bjets_deltaR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="deltaR for bjets"),
+                Plot.make1D(tag+"bjets_mbb", bjets_mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)"),
+                Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_deltaEta, bjets_deltaPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
             ])
 
         def get_m_top_for_SL(bJets, nonbJets, electrons, muons, met, sel_string):
@@ -172,9 +193,9 @@ class gen_variables(NanoAODHistoModule):
             tops_m_avg = (t1_mInv + t2_mT)/2
         
             plots.extend([
-                Plot.make1D("t1_mInv"+tag, t1_mInv, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
-                Plot.make1D("t2_mT"+tag, t2_mT, m_top_sel, EqBin(T2_BINS, T2_MIN, T2_MAX), title="", xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D("tops_m_avg"+tag, tops_m_avg, m_top_sel, EqBin(T_AVG_BINS, T_AVG_MIN, T_AVG_MAX), title="", xTitle="m_{avg} for tops (GeV)"),
+                Plot.make1D(tag+"t1_mInv", t1_mInv, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
+                Plot.make1D(tag+"t2_mT", t2_mT, m_top_sel, EqBin(T2_BINS, T2_MIN, T2_MAX), title="", xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"tops_m_avg", tops_m_avg, m_top_sel, EqBin(T_AVG_BINS, T_AVG_MIN, T_AVG_MAX), title="", xTitle="m_{avg} for tops (GeV)"),
             ])
 
         def get_final_state_totals(electrons, muons, jets, met, sel_string):
@@ -198,14 +219,14 @@ class gen_variables(NanoAODHistoModule):
             all_mT = (total_el_p4 + total_mu_p4 + total_jet_p4 + met.p4).Mt()
 
             plots.extend([
-                Plot.make1D("all_mInv_noMET"+tag, all_mInv_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
-                Plot.make1D("all_mT_noMET"+tag, all_mT_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
-                Plot.make1D("all_mInv"+tag, all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
-                Plot.make1D("all_mT"+tag, all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
-                Plot.make1D("all_sT"+tag, all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
+                Plot.make1D(tag+"all_mInv_noMET", all_mInv_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
+                Plot.make1D(tag+"all_mT_noMET", all_mT_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
+                Plot.make1D(tag+"all_mInv", all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
+                Plot.make1D(tag+"all_mT", all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
+                Plot.make1D(tag+"all_sT", all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
             ])
 
-        get_nH_and_nT(genParts, bJets, basicSel)
+        get_from_basicSel(genParts, sorted_bJets, 'basicSel')
 
         get_bjets_params(sorted_bJets, 'SL')
         get_bjets_params(sorted_bJets, 'DL')
@@ -223,5 +244,21 @@ class gen_variables(NanoAODHistoModule):
         yields.add(DL_sel, 'DL_sel')
         
         return plots
+
+    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+        super(gen_variables, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        from bamboo.plots import Plot, DerivedPlot
+        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
+        from bamboo.analysisutils import loadPlotIt
+        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
+        from plotit.plotit import Stack
+        from bamboo.root import gbl
+        for plot in plots_2D:
+            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+            cv = gbl.TCanvas(f"c{plot.name}")
+            expStack.obj.Draw("COLZ")
+            cv.Update()
+            import os
+            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
 
     

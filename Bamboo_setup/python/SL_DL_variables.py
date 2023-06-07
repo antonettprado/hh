@@ -5,7 +5,7 @@ from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
 from SL_DL_event_selection import SL_DL_event_selection
-from variable_ranges import *
+from constants import *
 import object_definition as object_defs
 import event_definition as event_defs
 
@@ -38,10 +38,16 @@ class SL_DL_variables(SL_DL_event_selection):
 
         SL_lep_resolved_sel = selections["SL"]["SL_lep_resolved_sel"]
         DL_lep_resolved_sel = selections["DL"]["DL_lep_resolved_sel"]
+
+        SL_lep_boosted_sel = selections["SL"]["SL_lep_boosted_sel"]
+        DL_lep_boosted_sel = selections["DL"]["DL_lep_boosted_sel"]
         # ================================================================
-        
+
+        subjets = tree.SubJet
         sorted_ak4_btags = op.sort(cleaned_ak4_btags, lambda jet: -jet.pt)
         cleaned_ak4_nonbtags = op.select(cleaned_ak4_jets, lambda ak4: op.NOT(op.rng_any(cleaned_ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
+
+        sorted_ak8_btags = op.sort(cleaned_ak8_btags, lambda jet: -jet.pt)
 
         if NUM_BJETS == 2:
             SL_lep_resolved_sel = SL_lep_resolved_sel.refine("Only "+str(NUM_BJETS)+" bJets/event", cut=[op.rng_count(cleaned_ak4_btags) == NUM_BJETS])
@@ -57,12 +63,12 @@ class SL_DL_variables(SL_DL_event_selection):
                 sel, tag = DL_lep_resolved_sel, "_DL"
             return sel, tag
         
-        def get_bjets_params(sorted_bjets, sel_string):
+        def get_bjets_params(sorted_ak4_btags, sel_string):
 
             sel, tag = get_selection_and_tag(sel_string)
 
-            bjet0 = sorted_bjets[0]
-            bjet1 = sorted_bjets[1]
+            bjet0 = sorted_ak4_btags[0]
+            bjet1 = sorted_ak4_btags[1]
 
             bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
             bjets_deltaEta = bjet0.eta - bjet1.eta
@@ -136,6 +142,13 @@ class SL_DL_variables(SL_DL_event_selection):
                 Plot.make1D("all_mT"+tag, all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
                 Plot.make1D("all_sT"+tag, all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
             ])
+
+        def get_bjets_params_for_boosted(sorted_ak8_btags, subjets, sel_string):
+
+            ak8_subjets = find_subjets(jet, subjets)
+            subjet0 = ak8_subjets[0]
+            subjet1 = ak8_subjets[1]
+
 
         get_bjets_params(sorted_ak4_btags, "SL_lep_resolved_sel")
         get_bjets_params(sorted_ak4_btags, "DL_lep_resolved_sel")
