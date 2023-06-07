@@ -4,7 +4,7 @@ from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
 from bamboo.analysismodules import NanoAODHistoModule
-from variable_ranges import *
+from constants import *
 import object_definition as object_defs
 import event_definition as event_defs
 
@@ -52,10 +52,11 @@ class gen_variables(NanoAODHistoModule):
         sorted_bJets = op.sort(bJets, lambda jet: -jet.pt)
         nonbJets = op.select(selected_genJets, lambda jet: op.NOT(jet.hadronFlavour == 5))
 
+        basicSel = noSel.refine("Only events with 2 non-bjets", cut=[op.rng_count(nonbJets)==2])
         if BJETS_NUM == 2:
-            basicSel = noSel.refine("Only "+str(BJETS_NUM)+" bJets/event", cut=[op.rng_count(bJets) == BJETS_NUM])
+            basicSel = basicSel.refine("Only "+str(BJETS_NUM)+" bJets/event", cut=[op.rng_count(bJets) == BJETS_NUM])
         elif BJETS_NUM == 3:
-            basicSel = noSel.refine("Only "+str(BJETS_NUM)+" bJets/event", cut=[op.rng_count(bJets) >= BJETS_NUM])
+            basicSel = basicSel.refine("Only "+str(BJETS_NUM)+" bJets/event", cut=[op.rng_count(bJets) >= BJETS_NUM])
         
         SL_sel = basicSel.refine("SL_sel", cut=[op.OR(
             op.AND(op.rng_len(genElectrons) == 1, op.rng_len(genMuons) == 0),
@@ -170,32 +171,33 @@ class gen_variables(NanoAODHistoModule):
                 Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_deltaEta, bjets_deltaPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
             ])
 
-        def get_m_top_for_SL(bJets, nonbJets, electrons, muons, met, sel_string):
+        def get_m_top_for_SL(sorted_bjets, nonbJets, electrons, muons, met, sel_string):
 
             sel, tag = get_selection_and_tag(sel_string)
-            m_top_sel = sel.refine("m_top_sel", cut=[op.rng_len(nonbJets)>=2])
+
+            t1_mInv_leadingb = op.invariant_mass(sorted_bjets[0].p4, nonbJets[0].p4, nonbJets[1].p4)
+            t1_mInv_subleadingb = op.invariant_mass(sorted_bjets[1].p4, nonbJets[0].p4, nonbJets[1].p4)
 
             m_top = 172.76
             jj_combos = op.combine((nonbJets),N=2)
-            b1_jj_combos = op.combine((bJets, jj_combos), N=2)
+            b1_jj_combos = op.combine((sorted_bjets, jj_combos), N=2)
             b1_jj_combos_mInv = op.map(b1_jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1][0].p4, combo[1][1].p4))
             t1_mInv_index = op.rng_min_element_index(b1_jj_combos_mInv, lambda bjj: op.abs(bjj-m_top))
             t1_mInv = b1_jj_combos_mInv[t1_mInv_index]
 
             t1_mInv_combo = b1_jj_combos[t1_mInv_index]
             b1 = t1_mInv_combo[0]
-            b2 = op.rng_find(bJets, lambda bjet: op.NOT(bjet.idx == b1.idx))  
+            b2 = op.rng_find(sorted_bjets, lambda bjet: op.NOT(bjet.idx == b1.idx))  
             if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
                 t2_mT = (b2.p4 + electrons[0].p4 + met.p4).Mt()
             if op.rng_len(electrons)==0 and op.rng_len(muons)==1:
                 t2_mT = (b2.p4 + muons[0].p4 + met.p4).Mt()
-
-            tops_m_avg = (t1_mInv + t2_mT)/2
         
             plots.extend([
-                Plot.make1D(tag+"t1_mInv", t1_mInv, m_top_sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
-                Plot.make1D(tag+"t2_mT", t2_mT, m_top_sel, EqBin(T2_BINS, T2_MIN, T2_MAX), title="", xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D(tag+"tops_m_avg", tops_m_avg, m_top_sel, EqBin(T_AVG_BINS, T_AVG_MIN, T_AVG_MAX), title="", xTitle="m_{avg} for tops (GeV)"),
+                Plot.make1D(tag+"t1_mInv_leadingb", t1_mInv_leadingb, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{inv} (bjj for leaading b) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_subleadingb", t1_mInv_subleadingb, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_mInv", t1_mInv, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), title="", xTitle="m_{0} (b1_jj) for top1 (GeV)"),
+                Plot.make1D(tag+"t2_mT", t2_mT, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), title="", xTitle="m_{T} for top2 (GeV)"),
             ])
 
         def get_final_state_totals(electrons, muons, jets, met, sel_string):
