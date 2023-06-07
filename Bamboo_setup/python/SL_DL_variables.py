@@ -101,11 +101,14 @@ class SL_DL_variables(SL_DL_event_selection):
 
             t1_mInv_combo = b1_jj_combos[t1_mInv_index]
             b1 = t1_mInv_combo[0]
-            b2 = op.rng_find(bjets, lambda bjet: op.NOT(bjet.idx == b1.idx))  
+            rest_bjets = op.select(bjets, lambda b: op.NOT(b.idx == b1.idx))
             if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
-                t2_mT = (b2.p4 + electrons[0].p4 + met.p4).Mt()
+                lep = electrons[0]
             if op.rng_len(electrons)==0 and op.rng_len(muons)==1:
-                t2_mT = (b2.p4 + muons[0].p4 + met.p4).Mt()
+                lep = muons[0]
+            b2_lnu_combos_mT = op.map(rest_bjets, lambda b2: (b2.p4 + lep.p4() + met.p4).Mt())
+            t2_mT_index = op.rng_min_element_index(b2_lnu_combos_mT, lambda blnu: op.abs(blnu-m_top))
+            t2_mT = b2_lnu_combos_mT[t2_mT_index]
 
             tops_m_avg = (t1_mInv + t2_mT)/2
         
