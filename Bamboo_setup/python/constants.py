@@ -1,5 +1,3 @@
-WP_M = 0.2770
-
 # Variable ranges common across reco and gen vars plots ==============
 MBB_BINS, MBB_MIN, MBB_MAX = 250, 0, 500
 BJET0_PT_BINS, BJET0_MIN, BJET0_MAX = 250, 0, 500
