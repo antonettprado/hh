@@ -69,17 +69,17 @@ def sl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 3, 
-        op.rng_len(ak4_btags) == 2
+        op.rng_len(ak4_btags) >= 2
         )
     )
 
-def sl_resolved_3b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
-    return (op.AND(
-        op.rng_len(ak8_btags) == 0,
-        op.rng_len(ak4_jets) >= 3, 
-        op.rng_len(ak4_btags) >= 3,
-        )
-    )
+#def sl_resolved_3b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
+#    return (op.AND(
+#        op.rng_len(ak8_btags) == 0,
+#        op.rng_len(ak4_jets) >= 3, 
+#        op.rng_len(ak4_btags) >= 3,
+#        )
+#    )
 
 def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
@@ -113,7 +113,7 @@ def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT)
             muon_ConePt[muons[0].idx] > 25
             ),
         op.sum(electrons[0].charge, muons[0].charge) == 0,
-        op.OR(HLT.Ele32_WPTight_Gsf, HLT.IsoMu24, HLT.IsoMu27, HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ) # do we want HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL for impact parameter study
+        op.OR(HLT.Ele32_WPTight_Gsf, HLT.IsoMu24, HLT.IsoMu27, HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ)
         )
     )
 
@@ -124,7 +124,7 @@ def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT
         muon_ConePt[muons[0].idx] > 25,
         muon_ConePt[muons[1].idx] > 15,
         op.sum(muons[0].charge, muons[1].charge) == 0,
-        op.OR(HLT.IsoMu24, HLT.IsoMu27, HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8) # do we want HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL for impact parameter cut study
+        op.OR(HLT.IsoMu24, HLT.IsoMu27, HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
         )
     )
 
@@ -148,17 +148,17 @@ def dl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 2, 
-        op.rng_len(ak4_btags) == 2
+        op.rng_len(ak4_btags) >= 2
         )
     )
 
-def dl_resolved_3b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
-    return (op.AND(
-        op.rng_len(ak8_btags) == 0,
-        op.rng_len(ak4_jets) >= 2, 
-        op.rng_len(ak4_btags) >= 3
-        )
-    )
+#def dl_resolved_3b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
+#    return (op.AND(
+#        op.rng_len(ak8_btags) == 0,
+#        op.rng_len(ak4_jets) >= 3, 
+#        op.rng_len(ak4_btags) >= 3
+#        )
+#    )
 
 def dl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.rng_len(ak8_btags) >= 1)

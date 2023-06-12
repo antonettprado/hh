@@ -12,6 +12,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_event_selection, self).__init__(args)
 
+    def addArgs(self, parser):
+        super(SL_DL_event_selection, self).addArgs(parser)
+        parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
+
     def object_and_event_selection(self, tree, noSel, MC_bjets=False):
         # ===============================================================================
         # ============================= Object Selection ================================
@@ -65,6 +69,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # Select AK8 b-tags
         cleaned_ak8_btags = object_defs.ak8_btag_selection(cleaned_ak8_jets, tree.SubJet)
 
+        # Subjets for AK8 jets
+        ak8_subjets = tree.SubJet
+
         # Select AK4 VBF Jets
         ak4_vbf_jets = object_defs.ak4_vbf_jet_selection(tree.Jet)
         ak4_vbf_jets = op.sort(ak4_vbf_jets, lambda jet: -jet.pt)
@@ -98,8 +105,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_e_resolved_2b_sel = SL_e_only_sel.refine("SL electron resolved 2b jets selection", cut=[
             event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_e_resolved_3b_sel = SL_e_only_sel.refine("SL electron resolved 3b jets selection", cut=[
-            event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        #SL_e_resolved_3b_sel = SL_e_only_sel.refine("SL electron resolved 3b jets selection", cut=[
+        #    event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_e_resolved_sel = SL_e_only_sel.refine("SL electron resolved jet selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_e_boosted_sel = SL_e_only_sel.refine("SL electron boosted jet selection", cut=[
@@ -115,8 +122,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_mu_resolved_2b_sel = SL_mu_only_sel.refine("SL muon resolved 2b jets selection", cut=[
             event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_resolved_3b_sel = SL_mu_only_sel.refine("SL muon resolved 3b jets selection", cut=[
-            event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        #SL_mu_resolved_3b_sel = SL_mu_only_sel.refine("SL muon resolved 3b jets selection", cut=[
+        #    event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_mu_resolved_sel = SL_mu_only_sel.refine("SL muon resolved jet selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_mu_boosted_sel = SL_mu_only_sel.refine("SL muon boosted jet selection", cut=[
@@ -133,8 +140,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_lep_resolved_2b_sel = SL_lep_only_sel.refine("SL resolved 2b jets selection", cut=[
             event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_lep_resolved_3b_sel = SL_lep_only_sel.refine("SL resolved 3b jets selection", cut=[
-            event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        #SL_lep_resolved_3b_sel = SL_lep_only_sel.refine("SL resolved 3b jets selection", cut=[
+        #    event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_lep_resolved_sel = SL_lep_only_sel.refine("SL resolved jet selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_lep_boosted_sel = SL_lep_only_sel.refine("SL boosted jet selection", cut=[
@@ -150,8 +157,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_ee_resolved_2b_sel = DL_ee_only_sel.refine("DL ee resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_ee_resolved_3b_sel = DL_ee_only_sel.refine("DL ee resolved 3b jets selection", cut=[
-            event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        #DL_ee_resolved_3b_sel = DL_ee_only_sel.refine("DL ee resolved 3b jets selection", cut=[
+        #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_ee_resolved_sel = DL_ee_only_sel.refine("DL ee resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_ee_boosted_sel = DL_ee_only_sel.refine("DL ee boosted jet selection", cut=[
@@ -167,8 +174,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_emu_resolved_2b_sel = DL_emu_only_sel.refine("DL emu resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_emu_resolved_3b_sel = DL_emu_only_sel.refine("DL emu resolved 3b jets selection", cut=[
-            event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        #DL_emu_resolved_3b_sel = DL_emu_only_sel.refine("DL emu resolved 3b jets selection", cut=[
+        #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_emu_resolved_sel = DL_emu_only_sel.refine("DL emu resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_emu_boosted_sel = DL_emu_only_sel.refine("DL emu boosted jet selection", cut=[
@@ -184,8 +191,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_mumu_resolved_2b_sel = DL_mumu_only_sel.refine("DL mumu resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_mumu_resolved_3b_sel = DL_mumu_only_sel.refine("DL mumu resolved 3b jets selection", cut=[
-            event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        #DL_mumu_resolved_3b_sel = DL_mumu_only_sel.refine("DL mumu resolved 3b jets selection", cut=[
+        #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_mumu_resolved_sel = DL_mumu_only_sel.refine("DL mumu resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_mumu_boosted_sel = DL_mumu_only_sel.refine("DL mumu boosted jet selection", cut=[
@@ -203,8 +210,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_lep_resolved_2b_sel = DL_lep_only_sel.refine("DL resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_lep_resolved_3b_sel = DL_lep_only_sel.refine("DL resolved 3b jets selection", cut=[
-            event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        #DL_lep_resolved_3b_sel = DL_lep_only_sel.refine("DL resolved 3b jets selection", cut=[
+        #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_lep_resolved_sel = DL_lep_only_sel.refine("DL resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_lep_boosted_sel = DL_lep_only_sel.refine("DL boosted jet selection", cut=[
@@ -221,6 +228,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         objects["cleaned_ak4_jets"] = cleaned_ak4_jets
         objects["cleaned_ak4_btags"] = cleaned_ak4_btags
         objects["cleaned_ak8_btags"] = cleaned_ak8_btags
+        objects["ak8_subjets"] = ak8_subjets
         objects["met"] = met
         objects["met_pt"] = met_pt
         objects["met_phi"] = met_phi
@@ -238,49 +246,49 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         selections["SL_e"]["SL_e_resolved_1b_sel"] = SL_e_resolved_1b_sel
         selections["SL_e"]["SL_e_resolved_2b_sel"] = SL_e_resolved_2b_sel
-        selections["SL_e"]["SL_e_resolved_3b_sel"] = SL_e_resolved_3b_sel
+        #selections["SL_e"]["SL_e_resolved_3b_sel"] = SL_e_resolved_3b_sel
         selections["SL_e"]["SL_e_resolved_sel"] = SL_e_resolved_sel
         selections["SL_e"]["SL_e_boosted_sel"] = SL_e_boosted_sel
         selections["SL_e"]["SL_e_sel"] = SL_e_sel
 
         selections["SL_mu"]["SL_mu_resolved_1b_sel"] = SL_mu_resolved_1b_sel
         selections["SL_mu"]["SL_mu_resolved_2b_sel"] = SL_mu_resolved_2b_sel
-        selections["SL_mu"]["SL_mu_resolved_3b_sel"] = SL_mu_resolved_3b_sel
+        #selections["SL_mu"]["SL_mu_resolved_3b_sel"] = SL_mu_resolved_3b_sel
         selections["SL_mu"]["SL_mu_resolved_sel"] = SL_mu_resolved_sel
         selections["SL_mu"]["SL_mu_boosted_sel"] = SL_mu_boosted_sel
         selections["SL_mu"]["SL_mu_sel"] = SL_mu_sel
 
         selections["SL"]["SL_lep_resolved_1b_sel"] = SL_lep_resolved_1b_sel
         selections["SL"]["SL_lep_resolved_2b_sel"] = SL_lep_resolved_2b_sel
-        selections["SL"]["SL_lep_resolved_3b_sel"] = SL_lep_resolved_3b_sel
+        #selections["SL"]["SL_lep_resolved_3b_sel"] = SL_lep_resolved_3b_sel
         selections["SL"]["SL_lep_resolved_sel"] = SL_lep_resolved_sel
         selections["SL"]["SL_lep_boosted_sel"] = SL_lep_boosted_sel
         selections["SL"]["SL_lep_sel"] = SL_lep_sel
 
         selections["DL_ee"]["DL_ee_resolved_1b_sel"] = DL_ee_resolved_1b_sel
         selections["DL_ee"]["DL_ee_resolved_2b_sel"] = DL_ee_resolved_2b_sel
-        selections["DL_ee"]["DL_ee_resolved_3b_sel"] = DL_ee_resolved_3b_sel
+        #selections["DL_ee"]["DL_ee_resolved_3b_sel"] = DL_ee_resolved_3b_sel
         selections["DL_ee"]["DL_ee_resolved_sel"] = DL_ee_resolved_sel
         selections["DL_ee"]["DL_ee_boosted_sel"] = DL_ee_boosted_sel
         selections["DL_ee"]["DL_ee_sel"] = DL_ee_sel
 
         selections["DL_emu"]["DL_emu_resolved_1b_sel"] = DL_emu_resolved_1b_sel
         selections["DL_emu"]["DL_emu_resolved_2b_sel"] = DL_emu_resolved_2b_sel
-        selections["DL_emu"]["DL_emu_resolved_3b_sel"] = DL_emu_resolved_3b_sel
+        #selections["DL_emu"]["DL_emu_resolved_3b_sel"] = DL_emu_resolved_3b_sel
         selections["DL_emu"]["DL_emu_resolved_sel"] = DL_emu_resolved_sel
         selections["DL_emu"]["DL_emu_boosted_sel"] = DL_emu_boosted_sel
         selections["DL_emu"]["DL_emu_sel"] = DL_emu_sel
 
         selections["DL_mumu"]["DL_mumu_resolved_1b_sel"] = DL_mumu_resolved_1b_sel
         selections["DL_mumu"]["DL_mumu_resolved_2b_sel"] = DL_mumu_resolved_2b_sel
-        selections["DL_mumu"]["DL_mumu_resolved_3b_sel"] = DL_mumu_resolved_3b_sel
+        #selections["DL_mumu"]["DL_mumu_resolved_3b_sel"] = DL_mumu_resolved_3b_sel
         selections["DL_mumu"]["DL_mumu_resolved_sel"] = DL_mumu_resolved_sel
         selections["DL_mumu"]["DL_mumu_boosted_sel"] = DL_mumu_boosted_sel
         selections["DL_mumu"]["DL_mumu_sel"] = DL_mumu_sel
 
         selections["DL"]["DL_lep_resolved_1b_sel"] = DL_lep_resolved_1b_sel
         selections["DL"]["DL_lep_resolved_2b_sel"] = DL_lep_resolved_2b_sel
-        selections["DL"]["DL_lep_resolved_3b_sel"] = DL_lep_resolved_3b_sel
+        #selections["DL"]["DL_lep_resolved_3b_sel"] = DL_lep_resolved_3b_sel
         selections["DL"]["DL_lep_resolved_sel"] = DL_lep_resolved_sel
         selections["DL"]["DL_lep_boosted_sel"] = DL_lep_boosted_sel
         selections["DL"]["DL_lep_sel"] = DL_lep_sel
@@ -293,12 +301,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(yields)
         yields.add(noSel, 'Basic Event Selection')
 
-        objects, selections = self.object_and_event_selection(tree, noSel, MC_bjets=True)
+        objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
         tight_electrons = objects["tight_electrons"]
         tight_muons = objects["tight_muons"]
         cleaned_ak4_jets = objects["cleaned_ak4_jets"]
         cleaned_ak4_btags = objects["cleaned_ak4_btags"]
         cleaned_ak8_btags = objects["cleaned_ak8_btags"]
+        ak8_subjets = objects["ak8_subjets"]
         met = objects["met"]
         met_pt = objects["met_pt"]
         met_phi = objects["met_phi"]

@@ -12,13 +12,11 @@ class gen_variables(NanoAODHistoModule):
 
     def __init__(self, args):
         super(gen_variables, self).__init__(args)
-        self.jets_pt_cut = None
-        self.bjets_num = None
 
     def addArgs(self, parser):
         super(gen_variables, self).addArgs(parser)
         parser.add_argument("--jets_pt_cut", action='store',type=int, default=25, help='Pt cut for all jets')
-        parser.add_argument("--bjets_num", action='store', type=int, default=2, help='Number of bjets per event')
+        parser.add_argument("--bjets_num", action='store', type=int, default=2, help='Minimum number of bjets per event')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
         return super(NanoAODHistoModule, self).prepareTree(tree=tree,
@@ -30,7 +28,7 @@ class gen_variables(NanoAODHistoModule):
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
         print(f'Pt cut for all jets: {self.args.jets_pt_cut}')
-        print(f'Num. of bjets/event: {self.args.bjets_num}')
+        print(f'Minimum number of bjets/event: {self.args.bjets_num}')
 
         JETS_PT_CUT=self.args.jets_pt_cut
         BJETS_NUM = self.args.bjets_num
@@ -46,19 +44,13 @@ class gen_variables(NanoAODHistoModule):
         genMuons = op.select(genParts, lambda part: op.AND(op.abs(part.pdgId)==13, op.abs(part.genPartMother.pdgId)==24))
         met = tree.GenMET
         # ================================================================
-
         selected_genJets = op.select(genJets, lambda jet: jet.pt > JETS_PT_CUT)
-
         bJets = op.select(selected_genJets, lambda jet: jet.hadronFlavour==5)
         sorted_bJets = op.sort(bJets, lambda jet: -jet.pt)
         nonbJets = op.select(selected_genJets, lambda jet: op.NOT(jet.hadronFlavour == 5))
+        sorted_nonbJets = op.sort(nonbJets, lambda jet: -jet.pt)
 
-        basicSel = noSel.refine("At least 2 bJets/event", cut=[op.rng_count(bJets) == 2])
-        # if BJETS_NUM == 2:
-        #     basicSel = basicSel.refine("Only 2 bJets/event", cut=[op.rng_count(bJets) == 2])
-        # elif BJETS_NUM == 3:
-        #     basicSel = basicSel.refine("At least 3 bJets/event", cut=[op.rng_count(bJets) >= 3])
-        
+        basicSel = noSel.refine("At least N bJets/event", cut=[op.rng_count(bJets) >= BJETS_NUM])
         SL_sel = basicSel.refine("SL_sel", cut=[op.OR(
             op.AND(op.rng_len(genElectrons) == 1, op.rng_len(genMuons) == 0),
             op.AND(op.rng_len(genElectrons) == 0, op.rng_len(genMuons) == 1))])
@@ -66,9 +58,8 @@ class gen_variables(NanoAODHistoModule):
             op.AND(op.rng_len(genElectrons)==2, op.rng_len(genMuons) == 0),
             op.AND(op.rng_len(genElectrons)==0, op.rng_len(genMuons) == 2),
             op.AND(op.rng_len(genElectrons)==1, op.rng_len(genMuons) == 1))])
-
-        SL_sel = SL_sel.refine("Nonbjets>=2 for SL", cut=[op.rng_len(nonbJets)>=2])
-        DL_sel = DL_sel.refine("Nonbjets>=2 for DL", cut=[op.rng_len(nonbJets)>=2])
+        SL_sel = SL_sel.refine("Nonbjets>=2 for SL", cut=[op.rng_len(sorted_nonbJets)>=2])
+        DL_sel = DL_sel.refine("Nonbjets>=2 for DL", cut=[op.rng_len(sorted_nonbJets)>=2])
 
         def get_selection_and_tag(sel_string):
             if "SL" in sel_string:
@@ -77,11 +68,9 @@ class gen_variables(NanoAODHistoModule):
                 sel, tag = DL_sel, "DL_"
             elif "basicSel" in sel_string:
                 sel, tag = basicSel, "basicSel_"
-
             return sel, tag
         
         def get_from_basicSel(genParts, sorted_bjets, sel_string):
-
             sel, tag = get_selection_and_tag(sel_string)
 
             bParts = op.select(genParts, lambda part: op.OR(part.pdgId == 5, part.pdgId == -5))
@@ -125,7 +114,6 @@ class gen_variables(NanoAODHistoModule):
             bParts_from_H_dEta = bParts_from_H[0].eta - bParts_from_H[1].eta
             bParts_from_H_dPhi = op.deltaPhi(bParts_from_H[0].p4, bParts_from_H[1].p4)
             bParts_from_H_deltaR = op.deltaR(bParts_from_H[0].p4, bParts_from_H[1].p4)
-
             bjet0 = sorted_bjets[0]
             bjet1 = sorted_bjets[1]
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
@@ -141,7 +129,6 @@ class gen_variables(NanoAODHistoModule):
             bParts_from_T_dEta = bParts_from_T[0].eta - bParts_from_T[1].eta
             bParts_from_T_dPhi = op.deltaPhi(bParts_from_T[0].p4, bParts_from_T[1].p4)
             bParts_from_T_deltaR = op.deltaR(bParts_from_T[0].p4, bParts_from_T[1].p4)
-
             bjet0 = sorted_bjets[0]
             bjet1 = sorted_bjets[1]
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
@@ -154,7 +141,6 @@ class gen_variables(NanoAODHistoModule):
             ])
             
         def get_bjets_params(sorted_bjets, sel_string):
-            
             sel, tag = get_selection_and_tag(sel_string)
 
             bjet0 = sorted_bjets[0]
@@ -175,30 +161,24 @@ class gen_variables(NanoAODHistoModule):
                 Plot.make1D(tag+"bjets_mbb", bjets_mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)"),
                 Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_deltaEta, bjets_deltaPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
             ])
-
             return bjets_mbb
 
-        def get_m_top_for_SL(sorted_bjets, nonbjets, electrons, muons, met, sel_string):
-
+        def get_m_top_for_SL(sorted_bjets, sorted_nonbjets, electrons, muons, met, sel_string):
             if "SL" in sel_string:
+                sel, tag = get_selection_and_tag(sel_string)
 
-                sel,  tag = get_selection_and_tag(sel_string)
+                t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
+                t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
 
-                t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, nonbjets[0].p4, nonbjets[1].p4)
-                t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, nonbjets[0].p4, nonbjets[1].p4)
-
-                jj_combos = op.combine((nonbjets),N=2)
+                jj_combos = op.combine((sorted_nonbjets),N=2)
                 b1_jj_combos = op.combine((sorted_bjets, jj_combos), N=2)
                 b1_jj_combos_pt = op.map(b1_jj_combos, lambda combo: (combo[0].p4 + combo[1][0].p4 + combo[1][1].p4).Pt())
                 t1_max_pt_index = op.rng_max_element_index(b1_jj_combos_pt, lambda combo_pt: combo_pt)
                 t1_b1jj_combo = b1_jj_combos[t1_max_pt_index]
-                t1_mInv = op.invariant_mass(t1_b1jj_combo[0].p4, t1_b1jj_combo[1][0].p4, t1_b1jj_combo[1][1].p4)
-
-                t1_b1jj_pt = (t1_b1jj_combo[0].p4 + t1_b1jj_combo[1][0].p4 + t1_b1jj_combo[1][1].p4).Pt()
-                
                 b1 = t1_b1jj_combo[0]
-
-                # For t2: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                
+                t1_mInv = op.invariant_mass(t1_b1jj_combo[0].p4, t1_b1jj_combo[1][0].p4, t1_b1jj_combo[1][1].p4)
+                t1_pt = (t1_b1jj_combo[0].p4 + t1_b1jj_combo[1][0].p4 + t1_b1jj_combo[1][1].p4).Pt()
+                        
                 rest_bjets = op.select(sorted_bjets, lambda b: op.NOT(b.idx == b1.idx))
                 if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
                     lep = electrons[0]
@@ -208,20 +188,18 @@ class gen_variables(NanoAODHistoModule):
                 t2_max_pt_index = op.rng_max_element_index(b2_lnu_combos_pt, lambda blnu_pt: blnu_pt)
                 b2 = rest_bjets[t2_max_pt_index]
                 t2_mT = (b2.p4 + lep.p4 + met.p4).Mt()
-                
-                t2_b2lnu_pt = (b2.p4 + lep.p4 + met.p4).Pt()
+                t2_pt = (b2.p4 + lep.p4 + met.p4).Pt()
                             
                 plots.extend([
                     Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{inv} (bjj for leaading b) for top1 (GeV)"),
                     Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
                     Plot.make1D(tag+"t1_mInv" , t1_mInv, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{0} (b1_jj) for top1 (GeV)"),
-                    Plot.make1D(tag+"t1_b1jj_pt" , t1_b1jj_pt, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="p_{T} of t1_b1jj combo (GeV)"),
+                    Plot.make1D(tag+"t1_pt" , t1_pt, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="p_{T} for top1 (GeV)"),
                     Plot.make1D(tag+"t2_mT" , t2_mT, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="m_{T} for top2 (GeV)"),
-                    Plot.make1D(tag+"t2_b2lnu_pt" , t2_b2lnu_pt, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="p_{T} of t2_b2lnu combo (GeV)"),
+                    Plot.make1D(tag+"t2_pt" , t2_pt, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="p_{T} for top2 (GeV)"),
                 ])
 
         def get_final_state_totals(electrons, muons, jets, met, sel_string):
-
             sel, tag = get_selection_and_tag(sel_string)
             
             total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
@@ -236,13 +214,12 @@ class gen_variables(NanoAODHistoModule):
             
             all_mInv_noMET = (total_el_p4 + total_mu_p4 + total_jet_p4).M()
             all_mT_noMET = (total_el_p4 + total_mu_p4 + total_jet_p4).Mt()
-
             all_mInv = (total_el_p4 + total_mu_p4 + total_jet_p4 + met.p4).M()
             all_mT = (total_el_p4 + total_mu_p4 + total_jet_p4 + met.p4).Mt()
 
             plots.extend([
-                Plot.make1D(tag+"all_mInv_noMET", all_mInv_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
-                Plot.make1D(tag+"all_mT_noMET", all_mT_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
+                Plot.make1D(tag+"all_mInv_noMET", all_mInv_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all without MET", xTitle="m_{inv} (GeV)"),
+                Plot.make1D(tag+"all_mT_noMET", all_mT_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mT_all without MET", xTitle="m_{T} (GeV)"),
                 Plot.make1D(tag+"all_mInv", all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
                 Plot.make1D(tag+"all_mT", all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
                 Plot.make1D(tag+"all_sT", all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
@@ -255,7 +232,7 @@ class gen_variables(NanoAODHistoModule):
         bjets_mbb_SL = get_bjets_params(sorted_bJets, 'SL')
         bjets_mbb_DL = get_bjets_params(sorted_bJets, 'DL')
 
-        get_m_top_for_SL(bJets, nonbJets, genElectrons, genMuons, met, 'SL')
+        get_m_top_for_SL(bJets, sorted_nonbJets, genElectrons, genMuons, met, 'SL')
 
         get_final_state_totals(genElectrons, genMuons, selected_genJets, met, 'SL')
         get_final_state_totals(genElectrons, genMuons, selected_genJets, met, 'DL')
