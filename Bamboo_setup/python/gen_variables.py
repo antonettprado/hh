@@ -88,11 +88,11 @@ class gen_variables(NanoAODHistoModule):
                 Plot.make1D(tag+"n_T", n_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of T"),
             ])
 
-            # #------------------ Get deltaR between b-particle and b-jet --------------------
+            # #------------------ Get dR between b-particle and b-jet --------------------
             jet_part_pairs = op.combine((sorted_bjets, bParts_from_H), N=2)
-            deltaR_of_pairs = op.map(jet_part_pairs, lambda pair: op.deltaR(pair[0].p4, pair[1].p4))
+            dR_of_pairs = op.map(jet_part_pairs, lambda pair: op.dR(pair[0].p4, pair[1].p4))
 
-            idx_of_min_pair = op.rng_min_element_index(deltaR_of_pairs, lambda dR: dR)
+            idx_of_min_pair = op.rng_min_element_index(dR_of_pairs, lambda dR: dR)
             min_pair = jet_part_pairs[idx_of_min_pair]
             jet_of_min_pair = min_pair[0]
             part_of_min_pair = min_pair[1]
@@ -101,43 +101,43 @@ class gen_variables(NanoAODHistoModule):
             jet_of_conj_pair = conj_pair[0]
             part_of_conj_pair = conj_pair[1]        
 
-            two_deltaR = op.select(deltaR_of_pairs, lambda dR: op.OR(
-                op.deltaR(jet_of_min_pair.p4, part_of_min_pair.p4) == dR,
-                op.deltaR(jet_of_conj_pair.p4, part_of_conj_pair.p4) == dR))
+            two_dR = op.select(dR_of_pairs, lambda dR: op.OR(
+                op.dR(jet_of_min_pair.p4, part_of_min_pair.p4) == dR,
+                op.dR(jet_of_conj_pair.p4, part_of_conj_pair.p4) == dR))
 
-            # deltaR_0_plot = Plot.make1D(tag+"two_deltaR_sel0", two_deltaR[0], BOTH_sels, EqBin(100, 0, 1), title="deltaR", xTitle="")
-            # deltaR_1_plot = Plot.make1D(tag+"two_deltaR_sel1", two_deltaR[1], BOTH_sels, EqBin(100, 0, 1), title="deltaR", xTitle="")
-            # two_deltaR_plot = SummedPlot("two_deltaR", [deltaR_0_plot, deltaR_1_plot], xTitle="")
-            # plots.extend[(two_deltaR_plot)]
+            # dR_0_plot = Plot.make1D(tag+"two_dR_sel0", two_dR[0], BOTH_sels, EqBin(100, 0, 1), title="dR", xTitle="")
+            # dR_1_plot = Plot.make1D(tag+"two_dR_sel1", two_dR[1], BOTH_sels, EqBin(100, 0, 1), title="dR", xTitle="")
+            # two_dR_plot = SummedPlot("two_dR", [dR_0_plot, dR_1_plot], xTitle="")
+            # plots.extend[(two_dR_plot)]
 
             # #---------------------- Get 2D plots of bquarks from H ---------------------------
             bParts_from_H_dEta = bParts_from_H[0].eta - bParts_from_H[1].eta
-            bParts_from_H_dPhi = op.deltaPhi(bParts_from_H[0].p4, bParts_from_H[1].p4)
-            bParts_from_H_deltaR = op.deltaR(bParts_from_H[0].p4, bParts_from_H[1].p4)
+            bParts_from_H_dPhi = op.dPhi(bParts_from_H[0].p4, bParts_from_H[1].p4)
+            bParts_from_H_dR = op.dR(bParts_from_H[0].p4, bParts_from_H[1].p4)
             bjet0 = sorted_bjets[0]
             bjet1 = sorted_bjets[1]
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
             
             plots.extend([
-                Plot.make2D(tag+"bPartsH_dPhi_vs_dEta", [bParts_from_H_dEta, bParts_from_H_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
-                Plot.make2D(tag+"bPartsH_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dEta], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="deltaEta"),
-                Plot.make2D(tag+"bPartsH_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dPhi], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="deltaPhi"),
-                Plot.make2D(tag+"bPartsH_deltaR_vs_bjets_mbb", [bjets_mbb, bParts_from_H_deltaR], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="deltaR"),
+                Plot.make2D(tag+"bPartsH_dPhi_vs_dEta", [bParts_from_H_dEta, bParts_from_H_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="dEta", yTitle="dPhi"),
+                Plot.make2D(tag+"bPartsH_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dEta], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="dEta"),
+                Plot.make2D(tag+"bPartsH_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dPhi], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="dPhi"),
+                Plot.make2D(tag+"bPartsH_dR_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dR], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="dR"),
             ])
 
             # #---------------------- Get 2D plots of bquarks from T ---------------------------
             bParts_from_T_dEta = bParts_from_T[0].eta - bParts_from_T[1].eta
-            bParts_from_T_dPhi = op.deltaPhi(bParts_from_T[0].p4, bParts_from_T[1].p4)
-            bParts_from_T_deltaR = op.deltaR(bParts_from_T[0].p4, bParts_from_T[1].p4)
+            bParts_from_T_dPhi = op.dPhi(bParts_from_T[0].p4, bParts_from_T[1].p4)
+            bParts_from_T_dR = op.dR(bParts_from_T[0].p4, bParts_from_T[1].p4)
             bjet0 = sorted_bjets[0]
             bjet1 = sorted_bjets[1]
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
             
             plots.extend([
-                Plot.make2D(tag+"bPartsT_dPhi_vs_dEta", [bParts_from_T_dEta, bParts_from_T_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
-                Plot.make2D(tag+"bPartsT_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dEta], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="deltaEta"),
-                Plot.make2D(tag+"bPartsT_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dPhi], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="deltaPhi"),
-                Plot.make2D(tag+"bPartsT_deltaR_vs_bjets_mbb", [bjets_mbb, bParts_from_T_deltaR], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="deltaR"),
+                Plot.make2D(tag+"bPartsT_dPhi_vs_dEta", [bParts_from_T_dEta, bParts_from_T_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="dEta", yTitle="dPhi"),
+                Plot.make2D(tag+"bPartsT_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dEta], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="dEta"),
+                Plot.make2D(tag+"bPartsT_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dPhi], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="dPhi"),
+                Plot.make2D(tag+"bPartsT_dR_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dR], sel, [EqBin(MBB_BINS, MBB_MIN, MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="dR"),
             ])
             
         def get_bjets_params(sorted_bjets, sel_string):
@@ -146,20 +146,20 @@ class gen_variables(NanoAODHistoModule):
             bjet0 = sorted_bjets[0]
             bjet1 = sorted_bjets[1]
             bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
-            bjets_deltaPhi = op.deltaPhi(bjet0.p4, bjet1.p4)
-            bjets_deltaEta = bjet0.eta - bjet1.eta
-            bjets_deltaR = op.deltaR(bjet0.p4, bjet1.p4)
+            bjets_dPhi = op.dPhi(bjet0.p4, bjet1.p4)
+            bjets_dEta = bjet0.eta - bjet1.eta
+            bjets_dR = op.dR(bjet0.p4, bjet1.p4)
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
 
             plots.extend([
                 Plot.make1D(tag+"bjets0_pT", bjet0.pt, sel, EqBin(BJET0_PT_BINS, BJET0_MIN, BJET0_MAX), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
                 Plot.make1D(tag+"bjets1_pT", bjet1.pt, sel, EqBin(BJET1_PT_BINS, BJET1_MIN, BJET1_MAX), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
                 Plot.make1D(tag+"bjets_mean_pT", bjets_mean_pT, sel, EqBin(BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
-                Plot.make1D(tag+"bjets_deltaEta", bjets_deltaEta, sel, EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), title="", xTitle="deltaEta for bjets"),
-                Plot.make1D(tag+"bjets_deltaPhi", bjets_deltaPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="deltaPhi for bjets"),
-                Plot.make1D(tag+"bjets_deltaR", bjets_deltaR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="deltaR for bjets"),
+                Plot.make1D(tag+"bjets_dEta", bjets_dEta, sel, EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), title="", xTitle="dEta for bjets"),
+                Plot.make1D(tag+"bjets_dPhi", bjets_dPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="dPhi for bjets"),
+                Plot.make1D(tag+"bjets_dR", bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="dR for bjets"),
                 Plot.make1D(tag+"bjets_mbb", bjets_mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)"),
-                Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_deltaEta, bjets_deltaPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="deltaEta", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_dEta, bjets_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="dEta", yTitle="dPhi"),
             ])
             return bjets_mbb
 

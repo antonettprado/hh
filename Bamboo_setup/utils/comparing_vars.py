@@ -1,72 +1,73 @@
 import ROOT
 import os
 from pathlib import Path
-from variable_ranges import *
+from constants import *
 import os
-
-SOURCE_DIR = 'TOTAL_reco_vars_MCbjets_True_2b'
-
-OUT_PATH = os.path.join('Comparisons',SOURCE_DIR)
-if not os.path.exists(OUT_PATH):
-    os.makedirs(OUT_PATH)
-
-# file = ROOT.TFile(OUT_PATH + "/output.root", "RECREATE")
+import argparse
 
 # ROOT.gStyle.SetOptStat(111111)
 ROOT.gStyle.SetPalette(ROOT.kRainBow)
 
-def add_chanels_and_types(object_name, f, xbins, xmin, xmax, what_to_add, dim, ybins=None, ymin=None, ymax=None):
+LEVEL = None
+OUT_PATH = None
+SIGNAL_SAMPLES = None
+BACKG_SAMPLES = None
+ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
+ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
-    if dim == 2:
-        hist_combined = ROOT.TH2F("hist_combined","", xbins, xmin, xmax, ybins, ymin, ymax)
-    else:
-        hist_combined = ROOT.TH1F("hist_combined","", xbins, xmin, xmax)
+def get_full_objects_names(object_name, category, subcategories):
+    
+    all_objects_names = []
 
-    if "SL" in what_to_add:
-        
-        object_name_SL = object_name + '_SL'
-        hist_SL = f.Get(object_name_SL)
-
-        # object_name_SL_res_1b = object_name + '_SL_res_1b'
-        # object_name_SL_res_2b = object_name + '_SL_res_2b'
-        # object_name_SL_res_3b = object_name + '_SL_res_3b'
-        # hist_SL_res_1b = f.Get(object_name_SL_res_1b)
-        # hist_SL_res_2b = f.Get(object_name_SL_res_2b)
-        # hist_SL_res_3b = f.Get(object_name_SL_res_3b)
-
-        if dim == 2:
-            hist_SL_total = ROOT.TH2F("hist_SL_total","", xbins, xmin, xmax, ybins, ymin, ymax)
+    if LEVEL == "gen":
+        all_objects_names.append(category + "_" + object_name)
+    if LEVEL == "reco":
+        if subcategories != "all":
+            for subcat in subcategories:
+                all_objects_names.append(category + "_" + subcat + "_" + object_name)
         else:
-            hist_SL_total = ROOT.TH1F("hist_SL_total","", xbins, xmin, xmax)
+            # all_objects_names.append(category + "_res_1b_" + object_name)
+            all_objects_names.append(category + "_res_2b_" + object_name)
+            all_objects_names.append(category + "_boost_" + object_name)
 
-        hist_SL_total.Add(hist_SL)
-        # hist_SL_total.Add(hist_SL_res_1b)
-        # hist_SL_total.Add(hist_SL_res_2b)
-        # hist_SL_total.Add(hist_SL_res_3b)
+    return all_objects_names
+
+def add_channels_and_types(object_name, sample, xbins, xmin, xmax, category, subcategories, dim=1, ybins=None, ymin=None, ymax=None):
+
+    if dim == 1:
+        hist_combined = ROOT.TH1F("hist_combined","", xbins, xmin, xmax)
+    elif dim == 2:
+        hist_combined = ROOT.TH2F("hist_combined","", xbins, xmin, xmax, ybins, ymin, ymax)
+
+    if "SL" in category:
         
+        if dim == 1:
+            hist_SL_total = ROOT.TH1F("hist_SL_total","", xbins, xmin, xmax)
+        elif dim == 2:
+            hist_SL_total = ROOT.TH2F("hist_SL_total","", xbins, xmin, xmax, ybins, ymin, ymax)
+
+        full_objects_names = get_full_objects_names(object_name, "SL", subcategories)
+
+        for full_object_name in full_objects_names:
+            print("\t\t\t" + full_object_name)
+            hist = sample.Get(full_object_name)
+            hist_SL_total.Add(hist)
+       
         hist_combined.Add(hist_SL_total)
 
-    if 'DL' in what_to_add:
+    if 'DL' in category:
 
-        object_name_DL = object_name + '_DL'
-        hist_DL = f.Get(object_name_DL)
-
-        # object_name_DL_res_1b = object_name + '_DL_res_1b'
-        # object_name_DL_res_2b = object_name + '_DL_res_2b'
-        # object_name_DL_res_3b = object_name + '_DL_res_3b'
-        # hist_DL_res_1b = f.Get(object_name_DL_res_1b)
-        # hist_DL_res_2b = f.Get(object_name_DL_res_2b)
-        # hist_DL_res_3b = f.Get(object_name_DL_res_3b)
-
-        if dim == 2:
-            hist_DL_total = ROOT.TH2F("hist_DL_total","", xbins, xmin, xmax, ybins, ymin, ymax)
-        else:
+        if dim == 1:
             hist_DL_total = ROOT.TH1F("hist_DL_total","", xbins, xmin, xmax)
+        elif dim == 2:
+            hist_DL_total = ROOT.TH2F("hist_DL_total","", xbins, xmin, xmax, ybins, ymin, ymax)
 
-        hist_DL_total.Add(hist_DL)
-        # hist_DL_total.Add(hist_DL_res_1b)
-        # hist_DL_total.Add(hist_DL_res_2b)
-        # hist_DL_total.Add(hist_DL_res_3b)
+        full_objects_names = get_full_objects_names(object_name, "DL", subcategories)
+
+        for full_object_name in full_objects_names:
+            print("\t\t\t" + full_object_name)
+            hist = sample.Get(full_object_name)
+            hist_DL_total.Add(hist)
 
         hist_combined.Add(hist_DL_total)
 
@@ -75,100 +76,112 @@ def add_chanels_and_types(object_name, f, xbins, xmin, xmax, what_to_add, dim, y
 
     return hist_combined
 
-def add_signal(signal_files, object_name, xbins, xmin, xmax, titles, what_to_add, dim=1, ybins=None, ymin=None, ymax=None):
+def get_total_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles, category, subcategories):
 
-    if dim == 2:
-        total_signal = ROOT.TH2F("total_signal","", xbins, xmin, xmax, ybins, ymin, ymax)
-    else:
-        total_signal = ROOT.TH1F("total_signal","", xbins, xmin, xmax)
+    if of_type == "signal": 
+        SAMPLES_OF_TYPE = SIGNAL_SAMPLES
+    elif of_type == "backg":
+        SAMPLES_OF_TYPE = BACKG_SAMPLES
 
-    total_signal.SetTitle(titles[0])
-    total_signal.GetXaxis().SetTitle(titles[1])
-    total_signal.GetYaxis().SetTitle(titles[2])
+    print("\tGetting total 2D " + of_type)
 
-    for file in signal_files:
-        signal_hist = add_chanels_and_types(object_name, file, xbins, xmin, xmax, what_to_add, dim, ybins, ymin, ymax)
-        total_signal.Add(signal_hist)
-
-    total_signal = ROOT.gDirectory.Get("total_signal")
-    total_signal.SetDirectory(0)
-
-    if dim == 2:
-        canvas= ROOT.TCanvas('canvas', '', 200, 200)
-        total_signal.SetOption("colz")
-        total_signal.Draw()
-        canvas.Update()
-        canvas.SaveAs(os.path.join(OUT_PATH,object_name + '_signal.pdf'))
-
-    return total_signal
+    total_hist_of_type = ROOT.TH1F(of_type,"", xbins, xmin, xmax)
     
-def add_background(backg_files, object_name, xbins, xmin, xmax, titles, what_to_add, dim=1, ybins=None, ymin=None, ymax=None):
+    total_hist_of_type.SetTitle(titles[0])
+    total_hist_of_type.GetXaxis().SetTitle(titles[1])
+    total_hist_of_type.GetYaxis().SetTitle(titles[2])
 
-    if dim == 2:
-        total_backg = ROOT.TH2F("total_backg","", xbins, xmin, xmax, ybins, ymin, ymax)
-    else:
-        total_backg = ROOT.TH1F("total_backg","", xbins, xmin, xmax)
+    for sample in SAMPLES_OF_TYPE:
+        print("\t\tSample: " + sample.GetName())
+        hist_of_type = add_channels_and_types(object_name, sample, xbins, xmin, xmax, category, subcategories)
+        total_hist_of_type.Add(hist_of_type)
 
-    total_backg.SetTitle(titles[0])
-    total_backg.GetXaxis().SetTitle(titles[1])
-    total_backg.GetYaxis().SetTitle(titles[2])
+    total_hist_of_type = ROOT.gDirectory.Get(of_type)
+    total_hist_of_type.SetDirectory(0)
 
-    for file in backg_files:
-        backg_hist = add_chanels_and_types(object_name, file, xbins, xmin, xmax, what_to_add, dim, ybins, ymin, ymax)
-        total_backg.Add(backg_hist)
+    return total_hist_of_type
     
-    total_backg = ROOT.gDirectory.Get("total_backg")
-    total_backg.SetDirectory(0)
+def draw_total_2D_of_type(of_type, object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles, category, subcategories="all"):
+    
+    if of_type == "signal": 
+        SAMPLES_OF_TYPE = SIGNAL_SAMPLES
+    elif of_type == "backg":
+        SAMPLES_OF_TYPE = BACKG_SAMPLES
 
-    if dim == 2:
+    print("\tGetting total 2D " + of_type)
+
+    for sample in SAMPLES_OF_TYPE:
+        print("\t\tSample: " + sample.GetName())
+    
+        total_hist_of_type = ROOT.TH2F(of_type,"", xbins, xmin, xmax, ybins, ymin, ymax)
+
+        total_hist_of_type.SetTitle(titles[0])
+        total_hist_of_type.GetXaxis().SetTitle(titles[1])
+        total_hist_of_type.GetYaxis().SetTitle(titles[2])
+    
+        hist_of_type = add_channels_and_types(object_name, sample, xbins, xmin, xmax, category, subcategories, 2, ybins, ymin, ymax)
+        total_hist_of_type.Add(hist_of_type)
+
+        total_hist_of_type = ROOT.gDirectory.Get(of_type)
+        total_hist_of_type.SetDirectory(0)
+
+        start_index = sample.GetName().rfind('/') + 1
+        end_index = sample.GetName().rfind('.root')
+        sample_name = sample.GetName()[start_index:end_index]
+
         canvas= ROOT.TCanvas('canvas', '', 200, 200)
-        total_backg.SetOption("colz")
-        total_backg.Draw()
+        total_hist_of_type.SetOption("colz")
+        total_hist_of_type.Draw()
         canvas.Update()
-        canvas.SaveAs(os.path.join(OUT_PATH,object_name + '_backg.pdf'))
+        canvas.SaveAs(os.path.join(OUT_PATH,object_name + '_' + of_type + '_' + sample_name + '.pdf'))
 
-    return total_backg
+def draw_total_1D_signal_and_backg(hist_signal, hist_backg, xmin, xmax, object_name):
 
-def draw_hists(h1, h2, xmin, xmax, obs, dim=1, ymin=None, ymax=None):
+    hist_signal.Scale(1/hist_signal.Integral())
+    hist_backg.Scale(1/hist_backg.Integral())
 
-    if dim == 1:
-        h1.Scale(1/h1.Integral())
-        h2.Scale(1/h2.Integral())
+    canvas= ROOT.TCanvas('canvas', '', 200, 200)
+    # canvas.SetLogy()
+    canvas.SetGrid()
 
-        canvas= ROOT.TCanvas('canvas', '', 200, 200)
-        # canvas.SetLogy()
-        canvas.SetGrid()
+    hist_signal.SetLineColor(ROOT.kBlue)
+    hist_signal.SetLineWidth(3)
+    hist_backg.SetLineColor(ROOT.kRed)
+    hist_backg.SetLineWidth(3)
 
-        h1.SetLineColor(ROOT.kBlue)
-        h1.SetLineWidth(3)
-        h2.SetLineColor(ROOT.kRed)
-        h2.SetLineWidth(3)
+    
+    hist_signal.GetXaxis().SetRangeUser(xmin, xmax)
+    hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
 
-        
-        h1.GetXaxis().SetRangeUser(xmin, xmax)
-        h1.GetYaxis().SetRangeUser(0, 1.1*max(h1.GetMaximum(), h2.GetMaximum()))
+    hist_signal.Draw()
+    hist_backg.Draw("sames")
+    canvas.Update()
 
-        h1.Draw()
-        h2.Draw("sames")
-        canvas.Update()
+    s1 = hist_signal.FindObject("stats")
+    s1.SetTextColor(ROOT.kBlue)
 
-        s1 = h1.FindObject("stats")
-        s1.SetTextColor(ROOT.kBlue)
+    s2 = hist_backg.FindObject("stats")
+    s2.SetTextColor(ROOT.kRed)
+    s1.SetY1NDC(0.6)
+    s1.SetY2NDC(0.8)
+    s2.SetX1NDC(s1.GetX1NDC())
+    s2.SetY1NDC(0.4)
+    s2.SetX2NDC(s1.GetX2NDC())
+    s2.SetY2NDC(0.6)
+    
+    canvas.Update()
+    canvas.SaveAs(os.path.join(OUT_PATH,object_name + '.pdf'))
 
-        s2 = h2.FindObject("stats")
-        s2.SetTextColor(ROOT.kRed)
-        s1.SetY1NDC(0.6)
-        s1.SetY2NDC(0.8)
-        s2.SetX1NDC(s1.GetX1NDC())
-        s2.SetY1NDC(0.4)
-        s2.SetX2NDC(s1.GetX2NDC())
-        s2.SetY2NDC(0.6)
-        
-        canvas.Update()
-        canvas.SaveAs(os.path.join(OUT_PATH,obs + '.pdf'))
+def compare1D(object_name, xbins, xmin, xmax, titles, category, subcategories="all"):
+    print("This object is: " + object_name)
+    total_signal = get_total_1D_of_type("signal", object_name, xbins, xmin, xmax, titles, category, subcategories)
+    total_backg = get_total_1D_of_type("backg", object_name, xbins, xmin, xmax, titles, category, subcategories)
+    draw_total_1D_signal_and_backg(total_signal, total_backg, xmin, xmax, object_name)
 
-signal_files_list = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
-backg_files_list = ['TTbar_sl.root', 'TTbar_dl.root']
+def draw2D(object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles, category, subcategories="all"):
+
+    draw_total_2D_of_type("signal", "bjets_twoD", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'], 'SL_and_DL')
+    draw_total_2D_of_type("backg", "bjets_twoD", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'], 'SL_and_DL')
 
 def get_files_in_directory(directory):
     signal_files = []
@@ -176,115 +189,54 @@ def get_files_in_directory(directory):
     final_directory = os.path.join(directory,'results')
     for filename in os.listdir(final_directory):
         file_path = os.path.join(final_directory,filename)
-        if filename in signal_files_list:
+        if filename in ALL_SIGNAL_SAMPLES:
             f = ROOT.TFile.Open(file_path, 'read')
             signal_files.append(f)
-            print('Signal file: ' + filename)
-        elif filename in backg_files_list:
+            print('Signal sample: ' + filename)
+        elif filename in ALL_BACKG_SAMPLES:
             f = ROOT.TFile.Open(file_path, 'read')
             backg_files.append(f)
-            print('Backg file: ' + filename)
+            print('Backg sample: ' + filename)
     return signal_files, backg_files
 
-signal_files, backg_files = get_files_in_directory(SOURCE_DIR)
+if __name__ == "__main__":
 
-#=========================================================================
-# Comment out if comparing reco plots
-object_name = "bjets0_pT"
-titles = ['bJet0 pT', 'pT (GeV)', '']
-xbins, xmin, xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
+    parser = argparse.ArgumentParser(description="Comparing signal vs background")
+    parser.add_argument("-s", "--source_dir", action="store", dest="source_dir", help="source directory")
+    parser.add_argument("-l", "--level", action="store", dest="level", help="gen or reco")
+    args = parser.parse_args()
 
-object_name = "bjets1_pT"
-titles = ['bJet1 pT', 'pT (GeV)', '']
-xbins, xmin, xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
+    print("The source directory is: " + args.source_dir)
+    print("The level is : " + args.level)
 
-object_name = "bjets_mean_pT"
-titles = ['bJets mean pT', 'pT (GeV)', '']
-xbins, xmin, xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
+    OUT_PATH = os.path.join('Comparisons',args.source_dir)
+    if not os.path.exists(OUT_PATH):
+        os.makedirs(OUT_PATH)
 
-object_name = "bjets_deltaPhi"
-titles = ['bJets Delta Phi', 'Delta Phi', '']
-xbins, xmin, xmax = BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX 
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
+    LEVEL = args.level
+    SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(args.source_dir)
 
-object_name = "bjets_deltaR"
-titles = ['bJets DeltaR', 'DeltaR', '']
-xbins, xmin, xmax = BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
+    # ==================================================================
 
-object_name = "bjets_mbb"
-titles = ['bJets Inv. mass', 'm_{bb} (GeV)', '']
-xbins, xmin, xmax = BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
+    compare1D("bjets0_pT", BJET0_PT_BINS, BJET0_MIN, BJET0_MAX, ['bJet0 pT', 'pT (GeV)', ''], 'SL_and_DL')
+    compare1D("bjets1_pT", BJET1_PT_BINS, BJET1_MIN, BJET1_MAX, ['bJet1 pT', 'pT (GeV)', ''], 'SL_and_DL')
+    compare1D("bjets_mean_pT", BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX, ['bjets <pT>', 'pT (GeV)', ''], 'SL_and_DL')
+    compare1D("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['bJets dPhi', 'dPhi', ''], 'SL_and_DL')
+    compare1D("bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['bJets dEta', 'dEta', ''], 'SL_and_DL')
+    compare1D("bjets_dR", BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['bJets dR', 'dR', ''], 'SL_and_DL')
+    compare1D("bjets_mbb", BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL')
 
-#-----------------------------------------------------------------------------
-object_name = "bjets_twoD"
-titles = ['2D dist. of dPhi vs dEta', 'dEta', 'dPhi']
-xbins, xmin, xmax = BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX
-ybins, ymin, ymax = BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL', 2, ybins, ymin, ymax)
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL', 2, ybins, ymin, ymax)
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name, 2, ymin, ymax)
-#-----------------------------------------------------------------------------
+    compare1D("t1_mInv_leadb", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} w/ highest-pt bJet', 'GeV', ''], 'SL', ["res_2b"])
+    compare1D("t1_mInv_subleadb", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} w/ second-highest-pt bJet', 'GeV', ''], 'SL', ["res_2b"])
+    compare1D("t1_mInv", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ["res_2b"])
+    compare1D("t1_pt", T1_BINS, T1_MIN, T1_MAX, ['p_{T} for top1', 'GeV', ''], 'SL', ["res_2b"])
+    compare1D("t2_mT", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ["res_2b"])
+    compare1D("t2_pt", T2_BINS, T2_MIN, T2_MAX, ['p_{T} for top2', 'GeV', ''], 'SL', ["res_2b"])
 
-#=========================================================================
+    compare1D("all_mInv_nomet", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv without MET', 'GeV', ''], 'SL_and_DL', ["res_2b"])
+    compare1D("all_mT_nomet", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mT without MET', 'GeV', ''], 'SL_and_DL', ["res_2b"])
+    compare1D("all_mInv", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv', 'GeV', ''], 'SL_and_DL', ["res_2b"])
+    compare1D("all_mT", ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX, ['all_mT', 'GeV', ''], 'SL_and_DL', ["res_2b"])
+    compare1D("all_sT", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT', 'GeV', ''], 'SL_and_DL', ["res_2b"])
 
-object_name = "t1_mInv"
-titles = ['Inv. mass for t1', 'm_{inv} (GeV)', '']
-xbins, xmin, xmax = T1_BINS, T1_MIN, T1_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, "SL")
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, "SL")
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
-
-object_name = "t2_mT"
-titles = ['Trans. mass for t2', 'm_{T} (GeV)', '']
-xbins, xmin, xmax = T2_BINS, T2_MIN, T2_MAX 
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, "SL")
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, "SL")
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
-
-object_name = "tops_m_avg"
-titles = ['Average mass of tops', 'm_{avg} (GeV)', '']
-xbins, xmin, xmax = T_AVG_BINS, T_AVG_MIN, T_AVG_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, "SL")
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, "SL")
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
-
-#=========================================================================
-object_name = "all_mInv"
-titles = ['Inv. mass for all', 'm_{inv}', '']
-xbins, xmin, xmax = ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
-
-object_name = "all_mT"
-titles = ['Transv. mass for all', 'm_{T}', '']
-xbins, xmin, xmax = ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX 
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
-
-object_name = "all_sT"
-titles = ['s_{T} for all', 's_{T}', '']
-xbins, xmin, xmax = ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX
-hist_signal = add_signal(signal_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-hist_backg = add_background(backg_files, object_name, xbins, xmin, xmax, titles, 'SL_and_DL')
-draw_hists(hist_signal, hist_backg, xmin, xmax, object_name)
-
-# file.Close()
+    draw2D("bjets_twoD", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'], 'SL_and_DL')

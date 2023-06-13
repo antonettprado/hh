@@ -96,7 +96,7 @@ plotIt:
       fill-color: "#C900FF"
   plotdefaults:
     y-axis: Events
-    log-y: both
+    # log-y: both
     y-axis-show-zero: True
     save-extensions: [pdf]
     show-ratio: True
