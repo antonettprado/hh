@@ -94,7 +94,7 @@ class SL_DL_variables(SL_DL_event_selection):
 
             return sel, tag
 
-        def get_bjets_params(sorted_bjets, sel_string, plots):
+        def get_bjets_params(sorted_bjets, sel_string, plots, subjets=None):
             sel, tag = get_selection_and_tags(sel_string)
 
             if "res" in sel_string:
@@ -110,9 +110,6 @@ class SL_DL_variables(SL_DL_event_selection):
                 fatjet_subjets = object_defs.find_subjets(fatjet, subjets)
                 bjet0 = fatjet_subjets[0]
                 bjet1 = fatjet_subjets[1]
-
-            bjet0 = sorted_bjets[0]
-            bjet1 = sorted_bjets[1]
 
             bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
             bjets_dPhi = op.deltaPhi(bjet0.p4, bjet1.p4)
@@ -201,10 +198,10 @@ class SL_DL_variables(SL_DL_event_selection):
 
         plots = get_bjets_params(sorted_ak4_btags, "SL_res_2b", plots)
         plots = get_bjets_params(sorted_ak4_btags, "SL_res_3b", plots)
-        plots = get_bjets_params(sorted_ak8_btags, "SL_boost", plots)
+        plots = get_bjets_params(sorted_ak8_btags, "SL_boost", plots, ak8_subjets)
         plots = get_bjets_params(sorted_ak4_btags, "DL_res_2b", plots)
         plots = get_bjets_params(sorted_ak4_btags, "DL_res_3b", plots)
-        plots = get_bjets_params(sorted_ak8_btags, "DL_boost", plots)
+        plots = get_bjets_params(sorted_ak8_btags, "DL_boost", plots, ak8_subjets)
         
         plots = get_m_top_for_SL(sorted_ak4_btags, sorted_ak4_nonbtags, tight_electrons, tight_muons, MET, "SL_res_2b", plots)
         plots = get_m_top_for_SL(sorted_ak4_btags, sorted_ak4_nonbtags, tight_electrons, tight_muons, MET, "SL_res_3b", plots)
