@@ -67,23 +67,16 @@ class gen_variables(NanoAODHistoModule):
             op.AND(op.rng_len(genElectrons)==1, op.rng_len(genMuons) == 1))])
 
         SL_res_1b = SL.refine("SL resolved 1b jet selection", cut=[op.AND(op.rng_len(bJets) == 1, op.rng_len(bJetAK8s) == 0)])
-        SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) == 2, op.rng_len(bJetAK8s) == 0)])
-        SL_res_3b = SL.refine("SL resolved 3b jet selection", cut=[op.AND(op.rng_len(bJets) >= 3, op.rng_len(bJetAK8s) == 0)])
+        SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) >= 2, op.rng_len(bJetAK8s) == 0)])
         SL_boost = SL.refine("SL boosted jet selection", cut=[ op.rng_len(bJetAK8s)>= 1])
 
         DL_res_1b = DL.refine("DL resolved 1b jet selection", cut=[op.AND(op.rng_len(bJets) == 1, op.rng_len(bJetAK8s) == 0)])
-        DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) == 2, op.rng_len(bJetAK8s) == 0)])
-        DL_res_3b = DL.refine("DL resolved 3b jet selection", cut=[op.AND(op.rng_len(bJets) >= 3, op.rng_len(bJetAK8s) == 0)])
+        DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) >= 2, op.rng_len(bJetAK8s) == 0)])
         DL_boost = DL.refine("DL boosted jet selection", cut=[op.rng_len(bJetAK8s)>= 1])
 
         # Include extra selection of >=2 nonbjets for resolved selections only
         SL_res_1b = SL_res_1b.refine("Nonbjets>=2 for SL res 1b", cut=[op.rng_len(sorted_nonbJets)>=2])
         SL_res_2b = SL_res_2b.refine("Nonbjets>=2 for SL res 2b", cut=[op.rng_len(sorted_nonbJets)>=2])
-        SL_res_3b = SL_res_3b.refine("Nonbjets>=2 for SL res 3b", cut=[op.rng_len(sorted_nonbJets)>=2])
-
-        DL_res_1b = DL_res_1b.refine("Nonbjets>=2 for DL res 1b", cut=[op.rng_len(sorted_nonbJets)>=2])
-        DL_res_2b = DL_res_2b.refine("Nonbjets>=2 for DL res 2b", cut=[op.rng_len(sorted_nonbJets)>=2])
-        DL_res_3b = DL_res_3b.refine("Nonbjets>=2 for DL res 3b", cut=[op.rng_len(sorted_nonbJets)>=2])
 
         # ================================================================
         # ================================================================
@@ -207,9 +200,9 @@ class gen_variables(NanoAODHistoModule):
                 bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
 
                 plots.extend([
-                    Plot.make1D(tag+"bjets0_pT", bjet0.pt, sel, EqBin(BJET0_PT_BINS, BJET0_MIN, BJET0_MAX), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
-                    Plot.make1D(tag+"bjets1_pT", bjet1.pt, sel, EqBin(BJET1_PT_BINS, BJET1_MIN, BJET1_MAX), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
-                    Plot.make1D(tag+"bjets_mean_pT", bjets_mean_pT, sel, EqBin(BJETS_AVG_PT_BINS, BJETS_AVG_PT_MIN, BJETS_AVG_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
+                    Plot.make1D(tag+"bjets0_pT", bjet0.pt, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="p_{T} for bJet_0 (GeV)" ),
+                    Plot.make1D(tag+"bjets1_pT", bjet1.pt, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="p_{T} for bJet_1 (GeV)" ),
+                    Plot.make1D(tag+"bjets_mean_pT", bjets_mean_pT, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="<p_{T}> for bjets (GeV)"),
                     Plot.make1D(tag+"bjets_dEta", bjets_dEta, sel, EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), title="", xTitle="dEta for bjets"),
                     Plot.make1D(tag+"bjets_dPhi", bjets_dPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="dPhi for bjets"),
                     Plot.make1D(tag+"bjets_dR", bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="dR for bjets"),
@@ -219,7 +212,7 @@ class gen_variables(NanoAODHistoModule):
 
             elif "boost" in sel_string:
                 fatjet = sorted_bjets[0]
-                plots.append(Plot.make1D(tag+"bfatjet_mass", fatjet.mass, sel, EqBin(BJET0_PT_BINS, BJET0_MIN, BJET0_MAX), title="", xTitle="bFatJet mass (GeV)"))
+                plots.append(Plot.make1D(tag+"bfatjet_mass", fatjet.mass, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="bFatJet mass (GeV)"))
 
             return plots
             
@@ -294,19 +287,14 @@ class gen_variables(NanoAODHistoModule):
         # get_from_basicSel(genParts, sorted_bJets, 'DL')
 
         plots = get_bjets_params(sorted_bJets, "SL_res_2b", plots)
-        plots = get_bjets_params(sorted_bJets, "SL_res_3b", plots)
         plots = get_bjets_params(sorted_bJetAK8s, "SL_boost", plots)
         plots = get_bjets_params(sorted_bJets, "DL_res_2b", plots)
-        plots = get_bjets_params(sorted_bJets, "DL_res_3b", plots)
         plots = get_bjets_params(sorted_bJetAK8s, "DL_boost", plots)
 
         plots = get_m_top_for_SL(bJets, sorted_nonbJets, genElectrons, genMuons, MET, 'SL_res_2b', plots)
-        plots = get_m_top_for_SL(bJets, sorted_nonbJets, genElectrons, genMuons, MET, 'SL_res_3b', plots)
 
         plots = get_final_state_totals(genElectrons, genMuons, selected_genJets, MET, 'SL_res_2b', plots)
-        plots = get_final_state_totals(genElectrons, genMuons, selected_genJets, MET, 'SL_res_3b', plots) 
         plots = get_final_state_totals(genElectrons, genMuons, selected_genJets, MET, 'DL_res_2b', plots)
-        plots = get_final_state_totals(genElectrons, genMuons, selected_genJets, MET, 'DL_res_3b', plots)   
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -314,10 +302,8 @@ class gen_variables(NanoAODHistoModule):
         
         yields.add(noSel, 'noSel')
         yields.add(SL_res_2b, 'SL_res_2b')
-        yields.add(SL_res_3b, 'SL_res_3b')
         yields.add(SL_boost, 'SL_boost')
         yields.add(DL_res_2b, 'DL_res_2b')
-        yields.add(DL_res_3b, 'DL_res_3b')
         yields.add(DL_boost, 'DL_boost')
 
         return plots
