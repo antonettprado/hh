@@ -42,7 +42,7 @@ def get_total_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles, channe
     elif of_type == "backg":
         SAMPLES_OF_TYPE = BACKG_SAMPLES
 
-    total_hist_of_type = ROOT.TH1F(of_type,"", xbins, xmin, xmax)
+    total_hist_of_type = ROOT.TH1F(of_type, "", xbins, xmin, xmax)
     total_hist_of_type.SetTitle(titles[0])
     total_hist_of_type.GetXaxis().SetTitle(titles[1])
     total_hist_of_type.GetYaxis().SetTitle(titles[2])
@@ -150,13 +150,13 @@ def draw2D(object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles, channels, 
     if "SL" in channels:
         full_object_names = get_object_name_subcats(object_name, "SL", subcats)
         for full_object_name in full_object_names:
-            draw_total_2D_of_type("signal", full_object_name, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'])
-            draw_total_2D_of_type("backg", full_object_name, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'])
+            draw_total_2D_of_type("signal", full_object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles)
+            draw_total_2D_of_type("backg", full_object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles)
     if "DL" in channels:
         full_object_names = get_object_name_subcats(object_name, "DL", subcats)
         for full_object_name in full_object_names:
-            draw_total_2D_of_type("signal", full_object_name, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'])
-            draw_total_2D_of_type("backg", full_object_name, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'])
+            draw_total_2D_of_type("signal", full_object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles)
+            draw_total_2D_of_type("backg", full_object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles)
 
 def get_files_in_directory(directory):
     signal_files = []
@@ -222,9 +222,9 @@ if __name__ == "__main__":
         draw1D("t1_mInv_combo_min_dPhi", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
         draw1D("t2_mT_fort1mindPhi_combo_min_pt", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
         draw1D("t2_mT_fort1mindPhi_combo_max_pt", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_max_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL_and_DL', ['res_2b'])
-        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL_and_DL', ['res_2b'])
-        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['dPhi for jj in t1 vs bjets m_{bb}', 'm_{bb}', 'dPhi'], 'SL_and_DL', ['res_2b'])
+        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_max_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T1_BINS, T1_MIN, T1_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
+        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T1_BINS, T1_MIN, T1_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
+        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_dPhi", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T1_BINS, T1_MIN, T1_MAX, ['dPhi for jj in t1 vs bjets m_{bb}', 'm_{bb}', 'dPhi'], 'SL', ['res_2b'])
 
 
     draw1D("all_mInv_noMET", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv without MET', 'GeV', ''], 'SL_and_DL', ['res_2b'])
