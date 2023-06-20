@@ -315,7 +315,7 @@ class SL_DL_variables(SL_DL_event_selection):
             sel, tag = get_selection_and_tags(sel_string)
 
             plots.extend([
-                Plot.make2D(tag+"bjets_mbb_vs_"+t1_mInv_string , [bjets_mbb, t1_mInv], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(T1_BINS, T1_MIN, T1_MAX )], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
+                Plot.make2D(tag+"bjets_mbb_vs_"+t1_mInv_string , [bjets_mbb, t1_mInv], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(T1_BINS, T1_MIN, T1_MAX)], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
             ])
 
         bjets_mbb_SL_res_2b = get_bjets_params(sorted_ak4_btags, "SL_res_2b")

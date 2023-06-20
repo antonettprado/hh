@@ -90,9 +90,6 @@ class gen_variables(NanoAODHistoModule):
                 elif "res_2b" in sel_string:
                     sel = SL_res_2b
                     tag = "SL_res_2b_"
-                elif "res_3b" in sel_string:
-                    sel = SL_res_3b
-                    tag = "SL_res_3b_"
                 elif "boost" in sel_string:
                     sel = SL_boost
                     tag = "SL_boost_"
@@ -104,9 +101,6 @@ class gen_variables(NanoAODHistoModule):
                 elif "res_2b" in sel_string:
                     sel = DL_res_2b
                     tag = "DL_res_2b_"
-                elif "res_3b" in sel_string:
-                    sel = DL_res_3b
-                    tag = "DL_res_3b_"
                 elif "boost" in sel_string:
                     sel = DL_boost
                     tag = "DL_boost_"
@@ -207,8 +201,10 @@ class gen_variables(NanoAODHistoModule):
                     Plot.make1D(tag+"bjets_dPhi", bjets_dPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), title="", xTitle="dPhi for bjets"),
                     Plot.make1D(tag+"bjets_dR", bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="dR for bjets"),
                     Plot.make1D(tag+"bjets_mbb", bjets_mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)"),
-                    Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_dEta, bjets_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="dEta", yTitle="dPhi"),
+                    Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)] ,title="", xTitle="dEta", yTitle="dPhi"),
                 ])
+
+                return bjets_mbb
 
             elif "boost" in sel_string:
                 fatjet = sorted_bjets[0]
@@ -368,10 +364,10 @@ class gen_variables(NanoAODHistoModule):
 
         def get_final_state_totals(electrons, muons, jets, MET, sel_string):
             sel, tag = get_selection_and_tags(sel_string)
-            
+
             total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
             total_mu_pt = op.rng_sum(muons, lambda mu: mu.pt)
-            total_jet_pt = op.rng_sum(genJets, lambda jet: jet.pt)
+            total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
             all_sT = op.sum(total_e_pt, total_mu_pt, total_jet_pt, MET.pt)
 
             total_e_pt_50 = op.rng_sum(op.select(electrons, lambda el: el.pt>50), lambda el: el.pt)
