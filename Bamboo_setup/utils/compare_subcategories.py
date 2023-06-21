@@ -195,6 +195,9 @@ if __name__ == "__main__":
 
     # ==================================================================
 
+    if LEVEL == "reco":
+        draw1D("bfatjet_msoftdrop", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bFatJet mass', 'GeV', ''], 'SL_and_DL', ['boost'])
+    
     draw1D("bfatjet_mass", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bFatJet mass', 'GeV', ''], 'SL_and_DL', ['boost'])
 
     draw1D("bjets0_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet0 pT', 'pT (GeV)', ''], 'SL_and_DL', ['res_2b'])
@@ -206,26 +209,32 @@ if __name__ == "__main__":
     draw1D("bjets_mbb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL', ['res_2b'])
     draw2D("bjets_dPhi_vs_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'], 'SL_and_DL', ['res_2b'])
 
-    if LEVEL == "gen":
-        draw1D("t1_mInv_leadb", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} w/ highest-pt bJet', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t1_mInv_subleadb", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} w/ second-highest-pt bJet', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t1_mInv", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t1_pt", T1_BINS, T1_MIN, T1_MAX, ['p_{T} for top1', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t2_mT", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t2_pt", T2_BINS, T2_MIN, T2_MAX, ['p_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t1_mInv_combo_max_pt", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t2_mT_combo_max_pt", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
 
-    elif LEVEL == "reco":
-        draw1D("t1_mInv_combo_max_pt", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t2_mT_combo_max_pt", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t1_mInv_combo_min_pt", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t2_mT_combo_min_pt", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t1_mInv_combo_min_dPhi", T1_BINS, T1_MIN, T1_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t2_mT_fort1mindPhi_combo_min_pt", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-        draw1D("t2_mT_fort1mindPhi_combo_max_pt", T2_BINS, T2_MIN, T2_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_max_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T1_BINS, T1_MIN, T1_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
-        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T1_BINS, T1_MIN, T1_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
-        draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_dPhi", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T1_BINS, T1_MIN, T1_MAX, ['dPhi for jj in t1 vs bjets m_{bb}', 'm_{bb}', 'dPhi'], 'SL', ['res_2b'])
+    draw1D("t1_mInv_combo_min_pt", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t2_mT_combo_min_pt", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
 
+    draw1D("t1_mInv_combo_min_dPhi", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t1_dPhi_combo_min_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi between b and jj for top1', 'dPhi', ''], 'SL', ['res_2b'])
+    draw1D("t2_mT_combo_min_dPhi", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t2_dPhi_combo_min_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi between b and lepton for top2', 'dPhi', ''], 'SL', ['res_2b'])
+    
+    draw1D("t1_mInv_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t1_pt_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['p_{T} for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t2_mT_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t2_pt_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['p_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
+
+    draw1D("t1_mInv_combo_min_dPhi_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t1_dPhi_combo_min_dPhi_mjj_mW", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi between b and jj for top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t2_mT_combo_min_dPhi_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t2_dPhi_combo_min_dPhi_mjj_mW", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi between b and lepton for top2', 'GeV', ''], 'SL', ['res_2b'])
+
+    draw2D("bjets_mbb_vs_"+"t1_mInv_combo_max_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
+    draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_pt", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
+    draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_dPhi", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} in t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
+    draw2D("bjets_mbb_vs_"+"t1_mInv_combo_max_pt_mjj_mW", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
+    draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_dPhi_mjj_mW", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
 
     draw1D("all_mInv_noMET", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv without MET', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_mT_noMET", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mT without MET', 'GeV', ''], 'SL_and_DL', ['res_2b'])

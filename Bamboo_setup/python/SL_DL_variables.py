@@ -127,7 +127,7 @@ class SL_DL_variables(SL_DL_event_selection):
             ])
 
             return bjets_mbb
-
+ 
         def get_m_top_for_SL(sorted_bjets, sorted_nonbjets, electrons, muons, MET, sel_string):
 
             sel, tag = get_selection_and_tags(sel_string)
@@ -136,8 +136,8 @@ class SL_DL_variables(SL_DL_event_selection):
             t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
             t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
             plots.extend([
-                Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
             ])
 
             # Using combinations
@@ -166,10 +166,10 @@ class SL_DL_variables(SL_DL_event_selection):
             t2_pt_combo_max_pt = b2_lnu_combos_pt_for_max_pt[t2_combo_max_pt_index]
                         
             plots.extend([
-                Plot.make1D(tag+"t1_mInv_combo_max_pt" , t1_mInv_combo_max_pt, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_pt_combo_max_pt" , t1_pt_combo_max_pt, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="p_{T} for top1 (GeV)"),
-                Plot.make1D(tag+"t2_mT_combo_max_pt" , t2_mT_combo_max_pt, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D(tag+"t2_pt_combo_max_pt" , t2_pt_combo_max_pt, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="p_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_combo_max_pt" , t1_mInv_combo_max_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_pt_combo_max_pt" , t1_pt_combo_max_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
+                Plot.make1D(tag+"t2_mT_combo_max_pt" , t2_mT_combo_max_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t2_pt_combo_max_pt" , t2_pt_combo_max_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
             ])
             
             # Mtop calculation from min pT of sum of 4-momentum of bjj
@@ -191,10 +191,10 @@ class SL_DL_variables(SL_DL_event_selection):
             t2_pt_combo_min_pt = b2_lnu_combos_pt_for_min_pt[t2_combo_min_pt_index]
                         
             plots.extend([
-                Plot.make1D(tag+"t1_mInv_combo_min_pt" , t1_mInv_combo_min_pt, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_pt_combo_min_pt" , t1_pt_combo_min_pt, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="p_{T} for top1 (GeV)"),
-                Plot.make1D(tag+"t2_mT_combo_min_pt" , t2_mT_combo_min_pt, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D(tag+"t2_pt_combo_min_pt" , t2_pt_combo_min_pt, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="p_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_combo_min_pt" , t1_mInv_combo_min_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_pt_combo_min_pt" , t1_pt_combo_min_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
+                Plot.make1D(tag+"t2_mT_combo_min_pt" , t2_mT_combo_min_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t2_pt_combo_min_pt" , t2_pt_combo_min_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
             ])
 
             # Mtop calculation from min dPhi of b and jj pair
@@ -216,9 +216,9 @@ class SL_DL_variables(SL_DL_event_selection):
             t2_dPhi_combo_min_dPhi = b2_lnu_combos_dPhi[t2_combo_min_dPhi_index]
 
             plots.extend([
-                Plot.make1D(tag+"t1_mInv_combo_min_dPhi" , t1_mInv_combo_min_dPhi, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_combo_min_dPhi" , t1_mInv_combo_min_dPhi, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_dPhi_combo_min_dPhi" , t1_dPhi_combo_min_dPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="deltaPhi between b and jj for top1"),
-                Plot.make1D(tag+"t2_mT_combo_min_dPhi" , t2_mT_combo_min_dPhi, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t2_mT_combo_min_dPhi" , t2_mT_combo_min_dPhi, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
                 Plot.make1D(tag+"t2_dPhi_combo_min_dPhi" , t2_dPhi_combo_min_dPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="deltaPhi between b and lepton for top2"),
             ])
 
@@ -244,10 +244,10 @@ class SL_DL_variables(SL_DL_event_selection):
             t2_pt_combo_max_pt_mjj_mW = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
                         
             plots.extend([
-                Plot.make1D(tag+"t1_mInv_combo_max_pt_mjj_mW" , t1_mInv_combo_max_pt_mjj_mW, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_pt_combo_max_pt_mjj_mW" , t1_pt_combo_max_pt_mjj_mW, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="p_{T} for top1 (GeV)"),
-                Plot.make1D(tag+"t2_mT_combo_max_pt_mjj_mW" , t2_mT_combo_max_pt_mjj_mW, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D(tag+"t2_pt_combo_max_pt_mjj_mW" , t2_pt_combo_max_pt_mjj_mW, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="p_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_combo_max_pt_mjj_mW" , t1_mInv_combo_max_pt_mjj_mW, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_pt_combo_max_pt_mjj_mW" , t1_pt_combo_max_pt_mjj_mW, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
+                Plot.make1D(tag+"t2_mT_combo_max_pt_mjj_mW" , t2_mT_combo_max_pt_mjj_mW, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t2_pt_combo_max_pt_mjj_mW" , t2_pt_combo_max_pt_mjj_mW, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
             ])
 
             # Mtop calculation from min dPhi of b and jj pair with mjj closest to m_W
@@ -269,14 +269,14 @@ class SL_DL_variables(SL_DL_event_selection):
             t2_dPhi_combo_min_dPhi_mjj_mW = b2_lnu_combos_dPhi_mjj_mW[t2_combo_min_dPhi_mjj_mW_index]
 
             plots.extend([
-                Plot.make1D(tag+"t1_mInv_combo_min_dPhi_mjj_mW" , t1_mInv_combo_min_dPhi_mjj_mW, sel, EqBin(T1_BINS, T1_MIN, T1_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_dPhi_combo_min_dPhi_mjj_mW" , t1_dPhi_combo_min_dPhi_mjj_mW, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="deltaPhi between b and jj for top1"),
-                Plot.make1D(tag+"t2_mT_combo_min_dPhi_mjj_mW" , t2_mT_combo_min_dPhi_mjj_mW, sel, EqBin(T2_BINS, T2_MIN, T2_MAX), xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D(tag+"t2_dPhi_combo_min_dPhi_mjj_mW" , t2_dPhi_combo_min_dPhi_mjj_mW, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="deltaPhi between b and lepton for top2"),
+                Plot.make1D(tag+"t1_mInv_combo_min_dPhi_mjj_mW" , t1_mInv_combo_min_dPhi_mjj_mW, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_dPhi_combo_min_dPhi_mjj_mW" , t1_dPhi_combo_min_dPhi_mjj_mW, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="dPhi between b and jj for top1"),
+                Plot.make1D(tag+"t2_mT_combo_min_dPhi_mjj_mW" , t2_mT_combo_min_dPhi_mjj_mW, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
+                Plot.make1D(tag+"t2_dPhi_combo_min_dPhi_mjj_mW" , t2_dPhi_combo_min_dPhi_mjj_mW, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="dPhi between b and lepton for top2"),
             ])
 
             return t1_mInv_combo_max_pt, t1_mInv_combo_min_pt, t1_mInv_combo_min_dPhi, t1_mInv_combo_max_pt_mjj_mW, t1_mInv_combo_min_dPhi_mjj_mW
-
+ 
         def get_final_state_totals(electrons, muons, jets, met, sel_string):
             sel, tag = get_selection_and_tags(sel_string)
 
@@ -315,7 +315,7 @@ class SL_DL_variables(SL_DL_event_selection):
             sel, tag = get_selection_and_tags(sel_string)
 
             plots.extend([
-                Plot.make2D(tag+"bjets_mbb_vs_"+t1_mInv_string , [bjets_mbb, t1_mInv], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(T1_BINS, T1_MIN, T1_MAX)], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
+                Plot.make2D(tag+"bjets_mbb_vs_"+t1_mInv_string , [bjets_mbb, t1_mInv], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
             ])
 
         bjets_mbb_SL_res_2b = get_bjets_params(sorted_ak4_btags, "SL_res_2b")
