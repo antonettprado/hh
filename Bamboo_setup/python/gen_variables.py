@@ -370,11 +370,15 @@ class gen_variables(NanoAODHistoModule):
             total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
             all_sT = op.sum(total_e_pt, total_mu_pt, total_jet_pt, MET.pt)
 
-            total_e_pt_50 = op.rng_sum(op.select(electrons, lambda el: el.pt>50), lambda el: el.pt)
-            total_mu_pt_50 = op.rng_sum(op.select(muons, lambda mu: mu.pt>50), lambda mu: mu.pt)
-            total_jet_pt_50 = op.rng_sum(op.select(jets, lambda jet: jet.pt>50), lambda jet: jet.pt)
+            e_pt_50 = op.select(electrons, lambda el: el.pt>50)
+            mu_pt_50 = op.select(muons, lambda mu: mu.pt>50)
+            jet_pt_50 = op.select(jets, lambda jet: jet.pt>50)
+            total_e_pt_50 = op.switch(op.rng_count(e_pt_50)>0, op.rng_sum(e_pt_50, lambda el: el.pt, start=op.c_float(0.)), op.c_float(0.))
+            total_mu_pt_50 = op.switch(op.rng_count(mu_pt_50)>0, op.rng_sum(mu_pt_50, lambda mu: mu.pt, start=op.c_float(0.)), op.c_float(0.))
+            total_jet_pt_50 = op.switch(op.rng_count(jet_pt_50)>0, op.rng_sum(jet_pt_50, lambda jet: jet.pt, start=op.c_float(0.)), op.c_float(0.))
             all_sT_50_no_met = op.sum(total_e_pt_50, total_mu_pt_50, total_jet_pt_50)
-            all_sT_50 = op.switch(MET.pt > 50, all_sT_50_no_met + MET.pt, all_sT_50_no_met)
+            all_sT_50 = op.switch(met.pt > 50, all_sT_50_no_met + met.pt, all_sT_50_no_met)
+            all_sT_50_cut = op.switch(all_sT_50 == 0, -9999, all_sT_50)
 
             zero_p4 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
             total_el_p4 = op.rng_sum(electrons, lambda el: el.p4, start=zero_p4)
@@ -387,12 +391,15 @@ class gen_variables(NanoAODHistoModule):
             all_mT = (total_el_p4 + total_mu_p4 + total_jet_p4 + MET.p4).Mt()
 
             plots.extend([
+                Plot.make1D(tag+"all_sT_50_no_met" , all_sT_50_no_met, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50_no_met", xTitle="s_{T} (GeV)"),
+                Plot.make1D(tag+"all_sT_50" , all_sT_50, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50", xTitle="s_{T} (GeV)"),
+                Plot.make1D(tag+"all_sT_50_cut" , all_sT_50_cut, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50_cut", xTitle="s_{T} (GeV)"),
+
                 Plot.make1D(tag+"all_mInv_noMET", all_mInv_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all without MET", xTitle="m_{inv} (GeV)"),
                 Plot.make1D(tag+"all_mT_noMET", all_mT_noMET, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mT_all without MET", xTitle="m_{T} (GeV)"),
                 Plot.make1D(tag+"all_mInv", all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="mInv_all", xTitle="m_{inv} (GeV)"),
                 Plot.make1D(tag+"all_mT", all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="mT_all", xTitle="m_{T} (GeV)"),
                 Plot.make1D(tag+"all_sT", all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="sT_all", xTitle="s_{T} (GeV)"),
-                Plot.make1D(tag+"all_sT_50" , all_sT_50, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50", xTitle="s_{T} (GeV)"),
             ])
 
         def get_bjets_mbb_vs_t1_mInv(bjets_mbb, t1_mInv, t1_mInv_string, sel_string):

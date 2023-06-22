@@ -11,7 +11,7 @@ from constants import *
 import os
 import argparse
 
-# ROOT.gStyle.SetOptStat(111111)
+ROOT.gStyle.SetOptStat(111221)
 ROOT.gStyle.SetPalette(ROOT.kRainBow)
 
 LEVEL = None
@@ -94,13 +94,6 @@ def draw_total_2D_of_type(of_type, object_name, xbins, xmin, xmax, ybins, ymin, 
 
 def draw_total_1D_signal_and_backg(hist_signal, hist_backg, xmin, xmax, outname):
 
-    hist_signal.Scale(1/hist_signal.Integral())
-    hist_backg.Scale(1/hist_backg.Integral())
-
-    canvas= ROOT.TCanvas('canvas', '', 200, 200)
-    # canvas.SetLogy()
-    canvas.SetGrid()
-
     hist_signal.SetLineColor(ROOT.kBlue)
     hist_signal.SetLineWidth(3)
     hist_backg.SetLineColor(ROOT.kRed)
@@ -111,13 +104,15 @@ def draw_total_1D_signal_and_backg(hist_signal, hist_backg, xmin, xmax, outname)
     hist_signal.GetXaxis().SetRangeUser(xmin, xmax)
     hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
 
+    canvas_unnorm = ROOT.TCanvas('canvas_unnorm', '', 200, 200)
+    # canvas_unnorm.SetLogy()
+    canvas_unnorm.SetGrid()
     hist_signal.Draw("hist")
     hist_backg.Draw("hist sames")
-    canvas.Update()
+    canvas_unnorm.Update()
 
     s1 = hist_signal.FindObject("stats")
     s1.SetTextColor(ROOT.kBlue)
-
     s2 = hist_backg.FindObject("stats")
     s2.SetTextColor(ROOT.kRed)
     s1.SetY1NDC(0.6)
@@ -127,8 +122,18 @@ def draw_total_1D_signal_and_backg(hist_signal, hist_backg, xmin, xmax, outname)
     s2.SetX2NDC(s1.GetX2NDC())
     s2.SetY2NDC(0.6)
     
-    canvas.Update()
-    canvas.SaveAs(os.path.join(OUT_PATH,outname + '.pdf'))
+    canvas_unnorm.SaveAs(os.path.join(OUT_PATH,'un_' + outname + '.pdf'))
+
+    hist_signal.Scale(1/hist_signal.Integral())
+    hist_backg.Scale(1/hist_backg.Integral())
+    canvas_norm = ROOT.TCanvas('canvas_norm', '', 200, 200)
+    # canvas_norm.SetLogy()
+    canvas_norm.SetGrid()
+    hist_signal.Draw("hist")
+    hist_backg.Draw("hist sames")
+    canvas_norm.Update()
+
+    canvas_norm.SaveAs(os.path.join(OUT_PATH, outname + '.pdf'))
 
 def draw1D(object_name, xbins, xmin, xmax, titles, channels, subcats="all"):
 
@@ -200,31 +205,31 @@ if __name__ == "__main__":
     
     draw1D("bfatjet_mass", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bFatJet mass', 'GeV', ''], 'SL_and_DL', ['boost'])
 
-    draw1D("bjets0_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet0 pT', 'pT (GeV)', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("bjets1_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet1 pT', 'pT (GeV)', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("bjets_mean_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets <pT>', 'pT (GeV)', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['bJets dPhi', 'dPhi', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['bJets dEta', 'dEta', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("bjets_dR", BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['bJets dR', 'dR', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("bjets_mbb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL', ['res_2b'])
-    draw2D("bjets_dPhi_vs_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'], 'SL_and_DL', ['res_2b'])
+    if LEVEL == "reco":
+        subcats_for_bjets_hists = ['res_2b', 'boost']
+    elif LEVEL == "gen":
+        subcats_for_bjets_hists = ['res_2b']
+    draw1D("bjets0_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet0 pT', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets1_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet1 pT', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_mean_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets <pT>', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['bJets dPhi', 'dPhi', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['bJets dEta', 'dEta', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_dR", BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['bJets dR', 'dR', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_mbb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dPhi_vs_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta for bjets', 'dEta', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists)
 
     draw1D("t1_mInv_combo_max_pt", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_mT_combo_max_pt", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-
     draw1D("t1_mInv_combo_min_pt", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_mT_combo_min_pt", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-
     draw1D("t1_mInv_combo_min_dPhi", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t1_dPhi_combo_min_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi between b and jj for top1', 'dPhi', ''], 'SL', ['res_2b'])
     draw1D("t2_mT_combo_min_dPhi", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_dPhi_combo_min_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi between b and lepton for top2', 'dPhi', ''], 'SL', ['res_2b'])
-    
     draw1D("t1_mInv_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t1_pt_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['p_{T} for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_mT_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_pt_combo_max_pt_mjj_mW", T_BINS, T_MIN, T_MAX, ['p_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
-
     draw1D("t1_mInv_combo_min_dPhi_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t1_dPhi_combo_min_dPhi_mjj_mW", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi between b and jj for top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_mT_combo_min_dPhi_mjj_mW", T_BINS, T_MIN, T_MAX, ['m_{T} for top2', 'GeV', ''], 'SL', ['res_2b'])
@@ -235,10 +240,14 @@ if __name__ == "__main__":
     draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_dPhi", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} in t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
     draw2D("bjets_mbb_vs_"+"t1_mInv_combo_max_pt_mjj_mW", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
     draw2D("bjets_mbb_vs_"+"t1_mInv_combo_min_dPhi_mjj_mW", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} for t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} for t1'], 'SL', ['res_2b'])
-
+    
+    draw1D("all_sT_50_no_met", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT_50_no_met', 'GeV', ''], 'SL_and_DL', ['res_2b'])
+    draw1D("all_sT_50", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT_50', 'GeV', ''], 'SL_and_DL', ['res_2b'])
+    draw1D("all_sT_50_cut", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT_50_cut', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_mInv_noMET", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv without MET', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_mT_noMET", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mT without MET', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_mInv", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_mT", ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX, ['all_mT', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_sT", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT', 'GeV', ''], 'SL_and_DL', ['res_2b'])
+    
 
