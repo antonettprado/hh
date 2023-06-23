@@ -5,7 +5,6 @@ from bamboo.plots import EquidistantBinning as EqBin
 
 from bamboo.analysismodules import NanoAODHistoModule
 from constants import *
-from discriminator_definition import *
 import object_definition as object_defs
 import event_definition as event_defs
 
@@ -27,6 +26,8 @@ class gen_variables(NanoAODHistoModule):
                                                             backend=backend)
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+
+        noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=[])
 
         print(f'Pt cut for all jets: {self.args.jets_pt_cut}')
 
@@ -377,7 +378,7 @@ class gen_variables(NanoAODHistoModule):
             total_mu_pt_50 = op.switch(op.rng_count(mu_pt_50)>0, op.rng_sum(mu_pt_50, lambda mu: mu.pt, start=op.c_float(0.)), op.c_float(0.))
             total_jet_pt_50 = op.switch(op.rng_count(jet_pt_50)>0, op.rng_sum(jet_pt_50, lambda jet: jet.pt, start=op.c_float(0.)), op.c_float(0.))
             all_sT_50_no_met = op.sum(total_e_pt_50, total_mu_pt_50, total_jet_pt_50)
-            all_sT_50 = op.switch(met.pt > 50, all_sT_50_no_met + met.pt, all_sT_50_no_met)
+            all_sT_50 = op.switch(MET.pt > 50, all_sT_50_no_met + MET.pt, all_sT_50_no_met)
             all_sT_50_cut = op.switch(all_sT_50 == 0, -9999, all_sT_50)
 
             zero_p4 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
