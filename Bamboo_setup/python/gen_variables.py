@@ -437,8 +437,10 @@ class gen_variables(NanoAODHistoModule):
         # ===============================================================================
         
         yields.add(noSel, 'noSel')
+        yields.add(SL_res_2b, 'SL_res_1b')
         yields.add(SL_res_2b, 'SL_res_2b')
         yields.add(SL_boost, 'SL_boost')
+        yields.add(DL_res_1b, 'DL_res_1b')
         yields.add(DL_res_2b, 'DL_res_2b')
         yields.add(DL_boost, 'DL_boost')
 
