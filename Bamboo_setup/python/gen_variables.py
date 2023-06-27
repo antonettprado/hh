@@ -203,6 +203,7 @@ class gen_variables(NanoAODHistoModule):
                     Plot.make1D(tag+"bjets_dR", bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), title="", xTitle="dR for bjets"),
                     Plot.make1D(tag+"bjets_mbb", bjets_mbb, sel, EqBin(MBB_BINS, MBB_MIN, MBB_MAX), title="b Jets m_{bb}", xTitle="m_{bb} (GeV)"),
                     Plot.make2D(tag+"bjets_dPhi_vs_dEta", [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)] ,title="", xTitle="dEta", yTitle="dPhi"),
+                    Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="mbb", yTitle="deltaPhi"),
                 ])
 
                 return bjets_mbb

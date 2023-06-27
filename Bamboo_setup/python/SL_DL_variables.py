@@ -45,14 +45,16 @@ class SL_DL_variables(SL_DL_event_selection):
 
         # Retrieve selections ===========================================
         # Include extra selection of >=2 nonbjets for resolved selections only
+        
         SL_res_1b = selections["SL"]["SL_lep_resolved_1b_sel"].refine("Nonbjets>=2 for SL_res_1b", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
         SL_res_2b = selections["SL"]["SL_lep_resolved_2b_sel"].refine("Nonbjets>=2 for SL_res_2b", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
+        # SL_res_1b = selections["SL"]["SL_lep_resolved_1b_sel"]
+        # SL_res_2b = selections["SL"]["SL_lep_resolved_2b_sel"]
         SL_boost = selections["SL"]["SL_lep_boosted_sel"]
-
+        
         DL_res_1b = selections["DL"]["DL_lep_resolved_1b_sel"]
         DL_res_2b = selections["DL"]["DL_lep_resolved_2b_sel"]
         DL_boost = selections["DL"]["DL_lep_boosted_sel"]
-        
         # ================================================================
         # ================================================================
         # ================================================================
@@ -65,9 +67,6 @@ class SL_DL_variables(SL_DL_event_selection):
                 elif "res_2b" in sel_string:
                     sel = SL_res_2b
                     tag = "SL_res_2b_"
-                elif "res_3b" in sel_string:
-                    sel = SL_res_3b
-                    tag = "SL_res_3b_"
                 elif "boost" in sel_string:
                     sel = SL_boost
                     tag = "SL_boost_"
@@ -79,9 +78,6 @@ class SL_DL_variables(SL_DL_event_selection):
                 elif "res_2b" in sel_string:
                     sel = DL_res_2b
                     tag = "DL_res_2b_"
-                elif "res_3b" in sel_string:
-                    sel = DL_res_3b
-                    tag = "DL_res_3b_"
                 elif "boost" in sel_string:
                     sel = DL_boost
                     tag = "DL_boost_"
@@ -124,6 +120,7 @@ class SL_DL_variables(SL_DL_event_selection):
                 Plot.make1D(tag+"bjets_dR" , bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), xTitle="deltaR for bjets"),
                 Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
                 Plot.make2D(tag+"bjets_dPhi_vs_dEta" , [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="deltaEta", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="mbb", yTitle="deltaPhi"),
             ])
 
             return bjets_mbb
@@ -344,8 +341,10 @@ class SL_DL_variables(SL_DL_event_selection):
         # ============================= Cutflow Report ==================================
         # ===============================================================================
         
+        yields.add(SL_res_1b, 'SL_res_1b')
         yields.add(SL_res_2b, 'SL_res_2b')
         yields.add(SL_boost, 'SL_boost')
+        yields.add(DL_res_1b, 'DL_res_1b')
         yields.add(DL_res_2b, 'DL_res_2b')
         yields.add(DL_boost, 'DL_boost')
 

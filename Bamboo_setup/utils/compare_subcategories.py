@@ -8,7 +8,6 @@ import ROOT
 import os
 from pathlib import Path
 from constants import *
-import os
 import argparse
 
 ROOT.gStyle.SetOptStat(1221)
@@ -259,6 +258,7 @@ if __name__ == "__main__":
     draw1D("bjets_dR", BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['bJets dR', 'dR', ''], 'SL_and_DL', subcats_for_bjets_hists)
     draw1D("bjets_mbb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL', subcats_for_bjets_hists)
     draw2D("bjets_dPhi_vs_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta of bjets', 'dEta', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dPhi_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs mbb of bjets', 'mbb', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists)
 
     draw1D("t1_mInv_combo_max_pt", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) of top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_mT_combo_max_pt", T_BINS, T_MIN, T_MAX, ['m_{T} of top2', 'GeV', ''], 'SL', ['res_2b'])

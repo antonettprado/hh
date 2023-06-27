@@ -400,4 +400,16 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         yields.add(selections["SL"]["SL_lep_sel"], 'one lepton')
         yields.add(selections["DL"]["DL_lep_sel"], 'two leptons')
 
+        yields.add(selections["SL"]["SL_lep_resolved_1b_sel"], "SL resolved 1b")
+        yields.add(selections["SL"]["SL_lep_resolved_2b_sel"], "SL resolved 2b")
+        yields.add(selections["SL"]["SL_lep_boosted_sel"], "SL boosted")
+        yields.add(selections["DL"]["DL_lep_resolved_1b_sel"], "DL resolved 1b")
+        yields.add(selections["DL"]["DL_lep_resolved_2b_sel"], "DL resolved 2b")
+        yields.add(selections["DL"]["DL_lep_resolved_sel"], "DL boosted")
+
+        yields.add(selections["SL"]["SL_lep_sel"], "SL")
+        yields.add(selections["DL"]["DL_lep_sel"], "DL")
+        
+        
+
         return plots
