@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     print("------------------- Starting selections -------------------")
     set_efficiencies = [0.75, 0.80, 0.85, 0.90, 0.95]
-    step_size = 8
+    step_size = 2
     print('STEP SIZE = ' + str(step_size) + '\n')
     # --------------------------------------------------
     print("For 1D variables") 
@@ -162,113 +162,113 @@ if __name__ == "__main__":
             print("\t\t-------------------------------------------------\n")
 
     # --------------------------------------------------
-    print('For 2D variables:')
-    variables_2d = []
-    variables_2d.append("bjets_dEta_vs_mbb")
-    variables_2d.append("bjets_dPhi_vs_mbb")
-    variables_2d.append("bjets_dPhi_vs_dEta")
-    variables_2d.append("bjets_mbb_vs_t1_mInv_combo_max_pt_mjj_mW")
+    # print('For 2D variables:')
+    # variables_2d = []
+    # variables_2d.append("bjets_dEta_vs_mbb")
+    # variables_2d.append("bjets_dPhi_vs_mbb")
+    # variables_2d.append("bjets_dPhi_vs_dEta")
+    # variables_2d.append("bjets_mbb_vs_t1_mInv_combo_max_pt_mjj_mW")
 
-    for eff in set_efficiencies:
-        print("\tFor signal efficiency of " + str(eff))
-        for var in variables_2d:
-            histo_signal = get_total_hist_of_type("signal", var, dim=2)
-            histo_backg = get_total_hist_of_type("backg", var, dim=2)
+    # for eff in set_efficiencies:
+    #     print("\tFor signal efficiency of " + str(eff))
+    #     for var in variables_2d:
+    #         histo_signal = get_total_hist_of_type("signal", var, dim=2)
+    #         histo_backg = get_total_hist_of_type("backg", var, dim=2)
 
-            nbins_x = histo_signal.GetNbinsX()
-            nbins_y = histo_signal.GetNbinsY()
-            total_norm_signal = histo_signal.Integral()
-            total_norm_bkg = histo_backg.Integral()
-            min_bkg_frac = 9999
-            min_signal_frac = 9999
-            xl_min = -9999
-            xr_min = -9999
-            xbinl_min = -9999
-            xbinr_min = -9999
-            yl_min = -9999
-            yr_min = -9999
-            ybinl_min = -9999
-            ybinr_min = -9999
-            min_width_x = 9999
-            min_width_y = 9999
+    #         nbins_x = histo_signal.GetNbinsX()
+    #         nbins_y = histo_signal.GetNbinsY()
+    #         total_norm_signal = histo_signal.Integral()
+    #         total_norm_bkg = histo_backg.Integral()
+    #         min_bkg_frac = 9999
+    #         min_signal_frac = 9999
+    #         xl_min = -9999
+    #         xr_min = -9999
+    #         xbinl_min = -9999
+    #         xbinr_min = -9999
+    #         yl_min = -9999
+    #         yr_min = -9999
+    #         ybinl_min = -9999
+    #         ybinr_min = -9999
+    #         min_width_x = 9999
+    #         min_width_y = 9999
 
-            # ---------- Scan variables independently ----------
-            # for i in range(1,nbins_x+1):
-            #     xl = histo_signal.GetXaxis().GetBinCenter(i)
-            #     for j in range(i+1, nbins_x+1):
-            #         xr = histo_signal.GetXaxis().GetBinCenter(j)
-            #         width_x = xr - xl
+    #         # ---------- Scan variables independently ----------
+    #         # for i in range(1,nbins_x+1):
+    #         #     xl = histo_signal.GetXaxis().GetBinCenter(i)
+    #         #     for j in range(i+1, nbins_x+1):
+    #         #         xr = histo_signal.GetXaxis().GetBinCenter(j)
+    #         #         width_x = xr - xl
 
-            #         norm_signal = histo_signal.Integral(i,j,1,nbins_y)
-            #         norm_bkg = histo_backg.Integral(i,j,1,nbins_y)
-            #         norm_signal_frac = norm_signal/total_norm_signal
-            #         norm_bkg_frac = norm_bkg/total_norm_bkg
-            #         if  norm_signal_frac >= eff:
-            #             if norm_bkg_frac <= min_bkg_frac:
-            #                 xl_min = xl
-            #                 xr_min = xr
-            #                 xbinl_min = i
-            #                 xbinr_min = j
-            #                 min_bkg_frac = norm_bkg_frac
-            #                 min_signal_frac = norm_signal_frac
-            #                 min_width_x = width_x
-            # min_bkg_frac = 9999
-            # min_signal_frac = 9999
-            # for i in range(1,nbins_y+1):
-            #     yl = histo_signal.GetYaxis().GetBinCenter(i)
-            #     for j in range(i+1, nbins_y+1):
-            #         yr = histo_signal.GetYaxis().GetBinCenter(j)
-            #         width_y = yr - yl
+    #         #         norm_signal = histo_signal.Integral(i,j,1,nbins_y)
+    #         #         norm_bkg = histo_backg.Integral(i,j,1,nbins_y)
+    #         #         norm_signal_frac = norm_signal/total_norm_signal
+    #         #         norm_bkg_frac = norm_bkg/total_norm_bkg
+    #         #         if  norm_signal_frac >= eff:
+    #         #             if norm_bkg_frac <= min_bkg_frac:
+    #         #                 xl_min = xl
+    #         #                 xr_min = xr
+    #         #                 xbinl_min = i
+    #         #                 xbinr_min = j
+    #         #                 min_bkg_frac = norm_bkg_frac
+    #         #                 min_signal_frac = norm_signal_frac
+    #         #                 min_width_x = width_x
+    #         # min_bkg_frac = 9999
+    #         # min_signal_frac = 9999
+    #         # for i in range(1,nbins_y+1):
+    #         #     yl = histo_signal.GetYaxis().GetBinCenter(i)
+    #         #     for j in range(i+1, nbins_y+1):
+    #         #         yr = histo_signal.GetYaxis().GetBinCenter(j)
+    #         #         width_y = yr - yl
 
-            #         norm_signal = histo_signal.Integral(xbinl_min,xbinr_min,i,j)
-            #         norm_bkg = histo_backg.Integral(xbinl_min,xbinr_min,i,j)
-            #         norm_signal_frac = norm_signal/total_norm_signal
-            #         norm_bkg_frac = norm_bkg/total_norm_bkg
-            #         if  norm_signal_frac >= eff:
-            #             if norm_bkg_frac <= min_bkg_frac:
-            #                 yl_min = yl
-            #                 yr_min = yr
-            #                 ybinl_min = i
-            #                 ybinr_min = j
-            #                 min_bkg_frac = norm_bkg_frac
-            #                 min_signal_frac = norm_signal_frac
-            #                 min_width_y = width_y
+    #         #         norm_signal = histo_signal.Integral(xbinl_min,xbinr_min,i,j)
+    #         #         norm_bkg = histo_backg.Integral(xbinl_min,xbinr_min,i,j)
+    #         #         norm_signal_frac = norm_signal/total_norm_signal
+    #         #         norm_bkg_frac = norm_bkg/total_norm_bkg
+    #         #         if  norm_signal_frac >= eff:
+    #         #             if norm_bkg_frac <= min_bkg_frac:
+    #         #                 yl_min = yl
+    #         #                 yr_min = yr
+    #         #                 ybinl_min = i
+    #         #                 ybinr_min = j
+    #         #                 min_bkg_frac = norm_bkg_frac
+    #         #                 min_signal_frac = norm_signal_frac
+    #         #                 min_width_y = width_y
 
-            # --------- Scan variables simultaneously ----------
-            for i in range(1,nbins_x+1, step_size):
-                xl = histo_signal.GetXaxis().GetBinCenter(i)
-                for j in range(i+1, nbins_x+1, step_size):
-                    xr = histo_signal.GetXaxis().GetBinCenter(j)
-                    for k in range(1,nbins_y+1, step_size):
-                        yl = histo_signal.GetYaxis().GetBinCenter(k)
-                        for l in range(k+1, nbins_y+1, step_size):
-                            yr = histo_signal.GetYaxis().GetBinCenter(l)
-                            width_x = xr - xl
-                            width_y = yr - yl
+    #         # --------- Scan variables simultaneously ----------
+    #         for i in range(1,nbins_x+1, step_size):
+    #             xl = histo_signal.GetXaxis().GetBinCenter(i)
+    #             for j in range(i+1, nbins_x+1, step_size):
+    #                 xr = histo_signal.GetXaxis().GetBinCenter(j)
+    #                 for k in range(1,nbins_y+1, step_size):
+    #                     yl = histo_signal.GetYaxis().GetBinCenter(k)
+    #                     for l in range(k+1, nbins_y+1, step_size):
+    #                         yr = histo_signal.GetYaxis().GetBinCenter(l)
+    #                         width_x = xr - xl
+    #                         width_y = yr - yl
 
-                            norm_signal = histo_signal.Integral(i,j,k,l)
-                            norm_bkg = histo_backg.Integral(i,j,k,l)
-                            norm_signal_frac = norm_signal/total_norm_signal
-                            norm_bkg_frac = norm_bkg/total_norm_bkg
-                            if  norm_signal_frac >= eff:
-                                if norm_bkg_frac <= min_bkg_frac:
-                                    xl_min = xl
-                                    xr_min = xr
-                                    yl_min = yl
-                                    yr_min = yr
-                                    min_bkg_frac = norm_bkg_frac
-                                    min_signal_frac = norm_signal_frac
-                                    min_width_x = width_x
-                                    min_width_y = width_y
+    #                         norm_signal = histo_signal.Integral(i,j,k,l)
+    #                         norm_bkg = histo_backg.Integral(i,j,k,l)
+    #                         norm_signal_frac = norm_signal/total_norm_signal
+    #                         norm_bkg_frac = norm_bkg/total_norm_bkg
+    #                         if  norm_signal_frac >= eff:
+    #                             if norm_bkg_frac <= min_bkg_frac:
+    #                                 xl_min = xl
+    #                                 xr_min = xr
+    #                                 yl_min = yl
+    #                                 yr_min = yr
+    #                                 min_bkg_frac = norm_bkg_frac
+    #                                 min_signal_frac = norm_signal_frac
+    #                                 min_width_x = width_x
+    #                                 min_width_y = width_y
 
-            significance = min_signal_frac/math.sqrt(min_bkg_frac)
+    #         significance = min_signal_frac/math.sqrt(min_bkg_frac)
 
-            print("\t\tCut for %s:"%var)
-            print("\t\tX Minimum: %.2f, X Maximum: %.2f, X Width: %.2f"%(xl_min, xr_min, min_width_x))
-            print("\t\tY Minimum: %.2f, Y Maximum: %.2f, Y Width: %.2f"%(yl_min, yr_min, min_width_y))
-            print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
-            print("\t\tS/sqrt(B) = " + str(round(significance, 2)))
-            print("\t\t-------------------------------------------------")
+    #         print("\t\tCut for %s:"%var)
+    #         print("\t\tX Minimum: %.2f, X Maximum: %.2f, X Width: %.2f"%(xl_min, xr_min, min_width_x))
+    #         print("\t\tY Minimum: %.2f, Y Maximum: %.2f, Y Width: %.2f"%(yl_min, yr_min, min_width_y))
+    #         print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
+    #         print("\t\tS/sqrt(B) = " + str(round(significance, 2)))
+    #         print("\t\t-------------------------------------------------")
 
 executionTime = (time.time() - startTime)
 print('Execution time in seconds: ' + str(executionTime))
