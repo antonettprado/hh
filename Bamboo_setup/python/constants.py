@@ -1,7 +1,6 @@
 # Variable ranges common across reco and gen vars plots ==============
 MBB_BINS, MBB_MIN, MBB_MAX = 250, 0, 500
 
-
 BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX = 250, 0, 500
 BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX     = 100, -4, 4
 BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX     = 100, -7, 7
