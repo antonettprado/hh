@@ -35,7 +35,7 @@ def get_object_name_subcats(object_name, channel, subcats):
 
     return object_name_subcats
 
-def get_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles, channel):
+def get_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles):
 
     if of_type == "signal": 
         SAMPLES_OF_TYPE = SIGNAL_SAMPLES
@@ -177,14 +177,14 @@ def draw1D(object_name, xbins, xmin, xmax, titles, channels, subcats="all"):
     if "SL" in channels:
         full_object_names = get_object_name_subcats(object_name, "SL", subcats)
         for full_object_name in full_object_names:
-            total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles, "SL")
-            total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles, "SL")
+            total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles)
+            total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles)
             draw_1D_total(total_signal, total_backg, xmin, xmax, full_object_name)
     if "DL" in channels:
         full_object_names = get_object_name_subcats(object_name, "DL", subcats)
         for full_object_name in full_object_names:
-            total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles, "DL")
-            total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles, "DL")
+            total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles)
+            total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles)
             draw_1D_total(total_signal, total_backg, xmin, xmax, full_object_name)
 
 def draw2D(object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles, channels, subcats="all"):
