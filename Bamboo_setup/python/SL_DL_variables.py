@@ -48,8 +48,6 @@ class SL_DL_variables(SL_DL_event_selection):
         
         SL_res_1b = selections["SL"]["SL_lep_resolved_1b_sel"].refine("Nonbjets>=2 for SL_res_1b", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
         SL_res_2b = selections["SL"]["SL_lep_resolved_2b_sel"].refine("Nonbjets>=2 for SL_res_2b", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
-        # SL_res_1b = selections["SL"]["SL_lep_resolved_1b_sel"]
-        # SL_res_2b = selections["SL"]["SL_lep_resolved_2b_sel"]
         SL_boost = selections["SL"]["SL_lep_boosted_sel"]
         
         DL_res_1b = selections["DL"]["DL_lep_resolved_1b_sel"]
@@ -119,8 +117,9 @@ class SL_DL_variables(SL_DL_event_selection):
                 Plot.make1D(tag+"bjets_dPhi" , bjets_dPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="deltaPhi for bjets"),
                 Plot.make1D(tag+"bjets_dR" , bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), xTitle="deltaR for bjets"),
                 Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
-                Plot.make2D(tag+"bjets_dPhi_vs_dEta" , [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="deltaEta", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bjets_dEta_vs_mbb" , [bjets_mbb, bjets_dEta], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)], xTitle="mbb", yTitle="deltaEta"),
                 Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="mbb", yTitle="deltaPhi"),
+                Plot.make2D(tag+"bjets_dPhi_vs_dEta" , [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="deltaEta", yTitle="deltaPhi"),
             ])
 
             return bjets_mbb
@@ -340,6 +339,15 @@ class SL_DL_variables(SL_DL_event_selection):
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
+
+        # from bamboo.analysisutils import addPrintout
+        # from bamboo.root import gbl
+        # gbl.gInterpreter.Declare("""
+        #     bool bamboo_printEntry(long entry, long event) {
+        #     std::cout << "Processing entry #" << entry << ": event " << event << std::endl;
+        #     return false;
+        #     }""")
+        # addPrintout(SL_res_2b, "bamboo_printEntry", op.extVar("ULong_t", "rdfentry_"), tree.event)
         
         yields.add(SL_res_1b, 'SL_res_1b')
         yields.add(SL_res_2b, 'SL_res_2b')
