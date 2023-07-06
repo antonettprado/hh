@@ -28,7 +28,6 @@ def reset_log_file():
     log_file = open(OUTPUT_CSV,'w')
     log_file.close()
 
-
 def find_window_1D(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
     if bin_r <= bin_l:
         return bin_l, bin_r
@@ -129,6 +128,109 @@ def find_window_2D(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, hist
     if (xbin_l_new == xbin_l and xbin_r_new == xbin_r and ybin_l_new == ybin_l and ybin_r_new == ybin_r) or (signal_frac_new < cut):
         return xbin_l, xbin_r, ybin_l, ybin_r
     return find_window_2D(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg)
+
+def find_window_1D_v2(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
+    signal = histo_signal.Integral(bin_l, bin_r)
+    bkg = histo_bkg.Integral(bin_l, bin_r)
+
+    signal_l = histo_signal.Integral(bin_l - step, bin_r)
+    bkg_l = histo_bkg.Integral(bin_l - step, bin_r)
+    signal_r = histo_signal.Integral(bin_l, bin_r + step)
+    bkg_r = histo_bkg.Integral(bin_l, bin_r + step)
+
+    bin_l_new = bin_l
+    bin_r_new = bin_r
+    if bkg_l <=0 or bkg_r <=0:
+        if (signal_l) > (signal_r):
+            bin_l_new = bin_l - step
+        else:
+            bin_r_new = bin_r + step
+    else:
+        if (signal_l > signal) and (signal_r > signal):
+            if (signal_l/bkg_l) > (signal_r/bkg_r):
+                bin_l_new = bin_l - step
+            else:
+                bin_r_new = bin_r + step
+        elif signal_l > signal:
+            bin_l_new = bin_l - step
+        elif signal_r > signal:
+            bin_r_new = bin_r + step
+    if bin_l_new < 1:
+        bin_l_new = bin_l
+        if bin_r_new + step <= nbins:
+            bin_r_new = bin_r + step
+    if bin_r_new > nbins:
+        if bin_l_new - step >= 1:
+            bin_l_new = bin_l - step
+        bin_r_new = bin_r
+    signal_frac_new = histo_signal.Integral(bin_l_new, bin_r_new)/total_norm_signal
+    if  (bin_l_new == bin_l and bin_r_new == bin_r) or signal_frac_new >= cut:
+        return bin_l_new, bin_r_new
+    return find_window_1D_v2(bin_l_new, bin_r_new, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg)
+
+def find_window_2D_v2(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, histo_bkg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg):
+    #print (xbin_l, xbin_r, ybin_l, ybin_r)
+    signal = histo_signal.Integral(xbin_l, xbin_r, ybin_l, ybin_r)
+    bkg = histo_bkg.Integral(xbin_l, xbin_r, ybin_l, ybin_r)
+    signal_xl = histo_signal.Integral(xbin_l - step, xbin_r, ybin_l, ybin_r)
+    signal_xr = histo_signal.Integral(xbin_l, xbin_r + step, ybin_l, ybin_r)
+    signal_yl = histo_signal.Integral(xbin_l, xbin_r, ybin_l - step, ybin_r)
+    signal_yr = histo_signal.Integral(xbin_l, xbin_r, ybin_l, ybin_r + step)
+    bkg_xl = histo_bkg.Integral(xbin_l - step, xbin_r, ybin_l, ybin_r)
+    bkg_xr = histo_bkg.Integral(xbin_l, xbin_r + step, ybin_l, ybin_r)
+    bkg_yl = histo_bkg.Integral(xbin_l, xbin_r, ybin_l - step, ybin_r)
+    bkg_yr = histo_bkg.Integral(xbin_l, xbin_r, ybin_l, ybin_r + step)
+    
+    xbin_l_new = xbin_l
+    xbin_r_new = xbin_r
+    ybin_l_new = ybin_l
+    ybin_r_new = ybin_r
+
+    if bkg_xl <=0 or bkg_xr <= 0 or bkg_yl <= 0 or bkg_yr <= 0:
+        s_list = []
+        if (xbin_l - step) >= 1:
+            s_list.append(signal_xl)
+        if (xbin_r + step) <= nbins_x:
+            s_list.append(signal_xr)
+        if (ybin_l - step) >= 1:
+            s_list.append(signal_yl)
+        if (ybin_r + step) <= nbins_y:
+            s_list.append(signal_yr)
+
+        if len(s_list) != 0:
+            if (signal_xl) == max(s_list) and (xbin_l - step) >= 1:
+                xbin_l_new = xbin_l - step
+            elif (signal_xr) == max(s_list) and (xbin_r + step) <= nbins_x:
+                xbin_r_new = xbin_r + step
+            elif (signal_yl) == max(s_list) and (ybin_l - step) >= 1:
+                ybin_l_new = ybin_l - step
+            elif (signal_yr) == max(s_list) and (ybin_r + step) <= nbins_y:
+                ybin_r_new = ybin_r + step
+    else:
+        s_over_b_list = []
+        if (xbin_l - step) >= 1 and (signal_xl > signal):
+            s_over_b_list.append(signal_xl/bkg_xl)
+        if (xbin_r + step) <= nbins_x and (signal_xr > signal):
+            s_over_b_list.append(signal_xr/bkg_xr)
+        if (ybin_l - step) >= 1 and (signal_yl > signal):
+            s_over_b_list.append(signal_yl/bkg_yl)
+        if (ybin_r + step) <= nbins_y and (signal_yr > signal):
+            s_over_b_list.append(signal_yr/bkg_yr)
+
+        if len(s_over_b_list) != 0:
+            if (signal_xl/bkg_xl) == max(s_over_b_list) and (xbin_l - step) >= 1 and (signal_xl > signal):
+                xbin_l_new = xbin_l - step
+            elif (signal_xr/bkg_xr) == max(s_over_b_list) and (xbin_r + step) <= nbins_x and (signal_xr > signal):
+                xbin_r_new = xbin_r + step
+            elif (signal_yl/bkg_yl) == max(s_over_b_list) and (ybin_l - step) >= 1 and (signal_yl > signal):
+                ybin_l_new = ybin_l - step
+            elif (signal_yr/bkg_yr) == max(s_over_b_list) and (ybin_r + step) <= nbins_y and (signal_yr > signal):
+                ybin_r_new = ybin_r + step
+
+    signal_frac_new = histo_signal.Integral(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new)/total_norm_signal
+    if (xbin_l_new == xbin_l and xbin_r_new == xbin_r and ybin_l_new == ybin_l and ybin_r_new == ybin_r) or (signal_frac_new >= cut):
+        return xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new
+    return find_window_2D_v2(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
 
 def get_total_hist_of_type(of_type, object_name, dim=1):
 
@@ -262,7 +364,11 @@ if __name__ == "__main__":
             step = 1
             xl_bin_min = 1
             xr_bin_min = nbins
-            xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+            if "t1_mInv" in var:
+                # xl_bin_min, xr_bin_min = find_window_1D_v2(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+                xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+            else:
+                xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
             xl_min = histo_signal.GetBinCenter(xl_bin_min)
             xr_min = histo_signal.GetBinCenter(xr_bin_min)
             min_width = xr_min - xl_min
@@ -284,8 +390,6 @@ if __name__ == "__main__":
     variables_2d.append("bjets_dPhi_vs_dEta")
     variables_2d.append("bjets_mbb_vs_t1_mInv_combo_max_pt_mjj_mW")
 
-    step_2D = 5
-    print('Step size for 2D histograms: ' + str(step_2D) + '\n')
     for var in variables_2d:
         print("\tCut for %s:"%var)
         print_to_csv([var])
@@ -319,7 +423,11 @@ if __name__ == "__main__":
             xr_bin_min = nbins_x
             yl_bin_min = 1
             yr_bin_min = nbins_y
-            xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+            if "t1_mInv" in var:
+                # xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D_v2(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
+                xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
+            else:
+                xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
             xl_min = histo_signal.GetXaxis().GetBinCenter(xl_bin_min)
             xr_min = histo_signal.GetXaxis().GetBinCenter(xr_bin_min)
             yl_min = histo_signal.GetYaxis().GetBinCenter(yl_bin_min)
