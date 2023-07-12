@@ -264,6 +264,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         selections["SL"]["SL_lep_resolved_sel"] = SL_lep_resolved_sel
         selections["SL"]["SL_lep_boosted_sel"] = SL_lep_boosted_sel
         selections["SL"]["SL_lep_sel"] = SL_lep_sel
+        
 
         selections["DL_ee"]["DL_ee_resolved_1b_sel"] = DL_ee_resolved_1b_sel
         selections["DL_ee"]["DL_ee_resolved_2b_sel"] = DL_ee_resolved_2b_sel
@@ -397,15 +398,16 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         yields.add(selections["DL_ee"]["DL_ee_sel"], 'two electrons')
         yields.add(selections["DL_emu"]["DL_emu_sel"], 'one elect, one muon')
         yields.add(selections["DL_mumu"]["DL_mumu_sel"], 'two muons')
-        yields.add(selections["SL"]["SL_lep_sel"], 'one lepton')
-        yields.add(selections["DL"]["DL_lep_sel"], 'two leptons')
 
+        yields.add(selections["SL"]["SL_lep_resolved_sel"], "SL resolved")
         yields.add(selections["SL"]["SL_lep_resolved_1b_sel"], "SL resolved 1b")
         yields.add(selections["SL"]["SL_lep_resolved_2b_sel"], "SL resolved 2b")
         yields.add(selections["SL"]["SL_lep_boosted_sel"], "SL boosted")
+
+        yields.add(selections["DL"]["DL_lep_resolved_sel"], "DL resolved")
         yields.add(selections["DL"]["DL_lep_resolved_1b_sel"], "DL resolved 1b")
         yields.add(selections["DL"]["DL_lep_resolved_2b_sel"], "DL resolved 2b")
-        yields.add(selections["DL"]["DL_lep_resolved_sel"], "DL boosted")
+        yields.add(selections["DL"]["DL_lep_boosted_sel"], "DL boosted")
 
         yields.add(selections["SL"]["SL_lep_sel"], "SL")
         yields.add(selections["DL"]["DL_lep_sel"], "DL")

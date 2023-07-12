@@ -1,6 +1,7 @@
-import time
-startTime = time.time()
-#=============================================================
+###############################################################################
+############## Cut based selections on SL_res_2b_x objects ONLY ###############
+############## from SL_DL_vars_reco                             ###############
+###############################################################################
 
 import ROOT
 import os
@@ -11,21 +12,24 @@ import decimal
 from array import array 
 import math
 import csv
+import time
 
+SOURCE_PATH = None
+SOURCE_DIR = None
+OUTPUT_PATH = None
+OUTPUT_FILE = None
 SIGNAL_SAMPLES = None
 BACKG_SAMPLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
-SOURCE_DIR = None
-OUTPUT_CSV = None
 
 def print_to_csv(row):
-    with open(OUTPUT_CSV, "a") as file: 
+    with open(OUTPUT_PATH, "a") as file: 
         writer = csv.writer(file)
         writer.writerow(row)
 
-def reset_log_file():
-    log_file = open(OUTPUT_CSV,'w')
+def reset_output_file():
+    log_file = open(OUTPUT_PATH,'w')
     log_file.close()
 
 def find_window_1D(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
@@ -234,7 +238,7 @@ def find_window_2D_v2(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, h
 
 def get_total_hist_of_type(of_type, object_name, dim=1):
 
-    object_name = "SL_res_2b_" + object_name
+    object_name = "SL_res_2b_x_" + object_name
     if of_type == "signal": 
         SAMPLES_OF_TYPE = SIGNAL_SAMPLES
     elif of_type == "backg":
@@ -267,7 +271,7 @@ def get_total_hist_of_type(of_type, object_name, dim=1):
 
 def get_total_integral_of_type(of_type, object_name):
 
-        object_name = "SL_res_2b_" + object_name
+        object_name = "SL_res_2b_x_" + object_name
         if of_type == "signal":
             SAMPLES_OF_TYPE = SIGNAL_SAMPLES
         elif of_type == "backg":
@@ -297,32 +301,31 @@ def get_files_in_directory(directory):
     return signal_files, backg_files
 
 if __name__ == "__main__":
+    startTime = time.time()
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
-    parser.add_argument("-s", "--source_dir", action="store", dest="source_dir", help="source directory")
-    parser.add_argument("-o", "--output", action="store", dest="output", default="Cut based selections", help="Main output folder")
+    parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source directory")
     args = parser.parse_args()
 
-    SOURCE_DIR = args.source_dir
-    OUT_PATH = os.path.join(args.output, args.source_dir)
+    SOURCE_PATH = args.source_path
+    SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
+    OUTPUT_FILE = SOURCE_DIR + "_cuts.csv"
+    OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_FILE)
+    SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(SOURCE_PATH)
+    reset_output_file()
 
-    SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(SOURCE_DIR)
-    if not os.path.exists(OUT_PATH):
-        os.makedirs(OUT_PATH)
-    OUTPUT_CSV = "cut_based_selections_" + SOURCE_DIR + ".csv"
-    reset_log_file()
-    
-
+    print("The source path is: " + SOURCE_PATH)
+    print("The output path is: " + OUTPUT_PATH)
     # ==================================================================
     # ==================================================================
     # ==================================================================
 
-    print('-----------------------------------------------------------')
-    print(' Total stats for: ' + args.source_dir)
     object_name = "bjets_mbb"
     Total_signal = get_total_integral_of_type("signal", object_name)
     Total_backg = get_total_integral_of_type("backg", object_name)
     Total_significance = Total_signal/math.sqrt(Total_backg)
+    print('-----------------------------------------------------------')
+    print('Total stats for: ' + SOURCE_DIR)
     print("Total signal = " + str(round(Total_signal, 4)))
     print("Total background = " + str(round(Total_backg, 4)))
     print("S/sqrt(B) = " + str(round(Total_significance, 5)))
@@ -334,7 +337,7 @@ if __name__ == "__main__":
 
     EFFICIENCIES = [0.75, 0.80, 0.85, 0.90, 0.95]
     
-    print("\n----------- For 1D variables -----------") 
+    print("\n---------------------- For 1D variables ----------------------")
     variables_1D = []
     variables_1D.append("bjets_mbb")
     variables_1D.append("bjets_dPhi")
@@ -346,8 +349,6 @@ if __name__ == "__main__":
         print_to_csv([var])
         print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
         for EFF in EFFICIENCIES:
-            print("\t\tFor signal efficiency of " + str(EFF))
-        
             histo_signal = get_total_hist_of_type("signal", var)
             histo_backg = get_total_hist_of_type("backg", var)
 
@@ -374,16 +375,16 @@ if __name__ == "__main__":
             min_width = xr_min - xl_min
             min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min)/total_norm_signal
             min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min)/total_norm_bkg
-
             significance = (min_signal_frac*total_norm_signal)/math.sqrt(min_bkg_frac*total_norm_bkg)
 
+            print("\t\tFor signal efficiency of " + str(EFF))
             print("\t\tMinimum: %.2f, Maximum: %.2f, Width: %.2f"%(xl_min, xr_min, min_width))
             print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
             print("\t\tS/sqrt(B) = " + str(round(significance, 4)))
             print("\t\t-------------------------------------------------")
             print_to_csv([round(min_signal_frac*100, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
 
-    print("\n----------- For 2D variables -----------") 
+    print("\n---------------------- For 2D variables ----------------------") 
     variables_2d = []
     variables_2d.append("bjets_dEta_vs_mbb")
     variables_2d.append("bjets_dPhi_vs_mbb")
@@ -395,8 +396,6 @@ if __name__ == "__main__":
         print_to_csv([var])
         print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
         for EFF in EFFICIENCIES:
-            print("\t\tFor signal efficiency of " + str(EFF))
-        
             histo_signal = get_total_hist_of_type("signal", var, dim=2)
             histo_backg = get_total_hist_of_type("backg", var, dim=2)
 
@@ -436,9 +435,9 @@ if __name__ == "__main__":
             min_width_y = yr_min - yl_min
             min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_signal
             min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_bkg
-
             significance = (min_signal_frac*total_norm_signal)/math.sqrt(min_bkg_frac*total_norm_bkg)
 
+            print("\t\tFor signal efficiency of " + str(EFF))
             print("\t\tX Minimum: %.2f, X Maximum: %.2f, X Width: %.2f"%(xl_min, xr_min, min_width_x))
             print("\t\tY Minimum: %.2f, Y Maximum: %.2f, Y Width: %.2f"%(yl_min, yr_min, min_width_y))
             print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
@@ -447,6 +446,5 @@ if __name__ == "__main__":
             print_to_csv([round(min_signal_frac, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
             print_to_csv(["","["+ str(round(yl_min, 2)) + ", " + str(round(yr_min, 2)) +"]", "", ""])
 
-
-executionTime = (time.time() - startTime)
-print('Execution time in seconds: ' + str(executionTime))
+    executionTime = (time.time() - startTime)
+    print('Execution time in seconds: ' + str(executionTime))
