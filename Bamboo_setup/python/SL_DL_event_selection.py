@@ -99,124 +99,124 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # ===============================================================================
 
         # Single Electron
-        SL_e_only_sel = mllSel.refine("SL electron only selection", cut=[
+        SL_e_only = mllSel.refine("SL electron only selection", cut=[
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT)])
-        SL_e_resolved_1b_sel = SL_e_only_sel.refine("SL electron resolved 1b jet selection", cut=[
+        SL_e_resolved_1b = SL_e_only.refine("SL electron resolved 1b jet selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_e_resolved_2b_sel = SL_e_only_sel.refine("SL electron resolved 2b jets selection", cut=[
+        SL_e_resolved_2b = SL_e_only.refine("SL electron resolved 2b jets selection", cut=[
             event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        # SL_e_resolved_3b_sel = SL_e_only_sel.refine("SL electron resolved 3b jets selection", cut=[
+        # SL_e_resolved_3b = SL_e_only.refine("SL electron resolved 3b jets selection", cut=[
         #    event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_e_resolved_sel = SL_e_only_sel.refine("SL electron resolved jet selection", cut=[
+        SL_e_resolved = SL_e_only.refine("SL electron resolved jet selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_e_boosted_sel = SL_e_only_sel.refine("SL electron boosted jet selection", cut=[
+        SL_e_boosted = SL_e_only.refine("SL electron boosted jet selection", cut=[
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_e_sel = SL_e_only_sel.refine("SL electron selection", cut=[op.OR(
+        SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Single Muon
-        SL_mu_only_sel = mllSel.refine("SL muon only selection", cut=[
+        SL_mu_only = mllSel.refine("SL muon only selection", cut=[
             event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT)])
-        SL_mu_resolved_1b_sel = SL_mu_only_sel.refine("SL muon resolved 1b jet selection", cut=[
+        SL_mu_resolved_1b = SL_mu_only.refine("SL muon resolved 1b jet selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_resolved_2b_sel = SL_mu_only_sel.refine("SL muon resolved 2b jets selection", cut=[
+        SL_mu_resolved_2b = SL_mu_only.refine("SL muon resolved 2b jets selection", cut=[
             event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        # SL_mu_resolved_3b_sel = SL_mu_only_sel.refine("SL muon resolved 3b jets selection", cut=[
+        # SL_mu_resolved_3b = SL_mu_only.refine("SL muon resolved 3b jets selection", cut=[
         #    event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_resolved_sel = SL_mu_only_sel.refine("SL muon resolved jet selection", cut=[
+        SL_mu_resolved = SL_mu_only.refine("SL muon resolved jet selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_boosted_sel = SL_mu_only_sel.refine("SL muon boosted jet selection", cut=[
+        SL_mu_boosted = SL_mu_only.refine("SL muon boosted jet selection", cut=[
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_sel = SL_mu_only_sel.refine("SL muon selection", cut=[op.OR(
+        SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Single Lepton
-        SL_lep_only_sel = mllSel.refine("SL lepton only selection", cut=[op.OR(
+        SL_only = mllSel.refine("SL lepton only selection", cut=[op.OR(
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
             event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT))])
-        SL_lep_resolved_1b_sel = SL_lep_only_sel.refine("SL resolved 1b jet selection", cut=[
+        SL_res_1b = SL_only.refine("SL resolved 1b jet selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_lep_resolved_2b_sel = SL_lep_only_sel.refine("SL resolved 2b jets selection", cut=[
+        SL_res_2b = SL_only.refine("SL resolved 2b jets selection", cut=[
             event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        # SL_lep_resolved_3b_sel = SL_lep_only_sel.refine("SL resolved 3b jets selection", cut=[
+        # SL_res_3b = SL_only.refine("SL resolved 3b jets selection", cut=[
         #    event_defs.sl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_lep_resolved_sel = SL_lep_only_sel.refine("SL resolved jet selection", cut=[
+        SL_resolved = SL_only.refine("SL resolved jet selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_lep_boosted_sel = SL_lep_only_sel.refine("SL boosted jet selection", cut=[
+        SL_boost = SL_only.refine("SL boosted jet selection", cut=[
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_lep_sel = SL_lep_only_sel.refine("SL selection", cut=[op.OR(
+        SL = SL_only.refine("SL selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Double Electron
-        DL_ee_only_sel = mllSel.refine("DL ee only selection", cut=[
+        DL_ee_only = mllSel.refine("DL ee only selection", cut=[
             event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT)])
-        DL_ee_resolved_1b_sel = DL_ee_only_sel.refine("DL ee resolved 1b jet selection", cut=[
+        DL_ee_resolved_1b = DL_ee_only.refine("DL ee resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_ee_resolved_2b_sel = DL_ee_only_sel.refine("DL ee resolved 2b jets selection", cut=[
+        DL_ee_resolved_2b = DL_ee_only.refine("DL ee resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        # DL_ee_resolved_3b_sel = DL_ee_only_sel.refine("DL ee resolved 3b jets selection", cut=[
+        # DL_ee_resolved_3b = DL_ee_only.refine("DL ee resolved 3b jets selection", cut=[
         #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_ee_resolved_sel = DL_ee_only_sel.refine("DL ee resolved jet selection", cut=[
+        DL_ee_resolved = DL_ee_only.refine("DL ee resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_ee_boosted_sel = DL_ee_only_sel.refine("DL ee boosted jet selection", cut=[
+        DL_ee_boosted = DL_ee_only.refine("DL ee boosted jet selection", cut=[
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_ee_sel = DL_ee_only_sel.refine("DL ee selection", cut=[op.OR(
+        DL_ee = DL_ee_only.refine("DL ee selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Electron Muon
-        DL_emu_only_sel = mllSel.refine("DL emu only selection", cut=[
+        DL_emu_only = mllSel.refine("DL emu only selection", cut=[
             event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT)])
-        DL_emu_resolved_1b_sel = DL_emu_only_sel.refine("DL emu resolved 1b jet selection", cut=[
+        DL_emu_resolved_1b = DL_emu_only.refine("DL emu resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_emu_resolved_2b_sel = DL_emu_only_sel.refine("DL emu resolved 2b jets selection", cut=[
+        DL_emu_resolved_2b = DL_emu_only.refine("DL emu resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        # DL_emu_resolved_3b_sel = DL_emu_only_sel.refine("DL emu resolved 3b jets selection", cut=[
+        # DL_emu_resolved_3b = DL_emu_only.refine("DL emu resolved 3b jets selection", cut=[
         #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_emu_resolved_sel = DL_emu_only_sel.refine("DL emu resolved jet selection", cut=[
+        DL_emu_resolved = DL_emu_only.refine("DL emu resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_emu_boosted_sel = DL_emu_only_sel.refine("DL emu boosted jet selection", cut=[
+        DL_emu_boosted = DL_emu_only.refine("DL emu boosted jet selection", cut=[
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_emu_sel = DL_emu_only_sel.refine("DL emu selection", cut=[op.OR(
+        DL_emu = DL_emu_only.refine("DL emu selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Double Muon
-        DL_mumu_only_sel = mllSel.refine("DL mumu only selection", cut=[
+        DL_mumu_only = mllSel.refine("DL mumu only selection", cut=[
             event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT)])
-        DL_mumu_resolved_1b_sel = DL_mumu_only_sel.refine("DL mumu resolved 1b jet selection", cut=[
+        DL_mumu_resolved_1b = DL_mumu_only.refine("DL mumu resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_mumu_resolved_2b_sel = DL_mumu_only_sel.refine("DL mumu resolved 2b jets selection", cut=[
+        DL_mumu_resolved_2b = DL_mumu_only.refine("DL mumu resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        # DL_mumu_resolved_3b_sel = DL_mumu_only_sel.refine("DL mumu resolved 3b jets selection", cut=[
+        # DL_mumu_resolved_3b = DL_mumu_only.refine("DL mumu resolved 3b jets selection", cut=[
         #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_mumu_resolved_sel = DL_mumu_only_sel.refine("DL mumu resolved jet selection", cut=[
+        DL_mumu_resolved = DL_mumu_only.refine("DL mumu resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_mumu_boosted_sel = DL_mumu_only_sel.refine("DL mumu boosted jet selection", cut=[
+        DL_mumu_boosted = DL_mumu_only.refine("DL mumu boosted jet selection", cut=[
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_mumu_sel = DL_mumu_only_sel.refine("DL mumu selection", cut=[op.OR(
+        DL_mumu = DL_mumu_only.refine("DL mumu selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
         # Dilepton 
-        DL_lep_only_sel = mllSel.refine("DL only selection", cut=[op.OR(
+        DL_only = mllSel.refine("DL only selection", cut=[op.OR(
             event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
             event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT),
             event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT))])
-        DL_lep_resolved_1b_sel = DL_lep_only_sel.refine("DL resolved 1b jet selection", cut=[
+        DL_res_1b = DL_only.refine("DL resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_lep_resolved_2b_sel = DL_lep_only_sel.refine("DL resolved 2b jets selection", cut=[
+        DL_res_2b = DL_only.refine("DL resolved 2b jets selection", cut=[
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        # DL_lep_resolved_3b_sel = DL_lep_only_sel.refine("DL resolved 3b jets selection", cut=[
+        # DL_res_3b = DL_only.refine("DL resolved 3b jets selection", cut=[
         #    event_defs.dl_resolved_3b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_lep_resolved_sel = DL_lep_only_sel.refine("DL resolved jet selection", cut=[
+        DL_resolved = DL_only.refine("DL resolved jet selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_lep_boosted_sel = DL_lep_only_sel.refine("DL boosted jet selection", cut=[
+        DL_boost = DL_only.refine("DL boosted jet selection", cut=[
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_lep_sel = DL_lep_only_sel.refine("DL selection", cut=[op.OR(
+        DL = DL_only.refine("DL selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
@@ -244,55 +244,55 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         selections["DL_mumu"] = {}
         selections["DL"] = {}
 
-        selections["SL_e"]["SL_e_resolved_1b_sel"] = SL_e_resolved_1b_sel
-        selections["SL_e"]["SL_e_resolved_2b_sel"] = SL_e_resolved_2b_sel
-        # selections["SL_e"]["SL_e_resolved_3b_sel"] = SL_e_resolved_3b_sel
-        selections["SL_e"]["SL_e_resolved_sel"] = SL_e_resolved_sel
-        selections["SL_e"]["SL_e_boosted_sel"] = SL_e_boosted_sel
-        selections["SL_e"]["SL_e_sel"] = SL_e_sel
+        selections["SL_e"]["SL_e_resolved_1b"] = SL_e_resolved_1b
+        selections["SL_e"]["SL_e_resolved_2b"] = SL_e_resolved_2b
+        # selections["SL_e"]["SL_e_resolved_3b"] = SL_e_resolved_3b
+        selections["SL_e"]["SL_e_resolved"] = SL_e_resolved
+        selections["SL_e"]["SL_e_boosted"] = SL_e_boosted
+        selections["SL_e"]["SL_e"] = SL_e
 
-        selections["SL_mu"]["SL_mu_resolved_1b_sel"] = SL_mu_resolved_1b_sel
-        selections["SL_mu"]["SL_mu_resolved_2b_sel"] = SL_mu_resolved_2b_sel
-        # selections["SL_mu"]["SL_mu_resolved_3b_sel"] = SL_mu_resolved_3b_sel
-        selections["SL_mu"]["SL_mu_resolved_sel"] = SL_mu_resolved_sel
-        selections["SL_mu"]["SL_mu_boosted_sel"] = SL_mu_boosted_sel
-        selections["SL_mu"]["SL_mu_sel"] = SL_mu_sel
+        selections["SL_mu"]["SL_mu_resolved_1b"] = SL_mu_resolved_1b
+        selections["SL_mu"]["SL_mu_resolved_2b"] = SL_mu_resolved_2b
+        # selections["SL_mu"]["SL_mu_resolved_3b"] = SL_mu_resolved_3b
+        selections["SL_mu"]["SL_mu_resolved"] = SL_mu_resolved
+        selections["SL_mu"]["SL_mu_boosted"] = SL_mu_boosted
+        selections["SL_mu"]["SL_mu"] = SL_mu
 
-        selections["SL"]["SL_lep_resolved_1b_sel"] = SL_lep_resolved_1b_sel
-        selections["SL"]["SL_lep_resolved_2b_sel"] = SL_lep_resolved_2b_sel
-        # selections["SL"]["SL_lep_resolved_3b_sel"] = SL_lep_resolved_3b_sel
-        selections["SL"]["SL_lep_resolved_sel"] = SL_lep_resolved_sel
-        selections["SL"]["SL_lep_boosted_sel"] = SL_lep_boosted_sel
-        selections["SL"]["SL_lep_sel"] = SL_lep_sel
+        selections["SL"]["SL_res_1b"] = SL_res_1b
+        selections["SL"]["SL_res_2b"] = SL_res_2b
+        # selections["SL"]["SL_res_3b"] = SL_res_3b
+        selections["SL"]["SL_resolved"] = SL_resolved
+        selections["SL"]["SL_boost"] = SL_boost
+        selections["SL"]["SL"] = SL
         
 
-        selections["DL_ee"]["DL_ee_resolved_1b_sel"] = DL_ee_resolved_1b_sel
-        selections["DL_ee"]["DL_ee_resolved_2b_sel"] = DL_ee_resolved_2b_sel
-        # selections["DL_ee"]["DL_ee_resolved_3b_sel"] = DL_ee_resolved_3b_sel
-        selections["DL_ee"]["DL_ee_resolved_sel"] = DL_ee_resolved_sel
-        selections["DL_ee"]["DL_ee_boosted_sel"] = DL_ee_boosted_sel
-        selections["DL_ee"]["DL_ee_sel"] = DL_ee_sel
+        selections["DL_ee"]["DL_ee_resolved_1b"] = DL_ee_resolved_1b
+        selections["DL_ee"]["DL_ee_resolved_2b"] = DL_ee_resolved_2b
+        # selections["DL_ee"]["DL_ee_resolved_3b"] = DL_ee_resolved_3b
+        selections["DL_ee"]["DL_ee_resolved"] = DL_ee_resolved
+        selections["DL_ee"]["DL_ee_boosted"] = DL_ee_boosted
+        selections["DL_ee"]["DL_ee"] = DL_ee
 
-        selections["DL_emu"]["DL_emu_resolved_1b_sel"] = DL_emu_resolved_1b_sel
-        selections["DL_emu"]["DL_emu_resolved_2b_sel"] = DL_emu_resolved_2b_sel
-        # selections["DL_emu"]["DL_emu_resolved_3b_sel"] = DL_emu_resolved_3b_sel
-        selections["DL_emu"]["DL_emu_resolved_sel"] = DL_emu_resolved_sel
-        selections["DL_emu"]["DL_emu_boosted_sel"] = DL_emu_boosted_sel
-        selections["DL_emu"]["DL_emu_sel"] = DL_emu_sel
+        selections["DL_emu"]["DL_emu_resolved_1b"] = DL_emu_resolved_1b
+        selections["DL_emu"]["DL_emu_resolved_2b"] = DL_emu_resolved_2b
+        # selections["DL_emu"]["DL_emu_resolved_3b"] = DL_emu_resolved_3b
+        selections["DL_emu"]["DL_emu_resolved"] = DL_emu_resolved
+        selections["DL_emu"]["DL_emu_boosted"] = DL_emu_boosted
+        selections["DL_emu"]["DL_emu"] = DL_emu
 
-        selections["DL_mumu"]["DL_mumu_resolved_1b_sel"] = DL_mumu_resolved_1b_sel
-        selections["DL_mumu"]["DL_mumu_resolved_2b_sel"] = DL_mumu_resolved_2b_sel
-        # selections["DL_mumu"]["DL_mumu_resolved_3b_sel"] = DL_mumu_resolved_3b_sel
-        selections["DL_mumu"]["DL_mumu_resolved_sel"] = DL_mumu_resolved_sel
-        selections["DL_mumu"]["DL_mumu_boosted_sel"] = DL_mumu_boosted_sel
-        selections["DL_mumu"]["DL_mumu_sel"] = DL_mumu_sel
+        selections["DL_mumu"]["DL_mumu_resolved_1b"] = DL_mumu_resolved_1b
+        selections["DL_mumu"]["DL_mumu_resolved_2b"] = DL_mumu_resolved_2b
+        # selections["DL_mumu"]["DL_mumu_resolved_3b"] = DL_mumu_resolved_3b
+        selections["DL_mumu"]["DL_mumu_resolved"] = DL_mumu_resolved
+        selections["DL_mumu"]["DL_mumu_boosted"] = DL_mumu_boosted
+        selections["DL_mumu"]["DL_mumu"] = DL_mumu
 
-        selections["DL"]["DL_lep_resolved_1b_sel"] = DL_lep_resolved_1b_sel
-        selections["DL"]["DL_lep_resolved_2b_sel"] = DL_lep_resolved_2b_sel
-        # selections["DL"]["DL_lep_resolved_3b_sel"] = DL_lep_resolved_3b_sel
-        selections["DL"]["DL_lep_resolved_sel"] = DL_lep_resolved_sel
-        selections["DL"]["DL_lep_boosted_sel"] = DL_lep_boosted_sel
-        selections["DL"]["DL_lep_sel"] = DL_lep_sel
+        selections["DL"]["DL_res_1b"] = DL_res_1b
+        selections["DL"]["DL_res_2b"] = DL_res_2b
+        # selections["DL"]["DL_res_3b"] = DL_res_3b
+        selections["DL"]["DL_resolved"] = DL_resolved
+        selections["DL"]["DL_boost"] = DL_boost
+        selections["DL"]["DL"] = DL
 
         return objects, selections
 
@@ -321,62 +321,62 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # ===============================================================================
 
         plot_sel = []
-        plot_sel.append(["SL_e", selections["SL_e"]["SL_e_sel"]])
-        plot_sel.append(["SL_mu", selections["SL_mu"]["SL_mu_sel"]])
-        plot_sel.append(["DL_ee", selections["DL_ee"]["DL_ee_sel"]])
-        plot_sel.append(["DL_emu", selections["DL_emu"]["DL_emu_sel"]])
-        plot_sel.append(["DL_mumu", selections["DL_mumu"]["DL_mumu_sel"]])
-        plot_sel.append(["SL", selections["SL"]["SL_lep_sel"]])
-        plot_sel.append(["DL", selections["DL"]["DL_lep_sel"]])
+        plot_sel.append(["SL_e", selections["SL_e"]["SL_e"]])
+        plot_sel.append(["SL_mu", selections["SL_mu"]["SL_mu"]])
+        plot_sel.append(["DL_ee", selections["DL_ee"]["DL_ee"]])
+        plot_sel.append(["DL_emu", selections["DL_emu"]["DL_emu"]])
+        plot_sel.append(["DL_mumu", selections["DL_mumu"]["DL_mumu"]])
+        plot_sel.append(["SL", selections["SL"]["SL"]])
+        plot_sel.append(["DL", selections["DL"]["DL"]])
 
         plots.extend([
-            Plot.make1D("SL_e_pt", tight_electrons[0].pt, selections["SL_e"]["SL_e_sel"], EqBin(250, 0, 500), title="", xTitle="Electron pT (GeV)"),
-            Plot.make1D("SL_e_eta", tight_electrons[0].eta, selections["SL_e"]["SL_e_sel"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
-            Plot.make1D("SL_e_dxy", tight_electrons[0].dxy, selections["SL_e"]["SL_e_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
-            Plot.make1D("SL_e_dz", tight_electrons[0].dz, selections["SL_e"]["SL_e_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
-            Plot.make1D("SL_e_sip3d", tight_electrons[0].sip3d, selections["SL_e"]["SL_e_sel"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
+            Plot.make1D("SL_e_pt", tight_electrons[0].pt, selections["SL_e"]["SL_e"], EqBin(250, 0, 500), title="", xTitle="Electron pT (GeV)"),
+            Plot.make1D("SL_e_eta", tight_electrons[0].eta, selections["SL_e"]["SL_e"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
+            Plot.make1D("SL_e_dxy", tight_electrons[0].dxy, selections["SL_e"]["SL_e"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
+            Plot.make1D("SL_e_dz", tight_electrons[0].dz, selections["SL_e"]["SL_e"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
+            Plot.make1D("SL_e_sip3d", tight_electrons[0].sip3d, selections["SL_e"]["SL_e"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
 
-            Plot.make1D("SL_mu_pt", tight_muons[0].pt, selections["SL_mu"]["SL_mu_sel"], EqBin(250, 0, 500), title="", xTitle="Muon pT (GeV)"),
-            Plot.make1D("SL_mu_eta", tight_muons[0].eta, selections["SL_mu"]["SL_mu_sel"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
-            Plot.make1D("SL_mu_dxy", tight_muons[0].dxy, selections["SL_mu"]["SL_mu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
-            Plot.make1D("SL_mu_dz", tight_muons[0].dz, selections["SL_mu"]["SL_mu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
-            Plot.make1D("SL_mu_sip3d", tight_muons[0].sip3d, selections["SL_mu"]["SL_mu_sel"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
+            Plot.make1D("SL_mu_pt", tight_muons[0].pt, selections["SL_mu"]["SL_mu"], EqBin(250, 0, 500), title="", xTitle="Muon pT (GeV)"),
+            Plot.make1D("SL_mu_eta", tight_muons[0].eta, selections["SL_mu"]["SL_mu"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
+            Plot.make1D("SL_mu_dxy", tight_muons[0].dxy, selections["SL_mu"]["SL_mu"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
+            Plot.make1D("SL_mu_dz", tight_muons[0].dz, selections["SL_mu"]["SL_mu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
+            Plot.make1D("SL_mu_sip3d", tight_muons[0].sip3d, selections["SL_mu"]["SL_mu"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
 
-            Plot.make1D("DL_ee_leading_pt", tight_electrons[0].pt, selections["DL_ee"]["DL_ee_sel"], EqBin(250, 0, 500), title="", xTitle="Leading electron pT (GeV)"),
-            Plot.make1D("DL_ee_leading_eta", tight_electrons[0].eta, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -3, 3), title= "", xTitle="Leading electron eta"),
-            Plot.make1D("DL_ee_leading_dxy", tight_electrons[0].dxy, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading electron dxy (cm)"),
-            Plot.make1D("DL_ee_leading_dz", tight_electrons[0].dz, selections["DL_ee"]["DL_ee_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading electron dz (cm)"),
-            Plot.make1D("DL_ee_leading_sip3d", tight_electrons[0].sip3d, selections["DL_ee"]["DL_ee_sel"], EqBin(100, 0, 8), title="", xTitle="Leading electron sip3d"),
+            Plot.make1D("DL_ee_leading_pt", tight_electrons[0].pt, selections["DL_ee"]["DL_ee"], EqBin(250, 0, 500), title="", xTitle="Leading electron pT (GeV)"),
+            Plot.make1D("DL_ee_leading_eta", tight_electrons[0].eta, selections["DL_ee"]["DL_ee"], EqBin(100, -3, 3), title= "", xTitle="Leading electron eta"),
+            Plot.make1D("DL_ee_leading_dxy", tight_electrons[0].dxy, selections["DL_ee"]["DL_ee"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading electron dxy (cm)"),
+            Plot.make1D("DL_ee_leading_dz", tight_electrons[0].dz, selections["DL_ee"]["DL_ee"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading electron dz (cm)"),
+            Plot.make1D("DL_ee_leading_sip3d", tight_electrons[0].sip3d, selections["DL_ee"]["DL_ee"], EqBin(100, 0, 8), title="", xTitle="Leading electron sip3d"),
 
-            Plot.make1D("DL_ee_subleading_pt", tight_electrons[1].pt, selections["DL_ee"]["DL_ee_sel"], EqBin(250, 0, 500), title="", xTitle="Subleading electron pT (GeV)"),
-            Plot.make1D("DL_ee_subleading_eta", tight_electrons[1].eta, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -3, 3), title= "", xTitle="Subleading electron eta"),
-            Plot.make1D("DL_ee_subleading_dxy", tight_electrons[1].dxy, selections["DL_ee"]["DL_ee_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading electron dxy (cm)"),
-            Plot.make1D("DL_ee_subleading_dz", tight_electrons[1].dz, selections["DL_ee"]["DL_ee_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading electron dz (cm)"),
-            Plot.make1D("DL_ee_subleading_sip3d", tight_electrons[1].sip3d, selections["DL_ee"]["DL_ee_sel"], EqBin(100, 0, 8), title="", xTitle="Subleading electron sip3d"),
+            Plot.make1D("DL_ee_subleading_pt", tight_electrons[1].pt, selections["DL_ee"]["DL_ee"], EqBin(250, 0, 500), title="", xTitle="Subleading electron pT (GeV)"),
+            Plot.make1D("DL_ee_subleading_eta", tight_electrons[1].eta, selections["DL_ee"]["DL_ee"], EqBin(100, -3, 3), title= "", xTitle="Subleading electron eta"),
+            Plot.make1D("DL_ee_subleading_dxy", tight_electrons[1].dxy, selections["DL_ee"]["DL_ee"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading electron dxy (cm)"),
+            Plot.make1D("DL_ee_subleading_dz", tight_electrons[1].dz, selections["DL_ee"]["DL_ee"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading electron dz (cm)"),
+            Plot.make1D("DL_ee_subleading_sip3d", tight_electrons[1].sip3d, selections["DL_ee"]["DL_ee"], EqBin(100, 0, 8), title="", xTitle="Subleading electron sip3d"),
 
-            Plot.make1D("DL_emu_electron_pt", tight_electrons[0].pt, selections["DL_emu"]["DL_emu_sel"], EqBin(250, 0, 500), title="", xTitle="Electron pT (GeV)"),
-            Plot.make1D("DL_emu_electron_eta", tight_electrons[0].eta, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
-            Plot.make1D("DL_emu_electron_dxy", tight_electrons[0].dxy, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
-            Plot.make1D("DL_emu_electron_dz", tight_electrons[0].dz, selections["DL_emu"]["DL_emu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
-            Plot.make1D("DL_emu_electron_sip3d", tight_electrons[0].sip3d, selections["DL_emu"]["DL_emu_sel"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
+            Plot.make1D("DL_emu_electron_pt", tight_electrons[0].pt, selections["DL_emu"]["DL_emu"], EqBin(250, 0, 500), title="", xTitle="Electron pT (GeV)"),
+            Plot.make1D("DL_emu_electron_eta", tight_electrons[0].eta, selections["DL_emu"]["DL_emu"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
+            Plot.make1D("DL_emu_electron_dxy", tight_electrons[0].dxy, selections["DL_emu"]["DL_emu"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
+            Plot.make1D("DL_emu_electron_dz", tight_electrons[0].dz, selections["DL_emu"]["DL_emu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
+            Plot.make1D("DL_emu_electron_sip3d", tight_electrons[0].sip3d, selections["DL_emu"]["DL_emu"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
 
-            Plot.make1D("DL_emu_muon_pt", tight_muons[0].pt, selections["DL_emu"]["DL_emu_sel"], EqBin(250, 0, 500), title="", xTitle="Muon pT (GeV)"),
-            Plot.make1D("DL_emu_muon_eta", tight_muons[0].eta, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
-            Plot.make1D("DL_emu_muon_dxy", tight_muons[0].dxy, selections["DL_emu"]["DL_emu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
-            Plot.make1D("DL_emu_muon_dz", tight_muons[0].dz, selections["DL_emu"]["DL_emu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
-            Plot.make1D("DL_emu_muon_sip3d", tight_muons[0].sip3d, selections["DL_emu"]["DL_emu_sel"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
+            Plot.make1D("DL_emu_muon_pt", tight_muons[0].pt, selections["DL_emu"]["DL_emu"], EqBin(250, 0, 500), title="", xTitle="Muon pT (GeV)"),
+            Plot.make1D("DL_emu_muon_eta", tight_muons[0].eta, selections["DL_emu"]["DL_emu"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
+            Plot.make1D("DL_emu_muon_dxy", tight_muons[0].dxy, selections["DL_emu"]["DL_emu"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
+            Plot.make1D("DL_emu_muon_dz", tight_muons[0].dz, selections["DL_emu"]["DL_emu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
+            Plot.make1D("DL_emu_muon_sip3d", tight_muons[0].sip3d, selections["DL_emu"]["DL_emu"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
 
-            Plot.make1D("DL_mumu_leading_pt", tight_muons[0].pt, selections["DL_mumu"]["DL_mumu_sel"], EqBin(250, 0, 500), title="", xTitle="Leading muon pT (GeV)"),
-            Plot.make1D("DL_mumu_leading_eta", tight_muons[0].eta, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -3, 3), title= "", xTitle="Leading muon eta"),
-            Plot.make1D("DL_mumu_leading_dxy", tight_muons[0].dxy, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading muon dxy (cm)"),
-            Plot.make1D("DL_mumu_leading_dz", tight_muons[0].dz, selections["DL_mumu"]["DL_mumu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading muon dz (cm)"),
-            Plot.make1D("DL_mumu_leading_sip3d", tight_muons[0].sip3d, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, 0, 8), title="", xTitle="Leading muon sip3d"),
+            Plot.make1D("DL_mumu_leading_pt", tight_muons[0].pt, selections["DL_mumu"]["DL_mumu"], EqBin(250, 0, 500), title="", xTitle="Leading muon pT (GeV)"),
+            Plot.make1D("DL_mumu_leading_eta", tight_muons[0].eta, selections["DL_mumu"]["DL_mumu"], EqBin(100, -3, 3), title= "", xTitle="Leading muon eta"),
+            Plot.make1D("DL_mumu_leading_dxy", tight_muons[0].dxy, selections["DL_mumu"]["DL_mumu"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading muon dxy (cm)"),
+            Plot.make1D("DL_mumu_leading_dz", tight_muons[0].dz, selections["DL_mumu"]["DL_mumu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading muon dz (cm)"),
+            Plot.make1D("DL_mumu_leading_sip3d", tight_muons[0].sip3d, selections["DL_mumu"]["DL_mumu"], EqBin(100, 0, 8), title="", xTitle="Leading muon sip3d"),
 
-            Plot.make1D("DL_mumu_subleading_pt", tight_muons[1].pt, selections["DL_mumu"]["DL_mumu_sel"], EqBin(250, 0, 500), title="", xTitle="Subleading muon pT (GeV)"),
-            Plot.make1D("DL_mumu_subleading_eta", tight_muons[1].eta, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -3, 3), title= "", xTitle="Subleading muon eta"),
-            Plot.make1D("DL_mumu_subleading_dxy", tight_muons[1].dxy, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading muon dxy (cm)"),
-            Plot.make1D("DL_mumu_subleading_dz", tight_muons[1].dz, selections["DL_mumu"]["DL_mumu_sel"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading muon dz (cm)"),
-            Plot.make1D("DL_mumu_subleading_sip3d", tight_muons[1].sip3d, selections["DL_mumu"]["DL_mumu_sel"], EqBin(100, 0, 8), title="", xTitle="Subleading muon sip3d"),
+            Plot.make1D("DL_mumu_subleading_pt", tight_muons[1].pt, selections["DL_mumu"]["DL_mumu"], EqBin(250, 0, 500), title="", xTitle="Subleading muon pT (GeV)"),
+            Plot.make1D("DL_mumu_subleading_eta", tight_muons[1].eta, selections["DL_mumu"]["DL_mumu"], EqBin(100, -3, 3), title= "", xTitle="Subleading muon eta"),
+            Plot.make1D("DL_mumu_subleading_dxy", tight_muons[1].dxy, selections["DL_mumu"]["DL_mumu"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading muon dxy (cm)"),
+            Plot.make1D("DL_mumu_subleading_dz", tight_muons[1].dz, selections["DL_mumu"]["DL_mumu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading muon dz (cm)"),
+            Plot.make1D("DL_mumu_subleading_sip3d", tight_muons[1].sip3d, selections["DL_mumu"]["DL_mumu"], EqBin(100, 0, 8), title="", xTitle="Subleading muon sip3d"),
         ])
 
         for sel in plot_sel:
@@ -393,24 +393,24 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
-        yields.add(selections["SL_e"]["SL_e_sel"], 'one electron')
-        yields.add(selections["SL_mu"]["SL_mu_sel"], 'one muon')
-        yields.add(selections["DL_ee"]["DL_ee_sel"], 'two electrons')
-        yields.add(selections["DL_emu"]["DL_emu_sel"], 'one elect, one muon')
-        yields.add(selections["DL_mumu"]["DL_mumu_sel"], 'two muons')
+        yields.add(selections["SL_e"]["SL_e"], 'one electron')
+        yields.add(selections["SL_mu"]["SL_mu"], 'one muon')
+        yields.add(selections["DL_ee"]["DL_ee"], 'two electrons')
+        yields.add(selections["DL_emu"]["DL_emu"], 'one elect, one muon')
+        yields.add(selections["DL_mumu"]["DL_mumu"], 'two muons')
 
-        yields.add(selections["SL"]["SL_lep_resolved_sel"], "SL resolved")
-        yields.add(selections["SL"]["SL_lep_resolved_1b_sel"], "SL resolved 1b")
-        yields.add(selections["SL"]["SL_lep_resolved_2b_sel"], "SL resolved 2b")
-        yields.add(selections["SL"]["SL_lep_boosted_sel"], "SL boosted")
+        yields.add(selections["SL"]["SL_resolved"], "SL resolved")
+        yields.add(selections["SL"]["SL_res_1b"], "SL resolved 1b")
+        yields.add(selections["SL"]["SL_res_2b"], "SL resolved 2b")
+        yields.add(selections["SL"]["SL_boost"], "SL boosted")
 
-        yields.add(selections["DL"]["DL_lep_resolved_sel"], "DL resolved")
-        yields.add(selections["DL"]["DL_lep_resolved_1b_sel"], "DL resolved 1b")
-        yields.add(selections["DL"]["DL_lep_resolved_2b_sel"], "DL resolved 2b")
-        yields.add(selections["DL"]["DL_lep_boosted_sel"], "DL boosted")
+        yields.add(selections["DL"]["DL_resolved"], "DL resolved")
+        yields.add(selections["DL"]["DL_res_1b"], "DL resolved 1b")
+        yields.add(selections["DL"]["DL_res_2b"], "DL resolved 2b")
+        yields.add(selections["DL"]["DL_boost"], "DL boosted")
 
-        yields.add(selections["SL"]["SL_lep_sel"], "SL")
-        yields.add(selections["DL"]["DL_lep_sel"], "DL")
+        yields.add(selections["SL"]["SL"], "SL")
+        yields.add(selections["DL"]["DL"], "DL")
         
         
 
