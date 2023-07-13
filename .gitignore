@@ -13,5 +13,5 @@
 *.tar.gz
 *.tgz
 ._*
-
+Bamboo_setup/Z_OUTPUT/*
 
