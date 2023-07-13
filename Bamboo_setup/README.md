@@ -23,7 +23,7 @@ cp $(voms-proxy-info -p) ~/private/x509up
 export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
-# ====================  SL_DL_event_selection  ====================
+# ============ SL_DL_event_selection ============
 
 To run the code:
 ```bash
@@ -33,7 +33,7 @@ To run locally:
 ```bash
 bambooRun -m python/SL_DL_event_selection.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_EventSelection
 ```
-# ========================  SL_DL_vars_gen  =======================
+# ============ SL_DL_vars_gen  ============
 To run in interactive mode and locally:
 ```bash
 bambooRun -m python/SL_DL_vars_gen.py -i config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsGen
@@ -44,23 +44,23 @@ bambooRun -m python/SL_DL_vars_gen.py config/analysis_2018_test.yml -o Z_OUTPUT/
 ```
 To run in normal mode and on condor:
 ```bash
-bambooRun -m python/SL_DL_vars_gen.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsGen_0711 --envConfig config/cern.ini --distributed=driver
+bambooRun -m python/SL_DL_vars_gen.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsGen_0713 --envConfig config/cern.ini --distributed=driver
 ```
-# ======================== SL_DL_vars_reco ========================
+# ============ SL_DL_vars_reco ============
 To run in normal mode and locally:
 ```bash
 bambooRun -m python/SL_DL_vars_reco.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsReco
 ```
 To run in normal mode and on condor:
 ```bash
-bambooRun -m python/SL_DL_vars_reco.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsReco_0711 --envConfig config/cern.ini --distributed=driver
+bambooRun -m python/SL_DL_vars_reco.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsReco_0713 --envConfig config/cern.ini --distributed=driver
 ```
-# =========================== Comparisons ===========================
+# ============== Comparisons ==============
 ```bash
 python3 utils/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_0711 -l reco
 ```
 
-# ======================= Cut based selections =======================
+# ========= Cut based selections ==========
 ```bash
 python3 python/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_0711
 ```
@@ -70,11 +70,13 @@ python3 python/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_0711
 # ######## Don't use the following yet!! <<<<<<<<<<<<
 # ###################################################
 
-# ===================== likelihood_ratios_basic =======================
+# ======== likelihood_ratios_basic ========
 ```bash
-python3 python/likelihood_ratios_basic.py -s Z_OUTPUT/TOTAL_VarsReco_0711
+python3 python/likelihood_ratios_basic.py -s Z_OUTPUT/TOTAL_VarsReco_0713
 ```
 
-# ======================= SL_DL_likelihood_ratios =====================
+# ======== SL_DL_likelihood_ratios ========
+To run locally:
 ```bash
 bambooRun -m python/SL_DL_likelihood_ratio.py config/analysis_2018_test.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0711
+```

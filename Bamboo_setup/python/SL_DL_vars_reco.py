@@ -10,6 +10,7 @@ import object_definition as object_defs
 import event_definition as event_defs
 
 class SL_DL_vars_reco(SL_DL_event_selection):
+
     def __init__(self, args):
         super(SL_DL_vars_reco, self).__init__(args)
         
@@ -87,21 +88,23 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         def get_bjets_vars(sorted_bjets, sel_string, subjets=None):
 
+            bjets_vars = {}
             sel, tag = get_selection_and_tags(sel_string)
 
             if "res" in sel_string:
                 bjet0 = sorted_bjets[0]
                 bjet1 = sorted_bjets[1]
+
             elif "boost" in sel_string:
                 fatjet = sorted_bjets[0]
-                hists_1D.extend([
-                    Plot.make1D(tag+"bfatjet_mass", fatjet.mass, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="bFatJet mass (GeV)" ),
-                    Plot.make1D(tag+"bfatjet_msoftdrop", fatjet.msoftdrop, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="bFatJet soft drop mass (GeV)" ),
-                ])
-
                 fatjet_subjets = object_defs.find_subjets(fatjet, subjets)
                 bjet0 = fatjet_subjets[0]
                 bjet1 = fatjet_subjets[1]
+
+                hists_1D.extend([
+                    Plot.make1D(tag+"bfatjet_mass", fatjet.mass, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), title="", xTitle="bFatJet mass (GeV)" ),
+                    Plot.make1D(tag+"bfatjet_msoftdrop", fatjet.msoftdrop, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), title="", xTitle="bFatJet soft drop mass (GeV)" ),
+                ])
 
             bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
             bjets_pT_bb = (bjet0.p4 + bjet1.p4).Pt()
@@ -137,7 +140,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 Plot.make2D(tag+"bjets_dPhi_abs_vs_dEta_abs" , [bjets_dEta_abs, bjets_dPhi_abs], sel, [EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="abs(dEta)", yTitle="abs(dPhi)"),
             ])
 
-            bjets_vars = {}
             bjets_vars["bjets0_pT"] = bjet0.pt
             bjets_vars["bjets1_pT"] = bjet1.pt
             bjets_vars["bjets_mean_pT"] = bjets_mean_pT
@@ -153,16 +155,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
  
         def get_top_vars(sorted_bjets, sorted_nonbjets, electrons, muons, MET, sel_string):
 
+            top_vars = {}
             sel, tag = get_selection_and_tags(sel_string)
-
+            
             m_W = 80.377 # GeV
             
             t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
             t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
-            hists_1D.extend([
-                Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
-            ])
 
             # Using combinations
             jj_combos = op.combine((sorted_nonbjets),N=2)
@@ -190,13 +189,14 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             t2_pt = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
                         
             hists_1D.extend([
+                Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
+                Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_mInv" , t1_mInv, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_pt" , t1_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
                 Plot.make1D(tag+"t2_mT" , t2_mT, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
                 Plot.make1D(tag+"t2_pt" , t2_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
             ])
 
-            top_vars = {}
             top_vars["t1_mInv_leadb"] = t1_mInv_leadb
             top_vars["t1_mInv_subleadb"] = t1_mInv_subleadb
             top_vars["t1_mInv"] = t1_mInv
@@ -208,6 +208,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
  
         def get_total_vars(electrons, muons, jets, met, sel_string):
 
+            total_vars = {}
             sel, tag = get_selection_and_tags(sel_string)
 
             total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
@@ -242,7 +243,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 Plot.make1D(tag+"all_mT" , all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="all_mT", xTitle="m_{T} (GeV)"),
             ])
 
-            total_vars = {}
             total_vars["all_sT"] = all_sT
             total_vars["all_sT_50"] = all_sT_50
             total_vars["all_sT_50_cut"] = all_sT_50_cut

@@ -268,31 +268,39 @@ if __name__ == "__main__":
     draw1D("bjets1_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet1 pT', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
     draw1D("bjets_mean_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets <pT>', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
     draw1D("bjets_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['pT of bJets total p4', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['bJets dPhi', 'dPhi', ''], 'SL_and_DL', subcats_for_bjets_hists)
     draw1D("bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['bJets dEta', 'dEta', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_dEta_abs", BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX, ['abs(dEta) for bjets', 'abs(dEta)', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['bJets dPhi', 'dPhi', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_dPhi_abs", BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX, ['abs(dPhi) for bjets', 'abs(dPhi)', ''], 'SL_and_DL', subcats_for_bjets_hists)
     draw1D("bjets_dR", BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['bJets dR', 'dR', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_mbb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL', subcats_for_bjets_hists)
+    draw1D("bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL', subcats_for_bjets_hists)
     
-    draw2D("bjets_dEta_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['dEta vs mbb of bjets', 'mbb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
-    draw2D("bjets_dPhi_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dEta vs mbb of bjets', 'mbb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
-    draw2D("bjets_pT_bb_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['dEta vs mbb of bjets', 'mbb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dR_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['dR vs pT_bb of bjets', 'pT_bb', 'dR'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dEta_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['dEta vs pT of bjets', 'pT_bb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dPhi_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs pT of bjets', 'pT_bb', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists)
     
+    draw2D("bjets_dR_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['dR vs mbb of bjets', 'mbb', 'dR'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_pT_bb_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['pT_bb vs mbb of bjets', 'mbb', 'pT_bb'], 'SL_and_DL', subcats_for_bjets_hists)
     draw2D("bjets_dEta_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['dEta vs mbb of bjets', 'mbb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
     draw2D("bjets_dPhi_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs mbb of bjets', 'mbb', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists)
+    
     draw2D("bjets_dPhi_vs_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta of bjets', 'dEta', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists) 
+    draw2D("bjets_dPhi_abs_vs_dEta_abs", BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX, ['abs(dPhi) vs abs(dEta) of bjets', 'abs(dEta)', 'abs(dPhi)'], 'SL_and_DL', subcats_for_bjets_hists) 
 
+    draw1D("t1_mInv_leadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ leading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
+    draw1D("t1_mInv_subleadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ subleading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t1_mInv", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) of top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t1_pt", T_BINS, T_MIN, T_MAX, ['p_{T} of top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_mT", T_BINS, T_MIN, T_MAX, ['m_{T} of top2', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_pt", T_BINS, T_MIN, T_MAX, ['p_{T} of top2', 'GeV', ''], 'SL', ['res_2b'])
 
-    draw2D("t1_mInv_vs_bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} of t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} of t1'], 'SL', ['res_2b'])
-    draw2D("t1_mInv_vs_bjets_pT_bb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['m_{inv} of t1 vs bjets m_{bb}', 'pT of bJets', 'm_{inv} of t1'], 'SL', ['res_2b'])
-    
     draw1D("all_sT_50", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT_50', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_sT_50_cut", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT_50_cut', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_mInv", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_mT", ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX, ['all_mT', 'GeV', ''], 'SL_and_DL', ['res_2b'])
     draw1D("all_sT", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT', 'GeV', ''], 'SL_and_DL', ['res_2b'])
-    
+
+    draw2D("t1_mInv_vs_bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} of t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} of t1'], 'SL', ['res_2b'])
+    draw2D("t1_mInv_vs_bjets_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} of t1 vs bjets pT_bb', 'pT_bb', 'm_{inv} of t1'], 'SL', ['res_2b'])
+        
 

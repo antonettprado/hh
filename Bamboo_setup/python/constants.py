@@ -1,6 +1,4 @@
 # Variable ranges common across reco and gen vars plots ==============
-MBB_BINS, MBB_MIN, MBB_MAX = 125, 0, 500
-
 BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX = 250, 0, 500
 BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX     = 100, -4, 4
 BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX     = 50, 0, 4
@@ -16,3 +14,7 @@ ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX = 1500,0,3000
 ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX = 1000,0,2000
 
 TRTH_BINS, TRTH_MIN, TRTH_MAX = 10, -5, 5
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
+ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
