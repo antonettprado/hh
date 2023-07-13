@@ -342,7 +342,7 @@ if __name__ == "__main__":
     variables_1D.append("bjets_mbb")
     variables_1D.append("bjets_dPhi")
     variables_1D.append("bjets_dEta")
-    variables_1D.append("t1_mInv_combo_max_pt_mjj_mW")
+    variables_1D.append("t1_mInv")
 
     for var in variables_1D:
         print("\tCut for %s:"%var)
