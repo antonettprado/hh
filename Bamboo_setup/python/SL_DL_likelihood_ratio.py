@@ -107,37 +107,24 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         # likelihood_ratio_hists["SL_res_2b_x_t1_mInv"] = get_likelihood_ratio("SL_res_2b_x_t1_mInv", T_BINS, T_MIN, T_MAX)
 
         return likelihood_ratio_hists
-    
-    def get_SL_DL_likelihood_ratio(self, tree, noSel):
-
-        # Retrieve likelihoods ===========================================
-        likelihood_ratio_hists = self.get_likelihood_from_input()
-
-        # ================================================================
-        # ================================================================
-        # ================================================================
-        hists_1D = []
-        hists_2D = []
-
-        return hists_1D, hists_2D
-    
+        
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
 
-        objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
-        hists_1D, hists_2D = self.get_SL_DL_likelihood_ratio(tree, noSel)
-
-        SL_res_1b = selections["SL"]["SL_res_1b"]
-        SL_res_2b = selections["SL"]["SL_res_2b"]
-        SL_boost = selections["SL"]["SL_boost"]
+        # objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
+        likelihood_ratio_hists = self.get_likelihood_from_input()
+        print("Should be done with llrs ...")
+        # SL_res_1b = selections["SL"]["SL_res_1b"]
+        # SL_res_2b = selections["SL"]["SL_res_2b"]
+        # SL_boost = selections["SL"]["SL_boost"]
         # SL_res_1b_x = selections["SL"]["SL_res_1b_x"]
         # SL_res_2b_x = selections["SL"]["SL_res_2b_x"]
-        DL_res_1b = selections["DL"]["DL_res_1b"] 
-        DL_res_2b = selections["DL"]["DL_res_2b"]
-        DL_boost = selections["DL"]["DL_boost"]
+        # DL_res_1b = selections["DL"]["DL_res_1b"] 
+        # DL_res_2b = selections["DL"]["DL_res_2b"]
+        # DL_boost = selections["DL"]["DL_boost"]
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -147,6 +134,9 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         #     plots.append(hist)
         # for hist in hists_2D:
         #     plots.append(hist)
+
+        for hist in likelihood_ratio_hists:
+            plots.append(hist)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -160,5 +150,7 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         # yields.add(DL_res_1b, 'DL_res_1b')
         # yields.add(DL_res_2b, 'DL_res_2b')
         # yields.add(DL_boost, 'DL_boost')
+
+        print("SHOULD BE DONE WITH PLOTS!")
 
         return plots

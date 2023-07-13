@@ -17,14 +17,10 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         super(SL_DL_vars_reco, self).addArgs(parser)
         # parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+    def get_SL_DL_vars_reco(self, tree, noSel):
         
         self.args.mc_truth_b = False
         print("MC truth for bjets:" + str(self.args.mc_truth_b))
-
-        plots = []
-        yields = CutFlowReport("yields", printInLog=False, recursive=False)
-        plots.append(yields)
 
         # Retrieve objects ==============================================
         objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
@@ -46,13 +42,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         sorted_ak8_btags = op.sort(ak8_btags, lambda jet: -jet.pt)
 
         # Retrieve selections ===========================================
-        SL_res_1b = selections["SL"]["SL_lep_resolved_1b_sel"]
-        SL_res_2b = selections["SL"]["SL_lep_resolved_2b_sel"]
-        SL_boost = selections["SL"]["SL_lep_boosted_sel"]
+        SL_res_1b = selections["SL"]["SL_res_1b"]
+        SL_res_2b = selections["SL"]["SL_res_2b"]
+        SL_boost = selections["SL"]["SL_boost"]
         
-        DL_res_1b = selections["DL"]["DL_lep_resolved_1b_sel"]
-        DL_res_2b = selections["DL"]["DL_lep_resolved_2b_sel"]
-        DL_boost = selections["DL"]["DL_lep_boosted_sel"]
+        DL_res_1b = selections["DL"]["DL_res_1b"]
+        DL_res_2b = selections["DL"]["DL_res_2b"]
+        DL_boost = selections["DL"]["DL_boost"]
 
         # Include extra selection of >=2 nonbjets for resolved selections only
         SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
@@ -60,6 +56,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # ================================================================
         # ================================================================
         # ================================================================
+        hists_1D = []
+        hists_2D = []
 
         def get_selection_and_tags(sel_string):
             if "SL" in sel_string:
@@ -87,7 +85,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
             return sel, sel_string+"_"
 
-        def get_bjets_params(sorted_bjets, sel_string, subjets=None):
+        def get_bjets_vars(sorted_bjets, sel_string, subjets=None):
+
             sel, tag = get_selection_and_tags(sel_string)
 
             if "res" in sel_string:
@@ -95,7 +94,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 bjet1 = sorted_bjets[1]
             elif "boost" in sel_string:
                 fatjet = sorted_bjets[0]
-                plots.extend([
+                hists_1D.extend([
                     Plot.make1D(tag+"bfatjet_mass", fatjet.mass, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="bFatJet mass (GeV)" ),
                     Plot.make1D(tag+"bfatjet_msoftdrop", fatjet.msoftdrop, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="bFatJet soft drop mass (GeV)" ),
                 ])
@@ -113,7 +112,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             bjets_dR = op.deltaR(bjet0.p4, bjet1.p4) 
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
 
-            plots.extend([
+            hists_1D.extend([
                 Plot.make1D(tag+"bjets0_pT" , bjet0.pt, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), xTitle="p_{T} for bJet_0 (GeV)" ),
                 Plot.make1D(tag+"bjets1_pT" , bjet1.pt, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), xTitle="p_{T} for bJet_1 (GeV)" ),
                 Plot.make1D(tag+"bjets_mean_pT" , bjets_mean_pT, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), xTitle="<p_{T}> for bjets (GeV)"),
@@ -124,8 +123,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 Plot.make1D(tag+"bjets_dPhi_abs" , bjets_dPhi_abs, sel, EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX), xTitle="abs(dPhi) for bjets"),
                 Plot.make1D(tag+"bjets_dR" , bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), xTitle="deltaR for bjets"),
                 Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
+            ])
+
+            hists_2D.extend([
+                Plot.make2D(tag+"bjets_dR_vs_pT_bb" , [bjets_pT_bb, bjets_dR], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)], xTitle="pT of bb", yTitle="dR"),
                 Plot.make2D(tag+"bjets_dEta_vs_pT_bb" , [bjets_pT_bb, bjets_dEta], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)], xTitle="pT of bb", yTitle="dEta"),
                 Plot.make2D(tag+"bjets_dPhi_vs_pT_bb", [bjets_pT_bb, bjets_dPhi], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="pT of bb", yTitle="dPhi"),
+                Plot.make2D(tag+"bjets_dR_vs_mbb" , [bjets_mbb, bjets_dR], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)], xTitle="mbb", yTitle="dR"),
                 Plot.make2D(tag+"bjets_pT_bb_vs_mbb" , [bjets_mbb, bjets_pT_bb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX)], xTitle="mbb", yTitle="pT of bb"),
                 Plot.make2D(tag+"bjets_dEta_vs_mbb" , [bjets_mbb, bjets_dEta], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)], xTitle="mbb", yTitle="dEta"),
                 Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="mbb", yTitle="dPhi"),
@@ -133,16 +137,29 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 Plot.make2D(tag+"bjets_dPhi_abs_vs_dEta_abs" , [bjets_dEta_abs, bjets_dPhi_abs], sel, [EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="abs(dEta)", yTitle="abs(dPhi)"),
             ])
 
-            return bjets_mbb, bjets_pT_bb
+            bjets_vars = {}
+            bjets_vars["bjets0_pT"] = bjet0.pt
+            bjets_vars["bjets1_pT"] = bjet1.pt
+            bjets_vars["bjets_mean_pT"] = bjets_mean_pT
+            bjets_vars["bjets_pT_bb"] = bjets_pT_bb
+            bjets_vars["bjets_dEta"] = bjets_dEta
+            bjets_vars["bjets_dEta_abs"] = bjets_dEta_abs
+            bjets_vars["bjets_dPhi"] = bjets_dPhi
+            bjets_vars["bjets_dPhi_abs"] = bjets_dPhi_abs
+            bjets_vars["bjets_dR"] = bjets_dR
+            bjets_vars["bjets_mbb"] = bjets_mbb
+
+            return bjets_vars
  
-        def get_m_top_for_SL(sorted_bjets, sorted_nonbjets, electrons, muons, MET, sel_string):
+        def get_top_vars(sorted_bjets, sorted_nonbjets, electrons, muons, MET, sel_string):
 
             sel, tag = get_selection_and_tags(sel_string)
+
             m_W = 80.377 # GeV
             
             t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
             t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
-            plots.extend([
+            hists_1D.extend([
                 Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
             ])
@@ -172,16 +189,25 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             t2_mT = (b2_combo_max_pt_mjj_mW.p4 + lep.p4 + MET.p4).Mt()
             t2_pt = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
                         
-            plots.extend([
+            hists_1D.extend([
                 Plot.make1D(tag+"t1_mInv" , t1_mInv, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_pt" , t1_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
                 Plot.make1D(tag+"t2_mT" , t2_mT, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
                 Plot.make1D(tag+"t2_pt" , t2_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
             ])
 
-            return t1_mInv
+            top_vars = {}
+            top_vars["t1_mInv_leadb"] = t1_mInv_leadb
+            top_vars["t1_mInv_subleadb"] = t1_mInv_subleadb
+            top_vars["t1_mInv"] = t1_mInv
+            top_vars["t1_pt"] = t1_pt
+            top_vars["t2_mT"] = t2_mT
+            top_vars["t2_pt"] = t2_pt
+
+            return top_vars
  
-        def get_final_state_totals(electrons, muons, jets, met, sel_string):
+        def get_total_vars(electrons, muons, jets, met, sel_string):
+
             sel, tag = get_selection_and_tags(sel_string)
 
             total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
@@ -208,34 +234,90 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             all_mInv = (total_el_p4 + total_mu_p4 + total_jet_p4 + met.p4).M()
             all_mT = (total_el_p4 + total_mu_p4 + total_jet_p4 + met.p4).Mt()
 
-            plots.extend([
+            hists_1D.extend([
+                Plot.make1D(tag+"all_sT" , all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT", xTitle="s_{T} (GeV)"),
                 Plot.make1D(tag+"all_sT_50" , all_sT_50, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50", xTitle="s_{T} (GeV)"),
                 Plot.make1D(tag+"all_sT_50_cut" , all_sT_50_cut, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50_cut", xTitle="s_{T} (GeV)"),
                 Plot.make1D(tag+"all_mInv" , all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="all_mInv", xTitle="m_{inv} (GeV)"),
                 Plot.make1D(tag+"all_mT" , all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="all_mT", xTitle="m_{T} (GeV)"),
-                Plot.make1D(tag+"all_sT" , all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT", xTitle="s_{T} (GeV)"),
             ])
 
-        bjets_mbb_SL_res_2b_x, bjets_pT_bb_SL_res_2b_x = get_bjets_params(sorted_ak4_btags, "SL_res_2b_x")
-        get_bjets_params(sorted_ak8_btags, "SL_boost", ak8_subjets)
-        get_bjets_params(sorted_ak4_btags, "DL_res_2b")
-        get_bjets_params(sorted_ak8_btags, "DL_boost", ak8_subjets)
+            total_vars = {}
+            total_vars["all_sT"] = all_sT
+            total_vars["all_sT_50"] = all_sT_50
+            total_vars["all_sT_50_cut"] = all_sT_50_cut
+            total_vars["all_mInv"] = all_mInv
+            total_vars["all_mT"] = all_mT
+
+            return total_vars
+
+        SL_res_2b_x_bjets = get_bjets_vars(sorted_ak4_btags, "SL_res_2b_x")
+        get_bjets_vars(sorted_ak8_btags, "SL_boost", ak8_subjets)
+        get_bjets_vars(sorted_ak4_btags, "DL_res_2b")
+        get_bjets_vars(sorted_ak8_btags, "DL_boost", ak8_subjets)
         
-        t1_mInv_SL_res_2b_x = get_m_top_for_SL(sorted_ak4_btags, sorted_ak4_nonbtags, tight_electrons, tight_muons, MET, "SL_res_2b_x")
+        SL_res_2b_x_top_vars = get_top_vars(sorted_ak4_btags, sorted_ak4_nonbtags, tight_electrons, tight_muons, MET, "SL_res_2b_x")
 
-        plots.extend([
-                Plot.make2D("SL_res_2b_x"+"_"+"t1_mInv_vs_bjets_mbb" , [bjets_mbb_SL_res_2b_x, t1_mInv_SL_res_2b_x], SL_res_2b_x, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
-                Plot.make2D("SL_res_2b_x"+"_"+"t1_mInv_vs_bjets_pT_bb" , [bjets_pT_bb_SL_res_2b_x, t1_mInv_SL_res_2b_x], SL_res_2b_x, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="pT of bb", yTitle="m_{inv} for t_{1}"),
-            ])
+        SL_res_2b_x_bjets_mbb = SL_res_2b_x_bjets["bjets_mbb"]
+        SL_res_2b_x_bjets_pT_bb = SL_res_2b_x_bjets["bjets_pT_bb"]
+        SL_res_2b_x_t1_mInv = SL_res_2b_x_top_vars["t1_mInv"]
+        hists_2D.extend([
+            Plot.make2D("SL_res_2b_x"+"_"+"t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], SL_res_2b_x, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
+            Plot.make2D("SL_res_2b_x"+"_"+"t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], SL_res_2b_x, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="pT of bb", yTitle="m_{inv} for t_{1}"),
+        ])
 
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_1b")
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_1b_x")
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_2b")
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_2b_x")
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "SL_boost")
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "DL_res_1b")
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "DL_res_2b")
-        get_final_state_totals(tight_electrons, tight_muons, ak4_jets, MET, "DL_boost")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_1b")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_1b_x")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_2b")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_2b_x")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_boost")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "DL_res_1b")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "DL_res_2b")
+        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "DL_boost")
+
+        # ================================================================
+        # ================================================================
+        # ================================================================
+
+        selections = {}
+        selections["SL"] = {} 
+        selections["DL"] = {}
+        selections["SL"]["SL_res_1b"] = SL_res_1b
+        selections["SL"]["SL_res_2b"] = SL_res_2b
+        selections["SL"]["SL_boost"] = SL_boost
+        selections["SL"]["SL_res_1b_x"] = SL_res_1b_x
+        selections["SL"]["SL_res_2b_x"] = SL_res_2b_x
+        selections["DL"]["DL_res_1b"] = DL_res_1b
+        selections["DL"]["DL_res_2b"] = DL_res_2b
+        selections["DL"]["DL_boost"] = DL_boost
+
+        return hists_1D, hists_2D, selections
+    
+    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+
+        plots = []
+        yields = CutFlowReport("yields", printInLog=False, recursive=False)
+        plots.append(yields)
+
+        hists_1D, hists_2D, selections = self.get_SL_DL_vars_reco(tree, noSel)
+        
+        SL_res_1b = selections["SL"]["SL_res_1b"]
+        SL_res_2b = selections["SL"]["SL_res_2b"]
+        SL_boost = selections["SL"]["SL_boost"]
+        SL_res_1b_x = selections["SL"]["SL_res_1b_x"]
+        SL_res_2b_x = selections["SL"]["SL_res_2b_x"]
+        DL_res_1b = selections["DL"]["DL_res_1b"] 
+        DL_res_2b = selections["DL"]["DL_res_2b"]
+        DL_boost = selections["DL"]["DL_boost"]
+
+        # ===============================================================================
+        # ================================== Plots ======================================
+        # ===============================================================================
+
+        for hist in hists_1D:
+            plots.append(hist)
+        for hist in hists_2D:
+            plots.append(hist)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -251,7 +333,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         yields.add(DL_boost, 'DL_boost')
 
         return plots
-    
+
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         from bamboo.plots import Plot, DerivedPlot

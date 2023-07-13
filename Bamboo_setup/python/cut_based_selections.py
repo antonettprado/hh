@@ -389,7 +389,7 @@ if __name__ == "__main__":
     variables_2d.append("bjets_dEta_vs_mbb")
     variables_2d.append("bjets_dPhi_vs_mbb")
     variables_2d.append("bjets_dPhi_vs_dEta")
-    variables_2d.append("bjets_mbb_vs_t1_mInv")
+    variables_2d.append("t1_mInv_vs_bjets_mbb")
 
     for var in variables_2d:
         print("\tCut for %s:"%var)

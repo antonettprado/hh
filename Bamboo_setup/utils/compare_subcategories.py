@@ -212,23 +212,23 @@ def draw2D(object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles, channels, 
             draw_2D_of_type("signal", full_object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles)
             draw_2D_of_type("backg", full_object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles)
 
-if __name__ == "__main__":
+def get_files_in_directory(directory):
+    signal_files = []
+    backg_files = []
+    final_directory = os.path.join(directory,'results')
+    for filename in os.listdir(final_directory):
+        file_path = os.path.join(final_directory,filename)
+        if filename in ALL_SIGNAL_SAMPLES:
+            f = ROOT.TFile.Open(file_path, 'read')
+            signal_files.append(f)
+            print('Signal sample: ' + filename)
+        elif filename in ALL_BACKG_SAMPLES:
+            f = ROOT.TFile.Open(file_path, 'read')
+            backg_files.append(f)
+            print('Backg sample: ' + filename)
+    return signal_files, backg_files
 
-    def get_files_in_directory(directory):
-        signal_files = []
-        backg_files = []
-        final_directory = os.path.join(directory,'results')
-        for filename in os.listdir(final_directory):
-            file_path = os.path.join(final_directory,filename)
-            if filename in ALL_SIGNAL_SAMPLES:
-                f = ROOT.TFile.Open(file_path, 'read')
-                signal_files.append(f)
-                print('Signal sample: ' + filename)
-            elif filename in ALL_BACKG_SAMPLES:
-                f = ROOT.TFile.Open(file_path, 'read')
-                backg_files.append(f)
-                print('Backg sample: ' + filename)
-        return signal_files, backg_files
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source path")
