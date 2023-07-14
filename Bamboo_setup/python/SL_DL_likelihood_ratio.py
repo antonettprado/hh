@@ -14,6 +14,16 @@ import ROOT
 class SL_DL_likelihood_ratio(SL_DL_event_selection):
     def __init__(self, args):
         super(SL_DL_likelihood_ratio, self).__init__(args)
+        SOURCE_PATH = self.args.input_dir
+        SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
+        OUTPUT_DIR = SOURCE_DIR + "_llr"
+        OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_DIR)
+        self.args.output = OUTPUT_PATH
+
+        print("The input path is: " + self.args.input_dir)
+        print("The output path is:" + self.args.output)
+
+        self.list_llr_hists = self.get_likelihood_from_input()
         
     def addArgs(self, parser):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
@@ -39,7 +49,6 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         
         def get_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles=None):
 
-            print("object_name = " + object_name)
             samples_of_type = None
             if of_type == "signal": 
                 samples_of_type = SIGNAL_SAMPLES
@@ -67,17 +76,15 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             return total_hist_of_type
 
         def get_likelihood_ratio(object_name, xbins, xmin, xmax):
-
-            print("Getting all signal")
+            print("object_name = " + object_name)
             hist_signal = get_1D_of_type("signal", object_name, xbins, xmin, xmax)
-            print("Getting all background")
             hist_backg = get_1D_of_type("backg", object_name, xbins, xmin, xmax)
 
             # Normalize signal and background 
             hist_signal.Scale(1/hist_signal.Integral())
             hist_backg.Scale(1/hist_backg.Integral())
 
-            ratio_hist = ROOT.TH1F("ratio", "", xbins, xmin, xmax)
+            ratio_hist = ROOT.TH1F(object_name, "", xbins, xmin, xmax)
             ratio_hist = hist_signal.Clone()
             ratio_hist.Divide(hist_backg)
 
@@ -88,23 +95,14 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
 
             return ratio_hist
 
-        SOURCE_PATH = self.args.input_dir
-        SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
-        OUTPUT_DIR = SOURCE_DIR + "_llr"
-        OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_DIR)
-        SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(SOURCE_PATH)
-        
-        self.args.output = OUTPUT_PATH
-        print("The input path is: " + SOURCE_PATH)
-        print("The output path is:" + self.args.output)
-        #====================================================
+        SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(self.args.input_dir)
 
         likelihood_ratio_hists = {}
         likelihood_ratio_hists["SL_res_2b_x_bjets_mbb"] = get_likelihood_ratio("SL_res_2b_x_bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
-        # likelihood_ratio_hists["SL_res_2b_x_bjets_dPhi"] = get_likelihood_ratio("SL_res_2b_x_bjets_dPhi", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)
-        # likelihood_ratio_hists["SL_res_2b_x_bjets_dEta"] = get_likelihood_ratio("SL_res_2b_x_bjets_dEta", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)
-        # likelihood_ratio_hists["SL_res_2b_x_bjets_pT_bb"] = get_likelihood_ratio("SL_res_2b_x_bjets_pT_bb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
-        # likelihood_ratio_hists["SL_res_2b_x_t1_mInv"] = get_likelihood_ratio("SL_res_2b_x_t1_mInv", T_BINS, T_MIN, T_MAX)
+        # likelihood_ratio_hists["SL_res_2b_x_bjets_dPhi"] = get_likelihood_ratio("SL_res_2b_x_bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)
+        likelihood_ratio_hists["SL_res_2b_x_bjets_dEta"] = get_likelihood_ratio("SL_res_2b_x_bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)
+        likelihood_ratio_hists["SL_res_2b_x_bjets_pT_bb"] = get_likelihood_ratio("SL_res_2b_x_bjets_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX)
+        likelihood_ratio_hists["SL_res_2b_x_t1_mInv"] = get_likelihood_ratio("SL_res_2b_x_t1_mInv", T_BINS, T_MIN, T_MAX)
 
         return likelihood_ratio_hists
         
@@ -114,9 +112,28 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
 
+        list_llr_hists = self.list_llr_hists
+
+        # Retrieve objects ==============================================
         objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
-        # likelihood_ratio_hists = self.get_likelihood_from_input()
-        print("Should be done with llrs ...")
+
+        tight_electrons = objects["tight_electrons"]
+        tight_muons = objects["tight_muons"]
+        ak4_jets = objects["cleaned_ak4_jets"]
+        ak4_btags = objects["cleaned_ak4_btags"]
+        ak8_btags = objects["cleaned_ak8_btags"]
+        ak8_subjets = objects["ak8_subjets"]
+        MET = objects["met"]
+        ht_jets = objects["ht_jets"]
+        mht = objects["mht"] 
+        met_ld = objects["met_ld"]
+
+        ak4_nonbtags = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
+        sorted_ak4_btags = op.sort(ak4_btags, lambda jet: -jet.pt)
+        sorted_ak4_nonbtags = op.sort(ak4_nonbtags, lambda jet: -jet.pt)
+        sorted_ak8_btags = op.sort(ak8_btags, lambda jet: -jet.pt)
+
+        # Retrieve selections ===========================================
         SL_res_1b = selections["SL"]["SL_res_1b"]
         SL_res_2b = selections["SL"]["SL_res_2b"]
         SL_boost = selections["SL"]["SL_boost"]
@@ -125,6 +142,13 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         DL_res_1b = selections["DL"]["DL_res_1b"] 
         DL_res_2b = selections["DL"]["DL_res_2b"]
         DL_boost = selections["DL"]["DL_boost"]
+
+        # Include extra selection of >=2 nonbjets for resolved selections only
+        SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
+        SL_res_2b_x = SL_res_2b.refine("Nonbjets>=2 for SL_res_2b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
+        # ================================================================
+        # ================================================================
+        # ================================================================
 
         # ===============================================================================
         # ================================== Plots ======================================
