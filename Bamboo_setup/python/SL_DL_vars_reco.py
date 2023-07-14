@@ -160,8 +160,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             
             m_W = 80.377 # GeV
             
-            t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
-            t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
+            #t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
+            #t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
 
             # Using combinations
             jj_combos = op.combine((sorted_nonbjets),N=2)
@@ -189,8 +189,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             t2_pt = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
                         
             hists_1D.extend([
-                Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
+                #Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
+                #Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_mInv" , t1_mInv, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_pt" , t1_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
                 Plot.make1D(tag+"t2_mT" , t2_mT, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
@@ -237,7 +237,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
             hists_1D.extend([
                 Plot.make1D(tag+"all_sT" , all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT", xTitle="s_{T} (GeV)"),
-                Plot.make1D(tag+"all_sT_50" , all_sT_50, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50", xTitle="s_{T} (GeV)"),
+                #Plot.make1D(tag+"all_sT_50" , all_sT_50, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50", xTitle="s_{T} (GeV)"),
                 Plot.make1D(tag+"all_sT_50_cut" , all_sT_50_cut, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50_cut", xTitle="s_{T} (GeV)"),
                 Plot.make1D(tag+"all_mInv" , all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="all_mInv", xTitle="m_{inv} (GeV)"),
                 Plot.make1D(tag+"all_mT" , all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="all_mT", xTitle="m_{T} (GeV)"),
@@ -266,9 +266,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             Plot.make2D("SL_res_2b_x"+"_"+"t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], SL_res_2b_x, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="pT of bb", yTitle="m_{inv} for t_{1}"),
         ])
 
-        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_1b")
+        #get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_1b")
         get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_1b_x")
-        get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_2b")
+        #get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_2b")
         get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_res_2b_x")
         get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "SL_boost")
         get_total_vars(tight_electrons, tight_muons, ak4_jets, MET, "DL_res_1b")
