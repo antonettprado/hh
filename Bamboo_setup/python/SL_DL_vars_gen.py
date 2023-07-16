@@ -5,8 +5,6 @@ from bamboo.plots import EquidistantBinning as EqBin
 
 from bamboo.analysismodules import NanoAODHistoModule
 from constants import *
-import object_definition as object_defs
-import event_definition as event_defs
 
 class SL_DL_vars_gen(NanoAODHistoModule):
 

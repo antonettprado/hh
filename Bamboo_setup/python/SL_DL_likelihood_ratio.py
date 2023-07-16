@@ -143,8 +143,6 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         SL_res_1b = selections["SL"]["SL_res_1b"]
         SL_res_2b = selections["SL"]["SL_res_2b"]
         SL_boost = selections["SL"]["SL_boost"]
-        # SL_res_1b_x = selections["SL"]["SL_res_1b_x"]
-        # SL_res_2b_x = selections["SL"]["SL_res_2b_x"]
         DL_res_1b = selections["DL"]["DL_res_1b"] 
         DL_res_2b = selections["DL"]["DL_res_2b"]
         DL_boost = selections["DL"]["DL_boost"]
@@ -155,15 +153,68 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         # ================================================================
         # ================================================================
         # ================================================================
+        hists_1D = []  
+        hists_2D = []
+
+        def get_selection_and_tags(sel_string):
+            if "SL" in sel_string:
+                if sel_string == "SL_res_1b":
+                    sel = SL_res_1b
+                elif sel_string == "SL_res_1b_x":
+                    sel = SL_res_1b_x
+                elif sel_string == "SL_res_2b":
+                    sel = SL_res_2b
+                elif sel_string == "SL_res_2b_x":
+                    sel = SL_res_2b_x
+                elif sel_string == "SL_boost":
+                    sel = SL_boost
+                    
+            elif "DL" in sel_string:
+                if sel_string == "DL_res_1b":
+                    sel = DL_res_1b
+                elif sel_string == "DL_res_2b":
+                    sel = DL_res_2b
+                elif sel_string == "DL_boost":
+                    sel = DL_boost
+
+            elif "noSel" in sel_string:
+                sel = noSel
+
+            return sel, sel_string+"_"
+        
+        def get_mbb_llr(sorted_bjets, sel_string, subjets=None):
+            sel, tag = get_selection_and_tags(sel_string)
+            
+            if "res" in sel_string:
+                bjet0 = sorted_bjets[0]
+                bjet1 = sorted_bjets[1]
+
+            elif "boost" in sel_string:
+                fatjet = sorted_bjets[0]
+                fatjet_subjets = object_defs.find_subjets(fatjet, subjets)
+                bjet0 = fatjet_subjets[0]
+                bjet1 = fatjet_subjets[1]
+            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
+            bjets_mbb_llr = self.list_llr_hists[tag+"bjets_mbb"].GetBinContent(self.list_llr_hists[tag+"bjets_mbb"].FindBin(bjets_mbb))
+
+            hists_1D.extend([
+                Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
+                Plot.make1D(tag+"bjets_mbb_llr" , bjets_mbb_llr, sel, EqBin(100, 0, 4), xTitle="m_{bb} LLR"),
+            ])
+            hists_2D.extend([
+                Plot.make2D(tag+"bjets_mbb_mbb_llr" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
+            ])
+
+        get_mbb_llr(sorted_ak4_btags, "SL_res_2b_x")
 
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
 
-        # for hist in hists_1D:
-        #     plots.append(hist)
-        # for hist in hists_2D:
-        #     plots.append(hist)
+        for hist in hists_1D:
+            plots.append(hist)
+        for hist in hists_2D:
+            plots.append(hist)
 
         # for hist in likelihood_ratio_hists:
         #     plots.append(hist)
@@ -181,6 +232,20 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         yields.add(DL_res_2b, 'DL_res_2b')
         yields.add(DL_boost, 'DL_boost')
 
-        print("SHOULD BE DONE WITH PLOTS!")
-
         return plots
+
+    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+        super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        from bamboo.plots import Plot, DerivedPlot
+        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
+        from bamboo.analysisutils import loadPlotIt
+        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
+        from plotit.plotit import Stack
+        from bamboo.root import gbl
+        for plot in plots_2D:
+            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+            cv = gbl.TCanvas(f"c{plot.name}")
+            expStack.obj.Draw("COLZ")
+            cv.Update()
+            import os
+            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
