@@ -24,6 +24,13 @@ BACKG_SAMPLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
+MANUAL_CUT = False
+MANUAL_CUT_VARIABLE = "bjets_dPhi_vs_dEta"
+MANUAL_CUT_XMIN = -1.5
+MANUAL_CUT_XMAX = 1.5
+MANUAL_CUT_YMIN = -2
+MANUAL_CUT_YMAX = 2
+
 def print_to_csv(row):
     with open(OUTPUT_PATH, "a") as file: 
         writer = csv.writer(file)
@@ -321,8 +328,10 @@ if __name__ == "__main__":
     # ==================================================================
     # ==================================================================
 
-    EFFICIENCIES = [0.75, 0.80, 0.85, 0.90, 0.95]
-    
+    if MANUAL_CUT:
+        EFFICIENCIES = [-9999]
+    else:
+        EFFICIENCIES = [0.75, 0.80, 0.85, 0.90, 0.95]
     
     print("\n---------------------- For 1D variables ----------------------")
     variables_1D = {'SL_res_2b_x_':["bjets_mbb", "bjets_dPhi", "bjets_dEta", "t1_mInv", "bjets_dR", "bjets_pT_bb", "bjets0_pT"],
@@ -363,6 +372,10 @@ if __name__ == "__main__":
         print_to_csv([])
 
         for var in cutting_variables:
+            if MANUAL_CUT:
+                if var != MANUAL_CUT_VARIABLE:
+                    continue
+
             print("\tCut for %s:"%var)
             print_to_csv([var])
             print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
@@ -381,15 +394,21 @@ if __name__ == "__main__":
 
                 cut = EFF
                 step = 1
-                xl_bin_min = 1
-                xr_bin_min = nbins
-                if "t1_mInv" in var:
-                    # xl_bin_min, xr_bin_min = find_window_1D_v2(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
-                    xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+                if MANUAL_CUT:
+                    xl_bin = MANUAL_CUT_XMIN
+                    xr_bin = MANUAL_CUT_XMAX
+                    xl_bin_min = histo_signal.GetBin(xl_min)
+                    xr_bin_min = histo_signal.GetBin(xr_min)
                 else:
-                    xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
-                xl_min = histo_signal.GetBinCenter(xl_bin_min)
-                xr_min = histo_signal.GetBinCenter(xr_bin_min)
+                    xl_bin_min = 1
+                    xr_bin_min = nbins
+                    if "t1_mInv" in var:
+                        # xl_bin_min, xr_bin_min = find_window_1D_v2(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+                        xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+                    else:
+                        xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+                    xl_min = histo_signal.GetBinCenter(xl_bin_min)
+                    xr_min = histo_signal.GetBinCenter(xr_bin_min)
                 min_width = xr_min - xl_min
                 min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min)/total_norm_signal
                 min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min)/total_norm_bkg
@@ -439,6 +458,10 @@ if __name__ == "__main__":
         print_to_csv([])
 
         for var in cutting_variables:
+            if MANUAL_CUT:
+                if var != MANUAL_CUT_VARIABLE:
+                    continue
+            
             print("\tCut for %s:"%var)
             print_to_csv([var])
             print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
@@ -465,19 +488,30 @@ if __name__ == "__main__":
 
                 cut = EFF
                 step = 1
-                xl_bin_min = 1
-                xr_bin_min = nbins_x
-                yl_bin_min = 1
-                yr_bin_min = nbins_y
-                if "t1_mInv" in var:
-                    # xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D_v2(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
-                    xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
+
+                if MANUAL_CUT:
+                    xl_bin = MANUAL_CUT_XMIN
+                    xr_bin = MANUAL_CUT_XMAX
+                    yl_bin = MANUAL_CUT_YMIN
+                    yr_bin = MANUAL_CUT_YMAX
+                    xl_bin_min = histo_signal.GetXaxis().GetBin(xl_min)
+                    xr_bin_min = histo_signal.GetXaxis().GetBin(xr_min)
+                    yl_bin_min = histo_signal.GetYaxis().GetBin(yl_min)
+                    yr_bin_min = histo_signal.GetYaxis().GetBin(yr_min)
                 else:
-                    xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
-                xl_min = histo_signal.GetXaxis().GetBinCenter(xl_bin_min)
-                xr_min = histo_signal.GetXaxis().GetBinCenter(xr_bin_min)
-                yl_min = histo_signal.GetYaxis().GetBinCenter(yl_bin_min)
-                yr_min = histo_signal.GetYaxis().GetBinCenter(yr_bin_min)
+                    xl_bin_min = 1
+                    xr_bin_min = nbins_x
+                    yl_bin_min = 1
+                    yr_bin_min = nbins_y
+                    if "t1_mInv" in var:
+                        # xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D_v2(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
+                        xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
+                    else:
+                        xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
+                    xl_min = histo_signal.GetXaxis().GetBinCenter(xl_bin_min)
+                    xr_min = histo_signal.GetXaxis().GetBinCenter(xr_bin_min)
+                    yl_min = histo_signal.GetYaxis().GetBinCenter(yl_bin_min)
+                    yr_min = histo_signal.GetYaxis().GetBinCenter(yr_bin_min)
                 min_width_x = xr_min - xl_min
                 min_width_y = yr_min - yl_min
                 min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_signal
