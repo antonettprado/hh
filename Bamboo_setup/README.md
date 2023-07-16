@@ -61,7 +61,7 @@ python3 utils/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_0711 -l reco
 
 ## ========= Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection ==========
 ```bash
-python3 python/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_0711
+python3 utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_0711
 ```
 
 ## ======== Process NANOAODs: SL_DL_likelihood_ratios ========

@@ -397,8 +397,8 @@ if __name__ == "__main__":
                 if MANUAL_CUT:
                     xl_bin = MANUAL_CUT_XMIN
                     xr_bin = MANUAL_CUT_XMAX
-                    xl_bin_min = histo_signal.GetBin(xl_min)
-                    xr_bin_min = histo_signal.GetBin(xr_min)
+                    xl_bin_min = histo_signal.FindBin(xl_min)
+                    xr_bin_min = histo_signal.FindBin(xr_min)
                 else:
                     xl_bin_min = 1
                     xr_bin_min = nbins
@@ -494,10 +494,10 @@ if __name__ == "__main__":
                     xr_bin = MANUAL_CUT_XMAX
                     yl_bin = MANUAL_CUT_YMIN
                     yr_bin = MANUAL_CUT_YMAX
-                    xl_bin_min = histo_signal.GetXaxis().GetBin(xl_min)
-                    xr_bin_min = histo_signal.GetXaxis().GetBin(xr_min)
-                    yl_bin_min = histo_signal.GetYaxis().GetBin(yl_min)
-                    yr_bin_min = histo_signal.GetYaxis().GetBin(yr_min)
+                    xl_bin_min = histo_signal.GetXaxis().FindBin(xl_min)
+                    xr_bin_min = histo_signal.GetXaxis().FindBin(xr_min)
+                    yl_bin_min = histo_signal.GetYaxis().FindBin(yl_min)
+                    yr_bin_min = histo_signal.GetYaxis().FindBin(yr_min)
                 else:
                     xl_bin_min = 1
                     xr_bin_min = nbins_x
