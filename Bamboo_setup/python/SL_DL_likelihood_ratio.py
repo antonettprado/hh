@@ -5,11 +5,17 @@ from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
 from SL_DL_event_selection import SL_DL_event_selection
-from constants import *
 import object_definition as object_defs
 import event_definition as event_defs
+from constants import *
 import os
 import ROOT
+
+SIGNAL_SAMPLES = None
+BACKG_SAMPLES = None
+WITH_TITLES = None
+ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
+ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
 class SL_DL_likelihood_ratio(SL_DL_event_selection):
     def __init__(self, args):
@@ -47,6 +53,12 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
                     print('Backg sample: ' + filename)
             return signal_files, backg_files
         
+        def close_files_directory():
+            for sample in SIGNAL_SAMPLES:
+                sample.Close()
+            for sample in BACKG_SAMPLES:
+                sample.Close()
+
         def get_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles=None):
 
             samples_of_type = None
@@ -55,7 +67,7 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             elif of_type == "backg":
                 samples_of_type = BACKG_SAMPLES
 
-            total_hist_of_type = ROOT.TH1F(of_type, "", xbins, xmin, xmax)
+            total_hist_of_type = ROOT.TH1F(of_type+"_"+object_name, "", xbins, xmin, xmax)
 
             if titles is not None:
                 if WITH_TITLES is True:
@@ -67,16 +79,11 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
                 hist_of_type = sample.Get(object_name)
                 total_hist_of_type.Add(hist_of_type) 
 
-            total_hist_of_type = ROOT.gDirectory.Get(of_type)
+            total_hist_of_type = ROOT.gDirectory.Get(of_type+"_"+object_name)
             total_hist_of_type.SetDirectory(0)
-
-            for samples in samples_of_type:
-                sample.Close()
-
             return total_hist_of_type
 
         def get_likelihood_ratio(object_name, xbins, xmin, xmax):
-            print("object_name = " + object_name)
             hist_signal = get_1D_of_type("signal", object_name, xbins, xmin, xmax)
             hist_backg = get_1D_of_type("backg", object_name, xbins, xmin, xmax)
 
@@ -84,25 +91,24 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             hist_signal.Scale(1/hist_signal.Integral())
             hist_backg.Scale(1/hist_backg.Integral())
 
-            ratio_hist = ROOT.TH1F(object_name, "", xbins, xmin, xmax)
             ratio_hist = hist_signal.Clone()
+            ratio_hist.SetName("ratio_"+object_name)
             ratio_hist.Divide(hist_backg)
 
-            hist_signal.Delete()
-
-            ratio_hist = ROOT.gDirectory.Get("signal")
+            ratio_hist = ROOT.gDirectory.Get("ratio_"+object_name)
             ratio_hist.SetDirectory(0)
-
             return ratio_hist
 
         SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(self.args.input_dir)
 
         likelihood_ratio_hists = {}
         likelihood_ratio_hists["SL_res_2b_x_bjets_mbb"] = get_likelihood_ratio("SL_res_2b_x_bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
-        # likelihood_ratio_hists["SL_res_2b_x_bjets_dPhi"] = get_likelihood_ratio("SL_res_2b_x_bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)
+        likelihood_ratio_hists["SL_res_2b_x_bjets_dPhi"] = get_likelihood_ratio("SL_res_2b_x_bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)
         likelihood_ratio_hists["SL_res_2b_x_bjets_dEta"] = get_likelihood_ratio("SL_res_2b_x_bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)
         likelihood_ratio_hists["SL_res_2b_x_bjets_pT_bb"] = get_likelihood_ratio("SL_res_2b_x_bjets_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX)
         likelihood_ratio_hists["SL_res_2b_x_t1_mInv"] = get_likelihood_ratio("SL_res_2b_x_t1_mInv", T_BINS, T_MIN, T_MAX)
+
+        close_files_directory()
 
         return likelihood_ratio_hists
         
@@ -167,9 +173,9 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         # ===============================================================================
         
         yields.add(SL_res_1b, 'SL_res_1b')
-        # yields.add(SL_res_1b_x, 'SL_res_1b_x')
+        yields.add(SL_res_1b_x, 'SL_res_1b_x')
         yields.add(SL_res_2b, 'SL_res_2b')
-        # yields.add(SL_res_2b_x, 'SL_res_2b_x')
+        yields.add(SL_res_2b_x, 'SL_res_2b_x')
         yields.add(SL_boost, 'SL_boost')
         yields.add(DL_res_1b, 'DL_res_1b')
         yields.add(DL_res_2b, 'DL_res_2b')
