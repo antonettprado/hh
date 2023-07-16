@@ -395,8 +395,8 @@ if __name__ == "__main__":
                 cut = EFF
                 step = 1
                 if MANUAL_CUT:
-                    xl_bin = MANUAL_CUT_XMIN
-                    xr_bin = MANUAL_CUT_XMAX
+                    xl_min = MANUAL_CUT_XMIN
+                    xr_min = MANUAL_CUT_XMAX
                     xl_bin_min = histo_signal.FindBin(xl_min)
                     xr_bin_min = histo_signal.FindBin(xr_min)
                 else:
@@ -490,10 +490,10 @@ if __name__ == "__main__":
                 step = 1
 
                 if MANUAL_CUT:
-                    xl_bin = MANUAL_CUT_XMIN
-                    xr_bin = MANUAL_CUT_XMAX
-                    yl_bin = MANUAL_CUT_YMIN
-                    yr_bin = MANUAL_CUT_YMAX
+                    xl_min = MANUAL_CUT_XMIN
+                    xr_min = MANUAL_CUT_XMAX
+                    yl_min = MANUAL_CUT_YMIN
+                    yr_min = MANUAL_CUT_YMAX
                     xl_bin_min = histo_signal.GetXaxis().FindBin(xl_min)
                     xr_bin_min = histo_signal.GetXaxis().FindBin(xr_min)
                     yl_bin_min = histo_signal.GetYaxis().FindBin(yl_min)
