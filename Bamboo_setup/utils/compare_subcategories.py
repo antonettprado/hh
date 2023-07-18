@@ -283,12 +283,17 @@ if __name__ == "__main__":
     draw2D("bjets_pT_bb_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['pT_bb vs mbb of bjets', 'mbb', 'pT_bb'], 'SL_and_DL', subcats_for_bjets_hists)
     draw2D("bjets_dEta_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['dEta vs mbb of bjets', 'mbb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
     draw2D("bjets_dPhi_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs mbb of bjets', 'mbb', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dEta_abs_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX, ['abs(dPhi) vs mbb of bjets', 'mbb', 'abs(dPhi)'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dEta_abs_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX, ['abs(dEta) vs pT of bjets', 'pT_bb', 'abs(dEta)'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dPhi_abs_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX, ['abs(dPhi) vs mbb of bjets', 'mbb', 'abs(dPhi)'], 'SL_and_DL', subcats_for_bjets_hists)
+    draw2D("bjets_dPhi_abs_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX, ['abs(dPhi) vs pT of bjets', 'pT_bb', 'abs(dPhi)'], 'SL_and_DL', subcats_for_bjets_hists)
     
+
     draw2D("bjets_dPhi_vs_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['dPhi vs dEta of bjets', 'dEta', 'dPhi'], 'SL_and_DL', subcats_for_bjets_hists) 
     draw2D("bjets_dPhi_abs_vs_dEta_abs", BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX, ['abs(dPhi) vs abs(dEta) of bjets', 'abs(dEta)', 'abs(dPhi)'], 'SL_and_DL', subcats_for_bjets_hists) 
 
-    draw1D("t1_mInv_leadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ leading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
-    draw1D("t1_mInv_subleadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ subleading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
+    # draw1D("t1_mInv_leadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ leading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
+    # draw1D("t1_mInv_subleadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ subleading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t1_mInv", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) of top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t1_pt", T_BINS, T_MIN, T_MAX, ['p_{T} of top1', 'GeV', ''], 'SL', ['res_2b'])
     draw1D("t2_mT", T_BINS, T_MIN, T_MAX, ['m_{T} of top2', 'GeV', ''], 'SL', ['res_2b'])

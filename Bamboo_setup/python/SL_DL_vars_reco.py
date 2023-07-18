@@ -4,6 +4,9 @@ from bamboo import treefunctions as op
 from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
+import sys
+sys.path.append('/afs/cern.ch/user/s/scrossle/bamboodev/hh/Bamboo_setup/python')
+
 from SL_DL_event_selection import SL_DL_event_selection
 from constants import *
 import object_definition as object_defs
@@ -135,9 +138,14 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 Plot.make2D(tag+"bjets_dR_vs_mbb" , [bjets_mbb, bjets_dR], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)], xTitle="mbb", yTitle="dR"),
                 Plot.make2D(tag+"bjets_pT_bb_vs_mbb" , [bjets_mbb, bjets_pT_bb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX)], xTitle="mbb", yTitle="pT of bb"),
                 Plot.make2D(tag+"bjets_dEta_vs_mbb" , [bjets_mbb, bjets_dEta], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)], xTitle="mbb", yTitle="dEta"),
+                Plot.make2D(tag+"bjets_dEta_abs_vs_mbb" , [bjets_dEta_abs, bjets_mbb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX)], xTitle="mbb", yTitle="abs(dEta)"),
+                Plot.make2D(tag+"bjets_dEta_abs_vs_pT_bb" , [bjets_dEta_abs, bjets_pT_bb], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX)], xTitle="pT of bb", yTitle="abs(dEta)"),
                 Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="mbb", yTitle="dPhi"),
                 Plot.make2D(tag+"bjets_dPhi_vs_dEta" , [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="dEta", yTitle="dPhi"),
                 Plot.make2D(tag+"bjets_dPhi_abs_vs_dEta_abs" , [bjets_dEta_abs, bjets_dPhi_abs], sel, [EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="abs(dEta)", yTitle="abs(dPhi)"),
+                Plot.make2D(tag+"bjets_dPhi_abs_vs_mbb" , [bjets_dPhi_abs, bjets_mbb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="mbb", yTitle="abs(dPhi)"),
+                Plot.make2D(tag+"bjets_dPhi_abs_vs_pT_bb" , [bjets_dPhi_abs, bjets_pT_bb], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="pT of bb", yTitle="abs(dPhi)"),
+            
             ])
 
             bjets_vars["bjets0_pT"] = bjet0.pt
@@ -197,8 +205,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 Plot.make1D(tag+"t2_pt" , t2_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
             ])
 
-            top_vars["t1_mInv_leadb"] = t1_mInv_leadb
-            top_vars["t1_mInv_subleadb"] = t1_mInv_subleadb
+            # top_vars["t1_mInv_leadb"] = t1_mInv_leadb
+            # top_vars["t1_mInv_subleadb"] = t1_mInv_subleadb
             top_vars["t1_mInv"] = t1_mInv
             top_vars["t1_pt"] = t1_pt
             top_vars["t2_mT"] = t2_mT

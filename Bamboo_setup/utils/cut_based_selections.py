@@ -334,8 +334,8 @@ if __name__ == "__main__":
         EFFICIENCIES = [0.75, 0.80, 0.85, 0.90, 0.95]
     
     print("\n---------------------- For 1D variables ----------------------")
-    variables_1D = {'SL_res_2b_x_':["bjets_mbb", "bjets_dPhi", "bjets_dEta", "t1_mInv", "bjets_dR", "bjets_pT_bb", "bjets0_pT"],
-                    'DL_res_2b_':  ["bjets_mbb", "bjets_dPhi", "bjets_dEta", "bjets_dR", "bjets_pT_bb", "bjets0_pT"],
+    variables_1D = {'SL_res_2b_x_':["bjets_mbb", "bjets_dPhi", "bjets_dEta", "t1_mInv", "bjets_dR", "bjets_pT_bb", "bjets0_pT", "bjets_dPhi_abs", "bjets_dEta_abs"],
+                    'DL_res_2b_':  ["bjets_mbb", "bjets_dPhi", "bjets_dEta", "bjets_dR", "bjets_pT_bb", "bjets0_pT", "bjets_dPhi_abs", "bjets_dEta_abs"],
                     'SL_boost_':   [],
                     'DL_boost_':   []}
     # variables_1D.append("bjets_mbb")
