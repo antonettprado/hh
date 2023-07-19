@@ -138,13 +138,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 Plot.make2D(tag+"bjets_dR_vs_mbb" , [bjets_mbb, bjets_dR], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)], xTitle="mbb", yTitle="dR"),
                 Plot.make2D(tag+"bjets_pT_bb_vs_mbb" , [bjets_mbb, bjets_pT_bb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX)], xTitle="mbb", yTitle="pT of bb"),
                 Plot.make2D(tag+"bjets_dEta_vs_mbb" , [bjets_mbb, bjets_dEta], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)], xTitle="mbb", yTitle="dEta"),
-                Plot.make2D(tag+"bjets_dEta_abs_vs_mbb" , [bjets_dEta_abs, bjets_mbb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX)], xTitle="mbb", yTitle="abs(dEta)"),
-                Plot.make2D(tag+"bjets_dEta_abs_vs_pT_bb" , [bjets_dEta_abs, bjets_pT_bb], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX)], xTitle="pT of bb", yTitle="abs(dEta)"),
+                Plot.make2D(tag+"bjets_dEta_abs_vs_mbb" , [bjets_mbb, bjets_dEta_abs], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX)], xTitle="mbb", yTitle="abs(dEta)"),
+                Plot.make2D(tag+"bjets_dEta_abs_vs_pT_bb" , [bjets_pT_bb, bjets_dEta_abs], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX)], xTitle="pT of bb", yTitle="abs(dEta)"),
                 Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="mbb", yTitle="dPhi"),
                 Plot.make2D(tag+"bjets_dPhi_vs_dEta" , [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="dEta", yTitle="dPhi"),
                 Plot.make2D(tag+"bjets_dPhi_abs_vs_dEta_abs" , [bjets_dEta_abs, bjets_dPhi_abs], sel, [EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="abs(dEta)", yTitle="abs(dPhi)"),
-                Plot.make2D(tag+"bjets_dPhi_abs_vs_mbb" , [bjets_dPhi_abs, bjets_mbb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="mbb", yTitle="abs(dPhi)"),
-                Plot.make2D(tag+"bjets_dPhi_abs_vs_pT_bb" , [bjets_dPhi_abs, bjets_pT_bb], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="pT of bb", yTitle="abs(dPhi)"),
+                Plot.make2D(tag+"bjets_dPhi_abs_vs_mbb" , [bjets_mbb, bjets_dPhi_abs], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="mbb", yTitle="abs(dPhi)"),
+                Plot.make2D(tag+"bjets_dPhi_abs_vs_pT_bb" , [bjets_pT_bb, bjets_dPhi_abs], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="pT of bb", yTitle="abs(dPhi)"),
             
             ])
 
