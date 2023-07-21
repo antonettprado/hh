@@ -340,17 +340,118 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+        print("----------------------------- In postProces -----------------------------")
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        from bamboo.plots import Plot, DerivedPlot
-        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
-        from bamboo.analysisutils import loadPlotIt
-        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
-        from plotit.plotit import Stack
-        from bamboo.root import gbl
-        for plot in plots_2D:
-            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
-            cv = gbl.TCanvas(f"c{plot.name}")
-            expStack.obj.Draw("COLZ")
-            cv.Update()
-            import os
-            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
+
+        # ------------------- Outputtting 2D histograms ---------------------------
+        # from bamboo.plots import Plot, DerivedPlot
+        # plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
+        # from bamboo.analysisutils import loadPlotIt
+        # p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
+        # from plotit.plotit import Stack
+        # from bamboo.root import gbl
+        # for plot in plots_2D:
+        #     expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+        #     cv = gbl.TCanvas(f"c{plot.name}")
+        #     expStack.obj.Draw("COLZ")
+        #     cv.Update()
+        #     import os
+        #     cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
+
+        # ---------------------- Reding scalefactors ------------------------------
+        import os
+        import correctionlib.convert
+        import uproot
+        import rich
+        import ROOT
+        import boost_histogram as bh
+
+        SIGNAL_SAMPLES = None
+        BACKG_SAMPLES = None
+        ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
+        ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
+
+        def get_files_in_directory():
+            
+            signal_files = []
+            backg_files = []
+            for filename in os.listdir(results_path):
+                file_path = os.path.join(results_path,filename)
+                if filename in ALL_SIGNAL_SAMPLES:
+                    root_file = ROOT.TFile.Open(file_path, 'read')
+                    signal_files.append(root_file)
+                elif filename in ALL_BACKG_SAMPLES:
+                    root_file = ROOT.TFile.Open(file_path, 'read')
+                    backg_files.append(root_file)
+            return signal_files, backg_files
+
+        def output_llr_hist(object_name, xbins, xmin, xmax):
+            
+            signal_total_hist = ROOT.TH1F("signal " + object_name, "", xbins, xmin, xmax)
+            backg_total_hist  = ROOT.TH1F("backg " + object_name, "", xbins, xmin, xmax)
+
+            object_name = "SL_res_2b_x_" + object_name
+
+            for sample in SIGNAL_SAMPLES:
+                sample_signal = sample.Get(object_name)
+                signal_total_hist.Add(sample_signal)
+
+            for sample in BACKG_SAMPLES:
+                backg_signal = sample.Get(object_name)
+                backg_total_hist.Add(backg_signal)
+
+            # Normalize signal and background -----------
+            signal_total_hist.Scale(1/signal_total_hist.Integral())
+            backg_total_hist.Scale(1/backg_total_hist.Integral())
+
+            ratio_hist = ROOT.TH1F("object_name_ratio", "", xbins, xmin, xmax)
+            ratio_hist = signal_total_hist.Clone()
+            ratio_hist.Divide(backg_total_hist)
+
+            ratio_hist.Write(object_name)
+
+            return root_file
+
+        results_path = os.path.join(self.args.output,'results')
+        SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory()
+
+        root_file = ROOT.TFile(os.path.join(results_path, "output_file.root"), "RECREATE")
+
+        interesting_vars = []
+        interesting_vars.append(["bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX])
+        interesting_vars.append(["bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX])
+        interesting_vars.append(["bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX])
+        interesting_vars.append(["bjets_pT_bb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX])
+
+        for var in interesting_vars:
+            output_llr_hist(var[0], var[1], var[2], var[3])
+
+        root_file.Close()
+
+        #---------------------------------------------------------------------
+
+        root_file = uproot.open(os.path.join(results_path, "output_file.root"))
+
+        all_corrections = []
+        for key in root_file.keys():
+            end_index = key.rfind(';')
+            hist_name = key[:end_index]
+            # ratio_hists[hist_name] = root_file[key] 
+            hist = root_file[key]
+
+            h = bh.Histogram(hist)
+
+            corr = correctionlib.convert.from_histogram(h)
+            corr.name = hist_name
+            corr.description = f"llr for " + hist_name
+            # corr.data.flow = "clamp"
+            rich.print(corr)
+            all_corrections.append(corr)
+
+        root_file.Close()
+
+        cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
+
+        output_llr_file = os.path.join(results_path, "corrections_llr.json")
+        with open(output_llr_file, "w") as outfile:
+            outfile.write(cset.json(exclude_unset=False))
