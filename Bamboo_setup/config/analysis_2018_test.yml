@@ -4,17 +4,17 @@ eras:
     luminosity: 59700 # pb^-1 
 #dbcache: dascache
 samples:
-  # Signal MC
-  bbWW_sl:
-    era: "2018"
-    group: "HH_bbWW"
-    # db: das:/GluGluToHHTo2B2VLNu2J_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM 
-    files: 
-      - /afs/cern.ch/user/s/scrossle/MC_Samples/bbWW_sl/91FC447D-8281-4B46-BC6A-470A00F2D0AB.root
-    type: mc
-    cross-section:  0.00334825583
-    generated-events: genEventSumw
-    split: -1
+  # # Signal MC
+  # bbWW_sl:
+  #   era: "2018"
+  #   group: "HH_bbWW"
+  #   # db: das:/GluGluToHHTo2B2VLNu2J_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM 
+  #   files: 
+  #     - /afs/cern.ch/user/s/scrossle/MC_Samples/bbWW_sl/91FC447D-8281-4B46-BC6A-470A00F2D0AB.root
+  #   type: mc
+  #   cross-section:  0.00334825583
+  #   generated-events: genEventSumw
+  #   split: -1
   
   # bbWW_dl:
   #   era: "2018"
@@ -35,15 +35,15 @@ samples:
   #   split: -1
 
 
-  # # bkg #
-  # TTbar_sl:
-  #   era: "2018"
-  #   group: "TTbar"
-  #   db: [das:/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM, das:/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext3-v1/NANOAODSIM]
-  #   type: mc
-  #   cross-section: 366
-  #   generated-events: genEventSumw
-  #   split: -1
+  # bkg #
+  TTbar_sl:
+    era: "2018"
+    group: "TTbar"
+    db: [das:/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM, das:/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext3-v1/NANOAODSIM]
+    type: mc
+    cross-section: 366
+    generated-events: genEventSumw
+    split: -1
 
   # TTbar_dl:
   #   era: "2018"
