@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 from constants import *
 import argparse
+import variables
+from variables import Variable1D
 
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
@@ -47,19 +49,19 @@ def get_object_name_subcats(object_name, channel, subcats):
 
     return object_name_subcats
 
-def get_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles):
+def get_1D_of_type(of_type, object_name, var: Variable1D):
 
     if of_type == "signal": 
         SAMPLES_OF_TYPE = SIGNAL_SAMPLES
     elif of_type == "backg":
         SAMPLES_OF_TYPE = BACKG_SAMPLES
 
-    total_hist_of_type = ROOT.TH1F(of_type, "", xbins, xmin, xmax)
+    total_hist_of_type = ROOT.TH1F(of_type, "", var.nbins, var.min, var.max)
 
     if WITH_TITLES is True:
-        total_hist_of_type.SetTitle(titles[0])
-    total_hist_of_type.GetXaxis().SetTitle(titles[1])
-    total_hist_of_type.GetYaxis().SetTitle(titles[2])
+        total_hist_of_type.SetTitle()
+    total_hist_of_type.GetXaxis().SetTitle(var.full_title)
+    total_hist_of_type.GetYaxis().SetTitle("normalized frequency")
 
     for sample in SAMPLES_OF_TYPE:
         hist_of_type = sample.Get(object_name)
@@ -169,6 +171,7 @@ def draw_1D_total(hist_signal, hist_backg, xmin, xmax, outname):
     canvas_norm.SetGrid()
     hist_signal.Draw("hist")
     hist_backg.Draw("hist sames")
+    canvas_norm.SetLeftMargin(0.13)
     canvas_norm.Update()
 
     s1 = hist_signal.FindObject("stats")
@@ -184,20 +187,27 @@ def draw_1D_total(hist_signal, hist_backg, xmin, xmax, outname):
 
     canvas_norm.SaveAs(os.path.join(OUTPUT_PATH, outname + '.pdf'))
 
-def draw1D(object_name, xbins, xmin, xmax, titles, channels, subcats="all"):
+# def draw1D(object_name, xbins, xmin, xmax, titles, channels, subcats="all"):
 
-    if "SL" in channels:
-        full_object_names = get_object_name_subcats(object_name, "SL", subcats)
-        for full_object_name in full_object_names:
-            total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles)
-            total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles)
-            draw_1D_total(total_signal, total_backg, xmin, xmax, full_object_name)
-    if "DL" in channels:
-        full_object_names = get_object_name_subcats(object_name, "DL", subcats)
-        for full_object_name in full_object_names:
-            total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles)
-            total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles)
-            draw_1D_total(total_signal, total_backg, xmin, xmax, full_object_name)
+#     if "SL" in channels:
+#         full_object_names = get_object_name_subcats(object_name, "SL", subcats)
+#         for full_object_name in full_object_names:
+#             total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles)
+#             total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles)
+#             draw_1D_total(total_signal, total_backg, xmin, xmax, full_object_name)
+#     if "DL" in channels:
+#         full_object_names = get_object_name_subcats(object_name, "DL", subcats)
+#         for full_object_name in full_object_names:
+#             total_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax, titles)
+#             total_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax, titles)
+#             draw_1D_total(total_signal, total_backg, xmin, xmax, full_object_name)
+
+def draw1D(var: Variable1D):
+    for full_object_name in var.refs:
+        total_signal = get_1D_of_type("signal", full_object_name, var)
+        total_backg = get_1D_of_type("backg", full_object_name, var)
+        draw_1D_total(total_signal, total_backg, var.min, var.max, full_object_name)
+
 
 def draw2D(object_name, xbins, xmin, xmax, ybins, ymin, ymax, titles, channels, subcats="all"):
 
@@ -239,7 +249,8 @@ if __name__ == "__main__":
     SOURCE_PATH = args.source_path
     SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
     OUTPUT_DIR = SOURCE_DIR + "_comp"
-    OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_DIR)
+    # OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_DIR)
+    OUTPUT_PATH = os.path.join("Z_OUTPUT", 'test')
     SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(SOURCE_PATH)
     LEVEL = args.level
     WITH_TITLES = args.with_titles
@@ -255,25 +266,27 @@ if __name__ == "__main__":
     # ==================================================================
     # ==================================================================
 
-    if LEVEL == "reco":
-        draw1D("bfatjet_msoftdrop", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bFatJet mass', 'GeV', ''], 'SL_and_DL', ['boost'])
+    # if LEVEL == "reco":
+    #     draw1D("bfatjet_msoftdrop", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bFatJet mass', 'GeV', ''], 'SL_and_DL', ['boost'])
     
-    draw1D("bfatjet_mass", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bFatJet mass', 'GeV', ''], 'SL_and_DL', ['boost'])
+    # draw1D("bfatjet_mass", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bFatJet mass', 'GeV', ''], 'SL_and_DL', ['boost'])
 
     if LEVEL == "reco":
         subcats_for_bjets_hists = ['res_2b', 'boost']
     elif LEVEL == "gen":
         subcats_for_bjets_hists = ['res_2b']
-    draw1D("bjets0_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet0 pT', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets1_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJet1 pT', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_mean_pT", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['bJets <pT>', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, ['pT of bJets total p4', 'pT (GeV)', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['bJets dEta', 'dEta', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_dEta_abs", BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX, ['abs(dEta) for bjets', 'abs(dEta)', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX, ['bJets dPhi', 'dPhi', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_dPhi_abs", BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX, ['abs(dPhi) for bjets', 'abs(dPhi)', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_dR", BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['bJets dR', 'dR', ''], 'SL_and_DL', subcats_for_bjets_hists)
-    draw1D("bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, ['bJets m_{bb}', 'm_{bb}', ''], 'SL_and_DL', subcats_for_bjets_hists)
+
+    # variables1D = { name : Variable1D(name) for name in variables.ALL_VARNAMES_1D }
+    # for var in variables1D.values():
+    #     draw1D(var)
+
+    variables2D = { name : Variable2D(name) for name in variables.ALL_VARNAMES_2D }
+    for var in variables2D.values():
+        draw2D(var)
+        break
+
+    import sys
+    sys.exit(0)
     
     draw2D("bjets_dR_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['dR vs pT_bb of bjets', 'pT_bb', 'dR'], 'SL_and_DL', subcats_for_bjets_hists)
     draw2D("bjets_dEta_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['dEta vs pT of bjets', 'pT_bb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
@@ -294,16 +307,8 @@ if __name__ == "__main__":
 
     # draw1D("t1_mInv_leadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ leading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
     # draw1D("t1_mInv_subleadb", T_BINS, T_MIN, T_MAX, ['m_{inv} (w/ subleading bjet) of top1', 'GeV', ''], 'SL', ['res_2b'])
-    draw1D("t1_mInv", T_BINS, T_MIN, T_MAX, ['m_{inv} (b1_jj) of top1', 'GeV', ''], 'SL', ['res_2b'])
-    draw1D("t1_pt", T_BINS, T_MIN, T_MAX, ['p_{T} of top1', 'GeV', ''], 'SL', ['res_2b'])
-    draw1D("t2_mT", T_BINS, T_MIN, T_MAX, ['m_{T} of top2', 'GeV', ''], 'SL', ['res_2b'])
-    draw1D("t2_pt", T_BINS, T_MIN, T_MAX, ['p_{T} of top2', 'GeV', ''], 'SL', ['res_2b'])
-
+    
     # draw1D("all_sT_50", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT_50', 'GeV', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("all_sT_50_cut", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT_50_cut', 'GeV', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("all_mInv", ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX, ['all_mInv', 'GeV', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("all_mT", ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX, ['all_mT', 'GeV', ''], 'SL_and_DL', ['res_2b'])
-    draw1D("all_sT", ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX, ['all_sT', 'GeV', ''], 'SL_and_DL', ['res_2b'])
 
     draw2D("t1_mInv_vs_bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} of t1 vs bjets m_{bb}', 'm_{bb}', 'm_{inv} of t1'], 'SL', ['res_2b'])
     draw2D("t1_mInv_vs_bjets_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, T_BINS, T_MIN, T_MAX, ['m_{inv} of t1 vs bjets pT_bb', 'pT_bb', 'm_{inv} of t1'], 'SL', ['res_2b'])

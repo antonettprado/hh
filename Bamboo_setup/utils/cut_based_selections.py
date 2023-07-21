@@ -27,10 +27,10 @@ BACKG_SAMPLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
-MANUAL_CUT = False
-MANUAL_CUT_VARIABLE = "bjets_dPhi_vs_dEta"
-MANUAL_CUT_XMIN = -2
-MANUAL_CUT_XMAX = 2
+MANUAL_CUT = True
+MANUAL_CUT_VARIABLE = "bjets_pT_bb"
+MANUAL_CUT_XMIN = 150
+MANUAL_CUT_XMAX = 500
 MANUAL_CUT_YMIN = -1.6
 MANUAL_CUT_YMAX = 1.6
 
@@ -379,8 +379,11 @@ if __name__ == "__main__":
             continue
 
         object_name = "bjets_mbb"
+        
         Total_signal = get_total_integral_of_type("signal", object_name, dataset)
         Total_backg = get_total_integral_of_type("backg", object_name, dataset)
+        print(Total_signal)
+        print(Total_backg)
         Total_significance = Total_signal/math.sqrt(Total_backg)
         print('-----------------------------------------------------------')
         print('Total stats for: ' + dataset)

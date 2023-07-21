@@ -4,9 +4,6 @@ from bamboo import treefunctions as op
 from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
-import sys
-sys.path.append('/afs/cern.ch/user/s/scrossle/bamboodev/hh/Bamboo_setup/python')
-
 from SL_DL_event_selection import SL_DL_event_selection
 from constants import *
 import object_definition as object_defs
