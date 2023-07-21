@@ -34,6 +34,23 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
     def addArgs(self, parser):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
+        
+    def get_llr_corrections():
+
+        import uproot
+        results_path = os.path.join(self.args.input_dir,'results')
+        root_file = uproot.open(os.path.join(results_path, "output_file.root"))
+        hist_names = []
+        for key in root_file.keys():
+            end_index = key.rfind(';')
+            hist_names.append(key[:end_index])
+
+        from bamboo.scalefactors import get_correction
+        corrections_file = os.path.join(results_path, "corrections_llr.json")
+        corrections_dic = {}
+        for hist_name in hist_names:
+            corr_name = hist_name
+            corrections = get_correction(corrections_file, corr_name, params={"mbb": mbb},defineOnFirstUse=defineOnFirstUse, sel=selection)
 
     def get_likelihood_from_input(self):
 
@@ -97,6 +114,18 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
 
             ratio_hist = ROOT.gDirectory.Get("ratio_"+object_name)
             ratio_hist.SetDirectory(0)
+
+            # Extra ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # # Get the number of bins in the histogram
+            # num_bins = hist.GetNbinsX()
+            # # Create a list to store the bin contents
+            # bin_contents = []
+            # # Loop over all bins and get their contents
+            # for bin_number in range(1, num_bins + 1):
+            #     bin_content = hist.GetBinContent(bin_number)
+            #     bin_contents.append(bin_content)
+
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             return ratio_hist
 
         SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(self.args.input_dir)
@@ -111,7 +140,8 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         close_files_directory()
 
         return likelihood_ratio_hists
-        
+
+
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
         plots = []
@@ -120,7 +150,7 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
 
         list_llr_hists = self.list_llr_hists
 
-        # Retrieve objects ==============================================
+        # Retrieve objects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
 
         tight_electrons = objects["tight_electrons"]
@@ -139,7 +169,7 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         sorted_ak4_nonbtags = op.sort(ak4_nonbtags, lambda jet: -jet.pt)
         sorted_ak8_btags = op.sort(ak8_btags, lambda jet: -jet.pt)
 
-        # Retrieve selections ===========================================
+        # Retrieve selections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         SL_res_1b = selections["SL"]["SL_res_1b"]
         SL_res_2b = selections["SL"]["SL_res_2b"]
         SL_boost = selections["SL"]["SL_boost"]
@@ -194,18 +224,55 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
                 fatjet_subjets = object_defs.find_subjets(fatjet, subjets)
                 bjet0 = fatjet_subjets[0]
                 bjet1 = fatjet_subjets[1]
+                
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
-            bjets_mbb_llr = self.list_llr_hists[tag+"bjets_mbb"].GetBinContent(self.list_llr_hists[tag+"bjets_mbb"].FindBin(bjets_mbb))
+
+            hist = self.list_llr_hists[tag+"bjets_mbb"]
+            # Get the number of bins in the histogram
+            num_bins = hist.GetNbinsX()
+            # Create a list to store the bin contents
+            x_bin_list = []         # mbb
+            y_bin_list = []         # llr
+            # Loop over all bins and get their contents
+            for bin_number in range(1, num_bins + 1):
+                bin_content = hist.GetBinContent(bin_number)
+                y_bin_list.append(bin_content)
+                low_edge = hist.GetXaxis().GetBinLowEdge(bin_number)
+                x_bin_list.append(low_edge)
+
+            x_bin_list.append(hist.GetBinWidth(num_bins-1)+x_bin_list[num_bins-1])
+
+            print("x:     ")
+            print(x_bin_list)
+            print("y:     ")
+            print(y_bin_list)
+
+            #bjets_mbb = 22.34
+            #bjets_mbb_float = op.static_cast("float", bjets_mbb)
+
+            for i in range(num_bins):
+                low_edge = x_bin_list[i]
+                upper_edge = x_bin_list[i+1]
+                #print(low_edge, upper_edge)
+                #bjets_mbb_llr = op.switch(op.AND(bjets_mbb > op.c_float(low_edge), bjets_mbb < op.c_float(upper_edge)), y_bin_list[i], -9999)
+                if bjets_mbb > low_edge and bjets_mbb < upper_edge:
+                    bjets_mbb_llr_nonproxy = y_bin_list[i]
+                    print(i, low_edge, upper_edge,  bjets_mbb_llr_nonproxy)
+
+            print("bjets_mbb_llr: ", bjets_mbb_llr_nonproxy)
+
+            bjets_mbb_llr = op.c_float(bjets_mbb_llr_nonproxy)
 
             hists_1D.extend([
                 Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
                 Plot.make1D(tag+"bjets_mbb_llr" , bjets_mbb_llr, sel, EqBin(100, 0, 4), xTitle="m_{bb} LLR"),
             ])
-            hists_2D.extend([
-                Plot.make2D(tag+"bjets_mbb_mbb_llr" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
-            ])
+            # hists_2D.extend([
+            #     Plot.make2D(tag+"bjets_mbb_mbb_llr" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
+            # ])
 
         get_mbb_llr(sorted_ak4_btags, "SL_res_2b_x")
+
 
         # ===============================================================================
         # ================================== Plots ======================================

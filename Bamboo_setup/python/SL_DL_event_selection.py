@@ -2,9 +2,6 @@ from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo import treefunctions as op
 
-import sys
-sys.path.append('/afs/cern.ch/user/s/scrossle/bamboodev/hh/Bamboo_setup/python')
-
 import object_definition as object_defs
 import event_definition as event_defs
 
