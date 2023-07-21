@@ -3,6 +3,7 @@ from bamboo.treedecorators import NanoAODDescription
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.scalefactors import get_correction
 
 from SL_DL_event_selection import SL_DL_event_selection
 import object_definition as object_defs
@@ -35,22 +36,10 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
         
-    def get_llr_corrections():
-
-        import uproot
+    def get_llr_corrections(self, mbb, correction_name, selection, defineOnFirstUse=True):
         results_path = os.path.join(self.args.input_dir,'results')
-        root_file = uproot.open(os.path.join(results_path, "output_file.root"))
-        hist_names = []
-        for key in root_file.keys():
-            end_index = key.rfind(';')
-            hist_names.append(key[:end_index])
-
-        from bamboo.scalefactors import get_correction
-        corrections_file = os.path.join(results_path, "corrections_llr.json")
-        corrections_dic = {}
-        for hist_name in hist_names:
-            corr_name = hist_name
-            corrections = get_correction(corrections_file, corr_name, params={"mbb": mbb},defineOnFirstUse=defineOnFirstUse, sel=selection)
+        corrections_file = os.path.join(results_path, "corrections_llr.json") 
+        return get_correction(corrections_file, correction_name, params={"xaxis": mbb}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def get_likelihood_from_input(self):
 
@@ -115,15 +104,6 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             ratio_hist = ROOT.gDirectory.Get("ratio_"+object_name)
             ratio_hist.SetDirectory(0)
 
-            # Extra ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # # Get the number of bins in the histogram
-            # num_bins = hist.GetNbinsX()
-            # # Create a list to store the bin contents
-            # bin_contents = []
-            # # Loop over all bins and get their contents
-            # for bin_number in range(1, num_bins + 1):
-            #     bin_content = hist.GetBinContent(bin_number)
-            #     bin_contents.append(bin_content)
 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             return ratio_hist
@@ -226,7 +206,11 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
                 bjet1 = fatjet_subjets[1]
                 
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
+            bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
+            
 
+
+            '''
             hist = self.list_llr_hists[tag+"bjets_mbb"]
             # Get the number of bins in the histogram
             num_bins = hist.GetNbinsX()
@@ -262,14 +246,14 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             print("bjets_mbb_llr: ", bjets_mbb_llr_nonproxy)
 
             bjets_mbb_llr = op.c_float(bjets_mbb_llr_nonproxy)
-
+            '''
             hists_1D.extend([
                 Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
-                Plot.make1D(tag+"bjets_mbb_llr" , bjets_mbb_llr, sel, EqBin(100, 0, 4), xTitle="m_{bb} LLR"),
+                Plot.make1D(tag+"bjets_mbb_llr" , bjets_mbb_llr, sel, EqBin(25, 0, 4), xTitle="m_{bb} LLR"),
             ])
-            # hists_2D.extend([
-            #     Plot.make2D(tag+"bjets_mbb_mbb_llr" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
-            # ])
+            hists_2D.extend([
+                 Plot.make2D(tag+"bjets_mbb_mbb_llr" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(25, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
+             ])
 
         get_mbb_llr(sorted_ak4_btags, "SL_res_2b_x")
 
@@ -315,4 +299,4 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             expStack.obj.Draw("COLZ")
             cv.Update()
             import os
-            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
+            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))

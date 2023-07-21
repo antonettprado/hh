@@ -356,9 +356,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         #     expStack.obj.Draw("COLZ")
         #     cv.Update()
         #     import os
-        #     cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
+        #     cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))
 
-        # ---------------------- Reding scalefactors ------------------------------
+        # ---------------------- Reading scalefactors ------------------------------
         import os
         import correctionlib.convert
         import uproot
@@ -430,25 +430,22 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         #---------------------------------------------------------------------
 
-        root_file = uproot.open(os.path.join(results_path, "output_file.root"))
-
         all_corrections = []
-        for key in root_file.keys():
-            end_index = key.rfind(';')
-            hist_name = key[:end_index]
-            # ratio_hists[hist_name] = root_file[key] 
-            hist = root_file[key]
+        with uproot.open(os.path.join(results_path, "output_file.root")) as root_file:
+            for key in root_file.keys():
+                end_index = key.rfind(';')
+                hist_name = key[:end_index]
+                # ratio_hists[hist_name] = root_file[key] 
+                hist = root_file[key]
 
-            h = bh.Histogram(hist)
+                h = bh.Histogram(hist)
 
-            corr = correctionlib.convert.from_histogram(h)
-            corr.name = hist_name
-            corr.description = f"llr for " + hist_name
-            # corr.data.flow = "clamp"
-            rich.print(corr)
-            all_corrections.append(corr)
-
-        root_file.Close()
+                corr = correctionlib.convert.from_histogram(h)
+                corr.name = hist_name
+                corr.description = f"llr for " + hist_name
+                # corr.data.flow = "clamp"
+                rich.print(corr)
+                all_corrections.append(corr)
 
         cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
 
