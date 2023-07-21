@@ -21,14 +21,9 @@ class Variable1D():
         self.update(**kwargs)
         self.generate_eqbin()
         self.populate_by_function(func, func_args)
-        self.refs = [ '_'.join((channel, subcat, self.name)) 
-                     for channel in self.channels 
+        self.refs = [ '_'.join((subcat, self.name))  
                      for subcat in self.subcats ]
 
-        # A (hopefully) temporary addition for the SL_res_2b case
-        if f'SL_res_2b_{self.name}' in self.refs:
-            self.refs[self.refs.index(f'SL_res_2b_{self.name}')] = f'SL_res_2b_x_{self.name}'
-        
         self.full_title = self.title
         if self.unit: self.full_title = self.title + f' ({self.unit})'
 
@@ -59,6 +54,9 @@ class Variable2D():
         x_key, y_key = json_data['x'], json_data['y']
         self.xvar = Variable1D(x_key, xfunc, xfunc_args)
         self.yvar = Variable1D(y_key, yfunc, yfunc_args)
+        self.subcats = list(set(self.xvar.subcats) & set(self.yvar.subcats))
+        self.refs = [ '_'.join((subcat, self.name))  
+                     for subcat in self.subcats ]
 
     def __getattr__(self, attr_name):
         prefix = attr_name[0]
@@ -76,4 +74,5 @@ if __name__ == '__main__':
     var = Variable1D('bjets_mbb', lambda x, y: x**2 + y**2, (3, 4))
     var2D = Variable2D('bjets_dR_vs_pT_bb')
     print(var2D.xname, var2D.yname)
-    print(var2D.xrefs)
+    print(var2D.subcats)
+    print(var2D.refs)
