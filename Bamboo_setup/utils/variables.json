@@ -1,0 +1,211 @@
+{
+    "1D": 
+    {
+        "bjets_mbb": 
+        {
+            "nbins": 125,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "m_{bb}",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets_dPhi": 
+        {
+            "nbins": 100,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "#Delta#phi(b,b)",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets_dEta":
+        {
+            "nbins": 100,
+            "min": -7,
+            "max": 7,
+            "unit": "",
+            "title": "#Delta#eta(b,b)",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets_dPhi_abs":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 4,
+            "unit": "",
+            "title": "|#Delta#phi(b,b)|",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets_dEta_abs":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 7,
+            "unit": "",
+            "title": "|#Delta#eta(b,b)|",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets_dR":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 7,
+            "unit": "",
+            "title": "#DeltaR(b,b)",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets_pT_bb":
+        {
+            "nbins": 250,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "p_{T}^{bb}",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets0_pT":
+        {
+            "nbins": 250,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "leading b-jet p_{T}",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets1_pT":
+        {
+            "nbins": 250,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "sub-leading b-jet p_{T}",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "bjets_mean_pT":
+        {
+            "nbins": 250,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "mean b-jet p_{T}",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b", "boost"]
+        },
+
+        "t1_mInv":
+        {
+            "nbins": 125,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "top1 mass",
+            "channels": ["SL"],
+            "subcats": ["res_2b"]
+        },
+        
+        "t1_pt":
+        {
+            "nbins": 125,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "top1 p_{T}",
+            "channels": ["SL"],
+            "subcats": ["res_2b"]
+        },
+
+        "t2_mT":
+        {
+            "nbins": 125,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "top2 m_{T}",
+            "channels": ["SL"],
+            "subcats": ["res_2b"]
+        },
+
+        "t2_pt":
+        {
+            "nbins": 125,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "top2 p_{T}",
+            "channels": ["SL"],
+            "subcats": ["res_2b"]
+        },
+        
+        "all_sT_50_cut":
+        {
+            "nbins": 1000,
+            "min": 0,
+            "max": 2000,
+            "unit": "GeV",
+            "title": "all_sT_50_cut",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b"]
+        },
+
+        "all_sT":
+        {
+            "nbins": 1000,
+            "min": 0,
+            "max": 2000,
+            "unit": "GeV",
+            "title": "all_sT",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b"]
+        },
+
+        "all_mInv":
+        {
+            "nbins": 1500,
+            "min": 0,
+            "max": 3000,
+            "unit": "GeV",
+            "title": "all_mInv",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b"]
+        },
+
+        "all_mT":
+        {
+            "nbins": 1500,
+            "min": 0,
+            "max": 3000,
+            "unit": "GeV",
+            "title": "all_mT",
+            "channels": ["SL", "DL"],
+            "subcats": ["res_2b"]
+        }
+    },
+
+    "2D":
+    {
+        "bjets_dR_vs_pT_bb":
+        {
+            "x": "bjets_pT_bb",
+            "y": "bjets_dR"
+        }
+    }
+}

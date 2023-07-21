@@ -15,6 +15,9 @@ import math
 import csv
 import time
 
+import sys
+import numpy as np
+
 SOURCE_PATH = None
 SOURCE_DIR = None
 OUTPUT_PATH = None
@@ -24,12 +27,13 @@ BACKG_SAMPLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
-MANUAL_CUT = False
-MANUAL_CUT_VARIABLE = "bjets_dPhi_vs_dEta"
-MANUAL_CUT_XMIN = -2
-MANUAL_CUT_XMAX = 2
-MANUAL_CUT_YMIN = -2
-MANUAL_CUT_YMAX = 2
+MANUAL_CUT = True
+MANUAL_CUT_VARIABLE = "bjets_pT_bb"
+MANUAL_CUT_XMIN = 150
+MANUAL_CUT_XMAX = 500
+MANUAL_CUT_YMIN = -1.6
+MANUAL_CUT_YMAX = 1.6
+
 
 def print_to_csv(row):
     with open(OUTPUT_PATH, "a") as file: 
@@ -244,6 +248,32 @@ def find_window_2D_v2(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, h
         return xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new
     return find_window_2D_v2(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
 
+def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg):
+    signal_cdf = np.array(histo_signal.GetCumulative())[1:-1]/total_norm_signal
+    bkg_cdf = np.array(histo_bkg.GetCumulative())[1:-1]/total_norm_bkg
+    min_search_bin = 0
+    max_search_bin = np.argmax(signal_cdf > (1-cut))
+
+    def solve_j(i: int) -> int:
+        return np.argmax(signal_cdf > (cut + signal_cdf[i]))
+
+    def get_significance(i: int) -> float:
+        j = solve_j(i)
+        bkg_frac = bkg_cdf[j] - bkg_cdf[i]
+        signal_frac = signal_cdf[j] - signal_cdf[i]
+        significance = signal_frac*total_norm_signal/np.sqrt(bkg_frac*total_norm_bkg)
+        
+        return significance
+
+    if max_search_bin <= min_search_bin:
+        return int(min_search_bin)+2, len(signal_cdf)+1
+
+    fv = np.vectorize(get_significance)
+    bin_l = np.argmax(fv(np.arange(min_search_bin, max_search_bin))) + min_search_bin
+    bin_r = solve_j(bin_l)
+
+    return int(bin_l)+2, int(bin_r)+1 # addition acounts for underflow bin and ROOT TH1::Integral definition
+
 def get_total_hist_of_type(of_type, object_name, dataset, dim=1):
 
     object_name = dataset + object_name
@@ -338,13 +368,7 @@ if __name__ == "__main__":
                     'DL_res_2b_':  ["bjets_mbb", "bjets_dPhi", "bjets_dEta", "bjets_dR", "bjets_pT_bb", "bjets0_pT", "bjets_dPhi_abs", "bjets_dEta_abs"],
                     'SL_boost_':   [],
                     'DL_boost_':   []}
-    # variables_1D.append("bjets_mbb")
-    # variables_1D.append("bjets_dPhi")
-    # variables_1D.append("bjets_dEta")
-    # variables_1D.append("t1_mInv")
-    # variables_1D.append("bjets_dR")
-    # variables_1D.append("bjets_pT_bb")
-    # variables_1D.append("bjets0_pT")
+    # variables_1D = {'SL_res_2b_x_': ["bjets_dEta_abs"]}
 
     print_to_csv([])
     print_to_csv(["Directory: " + SOURCE_DIR])
@@ -355,8 +379,11 @@ if __name__ == "__main__":
             continue
 
         object_name = "bjets_mbb"
+        
         Total_signal = get_total_integral_of_type("signal", object_name, dataset)
         Total_backg = get_total_integral_of_type("backg", object_name, dataset)
+        print(Total_signal)
+        print(Total_backg)
         Total_significance = Total_signal/math.sqrt(Total_backg)
         print('-----------------------------------------------------------')
         print('Total stats for: ' + dataset)
@@ -404,9 +431,12 @@ if __name__ == "__main__":
                     xr_bin_min = nbins
                     if "t1_mInv" in var:
                         # xl_bin_min, xr_bin_min = find_window_1D_v2(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
-                        xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+                        xl_bin_min, xr_bin_min = find_window_1D_v3(cut, histo_signal, histo_backg, total_norm_signal, total_norm_bkg)
+                        # xl_bin_min, xr_bin_mins = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
                     else:
-                        xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+                        xl_bin_min, xr_bin_min = find_window_1D_v3(cut, histo_signal, histo_backg, total_norm_signal, total_norm_bkg)
+                        # xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
+
                     xl_min = histo_signal.GetBinCenter(xl_bin_min)
                     xr_min = histo_signal.GetBinCenter(xr_bin_min)
                 min_width = xr_min - xl_min
@@ -421,18 +451,12 @@ if __name__ == "__main__":
                 print("\t\t-------------------------------------------------")
                 print_to_csv([round(min_signal_frac*100, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
 
+
     print("\n---------------------- For 2D variables ----------------------") 
-    variables_2D = {"SL_res_2b_x_": ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "t1_mInv_vs_bjets_mbb", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb"],
-                    'DL_res_2b_':   ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb"],
+    variables_2D = {"SL_res_2b_x_": ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "t1_mInv_vs_bjets_mbb", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
+                    'DL_res_2b_':   ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
                     'SL_boost_':    [],
                     'DL_boost_':    []}
-    # variables_2D.append("bjets_dEta_vs_mbb")
-    # variables_2D.append("bjets_dPhi_vs_mbb")
-    # variables_2D.append("bjets_dPhi_vs_dEta")
-    # variables_2D.append("t1_mInv_vs_bjets_mbb")
-    # variables_2D.append("bjets_pT_bb_vs_mbb")
-    # variables_2D.append("bjets_dEta_vs_pT_bb")
-    # variables_2D.append("bjets_dPhi_vs_pT_bb")
 
     print_to_csv([])
     print_to_csv(["2D Cuts"])
