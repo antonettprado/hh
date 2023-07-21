@@ -247,20 +247,19 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             print("y:     ")
             print(y_bin_list)
 
-            bjets_mbb = op.c_float(22.34)
+            #bjets_mbb = 22.34
+            #bjets_mbb_float = op.static_cast("float", bjets_mbb)
 
             for i in range(num_bins):
                 low_edge = x_bin_list[i]
                 upper_edge = x_bin_list[i+1]
-                # print(low_edge)
-                # print(upper_edge)    
-                bjets_mbb_llr = op.switch(op.AND(bjets_mbb > op.c_float(low_edge), bjets_mbb < op.c_float(upper_edge)), y_bin_list[i], -9999)
-                # print(y_bin_list[i])
-                # if bjets_mbb > op.c_float(low_edge) and bjets_mbb < op.c_float(upper_edge):
-                    # bjets_mbb_llr_nonproxy = y_bin_list[i]
-                    print(i, low_edge, upper_edge)
+                #print(low_edge, upper_edge)
+                #bjets_mbb_llr = op.switch(op.AND(bjets_mbb > op.c_float(low_edge), bjets_mbb < op.c_float(upper_edge)), y_bin_list[i], -9999)
+                if bjets_mbb > low_edge and bjets_mbb < upper_edge:
+                    bjets_mbb_llr_nonproxy = y_bin_list[i]
+                    print(i, low_edge, upper_edge,  bjets_mbb_llr_nonproxy)
 
-            # print(bjets_mbb_llr_nonproxy)
+            print("bjets_mbb_llr: ", bjets_mbb_llr_nonproxy)
 
             bjets_mbb_llr = op.c_float(bjets_mbb_llr_nonproxy)
 
