@@ -276,17 +276,17 @@ if __name__ == "__main__":
     elif LEVEL == "gen":
         subcats_for_bjets_hists = ['res_2b']
 
-    # variables1D = { name : Variable1D(name) for name in variables.ALL_VARNAMES_1D }
-    # for var in variables1D.values():
-    #     draw1D(var)
+    variables1D = { name : Variable1D(name) for name in variables.ALL_VARNAMES_1D }
+    for var in variables1D.values():
+        draw1D(var)
 
-    variables2D = { name : Variable2D(name) for name in variables.ALL_VARNAMES_2D }
-    for var in variables2D.values():
-        draw2D(var)
-        break
+    # variables2D = { name : Variable2D(name) for name in variables.ALL_VARNAMES_2D }
+    # for var in variables2D.values():
+    #     draw2D(var)
+    #     break
 
-    import sys
-    sys.exit(0)
+    # import sys
+    # sys.exit(0)
     
     draw2D("bjets_dR_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX, ['dR vs pT_bb of bjets', 'pT_bb', 'dR'], 'SL_and_DL', subcats_for_bjets_hists)
     draw2D("bjets_dEta_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX, ['dEta vs pT of bjets', 'pT_bb', 'dEta'], 'SL_and_DL', subcats_for_bjets_hists)
