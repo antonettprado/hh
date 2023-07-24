@@ -5,6 +5,11 @@ import ROOT
 # Enable multithreading
 # ROOT.EnableImplicitMT()
 
+def get_object_selections(df):
+
+
+
+
 if __name__ == "__main__":
 
     # Parsing arguments
