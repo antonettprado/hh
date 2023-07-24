@@ -4,6 +4,8 @@ from bamboo import treefunctions as op
 
 import object_definition as object_defs
 import event_definition as event_defs
+from utils import variables
+from utils.variables import Variable1D, Variable2D
 
 from base_selection import NanoBaseHHbbWW
 
