@@ -11,6 +11,7 @@ import event_definition as event_defs
 from constants import *
 import os
 import ROOT
+from utils.variables import Variable1D, Variable2D
 
 SIGNAL_SAMPLES = None
 BACKG_SAMPLES = None
@@ -34,10 +35,10 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
         
-    def get_llr_corrections(self, mbb, correction_name, selection, defineOnFirstUse=True):
+    def get_llr_corrections(self, param1, correction_name, selection, defineOnFirstUse=True):
         results_path = os.path.join(self.args.input_dir,'results')
         corrections_file = os.path.join(results_path, "corrections_llr.json") 
-        return get_correction(corrections_file, correction_name, params={"xaxis": mbb}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
+        return get_correction(corrections_file, correction_name, params={"xaxis": param1}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
@@ -128,6 +129,9 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             bjets_dR = op.deltaR(bjet0.p4, bjet1.p4) 
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
 
+            bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
+            bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
+            bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
             bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
             
             hists_1D.extend([
