@@ -347,19 +347,19 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         # ------------------- Outputtting 2D histograms ---------------------------
-        # from bamboo.plots import Plot, DerivedPlot
-        # plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
-        # from bamboo.analysisutils import loadPlotIt
-        # p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
-        # from plotit.plotit import Stack
-        # from bamboo.root import gbl
-        # for plot in plots_2D:
-        #     expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
-        #     cv = gbl.TCanvas(f"c{plot.name}")
-        #     expStack.obj.Draw("COLZ")
-        #     cv.Update()
-        #     import os
-        #     cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))
+        from bamboo.plots import Plot, DerivedPlot
+        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
+        from bamboo.analysisutils import loadPlotIt
+        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
+        from plotit.plotit import Stack
+        from bamboo.root import gbl
+        for plot in plots_2D:
+            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+            cv = gbl.TCanvas(f"c{plot.name}")
+            expStack.obj.Draw("COLZ")
+            cv.Update()
+            import os
+            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))
 
         # ---------------------- Reading scalefactors ------------------------------
         import os

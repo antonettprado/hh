@@ -7,8 +7,6 @@ import decimal
 from array import array 
 import math
 
-import correctionlib.convert
-
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
 
@@ -63,15 +61,16 @@ if __name__ == "__main__":
             if filename in ALL_SIGNAL_SAMPLES:
                 f = ROOT.TFile.Open(file_path, 'read')
                 signal_files.append(f)
+                print('Signal sample: ' + filename)
             elif filename in ALL_BACKG_SAMPLES:
                 f = ROOT.TFile.Open(file_path, 'read')
                 backg_files.append(f)
+                print('Backg sample: ' + filename)
         return signal_files, backg_files
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source path")
     parser.add_argument("-t", "--titles", action="store_true", dest="with_titles", help="Show titles")
-    # parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
     args = parser.parse_args()
 
     SOURCE_PATH = args.source_path
@@ -85,6 +84,9 @@ if __name__ == "__main__":
 
     print("The source path is: " + SOURCE_PATH)
     print("The output path is: " + OUTPUT_PATH)
+    # ==================================================================
+    # ==================================================================
+    # ==================================================================
 
     def draw_ratio(object_name, xbins, xmin, xmax, titles=None):
         full_object_name  = "SL_res_2b_x_" + object_name
@@ -92,6 +94,9 @@ if __name__ == "__main__":
 
         hist_signal = get_1D_of_type("signal", full_object_name, xbins, xmin, xmax)
         hist_backg = get_1D_of_type("backg", full_object_name, xbins, xmin, xmax)
+
+        print(type(hist_signal))
+        print(type(hist_backg))
 
         # Normalize signal and background -------------------------------
         hist_signal.Scale(1/hist_signal.Integral())
@@ -101,35 +106,41 @@ if __name__ == "__main__":
         ratio_hist = hist_signal.Clone()
         ratio_hist.Divide(hist_backg)
 
-        # Get the number of bins in the histogram
-        ratio_hist_num_bins = ratio_hist.GetNbinsX()
-        # Create a list to store the bin contents
-        ratios = [ratio_hist.GetBinContent(bin_number) for bin_number in range(1, ratio_hist_num_bins + 1)]
+        print(type(ratio_hist))
 
-        llr_hist = TH1F("llr_hist", "", 100, 0, 4)
-        setbincontentt(bin_number)
+        ratio_hist.SetLineColor(ROOT.kGreen)
+        ratio_hist.SetLineWidth(3)
 
-        # ratio_hist.SetLineColor(ROOT.kGreen)
-        # ratio_hist.SetLineWidth(3)
+        # ratio_hist.SetTitle(titles[0])
+        ratio_hist.GetXaxis().SetTitle(object_name)
+        ratio_hist.GetYaxis().SetTitle("ratio")
 
-        # # ratio_hist.SetTitle(titles[0])
-        # ratio_hist.GetXaxis().SetTitle(object_name)
-        # ratio_hist.GetYaxis().SetTitle("ratio")
+        canvas = ROOT.TCanvas('canvas', '', 200, 200)
+        canvas.SetGrid()
+        ratio_hist.Draw("hist")
+        canvas.Update()
 
-        # canvas = ROOT.TCanvas('canvas', '', 200, 200)
-        # canvas.SetGrid()
-        # ratio_hist.Draw("hist")
-        # canvas.Update()
+        s1 = ratio_hist.FindObject("stats")
+        # s1.SetTextColor(ROOT.kGreen)
+        s1.SetY1NDC(0.6)
+        s1.SetY2NDC(0.8)
+        canvas.SaveAs(os.path.join(OUTPUT_PATH, output_file + '_ratio.pdf'))
 
-        # s1 = ratio_hist.FindObject("stats")
-        # # s1.SetTextColor(ROOT.kGreen)
-        # s1.SetY1NDC(0.6)
-        # s1.SetY2NDC(0.8)
-        # canvas.SaveAs(os.path.join(OUTPUT_PATH, output_file + '_ratio.pdf'))
+        # hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
+        # canvas2 = ROOT.TCanvas('canvas', '', 200, 200)
+        # canvas2.SetGrid()
+        # hist_signal.Draw("hist")
+        # hist_backg.Draw("hist sames")
 
-    # draw_ratio("bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
-    # draw_ratio("bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)
-    # draw_ratio("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)
-    # draw_ratio("bjets_pT_bb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
-    # draw_ratio("t1_mInv", T_BINS, T_MIN, T_MAX)
-    
+        # s2 = hist_signal.FindObject("stats")
+        # print("type(s2)")
+        # print(type(s2))
+
+        # canvas2.SaveAs(os.path.join(OUTPUT_PATH, output_file + '.pdf'))
+
+        
+    draw_ratio("bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
+    draw_ratio("bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)
+    draw_ratio("bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)
+    draw_ratio("bjets_pT_bb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
+    draw_ratio("t1_mInv", T_BINS, T_MIN, T_MAX)

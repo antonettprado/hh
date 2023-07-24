@@ -77,12 +77,12 @@ python3 utils/likelihood_ratio_plot.py -s Z_OUTPUT/TOTAL_VarsReco_0713
 ## ======== Process NANOAODs: SL_DL_likelihood_ratios ========
 To run locally:
 ```bash
-bambooRun -m python/SL_DL_likelihood_ratio.py config/analysis_2018_test.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0713 -o Z_OUTPUT/TOTAL_VarsLLR_0713
+bambooRun -m python/SL_DL_likelihood_ratio.py config/analysis_2018_test.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0713
 ```
 
 To run on condor:
 ```bash
-bambooRun -m python/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0711 -o Z_OUTPUT/TOTAL_VarsLLR_0713 --envConfig config/cern.ini --distributed=driver
+bambooRun -m python/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0711 --envConfig config/cern.ini --distributed=driver
 ```
 
 

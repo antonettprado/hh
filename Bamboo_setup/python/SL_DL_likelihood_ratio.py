@@ -23,15 +23,13 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         super(SL_DL_likelihood_ratio, self).__init__(args)
         SOURCE_PATH = self.args.input_dir
         SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
-        OUTPUT_DIR = SOURCE_DIR + "_llr"
+        OUTPUT_DIR = SOURCE_DIR + "_LLR"
         OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_DIR)
         self.args.output = OUTPUT_PATH
 
         print("The input path is: " + self.args.input_dir)
         print("The output path is:" + self.args.output)
 
-        self.list_llr_hists = self.get_likelihood_from_input()
-        
     def addArgs(self, parser):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
@@ -41,94 +39,11 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         corrections_file = os.path.join(results_path, "corrections_llr.json") 
         return get_correction(corrections_file, correction_name, params={"xaxis": mbb}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
-    def get_likelihood_from_input(self):
-
-        def get_files_in_directory(directory):
-            signal_files = []
-            backg_files = []
-            final_directory = os.path.join(directory,'results')
-            for filename in os.listdir(final_directory):
-                file_path = os.path.join(final_directory,filename)
-                if filename in ALL_SIGNAL_SAMPLES:
-                    f = ROOT.TFile.Open(file_path, 'read')
-                    signal_files.append(f)
-                    print('Signal sample: ' + filename)
-                elif filename in ALL_BACKG_SAMPLES:
-                    f = ROOT.TFile.Open(file_path, 'read')
-                    backg_files.append(f)
-                    print('Backg sample: ' + filename)
-            return signal_files, backg_files
-        
-        def close_files_directory():
-            for sample in SIGNAL_SAMPLES:
-                sample.Close()
-            for sample in BACKG_SAMPLES:
-                sample.Close()
-
-        def get_1D_of_type(of_type, object_name, xbins, xmin, xmax, titles=None):
-
-            samples_of_type = None
-            if of_type == "signal": 
-                samples_of_type = SIGNAL_SAMPLES
-            elif of_type == "backg":
-                samples_of_type = BACKG_SAMPLES
-
-            total_hist_of_type = ROOT.TH1F(of_type+"_"+object_name, "", xbins, xmin, xmax)
-
-            if titles is not None:
-                if WITH_TITLES is True:
-                    total_hist_of_type.SetTitle(titles[0])
-                total_hist_of_type.GetXaxis().SetTitle(titles[1])
-                total_hist_of_type.GetYaxis().SetTitle(titles[2])
-
-            for sample in samples_of_type:
-                hist_of_type = sample.Get(object_name)
-                total_hist_of_type.Add(hist_of_type) 
-
-            total_hist_of_type = ROOT.gDirectory.Get(of_type+"_"+object_name)
-            total_hist_of_type.SetDirectory(0)
-            return total_hist_of_type
-
-        def get_likelihood_ratio(object_name, xbins, xmin, xmax):
-            hist_signal = get_1D_of_type("signal", object_name, xbins, xmin, xmax)
-            hist_backg = get_1D_of_type("backg", object_name, xbins, xmin, xmax)
-
-            # Normalize signal and background 
-            hist_signal.Scale(1/hist_signal.Integral())
-            hist_backg.Scale(1/hist_backg.Integral())
-
-            ratio_hist = hist_signal.Clone()
-            ratio_hist.SetName("ratio_"+object_name)
-            ratio_hist.Divide(hist_backg)
-
-            ratio_hist = ROOT.gDirectory.Get("ratio_"+object_name)
-            ratio_hist.SetDirectory(0)
-
-
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            return ratio_hist
-
-        SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(self.args.input_dir)
-
-        likelihood_ratio_hists = {}
-        likelihood_ratio_hists["SL_res_2b_x_bjets_mbb"] = get_likelihood_ratio("SL_res_2b_x_bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX)
-        likelihood_ratio_hists["SL_res_2b_x_bjets_dPhi"] = get_likelihood_ratio("SL_res_2b_x_bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)
-        likelihood_ratio_hists["SL_res_2b_x_bjets_dEta"] = get_likelihood_ratio("SL_res_2b_x_bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)
-        likelihood_ratio_hists["SL_res_2b_x_bjets_pT_bb"] = get_likelihood_ratio("SL_res_2b_x_bjets_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX)
-        likelihood_ratio_hists["SL_res_2b_x_t1_mInv"] = get_likelihood_ratio("SL_res_2b_x_t1_mInv", T_BINS, T_MIN, T_MAX)
-
-        close_files_directory()
-
-        return likelihood_ratio_hists
-
-
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
-
-        list_llr_hists = self.list_llr_hists
 
         # Retrieve objects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
@@ -192,7 +107,7 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
 
             return sel, sel_string+"_"
         
-        def get_mbb_llr(sorted_bjets, sel_string, subjets=None):
+        def get_bjets_llr(sorted_bjets, sel_string, subjets=None):
             sel, tag = get_selection_and_tags(sel_string)
             
             if "res" in sel_string:
@@ -205,58 +120,25 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
                 bjet0 = fatjet_subjets[0]
                 bjet1 = fatjet_subjets[1]
                 
+            bjets_pT_bb = (bjet0.p4 + bjet1.p4).Pt()
+            bjets_dPhi = op.deltaPhi(bjet0.p4, bjet1.p4)
+            bjets_dPhi_abs = op.abs(bjets_dPhi)
+            bjets_dEta = bjet0.eta - bjet1.eta
+            bjets_dEta_abs = op.abs(bjets_dEta)
+            bjets_dR = op.deltaR(bjet0.p4, bjet1.p4) 
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
+
             bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
             
-
-
-            '''
-            hist = self.list_llr_hists[tag+"bjets_mbb"]
-            # Get the number of bins in the histogram
-            num_bins = hist.GetNbinsX()
-            # Create a list to store the bin contents
-            x_bin_list = []         # mbb
-            y_bin_list = []         # llr
-            # Loop over all bins and get their contents
-            for bin_number in range(1, num_bins + 1):
-                bin_content = hist.GetBinContent(bin_number)
-                y_bin_list.append(bin_content)
-                low_edge = hist.GetXaxis().GetBinLowEdge(bin_number)
-                x_bin_list.append(low_edge)
-
-            x_bin_list.append(hist.GetBinWidth(num_bins-1)+x_bin_list[num_bins-1])
-
-            print("x:     ")
-            print(x_bin_list)
-            print("y:     ")
-            print(y_bin_list)
-
-            #bjets_mbb = 22.34
-            #bjets_mbb_float = op.static_cast("float", bjets_mbb)
-
-            for i in range(num_bins):
-                low_edge = x_bin_list[i]
-                upper_edge = x_bin_list[i+1]
-                #print(low_edge, upper_edge)
-                #bjets_mbb_llr = op.switch(op.AND(bjets_mbb > op.c_float(low_edge), bjets_mbb < op.c_float(upper_edge)), y_bin_list[i], -9999)
-                if bjets_mbb > low_edge and bjets_mbb < upper_edge:
-                    bjets_mbb_llr_nonproxy = y_bin_list[i]
-                    print(i, low_edge, upper_edge,  bjets_mbb_llr_nonproxy)
-
-            print("bjets_mbb_llr: ", bjets_mbb_llr_nonproxy)
-
-            bjets_mbb_llr = op.c_float(bjets_mbb_llr_nonproxy)
-            '''
             hists_1D.extend([
                 Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
                 Plot.make1D(tag+"bjets_mbb_llr" , bjets_mbb_llr, sel, EqBin(25, 0, 4), xTitle="m_{bb} LLR"),
             ])
             hists_2D.extend([
-                 Plot.make2D(tag+"bjets_mbb_mbb_llr" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(25, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
+                 Plot.make2D(tag+"bjets_mbb_llr_vs_mbb" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(25, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
              ])
 
-        get_mbb_llr(sorted_ak4_btags, "SL_res_2b_x")
-
+        get_bjets_llr(sorted_ak4_btags, "SL_res_2b_x")
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -266,9 +148,6 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             plots.append(hist)
         for hist in hists_2D:
             plots.append(hist)
-
-        # for hist in likelihood_ratio_hists:
-        #     plots.append(hist)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -286,17 +165,18 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        from bamboo.plots import Plot, DerivedPlot
-        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
-        from bamboo.analysisutils import loadPlotIt
-        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
-        from plotit.plotit import Stack
-        from bamboo.root import gbl
-        for plot in plots_2D:
-            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
-            cv = gbl.TCanvas(f"c{plot.name}")
-            expStack.obj.Draw("COLZ")
-            cv.Update()
-            import os
-            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))
+        # super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        # from bamboo.plots import Plot, DerivedPlot
+        # plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
+        # from bamboo.analysisutils import loadPlotIt
+        # resultsdir = os.path.join(self.args.output, "plots")
+        # p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
+        # from plotit.plotit import Stack
+        # from bamboo.root import gbl
+        # for plot in plots_2D:
+        #     expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+        #     cv = gbl.TCanvas(f"c{plot.name}")
+        #     expStack.obj.Draw("COLZ")
+        #     cv.Update()
+        #     import os
+        #     cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))
