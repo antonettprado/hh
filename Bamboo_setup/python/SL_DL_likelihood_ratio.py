@@ -11,7 +11,7 @@ import event_definition as event_defs
 from constants import *
 import os
 import ROOT
-from utils.variables import Variable1D, Variable2D
+# from utils.variables import Variable1D, Variable2D
 
 SIGNAL_SAMPLES = None
 BACKG_SAMPLES = None
@@ -22,13 +22,7 @@ ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 class SL_DL_likelihood_ratio(SL_DL_event_selection):
     def __init__(self, args):
         super(SL_DL_likelihood_ratio, self).__init__(args)
-        SOURCE_PATH = self.args.input_dir
-        SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
-        OUTPUT_DIR = SOURCE_DIR + "_LLR"
-        OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_DIR)
-        self.args.output = OUTPUT_PATH
-
-        print("The input path is: " + self.args.input_dir)
+        print("The input dir is: " + self.args.input_dir)
         print("The output path is:" + self.args.output)
 
     def addArgs(self, parser):
@@ -37,7 +31,8 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         
     def get_llr_corrections(self, param1, correction_name, selection, defineOnFirstUse=True):
         results_path = os.path.join(self.args.input_dir,'results')
-        corrections_file = os.path.join(results_path, "corrections_llr.json") 
+        global_path = os.path.join("/afs/cern.ch/user/a/anunezde/bamboodevel/hh/Bamboo_setup", results_path)
+        corrections_file = os.path.join(global_path, "corrections_llr.json")
         return get_correction(corrections_file, correction_name, params={"xaxis": param1}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
@@ -130,17 +125,63 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
             bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
 
             bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
-            bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
-            bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
-            bjets_mbb_llr = self.get_llr_corrections(op.switch(bjets_mbb > BJETS_MBB_MAX, BJETS_MBB_MAX-0.0001, bjets_mbb), tag+"bjets_mbb", sel)
+            bjets_dEta_llr = self.get_llr_corrections(op.switch(bjets_dEta > BJETS_DETA_MAX, BJETS_DETA_MAX-0.0001, bjets_dEta), tag+"bjets_dEta", sel)
+            bjets_dPhi_llr = self.get_llr_corrections(op.switch(bjets_dPhi > BJETS_DPHI_MAX, BJETS_DPHI_MAX-0.0001, bjets_dPhi), tag+"bjets_dPhi", sel)
+            bjets_pT_bb_llr = self.get_llr_corrections(op.switch(bjets_pT_bb > BJET_PT_MAX, BJET_PT_MAX-0.0001, bjets_pT_bb), tag+"bjets_pT_bb", sel)
+            bjets_dR_llr = self.get_llr_corrections(op.switch(bjets_dR > BJETS_DR_MAX, BJETS_DR_MAX-0.0001, bjets_dR), tag+"bjets_dR", sel)
             
             hists_1D.extend([
-                Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
-                Plot.make1D(tag+"bjets_mbb_llr" , bjets_mbb_llr, sel, EqBin(25, 0, 4), xTitle="m_{bb} LLR"),
+                Plot.make1D(tag+"bjets_mbb_llr" , bjets_mbb_llr, sel, EqBin(100, 0, 10), xTitle="m_{bb} LLR"),
+                Plot.make1D(tag+"bjets_dEta_llr", bjets_dEta_llr, sel, EqBin(100, 0, 10), xTitle="dEta LLR"),
+                Plot.make1D(tag+"bjets_dPhi_llr", bjets_dPhi_llr, sel, EqBin(100, 0, 10), xTitle="dPhi LLR"),
+                Plot.make1D(tag+"bjets_pT_bb_llr", bjets_pT_bb_llr, sel, EqBin(100, 0, 10), xTitle="pT_bb LLR"),
+                Plot.make1D(tag+"bjets_dR_llr", bjets_dR_llr, sel, EqBin(100, 0, 10), xTitle="dR LLR"),
             ])
+            
             hists_2D.extend([
-                 Plot.make2D(tag+"bjets_mbb_llr_vs_mbb" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(25, 0, 4)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
-             ])
+                 Plot.make2D(tag+"bjets_mbb_llr_vs_mbb" , [bjets_mbb, bjets_mbb_llr], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100, 0, 10)], xTitle="m_{bb} (GeV)", yTitle="m_{bb} LLR"),
+                 Plot.make2D(tag+"bjets_dEta_llr_vs_dEta" , [bjets_dEta, bjets_dEta_llr], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(100, 0, 10)], xTitle="dEta", yTitle="dEta LLR"),
+                 Plot.make2D(tag+"bjets_dPhi_llr_vs_dPhi" , [bjets_dPhi, bjets_dPhi_llr], sel, [EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), EqBin(100, 0, 10)], xTitle="dPhi", yTitle="dEta LLR"),
+                 Plot.make2D(tag+"bjets_pT_bb_llr_vs_pT_bb" , [bjets_pT_bb, bjets_pT_bb_llr], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(100, 0, 10)], xTitle="pT_bb", yTitle="pT_bb LLR"),         
+                 Plot.make2D(tag+"bjets_dR_llr_vs_dR" , [bjets_dR, bjets_dR_llr], sel, [EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), EqBin(100, 0, 10)], xTitle="dR", yTitle="dR LLR"),         
+            ])
+
+            bjets_lr_mbb_x_dEta = op.product(bjets_mbb_llr, bjets_dEta_llr)
+            bjets_lr_mbb_x_dPhi = op.product(bjets_mbb_llr, bjets_dPhi_llr)
+            bjets_lr_mbb_x_pT_bb = op.product(bjets_mbb_llr, bjets_pT_bb_llr)
+            bjets_lr_mbb_x_dR = op.product(bjets_mbb_llr, bjets_dR_llr)
+            bjets_lr_dEta_x_dPhi = op.product(bjets_dEta_llr, bjets_dPhi_llr)
+            bjets_lr_dEta_x_pT_bb = op.product(bjets_dEta_llr, bjets_pT_bb_llr)
+            bjets_lr_dEta_x_dR = op.product(bjets_dEta_llr, bjets_dR_llr)
+            bjets_lr_dPhi_x_pT_bb = op.product(bjets_dPhi_llr, bjets_pT_bb_llr)
+            bjets_lr_dPhi_x_dR = op.product(bjets_dPhi_llr, bjets_dR_llr)
+            bjets_lr_pT_bb_x_dR = op.product(bjets_pT_bb_llr, bjets_dR_llr)
+
+            hists_1D.extend([
+                Plot.make1D(tag+"bjets_lr_mbb_x_dEta" , bjets_lr_mbb_x_dEta, sel, EqBin(100, 0, 10), xTitle="bjets_lr_mbb_x_dEta"),
+                Plot.make1D(tag+"bjets_lr_mbb_x_dPhi", bjets_lr_mbb_x_dPhi, sel, EqBin(100, 0, 10), xTitle="bjets_lr_mbb_x_dPhi"),
+                Plot.make1D(tag+"bjets_lr_mbb_x_pT_bb", bjets_lr_mbb_x_pT_bb, sel, EqBin(100, 0, 10), xTitle="bjets_lr_mbb_x_pT_bb"),
+                Plot.make1D(tag+"bjets_lr_mbb_x_dR", bjets_lr_mbb_x_dR, sel, EqBin(100, 0, 10), xTitle="bjets_lr_mbb_x_dR"),
+                Plot.make1D(tag+"bjets_lr_dEta_x_dPhi", bjets_lr_dEta_x_dPhi, sel, EqBin(100, 0, 10), xTitle="bjets_lr_dEta_x_dPhi"),
+                Plot.make1D(tag+"bjets_lr_dEta_x_pT_bb", bjets_lr_dEta_x_pT_bb, sel, EqBin(100, 0, 10), xTitle="bjets_lr_dEta_x_pT_bb"),
+                Plot.make1D(tag+"bjets_lr_dEta_x_dR", bjets_lr_dEta_x_dR, sel, EqBin(100, 0, 10), xTitle="bjets_lr_dEta_x_dR"),
+                Plot.make1D(tag+"bjets_lr_dPhi_x_pT_bb", bjets_lr_dPhi_x_pT_bb, sel, EqBin(100, 0, 10), xTitle="bjets_lr_dPhi_x_pT_bb"),
+                Plot.make1D(tag+"bjets_lr_dPhi_x_dR", bjets_lr_dPhi_x_dR, sel, EqBin(100, 0, 10), xTitle="bjets_lr_dPhi_x_dR"),
+                Plot.make1D(tag+"bjets_lr_pT_bb_x_dR", bjets_lr_pT_bb_x_dR, sel, EqBin(100, 0, 10), xTitle="bjets_lr_pT_bb_x_dR"),
+            ])
+
+            bjets_vars = {}
+            bjets_vars["bjets_mbb_llr"] = bjets_mbb_llr
+            bjets_vars["bjets_dEta_llr"] = bjets_dEta_llr
+            bjets_vars["bjets_dPhi_llr"] = bjets_dPhi_llr
+            bjets_vars["bjets_pT_bb_llr"] = bjets_pT_bb_llr
+            bjets_vars["bjets_dR_llr"] = bjets_dR_llr
+            bjets_vars["bjets_lr_mbb_x_dEta"] = bjets_lr_mbb_x_dEta
+            bjets_vars["bjets_lr_mbb_x_dPhi"] = bjets_lr_mbb_x_dPhi
+            bjets_vars["bjets_lr_mbb_x_pT_bb"] = bjets_lr_mbb_x_pT_bb
+            bjets_vars["bjets_lr_mbb_x_dR"] = bjets_lr_mbb_x_dR
+
+            return bjets_vars
 
         get_bjets_llr(sorted_ak4_btags, "SL_res_2b_x")
 
@@ -169,18 +210,18 @@ class SL_DL_likelihood_ratio(SL_DL_event_selection):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        # super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        # from bamboo.plots import Plot, DerivedPlot
-        # plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
-        # from bamboo.analysisutils import loadPlotIt
-        # resultsdir = os.path.join(self.args.output, "plots")
-        # p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
-        # from plotit.plotit import Stack
-        # from bamboo.root import gbl
-        # for plot in plots_2D:
-        #     expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
-        #     cv = gbl.TCanvas(f"c{plot.name}")
-        #     expStack.obj.Draw("COLZ")
-        #     cv.Update()
-        #     import os
-        #     cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))
+        super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        from bamboo.plots import Plot, DerivedPlot
+        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
+        from bamboo.analysisutils import loadPlotIt
+        import os
+        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
+        from plotit.plotit import Stack
+        from bamboo.root import gbl
+        for plot in plots_2D:
+            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+            cv = gbl.TCanvas(f"c{plot.name}")
+            expStack.obj.Draw("COLZ")
+            cv.Update()
+            plots_path = os.path.join(self.args.output, "plots_2018")
+            cv.SaveAs(os.path.join(plots_path, f"{plot.name}.pdf"))

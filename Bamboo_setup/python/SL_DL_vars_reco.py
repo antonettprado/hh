@@ -167,9 +167,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             sel, tag = get_selection_and_tags(sel_string)
             
             m_W = 80.377 # GeV
-            
-            #t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
-            #t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
 
             # Using combinations
             jj_combos = op.combine((sorted_nonbjets),N=2)
@@ -197,16 +194,12 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             t2_pt = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
                         
             hists_1D.extend([
-                #Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
-                #Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_mInv" , t1_mInv, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
                 Plot.make1D(tag+"t1_pt" , t1_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
                 Plot.make1D(tag+"t2_mT" , t2_mT, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
                 Plot.make1D(tag+"t2_pt" , t2_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
             ])
 
-            # top_vars["t1_mInv_leadb"] = t1_mInv_leadb
-            # top_vars["t1_mInv_subleadb"] = t1_mInv_subleadb
             top_vars["t1_mInv"] = t1_mInv
             top_vars["t1_pt"] = t1_pt
             top_vars["t2_mT"] = t2_mT
@@ -359,7 +352,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             expStack.obj.Draw("COLZ")
             cv.Update()
             import os
-            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.pdf"))
+            plots_path = os.path.join(self.args.output, "plots_2018")
+            cv.SaveAs(os.path.join(plots_path, f"{plot.name}.pdf"))
 
         # ---------------------- Reading scalefactors ------------------------------
         import os
@@ -388,17 +382,21 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                     backg_files.append(root_file)
             return signal_files, backg_files
 
-        def output_llr_hist(object_name, xbins, xmin, xmax):
-            
-            signal_total_hist = ROOT.TH1F("signal " + object_name, "", xbins, xmin, xmax)
-            backg_total_hist  = ROOT.TH1F("backg " + object_name, "", xbins, xmin, xmax)
+        def output_llr_hist(object_name, xbins, xmin, xmax, dim=1, ybins=None, ymin=None, ymax=None):
+            print(object_name)
+            if dim == 1:
+                signal_total_hist = ROOT.TH1F("signal " + object_name, "", xbins, xmin, xmax)
+                backg_total_hist  = ROOT.TH1F("backg " + object_name, "", xbins, xmin, xmax)
+                ratio_hist = ROOT.TH1F("ratio", "", xbins, xmin, xmax)
+            elif dim == 2:
+                signal_total_hist = ROOT.TH2F("signal " + object_name, "", xbins, xmin, xmax, ybins, ymin, ymax)
+                backg_total_hist  = ROOT.TH2F("backg " + object_name, "", xbins, xmin, xmax, ybins, ymin, ymax)
+                ratio_hist = ROOT.TH2F("ratio", "", xbins, xmin, xmax, ybins, ymin, ymax)    
 
             object_name = "SL_res_2b_x_" + object_name
-
             for sample in SIGNAL_SAMPLES:
                 sample_signal = sample.Get(object_name)
                 signal_total_hist.Add(sample_signal)
-
             for sample in BACKG_SAMPLES:
                 backg_signal = sample.Get(object_name)
                 backg_total_hist.Add(backg_signal)
@@ -407,7 +405,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             signal_total_hist.Scale(1/signal_total_hist.Integral())
             backg_total_hist.Scale(1/backg_total_hist.Integral())
 
-            ratio_hist = ROOT.TH1F("object_name_ratio", "", xbins, xmin, xmax)
             ratio_hist = signal_total_hist.Clone()
             ratio_hist.Divide(backg_total_hist)
 
@@ -418,27 +415,53 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         results_path = os.path.join(self.args.output,'results')
         SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory()
 
-        root_file = ROOT.TFile(os.path.join(results_path, "output_file.root"), "RECREATE")
+        root_file = ROOT.TFile(os.path.join(results_path, "corrections_llr.root"), "RECREATE")
 
-        interesting_vars = []
-        interesting_vars.append(["bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX])
-        interesting_vars.append(["bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX])
-        interesting_vars.append(["bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX])
-        interesting_vars.append(["bjets_pT_bb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX])
+        vars_1D = []
+        vars_1D.append(["bjets_pT_bb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX])
+        vars_1D.append(["bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX])
+        vars_1D.append(["bjets_dEta", BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX])
+        vars_1D.append(["bjets_dPhi", BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX])
+        vars_1D.append(["bjets_dEta_abs", BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX])
+        vars_1D.append(["bjets_dPhi_abs", BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX])
+        vars_1D.append(["bjets_dR", BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX])
 
-        for var in interesting_vars:
-            output_llr_hist(var[0], var[1], var[2], var[3])
+        vars_1D.append(["t1_mInv", T_BINS, T_MIN, T_MAX])
+
+        vars_2D = []
+        vars_2D.append(["bjets_dR_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX])
+        vars_2D.append(["bjets_dEta_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX])
+        vars_2D.append(["bjets_dPhi_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX])
+        vars_2D.append(["bjets_dEta_abs_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX])
+        vars_2D.append(["bjets_dPhi_abs_vs_pT_bb", BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX])
+        
+        vars_2D.append(["bjets_dR_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX])
+        vars_2D.append(["bjets_pT_bb_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX])
+        vars_2D.append(["bjets_dEta_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX])
+        vars_2D.append(["bjets_dEta_abs_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX])
+        vars_2D.append(["bjets_dPhi_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX])
+        vars_2D.append(["bjets_dPhi_abs_vs_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX])
+
+        vars_2D.append(["bjets_dPhi_abs_vs_dEta_abs", BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX, BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX])
+        
+        vars_2D.append(["t1_mInv_vs_bjets_mbb", BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX, T_BINS, T_MIN, T_MAX])
+        
+
+        for var in vars_1D:
+            output_llr_hist(var[0], var[1], var[2], var[3], dim=1)
+
+        for var in vars_2D:
+            output_llr_hist(var[0], var[1], var[2], var[3], 2, var[4], var[5], var[6])
 
         root_file.Close()
 
         #---------------------------------------------------------------------
 
         all_corrections = []
-        with uproot.open(os.path.join(results_path, "output_file.root")) as root_file:
+        with uproot.open(os.path.join(results_path, "corrections_llr.root")) as root_file:
             for key in root_file.keys():
                 end_index = key.rfind(';')
                 hist_name = key[:end_index]
-                # ratio_hists[hist_name] = root_file[key] 
                 hist = root_file[key]
 
                 h = bh.Histogram(hist)
@@ -446,7 +469,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 corr = correctionlib.convert.from_histogram(h)
                 corr.name = hist_name
                 corr.description = f"llr for " + hist_name
-                # corr.data.flow = "clamp"
                 rich.print(corr)
                 all_corrections.append(corr)
 
