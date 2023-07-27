@@ -111,7 +111,7 @@
             "subcats": ["SL_res_2b_x"]
         },
         
-        "t1_pt":
+        "t1_pT":
         {
             "nbins": 125,
             "min": 0,
@@ -131,7 +131,7 @@
             "subcats": ["SL_res_2b_x"]
         },
 
-        "t2_pt":
+        "t2_pT":
         {
             "nbins": 125,
             "min": 0,
