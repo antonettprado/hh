@@ -100,21 +100,35 @@ class Variable1D(Variable):
     def get_default_empty_hist(self, hist_key):
         return TH1F(hist_key, '', self.nbins, self.min, self.max)
 
+    def __getitem__(self, subcat: str):
+        if subcat not in self.subcats:
+            raise ValueError(f"{subcat} is not a valid subcategory of {self.name}")
+        child = Variable1D(self.name)
+        index = self.subcats.index(subcat)
+        # Delete the non-subcat specific attributes of the subcat_specific child.
+        # I do this so you get helpful errors if you accidentally try to use one of these
+        delattr(child, "subcats")
+        delattr(child, "refs")
+        # Add new, subcat-specific attributes to the child
+        # Note that I prefer the singular name for the attribute now
+        child.subcat = subcat
+        child.ref = self.refs[index]
+        child.selection = self.selections[subcat]
+        child.data = self.data[subcat]
+        return child
+
     def __iter__(self):
-        self.index = 0
-        self.child = Variable1D(self.name)
+        self.iter_index = 0
         return self
 
     def __next__(self):
-        if self.index >= len(self.subcats):
-            self.child = None
+        if self.iter_index >= len(self.subcats):
             raise StopIteration
-        index = self.index
+        index = self.iter_index
         this_subcat = self.subcats[index]
-        self.child.update(**self.__dict__)
-        self.child.update(data = self.data[this_subcat], subcat=self.subcats[index], selection=self.selections[this_subcat], ref=self.refs[index])
-        self.index += 1
-        return self.child
+        child = self.__getitem__(this_subcat)
+        self.iter_index += 1
+        return child
 
     def __repr__(self):
         return "<%s>" % str('\n '.join(f'{k} : {repr(v)}' for (k, v) in self.__dict__.items())) 
@@ -149,23 +163,37 @@ class Variable2D(Variable):
         if prefix == 'x': return self.xvar.__dict__[attr_name_1D]
         if prefix == 'y': return self.yvar.__dict__[attr_name_1D]
         raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{attr_name}'")
-        
+
+    def __getitem__(self, subcat: str):
+        if subcat not in self.subcats:
+            raise ValueError(f"{subcat} is not a valid subcategory of {self.name}")
+        child = Variable2D(self.name)
+        index = self.subcats.index(subcat)
+        # Delete the non-subcat specific attributes of the subcat_specific child.
+        # I do this so you get helpful errors if you accidentally try to use one of these
+        delattr(child, "subcats")
+        delattr(child, "refs")
+        # Add new, subcat-specific attributes to the child
+        # Note that I prefer the singular name for the attribute now
+        child.subcat = subcat
+        child.ref = self.refs[index]
+        child.selection = self.selections[subcat]
+        child.xdata = self.xdata[subcat]
+        child.ydata = self.ydata[subcat]
+        return child
+
     def __iter__(self):
-        self.index = 0
-        self.child = Variable2D(self.name)
+        self.iter_index = 0
         return self
 
     def __next__(self):
-        if self.index >= len(self.subcats):
-            self.child = None
+        if self.iter_index >= len(self.subcats):
             raise StopIteration
-        index = self.index
+        index = self.iter_index
         this_subcat = self.subcats[index]
-        self.child.update(**self.__dict__)
-        self.child.update(xdata = self.xdata[this_subcat], selection=self.selections[this_subcat], 
-                          ydata = self.ydata[this_subcat], subcat=self.subcats[index], ref=self.refs[index])
-        self.index += 1
-        return self.child
+        child = self.__getitem__(this_subcat)
+        self.iter_index += 1
+        return child
     
     def __repr__(self):
         return '\n'.join((repr(self.xvar), repr(self.yvar)))
