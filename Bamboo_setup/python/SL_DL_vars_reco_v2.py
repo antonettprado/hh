@@ -11,27 +11,26 @@ import event_definition as event_defs
 from utils import variables
 from utils.variables import Variable1D, Variable2D
 
-class SL_DL_vars_reco(SL_DL_event_selection):
+class SL_DL_vars_reco_v2(SL_DL_event_selection):
 
     def __init__(self, args):
-        super(SL_DL_vars_reco, self).__init__(args)
+        super(SL_DL_vars_reco_v2, self).__init__(args)
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
         # If you want to filter any variables out to avoid using in this analysis, do it here for efficiency
         
     def addArgs(self, parser):
-        super(SL_DL_vars_reco, self).addArgs(parser)
+        super(SL_DL_vars_reco_v2, self).addArgs(parser)
         # parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    
+    # If you want access to variable data, run this function once to instantiate all the objects and selections for a given tree
     def object_and_event_selection(self, tree, noSel, mc_truth_b=False):
         self.objects, self.selections = super().object_and_event_selection(tree, noSel, mc_truth_b)
 
         ak4_jets = self.objects["cleaned_ak4_jets"]
         ak4_btags = self.objects["cleaned_ak4_btags"]
         ak8_btags = self.objects["cleaned_ak8_btags"]
-        ak8_subjets = self.objects["ak8_subjets"]
 
         self.objects['ak4_nonbtags'] = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
         self.objects['sorted_ak4_btags'] = op.sort(ak4_btags, lambda jet: -jet.pt)
@@ -54,16 +53,23 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                             'SL_res_1b_x':SL_res_1b_x, 'SL_res_2b_x':SL_res_2b_x, 'noSel':noSel}
 
     # Returns dictionary of only elements in self.selections with keys in subcats
-    def get_selections_subset(self, subcats: list[str]):
+    def get_selections_subset(self, subcats: 'list[str]'):
         return { name: self.selections[name] for name in subcats }
     
+    '''
+    What follows are a bunch of functional definitions of the variables based on the objects and selections we generate in SL_DL_event_selection.
+    Functions that begin with '_' such as _get_bjets_vars(), _get_top_vars() etc are 'protected' functions that should return intermediary calculations
+    for a few different variables. 
+    Functions that do not begin with '_' either return a Variable1D object that has been populated with the relevant data and selections, or a list of populated Variable1D objects
+    Immediately below is an example of how to define a variable in a function and populate the Variable1D object.
+    Note that these definitions are only necessary for 1D variables, 2D variables can be populated by passing the two 1D variables that make up the 2D variable into var2D.populate()
+    '''
     # ========================== EXAMPLE OF ADDING A NEW VARIABLE ================================
     def _get_bjets_vars_data(self):
         # Define relevant objects
         ak4_nonbtags = self.objects["ak4_nonbtags"]
         ak8_subjets = self.objects["ak8_subjets"]
         sorted_ak4_btags = self.objects["sorted_ak4_btags"]
-        sorted_ak4_nonbtags = self.objects["sorted_ak4_nonbtags"]
         sorted_ak8_btags = self.objects['sorted_ak8_btags']
 
         # Define the variable for each subcat separately
@@ -88,8 +94,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
 
         # Define the variable (bjets_mbb)
-        res_data = op.invariant_mass(res_bjet0.p4, res_bjet1.p4)/2
-        boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)/2
+        res_data = op.invariant_mass(res_bjet0.p4, res_bjet1.p4)
+        boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)
         
         # Must have exactly the same keys as selections!!
         data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
@@ -208,7 +214,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return bfatjet_msoftdrop
 
     # Helper function for returning a list of all bjet-related variables for iteration
-    def get_bjets_vars(self) -> list[Variable1D]:
+    def get_bjets_vars(self) -> 'list[Variable1D]':
         vars = [self.get_bjets_mbb(),
                 self.get_bjets_dPhi(),
                 self.get_bjets_dPhi_abs(),
@@ -298,7 +304,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return t2_pT 
 
     # Helper function for returning a list of all top-related variables for iteration
-    def get_top_vars(self) -> list[Variable1D]:
+    def get_top_vars(self) -> 'list[Variable1D]':
         vars = [self.get_t1_mInv(),
                 self.get_t1_pT(),
                 self.get_t2_mT(),
@@ -375,20 +381,130 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         all_mT.populate(data, selections)
         return all_mT
 
+    # ============================= New Variables ================================
     # Helper function for returning a list of all 'total' variables for iteration
-    def get_total_vars(self) -> list[Variable1D]:
+    def get_total_vars(self) -> 'list[Variable1D]':
         vars = [self.get_all_sT(),
                 self.get_all_sT_50_cut(),
                 self.get_all_mInv(),
                 self.get_all_mT()]
         return vars
 
+    def get_trijet_pT_rat(self) -> Variable1D:
+        trijet_pT_rat = Variable1D('trijet_pT_rat')
+        subcat_names = trijet_pT_rat.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        jj, b, _, _ = self._get_top_vars_data()
+        trijet = jj[0].p4 + jj[1].p4 + b.p4
+        data = trijet.Pt() / (jj[0].pt + jj[1].pt + b.pt)
+        data = { 'SL_res_2b_x':data }
+        trijet_pT_rat.populate(data, selections)
+        return trijet_pT_rat
+
+    # Mass of the two non-bjets closest in mass to W
+    def _get_jj_W_from_mass_closest_to_W(self):
+        m_W = 80.377
+        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
+        jj_combos = op.combine((sorted_nonbjets), N=2)
+        jj_combos_mjj = op.map(jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4))
+        jj_mjj_mW = jj_combos[op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: op.abs(combo_mjj - m_W))]
+        return jj_mjj_mW
+    
+    def _get_jj_W_from_most_pT(self):
+        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
+        jj_combos = op.combine((sorted_nonbjets), N=2)
+        jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Pt())
+        jj_mjj_mW = jj_combos[op.rng_max_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
+        return jj_mjj_mW
+
+    def _get_jj_W_from_min_eta_comb(self):
+        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
+        jj_combos = op.combine((sorted_nonbjets), N=2)
+        jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Eta())
+        jj_mjj_mW = jj_combos[op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: op.abs(combo_mjj))]
+        return jj_mjj_mW
+
+    def _get_jj_W_from_min_eta_indiv(self):
+        nonbjets = self.objects['ak4_nonbtags']
+        eta_sorted_nonbtags = op.sort(nonbjets, lambda jet: op.abs(jet.eta))
+        jj_mjj_mW = (eta_sorted_nonbtags[0], eta_sorted_nonbtags[1])
+        return jj_mjj_mW
+
+    def _get_jj_W_from_mass_least_dR(self):
+        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
+        jj_combos = op.combine((sorted_nonbjets), N=2)
+        jj_combos_mjj = op.map(jj_combos, lambda combo: op.deltaR(combo[0].p4, combo[1].p4))
+        jj_mjj_mW = jj_combos[op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
+        return jj_mjj_mW
+
+    def get_mjj(self) -> Variable1D:
+        mjj = Variable1D('mjj')
+        subcat_names = mjj.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        jj_mjj_mW = self._get_jj_W_from_mass_closest_to_W()
+        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        data = { 'SL_res_2b_x': data }
+        mjj.populate(data, selections)
+        return mjj 
+
+    def get_mjj_with_pT(self) -> Variable1D:
+        mjj = Variable1D('mjj')
+        subcat_names = mjj.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        jj_mjj_mW = self._get_jj_W_from_most_pT()
+        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        data = { 'SL_res_2b_x': data }
+        mjj.populate(data, selections)
+        mjj.refs[0] = "SL_res_2b_x_mjj_with_pT"
+        return mjj 
+
+    def get_mjj_with_eta_comb(self) -> Variable1D:
+        mjj = Variable1D('mjj')
+        subcat_names = mjj.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        jj_mjj_mW = self._get_jj_W_from_min_eta_comb()
+        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        data = { 'SL_res_2b_x': data }
+        mjj.populate(data, selections)
+        mjj.refs[0] = "SL_res_2b_x_mjj_with_eta_comb"
+        return mjj 
+        
+    def get_mjj_with_eta_indiv(self) -> Variable1D:
+        mjj = Variable1D('mjj')
+        subcat_names = mjj.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        jj_mjj_mW = self._get_jj_W_from_min_eta_indiv()
+        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        data = { 'SL_res_2b_x': data }
+        mjj.populate(data, selections)
+        mjj.refs[0] = "SL_res_2b_x_mjj_with_eta_indiv"
+        return mjj 
+
+    def get_mjj_with_dR(self) -> Variable1D:
+        mjj = Variable1D('mjj')
+        subcat_names = mjj.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        jj_mjj_mW = self._get_jj_W_from_mass_least_dR()
+        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        data = { 'SL_res_2b_x': data }
+        mjj.populate(data, selections)
+        mjj.refs[0] = "SL_res_2b_x_mjj_with_dR"
+        return mjj 
+
+    # ============================ End New Variables ==============================
+
     # Helper function for returning a list of all reco variables for iteration
-    def get_all_reco_variables(self) -> list[Variable1D]:
+    def get_all_reco_variables(self) -> 'list[Variable1D]':
         vars = self.get_bjets_vars() + self.get_top_vars() + self.get_total_vars()
         return vars
 
-    def get_all_reco_2D_variables(self) -> list[Variable2D]:
+    def get_all_reco_2D_variables(self) -> 'list[Variable2D]':
         vars1D = self.get_all_reco_variables()
         vars1D_lookup = { var.name: var for var in vars1D }
         vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
@@ -399,7 +515,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         
         return vars2D
 
-
+    # DEPRECATED 
     def get_SL_DL_vars_reco(self, tree, noSel):
 
         self.args.mc_truth_b = False
@@ -706,7 +822,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # ================================== Plots ======================================
         # ===============================================================================
 
-        reco_vars = self.get_all_reco_variables()
+        # reco_vars = self.get_all_reco_variables()
+        reco_vars = [self.get_mjj(), self.get_mjj_with_pT(), self.get_mjj_with_eta_comb(), self.get_mjj_with_eta_indiv(), self.get_mjj_with_dR(), self.get_trijet_pT_rat(), *self.get_all_reco_variables()]
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
         plots.extend(hists_1D)
 
@@ -731,7 +848,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     # def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
     #     print("----------------------------- In postProces -----------------------------")
-    #     super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+    #     super(SL_DL_vars_reco_v2, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
     #     # ------------------- Outputtting 2D histograms ---------------------------
     #     from bamboo.plots import Plot, DerivedPlot
