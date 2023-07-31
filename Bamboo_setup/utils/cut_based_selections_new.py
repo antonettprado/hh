@@ -374,7 +374,7 @@ if __name__ == "__main__":
     else:
         EFFICIENCIES = [0.75, 0.80, 0.85, 0.90, 0.95]
     
-    variable_names = ["bjets_mbb", "bjets_dPhi", "bjets_dEta", "t1_mInv", "bjets_dR", "bjets_pT_bb", "bjets0_pT", "bjets_dPhi_abs", "bjets_dEta_abs",
+    variable_names = ["bjets_mbb", "bjets_dPhi", "bjets_dEta", "t1_mInv", "bjets_dR", "bjets_pT_bb", "bjets_dPhi_abs", "bjets_dEta_abs", "mjj", "trijet_pT_rat",
                        "bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "t1_mInv_vs_bjets_mbb", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"]
 
     mindex = pd.MultiIndex.from_product([variable_names, EFFICIENCIES], names=['variable', 'efficiency'])

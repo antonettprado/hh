@@ -25,6 +25,7 @@ ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 WITH_TITLES = None
 LEVEL = None
 
+# Deprecated
 def get_object_name_subcats(object_name, channel, subcats):
     
     object_name_subcats = []
@@ -49,6 +50,7 @@ def get_object_name_subcats(object_name, channel, subcats):
 
     return object_name_subcats
 
+# Deprecated
 def get_1D_of_type(of_type, object_name, var: Variable1D):
     if of_type == "signal": 
         SAMPLES_OF_TYPE = SIGNAL_SAMPLES
@@ -196,10 +198,11 @@ def draw_1D_total(hist_signal, hist_backg, xmin, xmax, outname):
     canvas_norm.SaveAs(os.path.join(OUTPUT_PATH, outname + '.pdf'))
 
 def draw1D(var: Variable1D):
-    for full_object_name in var.refs:
-        total_signal = get_1D_of_type("signal", full_object_name, var)
-        total_backg = get_1D_of_type("backg", full_object_name, var)
-        draw_1D_total(total_signal, total_backg, var.min, var.max, full_object_name)
+    # For subcat-specific var in var
+    for ss_var in var:
+        total_signal = ss_var.get_hist("signal", SIGNAL_SAMPLES, ss_var.subcat)
+        total_backg = ss_var.get_hist("backg", BACKG_SAMPLES, ss_var.subcat)
+        draw_1D_total(total_signal, total_backg, ss_var.min, ss_var.max, ss_var.ref)
 
 def draw2D(var: Variable1D):
 
@@ -251,8 +254,14 @@ if __name__ == "__main__":
     # ==================================================================
     # ==================================================================
 
-    variables1D = { name : Variable1D(name) for name in variables.ALL_VARNAMES_1D }
+    variables1D: 'dict[str, Variable1D]' = { name : Variable1D(name) for name in variables.ALL_VARNAMES_1D }
+    variables1D.update(**{ name : Variable1D('mjj', refs=['SL_res_2b_x_' + name]) for name in ['mjj_with_pT', 'mjj_with_eta_comb', 'mjj_with_eta_indiv', 'mjj_with_dR']})
+    # mjj_test = Variable1D('mjj', refs=["SL_res_2b_x_mjj_new"])
+    # mjj_test.refs[0] = 'SL_res_2b_x_mjj_new'
+    # variables1D = { 'mjj':Variable1D('mjj'), 'mjj_test': mjj_test, 'trijet_pT_rat':Variable1D('trijet_pT_rat') }
     for var in variables1D.values():
+        if var.name == 'bjets0_pT' or var.name == 'bjets1_pT':
+            continue
         draw1D(var)
 
     variables2D = { name : Variable2D(name) for name in variables.ALL_VARNAMES_2D }

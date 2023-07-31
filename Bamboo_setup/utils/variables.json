@@ -199,6 +199,26 @@
             "unit": "GeV",
             "title": "bfatjet_mass",
             "subcats": ["SL_boost", "DL_boost"]
+        },
+
+        "mjj":
+        {
+            "nbins": 30,
+            "min": 15,
+            "max": 150,
+            "unit": "GeV",
+            "title": "mjj",
+            "subcats": ["SL_res_2b_x"]
+        },
+
+        "trijet_pT_rat":
+        {
+            "nbins": 55,
+            "min": 0,
+            "max": 1.1,
+            "unit": "",
+            "title": "trijet_pT_rat",
+            "subcats": ["SL_res_2b_x"]
         }
     },
 

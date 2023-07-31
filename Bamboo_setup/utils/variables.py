@@ -22,18 +22,20 @@ class Variable():
     def __init__(self, name, **kwargs):
         self.name = name
         self.hists = {}
+        self.selections = {}
+        self.data = {}
         self.update(**kwargs)
 
     def update(self, **kwargs):
         self.__dict__.update(**kwargs)
 
-    def set_refs(self, subcats: list[str]):
+    def set_refs(self, subcats: 'list[str]'):
         self.refs = [ '_'.join((subcat, self.name))  
                      for subcat in subcats ]
 
     def get_hist_from_file(self, subcat: str, file: TFile) -> Union[TH1F, TH2F]:
         # Check if hist exists. If not, generate it
-        hist_key = '_'.join((subcat, self.name, Path(file.GetName()).stem))
+        hist_key = '_'.join((self[subcat].ref, Path(file.GetName()).stem))
         if hist_key in self.hists.keys():
             return self.hists[hist_key]
 
@@ -41,12 +43,15 @@ class Variable():
         return self.hists[hist_key]
 
     def generate_hist_from_file(self, file: TFile, subcat: str) -> None:
-        hist_name = '_'.join((subcat, self.name))
+        hist_name = self[subcat].ref
         hist_key = '_'.join((hist_name, Path(file.GetName()).stem))
         self.hists[hist_key] = file.Get(hist_name)
-        self.hists[hist_key].SetDirectory(0)
+        try:
+            self.hists[hist_key].SetDirectory(0)
+        except AttributeError as err:
+            raise KeyError(f"'{hist_name}' not found in {file.GetName()}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
 
-    def get_hist(self, hist_key: str, files: list[TFile]=[], subcat: str='') -> Union[TH1F, TH2F]:
+    def get_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='') -> Union[TH1F, TH2F]:
         # Check if total hist exists. If not, generate it
         if hist_key in self.hists.keys():
             return self.hists[hist_key]
@@ -54,7 +59,7 @@ class Variable():
         self.generate_hist(files, subcat, hist_key)
         return self.hists[hist_key]
 
-    def generate_hist(self, files: list[TFile], subcat: str, hist_key: str) -> None:
+    def generate_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
         self.hists[hist_key] = self.get_default_empty_hist(hist_key)
         for file in files:
             this_hist = self.get_hist_from_file(subcat, file)
@@ -63,10 +68,47 @@ class Variable():
         self.hists[hist_key] = gDirectory.Get(hist_key)
         self.hists[hist_key].SetDirectory(0)
 
+    def is_child(self):
+        return hasattr(self, "subcat")
+        
+    def __getitem__(self, subcat: str):
+        # If already the child, do nothing
+        if self.is_child(): return self
+        # If invalid subcat, raise error
+        if subcat not in self.subcats:
+            raise ValueError(f"{subcat} is not a valid subcategory of {self.name}")
+        child = self.__class__(self.name)
+        index = self.subcats.index(subcat)
+        # Delete the non-subcat specific attributes of the subcat_specific child.
+        # I do this so you get helpful errors if you accidentally try to use one of these
+        delattr(child, "subcats")
+        delattr(child, "refs")
+        # Add new, subcat-specific attributes to the child
+        # Note that I prefer the singular name for the attribute now
+        child.subcat = subcat
+        child.ref = self.refs[index]
+        child.selection = self.selections.get(subcat, None)
+        return child
+    
+    def __iter__(self):
+        self.iter_index = 0
+        return self
+
+    def __next__(self):
+        if self.iter_index >= len(self.subcats):
+            raise StopIteration
+        index = self.iter_index
+        this_subcat = self.subcats[index]
+        child = self.__getitem__(this_subcat)
+        self.iter_index += 1
+        return child
+
     # To be overridden in subclasses
     def get_default_empty_hist(self, hist_key):
-        raise NotImplementedErorr('Subclasses must implement get_default_empty_hist')
+        raise NotImplementedError('Subclasses must implement get_default_empty_hist')
 
+    def __str__(self):
+        return f"{self.__class__.__name__}('{self.name}')"
 
 class Variable1D(Variable):
     def __init__(self, json_key, **kwargs):
@@ -101,33 +143,9 @@ class Variable1D(Variable):
         return TH1F(hist_key, '', self.nbins, self.min, self.max)
 
     def __getitem__(self, subcat: str):
-        if subcat not in self.subcats:
-            raise ValueError(f"{subcat} is not a valid subcategory of {self.name}")
-        child = Variable1D(self.name)
-        index = self.subcats.index(subcat)
-        # Delete the non-subcat specific attributes of the subcat_specific child.
-        # I do this so you get helpful errors if you accidentally try to use one of these
-        delattr(child, "subcats")
-        delattr(child, "refs")
-        # Add new, subcat-specific attributes to the child
-        # Note that I prefer the singular name for the attribute now
-        child.subcat = subcat
-        child.ref = self.refs[index]
-        child.selection = self.selections[subcat]
-        child.data = self.data[subcat]
-        return child
-
-    def __iter__(self):
-        self.iter_index = 0
-        return self
-
-    def __next__(self):
-        if self.iter_index >= len(self.subcats):
-            raise StopIteration
-        index = self.iter_index
-        this_subcat = self.subcats[index]
-        child = self.__getitem__(this_subcat)
-        self.iter_index += 1
+        if self.is_child(): return self
+        child = super().__getitem__(subcat)
+        child.data = self.data.get(subcat, None)
         return child
 
     def __repr__(self):
@@ -165,54 +183,31 @@ class Variable2D(Variable):
         raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{attr_name}'")
 
     def __getitem__(self, subcat: str):
-        if subcat not in self.subcats:
-            raise ValueError(f"{subcat} is not a valid subcategory of {self.name}")
-        child = Variable2D(self.name)
-        index = self.subcats.index(subcat)
-        # Delete the non-subcat specific attributes of the subcat_specific child.
-        # I do this so you get helpful errors if you accidentally try to use one of these
-        delattr(child, "subcats")
-        delattr(child, "refs")
-        # Add new, subcat-specific attributes to the child
-        # Note that I prefer the singular name for the attribute now
-        child.subcat = subcat
-        child.ref = self.refs[index]
-        child.selection = self.selections[subcat]
-        child.xdata = self.xdata[subcat]
-        child.ydata = self.ydata[subcat]
-        return child
-
-    def __iter__(self):
-        self.iter_index = 0
-        return self
-
-    def __next__(self):
-        if self.iter_index >= len(self.subcats):
-            raise StopIteration
-        index = self.iter_index
-        this_subcat = self.subcats[index]
-        child = self.__getitem__(this_subcat)
-        self.iter_index += 1
+        if self.is_child(): return self
+        child = super().__getitem__(subcat)
+        child.xdata = self.xdata.get(subcat, None)
+        child.ydata = self.ydata.get(subcat, None)
         return child
     
     def __repr__(self):
         return '\n'.join((repr(self.xvar), repr(self.yvar)))
 
 # Helper functions to quickly get all the variables in a script
-def get_all_1D_variables() -> dict[Variable1D]:
+def get_all_1D_variables() -> 'dict[str,Variable1D]':
     return { name: Variable1D(name) for name in ALL_VARNAMES_1D }
-def get_all_2D_variables() -> dict[Variable2D]:
+def get_all_2D_variables() -> 'dict[str,Variable2D]':
     return { name: Variable2D(name) for name in ALL_VARNAMES_2D }
 
 if __name__ == '__main__':
-    # load all variables to json
     var1D = Variable1D('bjets_mbb')
+    var1D2 = Variable1D('bjets_dPhi')
     data = {'SL_res_2b_x': 1, 'DL_res_2b': 2,
             'SL_boost': 3, 'DL_boost': 4 }
     sels = {'SL_res_2b_x': 5, 'DL_res_2b': 6,
             'SL_boost': 7, 'DL_boost': 8 }
     var1D.populate(data, sels)
-    for i in var1D:
-        print(i.subcat, i.full_title, i.ref, i.data)
-    
-
+    var1D2.populate(data, sels)
+    var2D = Variable2D('bjets_dPhi_vs_mbb')
+    var2D.populate(var1D, var1D2)
+    for i in var2D:
+        print(i.subcat, i.xfull_title, i.ref, i.xdata, i.ydata)
