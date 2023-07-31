@@ -16,3 +16,6 @@
 Bamboo_setup/Z_OUTPUT/*
 Bamboo_setup/config/analysis_2018_test.yml
 *.out
+
+Bamboo_setup/README.md
+.gitignore
