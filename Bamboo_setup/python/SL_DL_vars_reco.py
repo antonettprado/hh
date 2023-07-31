@@ -11,17 +11,17 @@ import event_definition as event_defs
 from utils import variables
 from utils.variables import Variable1D, Variable2D
 
-class SL_DL_vars_reco_v2(SL_DL_event_selection):
+class SL_DL_vars_reco(SL_DL_event_selection):
 
     def __init__(self, args):
-        super(SL_DL_vars_reco_v2, self).__init__(args)
+        super(SL_DL_vars_reco, self).__init__(args)
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
         # If you want to filter any variables out to avoid using in this analysis, do it here for efficiency
         
     def addArgs(self, parser):
-        super(SL_DL_vars_reco_v2, self).addArgs(parser)
+        super(SL_DL_vars_reco, self).addArgs(parser)
         # parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
     # If you want access to variable data, run this function once to instantiate all the objects and selections for a given tree
@@ -569,7 +569,7 @@ class SL_DL_vars_reco_v2(SL_DL_event_selection):
 
 <<<<<<< HEAD
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        super(SL_DL_vars_reco_v2, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         print("-------------------- Outputtting 2D histograms ---------------------")
         from bamboo.plots import Plot, DerivedPlot
         from bamboo.analysisutils import loadPlotIt
@@ -666,7 +666,7 @@ class SL_DL_vars_reco_v2(SL_DL_event_selection):
 =======
     # def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
     #     print("----------------------------- In postProces -----------------------------")
-    #     super(SL_DL_vars_reco_v2, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+    #     super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
     #     # ------------------- Outputtting 2D histograms ---------------------------
     #     from bamboo.plots import Plot, DerivedPlot

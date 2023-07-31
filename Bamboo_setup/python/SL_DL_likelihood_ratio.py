@@ -6,7 +6,7 @@ from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.scalefactors import get_correction
 from bamboo.treeproxies import FloatProxy
 
-from SL_DL_vars_reco_v2 import SL_DL_vars_reco_v2
+from SL_DL_vars_reco import SL_DL_vars_reco
 import object_definition as object_defs
 import event_definition as event_defs
 from constants import *
@@ -22,14 +22,14 @@ WITH_TITLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
-class SL_DL_likelihood_ratio_v2(SL_DL_vars_reco_v2):
+class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def __init__(self, args):
-        super(SL_DL_likelihood_ratio_v2, self).__init__(args)
+        super(SL_DL_likelihood_ratio, self).__init__(args)
         print("The input dir is: " + self.args.input_dir)
         print("The output path is:" + self.args.output)
 
     def addArgs(self, parser):
-        super(SL_DL_likelihood_ratio_v2, self).addArgs(parser)
+        super(SL_DL_likelihood_ratio, self).addArgs(parser)
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
         
     def get_var_corrected(self, data, correction_name, selection, defineOnFirstUse=True):
