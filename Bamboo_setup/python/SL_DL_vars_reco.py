@@ -514,11 +514,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             var.populate(xvar, yvar)
         
         return vars2D
-<<<<<<< HEAD
-   
-=======
     
->>>>>>> cf07ead87e029564fd839ce654c59228a0e02bde
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
