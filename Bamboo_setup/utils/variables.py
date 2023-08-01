@@ -4,7 +4,7 @@ from ROOT import TFile, TH1F, TH2F, gDirectory
 from pathlib import Path
 from typing import Union
 import os
-import sys
+import copy
 VARPATH = os.path.join(os.path.dirname(__file__), 'variables.json')
 
 null_func = lambda *x: None # used to instantiate default function definitions
@@ -17,6 +17,7 @@ with open(VARPATH, 'r') as f:
     ALL_JSON_DATA = json.load(f)
     ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
     ALL_VARNAMES_2D = ALL_JSON_DATA['2D'].keys()
+
 
 class Variable():
     def __init__(self, name, **kwargs):
@@ -51,12 +52,17 @@ class Variable():
         except AttributeError as err:
             raise KeyError(f"'{hist_name}' not found in {file.GetName()}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
 
-    def get_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='') -> Union[TH1F, TH2F]:
+    def get_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
         # Check if total hist exists. If not, generate it
         if hist_key in self.hists.keys():
             return self.hists[hist_key]
+
+        if self.is_child():
+            subcat = self.subcat
         
         self.generate_hist(files, subcat, hist_key)
+        if normalized:
+            self.hists[hist_key].Scale(1/self.hists[hist_key].Integral())
         return self.hists[hist_key]
 
     def generate_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
@@ -65,10 +71,10 @@ class Variable():
             this_hist = self.get_hist_from_file(subcat, file)
             self.hists[hist_key].Add(this_hist)
 
-        self.hists[hist_key] = gDirectory.Get(hist_key)
+        # self.hists[hist_key] = gDirectory.Get(hist_key)
         self.hists[hist_key].SetDirectory(0)
 
-    def is_child(self):
+    def is_child(self) -> bool:
         return hasattr(self, "subcat")
         
     def __getitem__(self, subcat: str):
@@ -77,7 +83,7 @@ class Variable():
         # If invalid subcat, raise error
         if subcat not in self.subcats:
             raise ValueError(f"{subcat} is not a valid subcategory of {self.name}")
-        child = self.__class__(self.name)
+        child = copy.copy(self)
         index = self.subcats.index(subcat)
         # Delete the non-subcat specific attributes of the subcat_specific child.
         # I do this so you get helpful errors if you accidentally try to use one of these
@@ -111,7 +117,7 @@ class Variable():
         return f"{self.__class__.__name__}('{self.name}')"
 
 class Variable1D(Variable):
-    def __init__(self, json_key, **kwargs):
+    def __init__(self, json_key, is_lr=False, **kwargs):
         super().__init__(json_key)
         json_data = ALL_JSON_DATA['1D'][json_key]
         self.eqbin = None
@@ -192,6 +198,38 @@ class Variable2D(Variable):
     def __repr__(self):
         return '\n'.join((repr(self.xvar), repr(self.yvar)))
 
+
+lr_binning = { 
+               1: { 'nbins':200, 'min':0, 'max':20 },
+               2: { 'nbins':200, 'min':0, 'max':10 },
+               3: { 'nbins':200, 'min':0, 'max':5 }
+              }
+class LikelihoodRatio(Variable):
+    def __init__(self, names:Union['list[str]', str], **kwargs):
+        if type(names) == str:
+            names = [names]
+        self.names = sorted(names)
+        self.name = '_x_'.join(self.names)
+        super().__init__(self.name)
+        self.vars = { name: Variable1D(name) for name in self.names }
+        self.dimensionality = len(self.names)
+        self.update(**lr_binning[self.dimensionality])
+        self.unit = ''
+        self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
+        self.refs = [ '_'.join((sc, self.name, 'lr')) for sc in self.subcats ]
+        self.update(**kwargs)
+
+    def get_default_empty_hist(self, hist_key):
+        return TH1F(hist_key, '', self.nbins, self.min, self.max)
+
+    def __getitem__(self, subcat: str):
+        if self.is_child(): return self
+        child = super().__getitem__(subcat)
+        return child
+
+    def __repr__(self):
+        return "<%s>" % str('\n '.join(f'{k} : {repr(v)}' for (k, v) in self.__dict__.items())) 
+
 # Helper functions to quickly get all the variables in a script
 def get_all_1D_variables() -> 'dict[str,Variable1D]':
     return { name: Variable1D(name) for name in ALL_VARNAMES_1D }
@@ -211,3 +249,8 @@ if __name__ == '__main__':
     var2D.populate(var1D, var1D2)
     for i in var2D:
         print(i.subcat, i.xfull_title, i.ref, i.xdata, i.ydata)
+
+    lr1 = LikelihoodRatio(('bjets_mbb', 'bjets_dR'))
+    print(repr(lr1))
+    for i in lr1:
+        print(i.subcat, i.ref)

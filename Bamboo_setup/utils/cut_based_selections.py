@@ -27,7 +27,7 @@ BACKG_SAMPLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
-MANUAL_CUT = True
+MANUAL_CUT = False
 MANUAL_CUT_VARIABLE = "bjets_pT_bb"
 MANUAL_CUT_XMIN = 150
 MANUAL_CUT_XMAX = 500
@@ -440,7 +440,7 @@ if __name__ == "__main__":
                     xl_min = histo_signal.GetBinCenter(xl_bin_min)
                     xr_min = histo_signal.GetBinCenter(xr_bin_min)
                 min_width = xr_min - xl_min
-                min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min)/total_norm_signal
+                min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min)
                 min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min)/total_norm_bkg
                 significance = (min_signal_frac*total_norm_signal)/math.sqrt(min_bkg_frac*total_norm_bkg)
 
@@ -452,104 +452,104 @@ if __name__ == "__main__":
                 print_to_csv([round(min_signal_frac*100, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
 
 
-    print("\n---------------------- For 2D variables ----------------------") 
-    variables_2D = {"SL_res_2b_x_": ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "t1_mInv_vs_bjets_mbb", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
-                    'DL_res_2b_':   ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
-                    'SL_boost_':    [],
-                    'DL_boost_':    []}
+    # print("\n---------------------- For 2D variables ----------------------") 
+    # variables_2D = {"SL_res_2b_x_": ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "t1_mInv_vs_bjets_mbb", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
+    #                 'DL_res_2b_':   ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
+    #                 'SL_boost_':    [],
+    #                 'DL_boost_':    []}
 
-    print_to_csv([])
-    print_to_csv(["2D Cuts"])
-    for dataset, cutting_variables in variables_2D.items():
-        if not cutting_variables:
-            continue
+    # print_to_csv([])
+    # print_to_csv(["2D Cuts"])
+    # for dataset, cutting_variables in variables_2D.items():
+    #     if not cutting_variables:
+    #         continue
 
-        object_name = "bjets_mbb"
-        Total_signal = get_total_integral_of_type("signal", object_name, dataset)
-        Total_backg = get_total_integral_of_type("backg", object_name, dataset)
-        Total_significance = Total_signal/math.sqrt(Total_backg)
-        print('-----------------------------------------------------------')
-        print('Total stats for: ' + dataset)
-        print(f"Total signal = {Total_signal:.4f}")
-        print(f"Total background = {Total_backg:.4f}")
-        print(f"S/sqrt(B) = {Total_significance:.5f}")
-        print('-----------------------------------------------------------')
+    #     object_name = "bjets_mbb"
+    #     Total_signal = get_total_integral_of_type("signal", object_name, dataset)
+    #     Total_backg = get_total_integral_of_type("backg", object_name, dataset)
+    #     Total_significance = Total_signal/math.sqrt(Total_backg)
+    #     print('-----------------------------------------------------------')
+    #     print('Total stats for: ' + dataset)
+    #     print(f"Total signal = {Total_signal:.4f}")
+    #     print(f"Total background = {Total_backg:.4f}")
+    #     print(f"S/sqrt(B) = {Total_significance:.5f}")
+    #     print('-----------------------------------------------------------')
         
-        print_to_csv([])
-        print_to_csv([dataset])
-        print_to_csv(["Total Signal", "Total Backg.", "S/sqrt(B)"])
-        print_to_csv([str(round(Total_signal, 4)), str(round(Total_backg, 4)), str(round(Total_significance, 5))])
-        print_to_csv([])
+    #     print_to_csv([])
+    #     print_to_csv([dataset])
+    #     print_to_csv(["Total Signal", "Total Backg.", "S/sqrt(B)"])
+    #     print_to_csv([str(round(Total_signal, 4)), str(round(Total_backg, 4)), str(round(Total_significance, 5))])
+    #     print_to_csv([])
 
-        for var in cutting_variables:
-            if MANUAL_CUT:
-                if var != MANUAL_CUT_VARIABLE:
-                    continue
+    #     for var in cutting_variables:
+    #         if MANUAL_CUT:
+    #             if var != MANUAL_CUT_VARIABLE:
+    #                 continue
             
-            print("\tCut for %s:"%var)
-            print_to_csv([var])
-            print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
-            for EFF in EFFICIENCIES:
-                histo_signal = get_total_hist_of_type("signal", var, dataset, dim=2)
-                histo_backg = get_total_hist_of_type("backg", var, dataset, dim=2)
+    #         print("\tCut for %s:"%var)
+    #         print_to_csv([var])
+    #         print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
+    #         for EFF in EFFICIENCIES:
+    #             histo_signal = get_total_hist_of_type("signal", var, dataset, dim=2)
+    #             histo_backg = get_total_hist_of_type("backg", var, dataset, dim=2)
 
-                nbins_x = histo_signal.GetNbinsX()
-                nbins_y = histo_signal.GetNbinsY()
-                total_norm_signal = histo_signal.Integral()
-                total_norm_bkg = histo_backg.Integral()
-                min_bkg_frac = 9999
-                min_signal_frac = 9999
-                xl_min = -9999
-                xr_min = -9999
-                xbinl_min = -9999
-                xbinr_min = -9999
-                yl_min = -9999
-                yr_min = -9999
-                ybinl_min = -9999
-                ybinr_min = -9999
-                min_width_x = 9999
-                min_width_y = 9999
+    #             nbins_x = histo_signal.GetNbinsX()
+    #             nbins_y = histo_signal.GetNbinsY()
+    #             total_norm_signal = histo_signal.Integral()
+    #             total_norm_bkg = histo_backg.Integral()
+    #             min_bkg_frac = 9999
+    #             min_signal_frac = 9999
+    #             xl_min = -9999
+    #             xr_min = -9999
+    #             xbinl_min = -9999
+    #             xbinr_min = -9999
+    #             yl_min = -9999
+    #             yr_min = -9999
+    #             ybinl_min = -9999
+    #             ybinr_min = -9999
+    #             min_width_x = 9999
+    #             min_width_y = 9999
 
-                cut = EFF
-                step = 1
+    #             cut = EFF
+    #             step = 1
 
-                if MANUAL_CUT:
-                    xl_min = MANUAL_CUT_XMIN
-                    xr_min = MANUAL_CUT_XMAX
-                    yl_min = MANUAL_CUT_YMIN
-                    yr_min = MANUAL_CUT_YMAX
-                    xl_bin_min = histo_signal.GetXaxis().FindBin(xl_min)
-                    xr_bin_min = histo_signal.GetXaxis().FindBin(xr_min)
-                    yl_bin_min = histo_signal.GetYaxis().FindBin(yl_min)
-                    yr_bin_min = histo_signal.GetYaxis().FindBin(yr_min)
-                else:
-                    xl_bin_min = 1
-                    xr_bin_min = nbins_x
-                    yl_bin_min = 1
-                    yr_bin_min = nbins_y
-                    if "t1_mInv" in var:
-                        # xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D_v2(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
-                        xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
-                    else:
-                        xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
-                    xl_min = histo_signal.GetXaxis().GetBinCenter(xl_bin_min)
-                    xr_min = histo_signal.GetXaxis().GetBinCenter(xr_bin_min)
-                    yl_min = histo_signal.GetYaxis().GetBinCenter(yl_bin_min)
-                    yr_min = histo_signal.GetYaxis().GetBinCenter(yr_bin_min)
-                min_width_x = xr_min - xl_min
-                min_width_y = yr_min - yl_min
-                min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_signal
-                min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_bkg
-                significance = (min_signal_frac*total_norm_signal)/math.sqrt(min_bkg_frac*total_norm_bkg)
+    #             if MANUAL_CUT:
+    #                 xl_min = MANUAL_CUT_XMIN
+    #                 xr_min = MANUAL_CUT_XMAX
+    #                 yl_min = MANUAL_CUT_YMIN
+    #                 yr_min = MANUAL_CUT_YMAX
+    #                 xl_bin_min = histo_signal.GetXaxis().FindBin(xl_min)
+    #                 xr_bin_min = histo_signal.GetXaxis().FindBin(xr_min)
+    #                 yl_bin_min = histo_signal.GetYaxis().FindBin(yl_min)
+    #                 yr_bin_min = histo_signal.GetYaxis().FindBin(yr_min)
+    #             else:
+    #                 xl_bin_min = 1
+    #                 xr_bin_min = nbins_x
+    #                 yl_bin_min = 1
+    #                 yr_bin_min = nbins_y
+    #                 if "t1_mInv" in var:
+    #                     # xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D_v2(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
+    #                     xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
+    #                 else:
+    #                     xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
+    #                 xl_min = histo_signal.GetXaxis().GetBinCenter(xl_bin_min)
+    #                 xr_min = histo_signal.GetXaxis().GetBinCenter(xr_bin_min)
+    #                 yl_min = histo_signal.GetYaxis().GetBinCenter(yl_bin_min)
+    #                 yr_min = histo_signal.GetYaxis().GetBinCenter(yr_bin_min)
+    #             min_width_x = xr_min - xl_min
+    #             min_width_y = yr_min - yl_min
+    #             min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_signal
+    #             min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_bkg
+    #             significance = (min_signal_frac*total_norm_signal)/math.sqrt(min_bkg_frac*total_norm_bkg)
 
-                print("\t\tFor signal efficiency of " + str(EFF))
-                print("\t\tX Minimum: %.2f, X Maximum: %.2f, X Width: %.2f"%(xl_min, xr_min, min_width_x))
-                print("\t\tY Minimum: %.2f, Y Maximum: %.2f, Y Width: %.2f"%(yl_min, yr_min, min_width_y))
-                print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
-                print("\t\tS/sqrt(B) = " + str(round(significance, 4)))
-                print("\t\t-------------------------------------------------")
-                print_to_csv([round(min_signal_frac, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
-                print_to_csv(["","["+ str(round(yl_min, 2)) + ", " + str(round(yr_min, 2)) +"]", "", ""])
+    #             print("\t\tFor signal efficiency of " + str(EFF))
+    #             print("\t\tX Minimum: %.2f, X Maximum: %.2f, X Width: %.2f"%(xl_min, xr_min, min_width_x))
+    #             print("\t\tY Minimum: %.2f, Y Maximum: %.2f, Y Width: %.2f"%(yl_min, yr_min, min_width_y))
+    #             print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
+    #             print("\t\tS/sqrt(B) = " + str(round(significance, 4)))
+    #             print("\t\t-------------------------------------------------")
+    #             print_to_csv([round(min_signal_frac, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
+    #             print_to_csv(["","["+ str(round(yl_min, 2)) + ", " + str(round(yr_min, 2)) +"]", "", ""])
 
-    executionTime = (time.time() - startTime)
-    print('Execution time in seconds: ' + str(executionTime))
+    # executionTime = (time.time() - startTime)
+    # print('Execution time in seconds: ' + str(executionTime))

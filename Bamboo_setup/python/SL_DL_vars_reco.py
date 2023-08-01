@@ -10,6 +10,7 @@ import object_definition as object_defs
 import event_definition as event_defs
 from utils import variables
 from utils.variables import Variable1D, Variable2D
+from pathlib import Path
 
 class SL_DL_vars_reco(SL_DL_event_selection):
 
@@ -212,7 +213,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = {'SL_boost': boost_data, 'DL_boost': boost_data}
         bfatjet_msoftdrop.populate(data, selections)
         return bfatjet_msoftdrop
-
+    
     # Helper function for returning a list of all bjet-related variables for iteration
     def get_bjets_vars(self) -> 'list[Variable1D]':
         vars = [self.get_bjets_mbb(),
@@ -613,76 +614,46 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         print("------------------ Reading scalefactors --------------------")
         import os
         import correctionlib.convert
-        import uproot
-        import rich
         import ROOT
         import boost_histogram as bh
-        SIGNAL_SAMPLES = None
-        BACKG_SAMPLES = None
+        import numpy as np
         ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
         ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
+        results_path = Path(self.args.output) / 'results' # Constructs "output_path/results" using the forward slash operator
+        SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_SIGNAL_SAMPLES if (results_path / name).exists() ]
+        BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_BACKG_SAMPLES if (results_path / name).exists() ]
 
-        def get_files_in_directory():
-            signal_files = []
-            backg_files = []
-            for filename in os.listdir(results_path):
-                file_path = os.path.join(results_path,filename)
-                if filename in ALL_SIGNAL_SAMPLES:
-                    root_file = ROOT.TFile.Open(file_path, 'read')
-                    signal_files.append(root_file)
-                elif filename in ALL_BACKG_SAMPLES:
-                    root_file = ROOT.TFile.Open(file_path, 'read')
-                    backg_files.append(root_file)
-            return signal_files, backg_files
-
-        def output_llr_hist(var):
-            signal_total_hist = var.get_default_empty_hist('signal')
-            backg_total_hist  = var.get_default_empty_hist('backg')
-            ratio_hist = var.get_default_empty_hist('ratio')
-
-            for sample in SIGNAL_SAMPLES:
-                sample_signal = sample.Get(var.ref)
-                signal_total_hist.Add(sample_signal)
-            for sample in BACKG_SAMPLES:
-                backg_signal = sample.Get(var.ref)
-                backg_total_hist.Add(backg_signal)
-
-            # Normalize signal and background -----------
-            signal_total_hist.Scale(1/signal_total_hist.Integral())
-            backg_total_hist.Scale(1/backg_total_hist.Integral())
+        def output_llr_hist(var: Variable1D) -> ROOT.TH1D:
+            signal_total_hist = var.get_hist('signal', SIGNAL_SAMPLES, normalized=True)
+            backg_total_hist  = var.get_hist('backg', BACKG_SAMPLES, normalized=True)
 
             ratio_hist = signal_total_hist.Clone()
             ratio_hist.Divide(backg_total_hist)
-            ratio_hist.Write(var.ref)
 
-            return root_file
+            var.hists['ratio'] = ratio_hist
+            return ratio_hist
 
-        results_path = os.path.join(self.args.output,'results')
-        SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory()
-
-        root_file = ROOT.TFile(os.path.join(results_path, "corrections_llr.root"), "RECREATE")
         all_reco_vars_1D = self.get_all_reco_variables()
         all_reco_vars_2D = self.get_all_reco_2D_variables()
         all_reco_vars = all_reco_vars_1D + all_reco_vars_2D
-        for var in all_reco_vars:
-            if "SL_res_2b_x" in var.subcats: 
-                SL_res_2b_x_var = var["SL_res_2b_x"]
-                output_llr_hist(SL_res_2b_x_var)
-        root_file.Close()
-
         all_corrections = []
-        with uproot.open(os.path.join(results_path, "corrections_llr.root")) as root_file:
-            for key in root_file.keys():
-                end_index = key.rfind(';')
-                hist_name = key[:end_index]
-                hist = root_file[key]
-                h = bh.Histogram(hist)
-                corr = correctionlib.convert.from_histogram(h)
-                corr.name = hist_name
-                corr.description = f"llr for " + hist_name
-                corr.data.flow = "clamp"
-                rich.print(corr)
-                all_corrections.append(corr)
+        for var in all_reco_vars_1D:
+            if "SL_res_2b_x" not in var.subcats: 
+                continue
+            SL_res_2b_x_var = var["SL_res_2b_x"]
+            ratio_hist = output_llr_hist(SL_res_2b_x_var)
+            np_ratio_hist = np.array(ratio_hist)
+            underflow, overflow = np_ratio_hist[0], np_ratio_hist[-1]
+            lrs = np_ratio_hist[1:-1]
+            bin_edges = np.linspace(SL_res_2b_x_var.min, SL_res_2b_x_var.max, SL_res_2b_x_var.nbins+1)
+            bin_centers = (bin_edges[1:]+bin_edges[:-1])/2
+            hist = bh.numpy.histogram(bin_centers, bins=bin_edges, weights=lrs, histogram=bh.Histogram)
+            corr = correctionlib.convert.from_histogram(hist)
+            corr.name = SL_res_2b_x_var.ref + '_lr'
+            corr.description = f'llr for {SL_res_2b_x_var.ref}'
+            corr.data.flow = 'clamp'
+            # rich.print(corr)
+            all_corrections.append(corr)
 
         cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
         output_llr_file = os.path.join(results_path, "corrections_llr.json")
