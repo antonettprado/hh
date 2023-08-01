@@ -497,6 +497,49 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         mjj.refs[0] = "SL_res_2b_x_mjj_with_dR"
         return mjj 
 
+    def get_sl_lep_pT(self) -> Variable1D:
+        sl_lep_pT = Variable1D('sl_lep_pT')
+        subcat_names = sl_lep_pT.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
+            lep = electrons[0]
+        if op.rng_len(electrons)==0 and op.rng_len(muons)==1:
+            lep = muons[0]
+        data = { 'SL_res_2b_x': lep.pt }
+        sl_lep_pT.populate(data, selections)
+        return sl_lep_pT
+
+    def get_trijet_bijet_dR(self) -> Variable1D:
+        trijet_bijet_dR = Variable1D('trijet_bijet_dR')
+        selections = self.get_selections_subset(trijet_bijet_dR.subcats)
+
+        jets = self._get_jj_W_from_mass_closest_to_W()
+        bjet = self.objects['sorted_ak4_btags'][0]
+        bijet = jets[0].p4 + jets[1].p4
+        trijet = bijet + bjet.p4
+        data = op.deltaR(bijet, trijet)
+        data = { 'SL_res_2b_x':data }
+        trijet_bijet_dR.populate(data, selections)
+        return trijet_bijet_dR
+
+    def get_bjet_bijet_dR(self):
+        bjet_bijet_dR = Variable1D('bjet_bijet_dR')
+        selections = self.get_selections_subset(bjet_bijet_dR.subcats)
+
+        jets = self._get_jj_W_from_mass_closest_to_W()
+        bjet = self.objects['sprted_ak4_btags'][0].p4
+        bijet = jets[0].p4 + jets[1].p4
+        data = op.deltaR(bjet, bijet)
+        data = { 'SL_res_2b_x':data }
+        bjet_bijet_dR.populate(data, selections)
+        return bjet_bijet_dR
+
+
+
+
+
     # ============================ End New Variables ==============================
 
     # Helper function for returning a list of all reco variables for iteration

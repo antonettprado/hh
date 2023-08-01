@@ -219,6 +219,36 @@
             "unit": "",
             "title": "trijet_pT_rat",
             "subcats": ["SL_res_2b_x"]
+        },
+
+        "sl_lep_pT":
+        {
+            "nbins": 120,
+            "min": 10,
+            "max": 60,
+            "unit": "GeV",
+            "title": "SL Lepton pT",
+            "subcats": ["SL_res_2b_x"]
+        },
+
+        "trijet_bijet_dR":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 7,
+            "unit": "",
+            "title": "#DeltaR(bjj, jj)",
+            "subcats": ["SL_res_2b_x"]
+        },
+
+        "bjet_bijet_dR":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 7,
+            "unit": "",
+            "title": "#DeltaR(b, jj)",
+            "subcats": ["SL_res_2b_x"]
         }
     },
 
