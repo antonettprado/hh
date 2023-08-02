@@ -34,7 +34,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         
     def get_var_corrected(self, data, correction_name, selection, defineOnFirstUse=True):
         local_path = os.path.join(self.args.input_dir, 'results/corrections_llr.json')
-        global_path = os.path.abspath(local_path)
+        global_path = os.path.join('/afs/cern.ch/user/a/anunezde/bamboodevel/hh/Bamboo_setup', local_path)
+        # global_path = os.path.abspath(local_path)
         return get_correction(global_path, correction_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def get_bjets_vars_lr_corrections(self) -> list[Variable1D]:
@@ -77,6 +78,34 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             all_1D_corrected_var_combos[key] = correction_result
         return all_1D_corrected_var_combos
 
+    def test_skim(self, noSel, plots, tree):
+
+        muons = tree.Muon
+        jets = tree.Jet
+        twoMuSel = noSel.refine("twoMuons", cut=[ op.rng_len(muons) > 1 ])
+        mll = op.invariant_mass(muons[0].p4, muons[1].p4)
+        plots.append(Skim("dimuSkim", {
+            "run": None,  # copy from input file
+            "luminosityBlock": None,
+            "event": None,
+            "dimu_M": mll,
+            "mu1_pt": muons[0].pt,
+            "mu2_pt": muons[1].pt,
+            "all_jets_pt": op.map(jets, lambda j: j.pt),
+            }, twoMuSel))
+
+        return plots
+
+    def test_skim_refined(self, vars, plots):
+
+        from bamboo.plots import Skim
+        keys = [var.name for var in vars]
+        values = [var.data for var in vars]
+        branches = dict(zip(keys, values))
+        branches.update({"event":None})
+        plots.append(Skim(vars[0].subcat, branches, vars[0].selection))
+        return plots
+
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
         plots = []
@@ -105,6 +134,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
         hists_1D_of_combos = [Plot.make1D(ref, result, SL_res_2b_x, EqBin(200, 0, 20), xTitle=ref) for ref, result in all_1D_corrected_vars_combinations.items()]
         plots.extend(hists_1D_of_combos)
+
+        plots = self.test_skim_refined(all_1D_corrected_vars, plots)
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
@@ -121,3 +152,9 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         print(len(plots))
 
         return plots
+
+    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+
+        file1 = os.path.join(self.args.output, 'results/bbWW_sl.root')
+        df = ROOT.RDataFrame("SL_res_2b_x", file1)
+        df.Display({"event", "bjets_mbb"}, 5, 20).Print()
