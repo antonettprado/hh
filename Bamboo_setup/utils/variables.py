@@ -231,6 +231,12 @@ class LikelihoodRatio(Variable):
         empty_hist.GetXaxis().SetTitle(self.full_title)
         return empty_hist
 
+    def populate(self, data: dict, selections: dict):
+        self.data = data
+        self.selections = selections
+        if data.keys() != selections.keys():
+            raise KeyError("Data and selections must be dicts containing the same keys")
+
     def __getitem__(self, subcat: str):
         if self.is_child(): return self
         child = super().__getitem__(subcat)
