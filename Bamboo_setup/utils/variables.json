@@ -101,43 +101,43 @@
             "subcats": ["SL_res_2b_x", "SL_boost", "DL_res_2b", "DL_boost"]
         },
 
-        "t1_mInv":
+        "trijet_mInv":
         {
             "nbins": 125,
             "min": 0,
             "max": 500,
             "unit": "GeV",
-            "title": "top1 mass",
+            "title": "hadronic top mass",
             "subcats": ["SL_res_2b_x"]
         },
         
-        "t1_pT":
+        "trijet_pT":
         {
             "nbins": 125,
             "min": 0,
             "max": 500,
             "unit": "GeV",
-            "title": "top1 p_{T}",
+            "title": "hadronic top p_{T}",
             "subcats": ["SL_res_2b_x"]
         },
 
-        "t2_mT":
+        "blnu_mT":
         {
             "nbins": 125,
             "min": 0,
             "max": 500,
             "unit": "GeV",
-            "title": "top2 m_{T}",
+            "title": "leptonic top m_{T}",
             "subcats": ["SL_res_2b_x"]
         },
 
-        "t2_pT":
+        "blnu_pT":
         {
             "nbins": 125,
             "min": 0,
             "max": 500,
             "unit": "GeV",
-            "title": "top2 p_{T}",
+            "title": "leptonic p_{T}",
             "subcats": ["SL_res_2b_x"]
         },
         
@@ -223,9 +223,9 @@
 
         "sl_lep_pT":
         {
-            "nbins": 120,
-            "min": 10,
-            "max": 60,
+            "nbins": 140,
+            "min": 0,
+            "max": 70,
             "unit": "GeV",
             "title": "SL Lepton pT",
             "subcats": ["SL_res_2b_x"]
@@ -335,13 +335,13 @@
         "t1_mInv_vs_bjets_mbb":
         {
             "x": "bjets_mbb",
-            "y": "t1_mInv"
+            "y": "trijet_mInv"
         },
 
         "t1_mInv_vs_bjets_pT_bb":
         {
             "x": "bjets_pT_bb",
-            "y": "t1_mInv"
+            "y": "trijet_mInv"
         }
     }
 }

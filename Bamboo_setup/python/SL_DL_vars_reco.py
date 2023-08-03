@@ -27,6 +27,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     # If you want access to variable data, run this function once to instantiate all the objects and selections for a given tree
     def object_and_event_selection(self, tree, noSel, mc_truth_b=False):
+        self.tree = tree
         self.objects, self.selections = super().object_and_event_selection(tree, noSel, mc_truth_b)
 
         ak4_jets = self.objects["cleaned_ak4_jets"]
@@ -59,7 +60,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
     
     '''
     What follows are a bunch of functional definitions of the variables based on the objects and selections we generate in SL_DL_event_selection.
-    Functions that begin with '_' such as _get_bjets_vars(), _get_top_vars() etc are 'protected' functions that should return intermediary calculations
+    Functions that begin with '_' such as _get_bjets_vars_data(), _get_trijet_vars_data() etc are 'protected' functions that should return intermediary calculations
     for a few different variables. 
     Functions that do not begin with '_' either return a Variable1D object that has been populated with the relevant data and selections, or a list of populated Variable1D objects
     Immediately below is an example of how to define a variable in a function and populate the Variable1D object.
@@ -228,88 +229,113 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 self.get_bfatjet_msoftdrop()]
         return vars
 
-    def _get_top_vars_data(self):
-        m_W = 80.377 # GeV
-        sorted_bjets = self.objects['sorted_ak4_btags']
+    def _get_jj_W(self):
         sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
-
         jj_combos = op.combine((sorted_nonbjets), N=2)
-        jj_combos_mjj = op.map(jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4))
-        jj_combo_mjj_mW_index = op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: op.abs(combo_mjj - m_W))
-        jj_mjj_mW = jj_combos[jj_combo_mjj_mW_index]
-        b1_jj_combos_mjj_mW_pt = op.map(sorted_bjets, lambda b1: (b1.p4 + jj_mjj_mW[0].p4 + jj_mjj_mW[1].p4).Pt())
-        t1_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b1_jj_combos_mjj_mW_pt, lambda combo_pt: combo_pt)
-        b1_combo_max_pt_mjj_mW = sorted_bjets[t1_combo_max_pt_mjj_mW_index]
-        return jj_mjj_mW, b1_combo_max_pt_mjj_mW, b1_jj_combos_mjj_mW_pt, t1_combo_max_pt_mjj_mW_index
+        jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Pt())
+        jj_mjj_mW = jj_combos[op.rng_max_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
+        return jj_mjj_mW
+    
+    def get_mjj(self) -> Variable1D:
+        mjj = Variable1D('mjj')
+        subcat_names = mjj.subcats
+        selections = self.get_selections_subset(subcat_names)
 
-    def _get_extra_top2_vars_data(self):
+        jj_mjj_mW = self._get_jj_W()
+        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        data = { 'SL_res_2b_x': data }
+        mjj.populate(data, selections)
+        return mjj
+
+    def _get_trijet_data(self):
+        sorted_bjets = self.objects['sorted_ak4_btags']
+
+        jj_W = self._get_jj_W()
+        b1_jj_combos_mjj_mW_pt = op.map(sorted_bjets, lambda b1: (b1.p4 + jj_W[0].p4 + jj_W[1].p4).Pt())
+        t1_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b1_jj_combos_mjj_mW_pt, lambda combo_pt: combo_pt)
+        trijet_bjet = sorted_bjets[t1_combo_max_pt_mjj_mW_index]
+        return jj_W[0], jj_W[1], trijet_bjet
+
+    def _get_blnu_data(self):
         electrons = self.objects['tight_electrons']
         muons = self.objects['tight_muons']
         MET = self.objects['met']
         sorted_bjets = self.objects['sorted_ak4_btags']
 
-        _, b1_combo_max_pt_mjj_mW, _, _ = self._get_top_vars_data()
-        rest_bjets_max_pt_mjj_mW = op.select(sorted_bjets, lambda b: op.NOT(b.idx == b1_combo_max_pt_mjj_mW.idx))
+        _, _, bjet = self._get_trijet_data()
+        non_hadronic_top_bjets = op.select(sorted_bjets, lambda b: op.NOT(b.idx == bjet.idx))
         if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
             lep = electrons[0]
         if op.rng_len(electrons)==0 and op.rng_len(muons)==1:
             lep = muons[0]
-        b2_lnu_combos_pt_for_max_pt_mjj_mW = op.map(rest_bjets_max_pt_mjj_mW, lambda b2: (b2.p4 + lep.p4 + MET.p4).Pt())
-        t2_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b2_lnu_combos_pt_for_max_pt_mjj_mW, lambda blnu_pt: blnu_pt)
-        b2_combo_max_pt_mjj_mW = rest_bjets_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
-        t2_4vec = b2_combo_max_pt_mjj_mW.p4 + lep.p4 + MET.p4
-        return b2_lnu_combos_pt_for_max_pt_mjj_mW, t2_combo_max_pt_mjj_mW_index, t2_4vec
+        potential_blnu_pts = op.map(non_hadronic_top_bjets, lambda b2: (b2.p4 + lep.p4 + MET.p4).Pt())
+        blnu_bjet_max_pt_index = op.rng_max_element_index(potential_blnu_pts, lambda blnu_pt: blnu_pt)
+        blnu_bjet = non_hadronic_top_bjets[blnu_bjet_max_pt_index]
+        return lep, MET, blnu_bjet
 
-    def get_t1_mInv(self) -> Variable1D:
-        t1_mInv = Variable1D('t1_mInv')
-        subcat_names = t1_mInv.subcats
+    def get_trijet_mInv(self) -> Variable1D:
+        trijet_mInv = Variable1D('trijet_mInv')
+        subcat_names = trijet_mInv.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        jj_mjj_mW, b1_combo_max_pt_mjj_mW, _, _ = self._get_top_vars_data()
-        data = op.invariant_mass(b1_combo_max_pt_mjj_mW.p4, jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        j0, j1, bjet = self._get_trijet_data()
+        data = op.invariant_mass(j0.p4, j1.p4, bjet.p4)
         data = { 'SL_res_2b_x': data }
-        t1_mInv.populate(data, selections)
-        return t1_mInv 
+        trijet_mInv.populate(data, selections)
+        return trijet_mInv 
 
-    def get_t1_pT(self) -> Variable1D:
-        t1_pT = Variable1D('t1_pT')
-        subcat_names = t1_pT.subcats
+    def get_trijet_pT(self) -> Variable1D:
+        trijet_pT = Variable1D('trijet_pT')
+        subcat_names = trijet_pT.subcats
         selections = self.get_selections_subset(subcat_names)
         
-        _, _, b1_jj_combos_mjj_mW_pt, t1_combo_max_pt_mjj_mW_index = self._get_top_vars_data()
-        data = b1_jj_combos_mjj_mW_pt[t1_combo_max_pt_mjj_mW_index]
+        j0, j1, bjet = self._get_trijet_data()
+        data = (j0.p4 + j1.p4 + bjet.p4).Pt()
         data = { 'SL_res_2b_x': data }
-        t1_pT.populate(data, selections)
-        return t1_pT 
+        trijet_pT.populate(data, selections)
+        return trijet_pT 
 
-    def get_t2_mT(self) -> Variable1D:
-        t2_mT = Variable1D('t2_mT')
-        subcat_names = t2_mT.subcats
+    def get_trijet_pT_rat(self) -> Variable1D:
+        trijet_pT_rat = Variable1D('trijet_pT_rat')
+        subcat_names = trijet_pT_rat.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        _, _, t2_4vec = self._get_extra_top2_vars_data()
-        data = t2_4vec.Mt()
-        data = { 'SL_res_2b_x': data }
-        t2_mT.populate(data, selections)
-        return t2_mT 
+        j0, j1, bjet = self._get_trijet_data()
+        trijet = j0.p4 + j1.p4 + bjet.p4
+        data = trijet.Pt() / (j0.pt + j1.pt + bjet.pt)
+        data = { 'SL_res_2b_x':data }
+        trijet_pT_rat.populate(data, selections)
+        return trijet_pT_rat
 
-    def get_t2_pT(self) -> Variable1D:
-        t2_pT = Variable1D('t2_pT')
-        subcat_names = t2_pT.subcats
+    def get_blnu_mT(self) -> Variable1D:
+        blnu_mT = Variable1D('blnu_mT')
+        subcat_names = blnu_mT.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        b2_lnu_combos_pt_for_max_pt_mjj_mW, t2_combo_max_pt_mjj_mW_index, _ = self._get_extra_top2_vars_data()
-        data = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
+        l, nu, bjet = self._get_blnu_data()
+        data = (l.p4 + nu.p4 + bjet.p4).Mt()
         data = { 'SL_res_2b_x': data }
-        t2_pT.populate(data, selections)
-        return t2_pT 
+        blnu_mT.populate(data, selections)
+        return blnu_mT 
+
+    def get_blnu_pT(self) -> Variable1D:
+        blnu_pT = Variable1D('blnu_pT')
+        subcat_names = blnu_pT.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        l, nu, bjet = self._get_blnu_data()
+        data = (l.p4 + nu.p4 + bjet.p4).Pt()
+        data = { 'SL_res_2b_x': data }
+        blnu_pT.populate(data, selections)
+        return blnu_pT 
 
     # Helper function for returning a list of all top-related variables for iteration
     def get_top_vars(self) -> 'list[Variable1D]':
-        vars = [self.get_t1_mInv(),
-                self.get_t1_pT(),
-                self.get_t2_mT(),
-                self.get_t2_pT()]
+        vars = [self.get_trijet_mInv(),
+                self.get_trijet_pT(),
+                self.get_trijet_pT_rat(),
+                self.get_blnu_mT(),
+                self.get_blnu_pT()]
         return vars
 
     def _get_total_vars_data(self):
@@ -391,112 +417,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return vars
           
     # ============================= New Variables ================================
-    def get_trijet_pT_rat(self) -> Variable1D:
-        trijet_pT_rat = Variable1D('trijet_pT_rat')
-        subcat_names = trijet_pT_rat.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        jj, b, _, _ = self._get_top_vars_data()
-        trijet = jj[0].p4 + jj[1].p4 + b.p4
-        data = trijet.Pt() / (jj[0].pt + jj[1].pt + b.pt)
-        data = { 'SL_res_2b_x':data }
-        trijet_pT_rat.populate(data, selections)
-        return trijet_pT_rat
-
-    # Mass of the two non-bjets closest in mass to W
-    def _get_jj_W_from_mass_closest_to_W(self):
-        m_W = 80.377
-        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
-        jj_combos = op.combine((sorted_nonbjets), N=2)
-        jj_combos_mjj = op.map(jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4))
-        jj_mjj_mW = jj_combos[op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: op.abs(combo_mjj - m_W))]
-        return jj_mjj_mW
-    
-    def _get_jj_W_from_most_pT(self):
-        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
-        jj_combos = op.combine((sorted_nonbjets), N=2)
-        jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Pt())
-        jj_mjj_mW = jj_combos[op.rng_max_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
-        return jj_mjj_mW
-
-    def _get_jj_W_from_min_eta_comb(self):
-        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
-        jj_combos = op.combine((sorted_nonbjets), N=2)
-        jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Eta())
-        jj_mjj_mW = jj_combos[op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: op.abs(combo_mjj))]
-        return jj_mjj_mW
-
-    def _get_jj_W_from_min_eta_indiv(self):
-        nonbjets = self.objects['ak4_nonbtags']
-        eta_sorted_nonbtags = op.sort(nonbjets, lambda jet: op.abs(jet.eta))
-        jj_mjj_mW = (eta_sorted_nonbtags[0], eta_sorted_nonbtags[1])
-        return jj_mjj_mW
-
-    def _get_jj_W_from_mass_least_dR(self):
-        sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
-        jj_combos = op.combine((sorted_nonbjets), N=2)
-        jj_combos_mjj = op.map(jj_combos, lambda combo: op.deltaR(combo[0].p4, combo[1].p4))
-        jj_mjj_mW = jj_combos[op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
-        return jj_mjj_mW
-
-    def get_mjj(self) -> Variable1D:
-        mjj = Variable1D('mjj')
-        subcat_names = mjj.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        jj_mjj_mW = self._get_jj_W_from_mass_closest_to_W()
-        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
-        data = { 'SL_res_2b_x': data }
-        mjj.populate(data, selections)
-        return mjj 
-
-    def get_mjj_with_pT(self) -> Variable1D:
-        mjj = Variable1D('mjj')
-        subcat_names = mjj.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        jj_mjj_mW = self._get_jj_W_from_most_pT()
-        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
-        data = { 'SL_res_2b_x': data }
-        mjj.populate(data, selections)
-        mjj.refs[0] = "SL_res_2b_x_mjj_with_pT"
-        return mjj 
-
-    def get_mjj_with_eta_comb(self) -> Variable1D:
-        mjj = Variable1D('mjj')
-        subcat_names = mjj.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        jj_mjj_mW = self._get_jj_W_from_min_eta_comb()
-        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
-        data = { 'SL_res_2b_x': data }
-        mjj.populate(data, selections)
-        mjj.refs[0] = "SL_res_2b_x_mjj_with_eta_comb"
-        return mjj 
-        
-    def get_mjj_with_eta_indiv(self) -> Variable1D:
-        mjj = Variable1D('mjj')
-        subcat_names = mjj.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        jj_mjj_mW = self._get_jj_W_from_min_eta_indiv()
-        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
-        data = { 'SL_res_2b_x': data }
-        mjj.populate(data, selections)
-        mjj.refs[0] = "SL_res_2b_x_mjj_with_eta_indiv"
-        return mjj 
-
-    def get_mjj_with_dR(self) -> Variable1D:
-        mjj = Variable1D('mjj')
-        subcat_names = mjj.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        jj_mjj_mW = self._get_jj_W_from_mass_least_dR()
-        data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
-        data = { 'SL_res_2b_x': data }
-        mjj.populate(data, selections)
-        mjj.refs[0] = "SL_res_2b_x_mjj_with_dR"
-        return mjj 
+    # Once variables are finalized, move them somewhere above here 
 
     def get_sl_lep_pT(self) -> Variable1D:
         sl_lep_pT = Variable1D('sl_lep_pT')
@@ -505,47 +426,42 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
         if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
-            lep = electrons[0]
+            lep = object_defs.elConePt(electrons, self.tree.Jet)[0]
         if op.rng_len(electrons)==0 and op.rng_len(muons)==1:
-            lep = muons[0]
-        data = { 'SL_res_2b_x': lep.pt }
+            lep = object_defs.muConePt(muons, self.tree.Jet)[0]
+
+        data = { 'SL_res_2b_x': lep }
         sl_lep_pT.populate(data, selections)
         return sl_lep_pT
-
+    
     def get_trijet_bijet_dR(self) -> Variable1D:
         trijet_bijet_dR = Variable1D('trijet_bijet_dR')
         selections = self.get_selections_subset(trijet_bijet_dR.subcats)
 
-        jets = self._get_jj_W_from_mass_closest_to_W()
-        bjet = self.objects['sorted_ak4_btags'][0]
-        bijet = jets[0].p4 + jets[1].p4
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
         trijet = bijet + bjet.p4
         data = op.deltaR(bijet, trijet)
         data = { 'SL_res_2b_x':data }
         trijet_bijet_dR.populate(data, selections)
         return trijet_bijet_dR
 
-    def get_bjet_bijet_dR(self):
+    def get_bjet_bijet_dR(self) -> Variable1D:
         bjet_bijet_dR = Variable1D('bjet_bijet_dR')
         selections = self.get_selections_subset(bjet_bijet_dR.subcats)
 
-        jets = self._get_jj_W_from_mass_closest_to_W()
-        bjet = self.objects['sprted_ak4_btags'][0].p4
-        bijet = jets[0].p4 + jets[1].p4
-        data = op.deltaR(bjet, bijet)
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
+        data = op.deltaR(bjet.p4, bijet)
         data = { 'SL_res_2b_x':data }
         bjet_bijet_dR.populate(data, selections)
         return bjet_bijet_dR
-
-
-
-
 
     # ============================ End New Variables ==============================
 
     # Helper function for returning a list of all reco variables for iteration
     def get_all_reco_variables(self) -> 'list[Variable1D]':
-        vars = self.get_bjets_vars() + self.get_top_vars() + self.get_total_vars()
+        vars = self.get_bjets_vars() + self.get_top_vars() + self.get_total_vars() + [ self.get_mjj(), self.get_sl_lep_pT(), self.get_trijet_bijet_dR(), self.get_bjet_bijet_dR() ]
         return vars
     
     def get_all_reco_2D_variables(self) -> 'list[Variable2D]':
@@ -571,7 +487,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # ===============================================================================
 
         # reco_vars = self.get_all_reco_variables()
-        reco_vars = [self.get_mjj(), self.get_mjj_with_pT(), self.get_mjj_with_eta_comb(), self.get_mjj_with_eta_indiv(), self.get_mjj_with_dR(), self.get_trijet_pT_rat(), *self.get_all_reco_variables()]
+        reco_vars = self.get_all_reco_variables()
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
         plots.extend(hists_1D)
 

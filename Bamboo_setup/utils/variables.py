@@ -46,11 +46,12 @@ class Variable():
     def generate_hist_from_file(self, file: TFile, subcat: str) -> None:
         hist_name = self[subcat].ref
         hist_key = '_'.join((hist_name, Path(file.GetName()).stem))
-        self.hists[hist_key] = file.Get(hist_name)
+        self.hists[hist_key] = self.get_default_empty_hist(hist_key)
         try:
-            self.hists[hist_key].SetDirectory(0)
-        except AttributeError as err:
+            self.hists[hist_key].Add(file.Get(hist_name))
+        except TypeError as err:
             raise KeyError(f"'{hist_name}' not found in {file.GetName()}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
+        self.hists[hist_key].SetDirectory(0)
 
     def get_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
         # Check if total hist exists. If not, generate it
@@ -109,7 +110,7 @@ class Variable():
         self.iter_index += 1
         return child
 
-    # To be overridden in subclasses
+    # To be overridden in subclasses: Instantiate hist type, bins, and axis titles
     def get_default_empty_hist(self, hist_key):
         raise NotImplementedError('Subclasses must implement get_default_empty_hist')
 
@@ -146,7 +147,9 @@ class Variable1D(Variable):
             print('WARNING: One or both of the supplied data and selections are not defined over all subcats')
 
     def get_default_empty_hist(self, hist_key):
-        return TH1F(hist_key, '', self.nbins, self.min, self.max)
+        empty_hist = TH1F(hist_key, '', self.nbins, self.min, self.max)
+        empty_hist.GetXaxis().SetTitle(self.full_title)
+        return empty_hist
 
     def __getitem__(self, subcat: str):
         if self.is_child(): return self
@@ -171,7 +174,10 @@ class Variable2D(Variable):
         self.update(**kwargs)
 
     def get_default_empty_hist(self, hist_key):
-        return TH2F(hist_key, '', self.xnbins, self.xmin, self.xmax, self.ynbins, self.ymin, self.ymax)
+        empty_hist = TH2F(hist_key, '', self.xnbins, self.xmin, self.xmax, self.ynbins, self.ymin, self.ymax)
+        empty_hist.GetXaxis().SetTitle(self.xfull_title)
+        empty_hist.GetYaxis().SetTitle(self.yfull_title)
+        return empty_hist
 
     def populate(self, xvar: Variable1D, yvar: Variable1D):
         consistent = (xvar.name == self.xname) and (yvar.name == self.yname) 
@@ -217,14 +223,18 @@ class LikelihoodRatio(Variable):
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
         self.refs = [ '_'.join((sc, self.name, 'lr')) for sc in self.subcats ]
+        self.full_title = ' '.join([var.title for var in self.vars]) + ' likelihood ratio'
         self.update(**kwargs)
 
     def get_default_empty_hist(self, hist_key):
-        return TH1F(hist_key, '', self.nbins, self.min, self.max)
+        empty_hist = TH1F(hist_key, '', self.nbins, self.min, self.max)
+        empty_hist.GetXaxis().SetTitle(self.full_title)
+        return empty_hist
 
     def __getitem__(self, subcat: str):
         if self.is_child(): return self
         child = super().__getitem__(subcat)
+        child.data = self.data.get(subcat, None)
         return child
 
     def __repr__(self):

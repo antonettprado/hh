@@ -1,6 +1,0 @@
-{
-    "files.watcherExclude": {
-        "**/Bamboo_setup/Z_OUTPUT/**": true
-    },
-    "python.analysis.typeCheckingMode": "off"
-}

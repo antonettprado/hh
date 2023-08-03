@@ -25,30 +25,6 @@ ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 WITH_TITLES = None
 LEVEL = None
 
-# Deprecated
-def get_object_name_subcats(object_name, channel, subcats):
-    
-    object_name_subcats = []
-    if subcats == "all":
-        if channel == "SL":
-            # object_subcats.append(channel + "_res_1b_x" + object_name)
-            object_name_subcats.append(channel + "_res_2b_x" + object_name)
-        elif channel == "DL":
-            # object_subcats.append(channel + "_res_1b" + object_name)
-            object_name_subcats.append(channel + "_res_2b" + object_name)
-        object_name_subcats.append(channel + "_boost_" + object_name)
-    else:
-        if channel == "SL":
-            for subcat_i in subcats:
-                if "res" in  subcat_i:
-                    object_name_subcats.append(channel + "_" + subcat_i + "_x_" + object_name)    
-                elif "boost" in subcat_i:
-                    object_name_subcats.append(channel + "_" + subcat_i + "_" + object_name)
-        elif channel == "DL":
-            for subcat_i in subcats:
-                object_name_subcats.append(channel + "_" + subcat_i + "_" + object_name)
-
-    return object_name_subcats
 
 # Deprecated
 def get_1D_of_type(of_type, object_name, var: Variable1D):
@@ -255,7 +231,6 @@ if __name__ == "__main__":
     # ==================================================================
 
     variables1D: 'dict[str, Variable1D]' = { name : Variable1D(name) for name in variables.ALL_VARNAMES_1D }
-    variables1D.update(**{ name : Variable1D('mjj', refs=['SL_res_2b_x_' + name]) for name in ['mjj_with_pT', 'mjj_with_eta_comb', 'mjj_with_eta_indiv', 'mjj_with_dR']})
     # mjj_test = Variable1D('mjj', refs=["SL_res_2b_x_mjj_new"])
     # mjj_test.refs[0] = 'SL_res_2b_x_mjj_new'
     # variables1D = { 'mjj':Variable1D('mjj'), 'mjj_test': mjj_test, 'trijet_pT_rat':Variable1D('trijet_pT_rat') }
