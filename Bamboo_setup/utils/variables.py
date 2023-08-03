@@ -207,8 +207,8 @@ class Variable2D(Variable):
 
 lr_binning = { 
                1: { 'nbins':200, 'min':0, 'max':20 },
-               2: { 'nbins':200, 'min':0, 'max':10 },
-               3: { 'nbins':200, 'min':0, 'max':5 }
+               2: { 'nbins':200, 'min':0, 'max':30 },
+               3: { 'nbins':200, 'min':0, 'max':40 }
               }
 class LikelihoodRatio(Variable):
     def __init__(self, names:Union['list[str]', str], **kwargs):
@@ -220,11 +220,18 @@ class LikelihoodRatio(Variable):
         self.vars = { name: Variable1D(name) for name in self.names }
         self.dimensionality = len(self.names)
         self.update(**lr_binning[self.dimensionality])
+        self.generate_eqbin()
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
         self.refs = [ '_'.join((sc, self.name, 'lr')) for sc in self.subcats ]
         self.full_title = ' '.join([var.title for var in self.vars]) + ' likelihood ratio'
         self.update(**kwargs)
+
+    def generate_eqbin(self):
+        if not all(item in self.__dict__ for item in ['nbins', 'min', 'max']):
+            print(f"Could not generate ROOT EqBin for {self.name}. Check json file")
+            return
+        self.eqbin = EqBin(self.nbins, self.min, self.max)
 
     def get_default_empty_hist(self, hist_key):
         empty_hist = TH1F(hist_key, '', self.nbins, self.min, self.max)
