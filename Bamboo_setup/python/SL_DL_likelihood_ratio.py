@@ -12,7 +12,7 @@ import event_definition as event_defs
 from constants import *
 import os
 import ROOT
-from utils.variables import Variable1D, Variable2D
+from utils.variables import Variable1D, Variable2D, LikelihoodRatio
 from typing import Dict
 from itertools import combinations
 
@@ -32,37 +32,61 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
         
-    def get_var_corrected(self, data, correction_name, selection, defineOnFirstUse=True):
+    def get_var_lr(self, data: list[], var_name, selection, defineOnFirstUse=True):
         local_path = os.path.join(self.args.input_dir, 'results/corrections_llr.json')
         global_path = os.path.join('/afs/cern.ch/user/a/anunezde/bamboodevel/hh/Bamboo_setup', local_path)
         # global_path = os.path.abspath(local_path)
-        return get_correction(global_path, correction_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
+        if len(data) == 1: 
+            return get_correction(global_path, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
+        elif len(data) == 2
+            return get_correction(global_path, var_name, params={"xaxis": data[0],"yaxis":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
-    def get_bjets_vars_lr_corrections(self) -> list[Variable1D]:
+    def get_bjets_vars_likelihoodratio(self) -> list[LikelihoodRatio]:
         bjets_vars = self.get_bjets_vars()
-        SL_res_2b_x_bjets_vars_corrected = []
+        all_bjets_vars_lr = []
         for var in bjets_vars:
-            if 'SL_res_2b_x' in var.subcats:
-                SL_res_2b_x_bjets_var = var['SL_res_2b_x']
-                data_to_correct = [op.switch(SL_res_2b_x_bjets_var.data > var.max, var.max - 0.0001, SL_res_2b_x_bjets_var.data)]
-                SL_res_2b_x_bjets_var.data = self.get_var_corrected(data_to_correct, SL_res_2b_x_bjets_var.ref, SL_res_2b_x_bjets_var.selection)
-                SL_res_2b_x_bjets_vars_corrected.append(SL_res_2b_x_bjets_var)
-        return SL_res_2b_x_bjets_vars_corrected
+            var_lr = LikelihoodRatio(var.name)
+            lr_data = {}
+            for subcat_var in var:
+                subcat_var_data = [op.switch(subcat_var.data > var.max, var.max - 0.0001, subcat_var.data)]
+                subcat_var_lr = self.get_var_lr([subcat_var_data], subcat_var.ref, subcat_var.selection)
+                lr_data[subcat_var.subcat] = subcat_var_lr
+            var_lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
+            all_bjets_vars_lr.append(var_lr)
+        return all_bjets_vars_lr
 
-    def get_top_vars_lr_corrections(self) -> list[Variable1D]:
+    def get_top_vars_likelihoodratio(self) -> list[LikelihoodRatio]:
         top_vars = self.get_top_vars()
-        SL_res_2b_x_top_vars_corrected = []
+        all_top_vars_lr = []
         for var in top_vars:
-            if 'SL_res_2b_x' in var.subcats:
-                SL_res_2b_x_top_var = var['SL_res_2b_x']
-                data_to_correct = [op.switch(SL_res_2b_x_top_var.data > var.max, var.max - 0.0001, SL_res_2b_x_top_var.data)]
-                SL_res_2b_x_top_var.data = self.get_var_corrected(data_to_correct, SL_res_2b_x_top_var.ref, SL_res_2b_x_top_var.selection)
-                SL_res_2b_x_top_vars_corrected.append(SL_res_2b_x_top_var)
-        return SL_res_2b_x_top_vars_corrected
+            var_lr = LikelihoodRatio(var.name)
+            lr_data = {}
+            for subcat_var in var:
+                subcat_var_data = [op.switch(subcat_var.data > var.max, var.max - 0.0001, subcat_var.data)]
+                subcat_var_lr = self.get_var_lr([subcat_var_data], subcat_var.ref, subcat_var.selection)
+                lr_data[subcat_var.subcat] = subcat_var_lr
+            var_lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
+            all_top_vars_lr.append(var_lr)
+        return all_top_vars_lr
 
-    def get_all_1D_corrected_vars(self) -> list[Variable1D]:
-        vars = self.get_bjets_vars_lr_corrections() + self.get_top_vars_lr_corrections()
+    def get_all_1D_vars_lr(self) -> list[LikelihoodRatio]:
+        vars = self.get_bjets_vars_likelihoodratio() + self.get_top_vars_likelihoodratio()
         return vars
+
+    def get_all_2D_vars_lr(self) -> list[LikelihoodRatio]:
+        vars_2D = self.get_all_reco_2D_variables()     
+        all_2D_vars_lr = []   
+        for var in vars_2D:
+            var_lr = LikelihoodRatio(var.name)
+            lr_data = {}
+            for subcat_var in var:
+                subcat_var_xdata = [op.switch(subcat_var.xdata > var.xvar.max, var.xvar.max - 0.0001, subcat_var.xdata)]
+                subcat_var_ydata = [op.switch(subcat_var.ydata > var.yvar.max, var.yvar.max - 0.0001, subcat_var.ydata)]
+                subcat_var_lr = self.get_var_lr([subcat_var_xdata, subcat_var_ydata], subcat_var.ref, subcat_var.selection)
+                lr_data[subcat_var.subcat] = subcat_var_lr
+            var_lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
+            all_2D_vars_lra.append(var_lr)
+        return all_2D_vars_lr
 
     def get_all_1D_corrected_vars_combinations(self) -> Dict[str, FloatProxy]:
         all_1D_corrected_vars = self.get_all_1D_corrected_vars()
@@ -103,7 +127,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         values = [var.data for var in vars]
         branches = dict(zip(keys, values))
         branches.update({"event":None})
-        plots.append(Skim(vars[0].subcat, branches, vars[0].selection))
+        plots.append(Skim('SL_res_2b_x', branches, vars[0].selection))
         return plots
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
@@ -126,16 +150,16 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
-        all_1D_corrected_vars = self.get_all_1D_corrected_vars()
+        all_1D_var_lrs = self.get_all_1D_corrected_vars()
         all_1D_corrected_vars_combinations = self.get_all_1D_corrected_vars_combinations()
-        
-        hists_1D = [Plot.make1D(corr_var.ref+'_lr', corr_var.data, corr_var.selection, EqBin(200, 0, 20), xTitle=corr_var.full_title) for corr_var in all_1D_corrected_vars]
+
+        hists_1D = [Plot.make1D(var_lr.name, var_lr.data, var_lr.selection, EqBin(var_lr.nbins, var_lr.min, var_lr.max)) for var_lr in all_1D_var_lrs]
         plots.extend(hists_1D)
 
-        hists_1D_of_combos = [Plot.make1D(ref, result, SL_res_2b_x, EqBin(200, 0, 20), xTitle=ref) for ref, result in all_1D_corrected_vars_combinations.items()]
-        plots.extend(hists_1D_of_combos)
+        # hists_1D_of_combos = [Plot.make1D(ref, result, SL_res_2b_x, EqBin(200, 0, 20), xTitle=ref) for ref, result in all_1D_corrected_vars_combinations.items()]
+        # plots.extend(hists_1D_of_combos)
 
-        plots = self.test_skim_refined(all_1D_corrected_vars, plots)
+        plots = self.test_skim_refined(all_1D_var_lrs, plots)
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
@@ -148,8 +172,6 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         yields.add(DL_res_1b, 'DL_res_1b')
         yields.add(DL_res_2b, 'DL_res_2b')
         yields.add(DL_boost, 'DL_boost')
-
-        print(len(plots))
 
         return plots
 

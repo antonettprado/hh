@@ -512,34 +512,36 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        print("-------------------- Outputtting 2D histograms ---------------------")
-        from bamboo.plots import Plot, DerivedPlot
-        from bamboo.analysisutils import loadPlotIt
-        from plotit.plotit import Stack
-        from bamboo.root import gbl
-        import os
-        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
-        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
-        for plot in plots_2D:
-            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
-            cv = gbl.TCanvas(f"c{plot.name}")
-            expStack.obj.Draw("COLZ")
-            cv.Update()
-            plots_path = os.path.join(self.args.output, "plots_2018")
-            cv.SaveAs(os.path.join(plots_path, f"{plot.name}.pdf"))
+        # print("-------------------- Outputtting 2D histograms ---------------------")
+        # from bamboo.plots import Plot, DerivedPlot
+        # from bamboo.analysisutils import loadPlotIt
+        # from plotit.plotit import Stack
+        # from bamboo.root import gbl
+        # import os
+        # plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
+        # p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
+        # for plot in plots_2D:
+        #     expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+        #     cv = gbl.TCanvas(f"c{plot.name}")
+        #     expStack.obj.Draw("COLZ")
+        #     cv.Update()
+        #     plots_path = os.path.join(self.args.output, "plots_2018")
+        #     cv.SaveAs(os.path.join(plots_path, f"{plot.name}.pdf"))
         print("------------------ Reading scalefactors --------------------")
         import os
         import correctionlib.convert
         import ROOT
         import boost_histogram as bh
         import numpy as np
+        # import root_numpy as rnp
+        from typing import Union
         ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
         ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
         results_path = Path(self.args.output) / 'results' # Constructs "output_path/results" using the forward slash operator
         SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_SIGNAL_SAMPLES if (results_path / name).exists() ]
         BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_BACKG_SAMPLES if (results_path / name).exists() ]
 
-        def output_llr_hist(var: Variable1D) -> ROOT.TH1D:
+        def output_llr_hist(var: Union[Variable1D, Variable2D]) -> Union[ROOT.TH1D, ROOT.TH2D]:
             signal_total_hist = var.get_hist('signal', SIGNAL_SAMPLES, normalized=True)
             backg_total_hist  = var.get_hist('backg', BACKG_SAMPLES, normalized=True)
 
@@ -553,17 +555,43 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         all_reco_vars_2D = self.get_all_reco_2D_variables()
         all_reco_vars = all_reco_vars_1D + all_reco_vars_2D
         all_corrections = []
-        for var in all_reco_vars_1D:
+        for var in all_reco_vars:
             if "SL_res_2b_x" not in var.subcats: 
                 continue
             SL_res_2b_x_var = var["SL_res_2b_x"]
             ratio_hist = output_llr_hist(SL_res_2b_x_var)
-            np_ratio_hist = np.array(ratio_hist)
-            underflow, overflow = np_ratio_hist[0], np_ratio_hist[-1]
-            lrs = np_ratio_hist[1:-1]
-            bin_edges = np.linspace(SL_res_2b_x_var.min, SL_res_2b_x_var.max, SL_res_2b_x_var.nbins+1)
-            bin_centers = (bin_edges[1:]+bin_edges[:-1])/2
-            hist = bh.numpy.histogram(bin_centers, bins=bin_edges, weights=lrs, histogram=bh.Histogram)
+            print('--------------------------')
+            print(SL_res_2b_x_var.ref)
+            if isinstance(var, Variable1D):
+                np_ratio_hist = np.array(ratio_hist)
+                underflow, overflow = np_ratio_hist[0], np_ratio_hist[-1]
+                lrs = np_ratio_hist[1:-1]
+                print('np_ratio_hist.ndim = ', np_ratio_hist.ndim)
+                print('np_ratio_hist.size = ', np_ratio_hist.size)
+                print('np_ratio_hist.shape = ', np_ratio_hist.shape)
+                print('lrs.shape: ', lrs.shape)
+                bin_edges = np.linspace(SL_res_2b_x_var.min, SL_res_2b_x_var.max, SL_res_2b_x_var.nbins+1)
+                bin_centers = (bin_edges[1:]+bin_edges[:-1])/2
+                print('len(bin_centers)=',len(bin_centers))
+                print('len(bin_edges)=',len(bin_edges))
+                hist = bh.numpy.histogram(bin_centers, bins=bin_edges, weights=lrs, histogram=bh.Histogram)
+            elif isinstance(var, Variable2D):
+                np_ratio_hist = np.array(ratio_hist).reshape(ratio_hist.GetXaxis().GetNbins()+2,ratio_hist.GetYaxis().GetNbins()+2)
+                lrs = np_ratio_hist[1:-1,1:-1]
+                print('np_ratio_hist.ndim = ', np_ratio_hist.ndim)
+                print('np_ratio_hist.size = ', np_ratio_hist.size)
+                print('np_ratio_hist.shape = ', np_ratio_hist.shape)
+                print('lrs.shape: ', lrs.shape)
+                xbin_edges = np.linspace(SL_res_2b_x_var.xvar.min, SL_res_2b_x_var.xvar.max, SL_res_2b_x_var.xvar.nbins+1) 
+                ybin_edges = np.linspace(SL_res_2b_x_var.yvar.min, SL_res_2b_x_var.yvar.max, SL_res_2b_x_var.yvar.nbins+1) 
+                xbin_centers = (xbin_edges[1:]+xbin_edges[:-1])/2
+                ybin_centers = (ybin_edges[1:]+ybin_edges[:-1])/2
+                print('len(xbin_centers)=',len(xbin_centers))
+                print('len(ybin_centers)=',len(ybin_centers))
+                print('len(xbin_edges)=',len(xbin_edges))
+                print('len(ybin_edges)=',len(ybin_edges))
+                hist = bh.numpy.histogram2d(xbin_centers, ybin_centers, bins=(xbin_edges, ybin_edges), weights=lrs, histogram=bh.Histogram)
+
             corr = correctionlib.convert.from_histogram(hist)
             corr.name = SL_res_2b_x_var.ref + '_lr'
             corr.description = f'llr for {SL_res_2b_x_var.ref}'
@@ -572,6 +600,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             all_corrections.append(corr)
 
         cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(results_path, "corrections_llr.json")
+        output_llr_file = os.path.join(results_path, "corrections_lr.json")
         with open(output_llr_file, "w") as outfile:
             outfile.write(cset.json(exclude_unset=False))
