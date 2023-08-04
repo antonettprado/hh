@@ -5,9 +5,8 @@ from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
 from SL_DL_event_selection import SL_DL_event_selection
-from constants import *
-import object_definition as object_defs
-import event_definition as event_defs
+import utils.object_definition as object_defs
+import utils.event_definition as event_defs
 from utils import variables
 from utils.variables import Variable1D, Variable2D
 from pathlib import Path
@@ -100,7 +99,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)
         
         # Must have exactly the same keys as selections!!
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
 
         # Populate the Variable1D object with the data dictionary and the selections dictionary
@@ -567,15 +566,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_SIGNAL_SAMPLES if (results_path / name).exists() ]
         BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_BACKG_SAMPLES if (results_path / name).exists() ]
 
-<<<<<<< HEAD
         def output_llr_hist(var: Variable1D) -> ROOT.TH1D:
             signal_total_hist = var.get_total_hist('signal', SIGNAL_SAMPLES, normalized=True)
             backg_total_hist  = var.get_total_hist('backg', BACKG_SAMPLES, normalized=True)
-=======
-        def output_llr_hist(var: Union[Variable1D, Variable2D]) -> Union[ROOT.TH1D, ROOT.TH2D]:
-            signal_total_hist = var.get_hist('signal', SIGNAL_SAMPLES, normalized=True)
-            backg_total_hist  = var.get_hist('backg', BACKG_SAMPLES, normalized=True)
->>>>>>> d01eb87775ccb75fed9ea2d9392ac35f5d4024ec
 
             ratio_hist = signal_total_hist.Clone()
             ratio_hist.Divide(backg_total_hist)
