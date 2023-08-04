@@ -100,7 +100,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)
         
         # Must have exactly the same keys as selections!!
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
 
         # Populate the Variable1D object with the data dictionary and the selections dictionary
@@ -116,7 +116,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
         res_data = op.deltaPhi(res_bjet0.p4, res_bjet1.p4)
         boost_data = op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4)
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjets_dPhi.populate(data, selections)
         return bjets_dPhi
@@ -128,7 +128,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
         res_data = op.abs(op.deltaPhi(res_bjet0.p4, res_bjet1.p4))
         boost_data = op.abs(op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4))
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjets_dPhi_abs.populate(data, selections)
         return bjets_dPhi_abs
@@ -140,7 +140,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
         res_data = res_bjet0.eta - res_bjet1.eta
         boost_data = boost_bjet0.eta - boost_bjet1.eta
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjets_dEta.populate(data, selections)
         return bjets_dEta
@@ -152,7 +152,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
         res_data = op.abs(res_bjet0.eta - res_bjet1.eta)
         boost_data = op.abs(boost_bjet0.eta - boost_bjet1.eta)
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjets_dEta_abs.populate(data, selections)
         return bjets_dEta_abs
@@ -164,7 +164,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
         res_data = op.deltaR(res_bjet0.p4, res_bjet1.p4) 
         boost_data = op.deltaR(boost_bjet0.p4, boost_bjet1.p4) 
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjets_dR.populate(data, selections)
         return bjets_dR
@@ -176,7 +176,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
         res_data = (res_bjet0.p4 + res_bjet1.p4).Pt() 
         boost_data = (boost_bjet0.p4 + boost_bjet1.p4).Pt()
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjets_pT_bb.populate(data, selections)
         return bjets_pT_bb
@@ -188,7 +188,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
         res_data = (res_bjet0.pt + res_bjet1.pt)/2
         boost_data = (boost_bjet0.pt + boost_bjet1.pt)/2
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjets_mean_pT.populate(data, selections)
         return bjets_mean_pT
@@ -222,7 +222,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         res_bjet0, _, boost_bjet0, _ = self._get_bjets_vars_data()
         res_data = res_bjet0.pt
         boost_data = boost_bjet0.pt
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjet0_pT.populate(data, selections)
         return bjet0_pT
@@ -234,7 +234,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         _, res_bjet1, _, boost_bjet1 = self._get_bjets_vars_data()
         res_data = res_bjet1.pt
         boost_data = boost_bjet1.pt
-        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
                 'SL_boost': boost_data, 'DL_boost': boost_data}
         bjet1_pT.populate(data, selections)
         return bjet1_pT
@@ -389,7 +389,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         total_mu_pt = op.rng_sum(muons, lambda mu: mu.pt)
         total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
         data = op.sum(total_e_pt, total_mu_pt, total_jet_pt, met.pt)
-        data = { "SL_res_2b_x": data, "DL_res_2b": data }
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
         all_sT.populate(data, selections)
         return all_sT
 
@@ -408,7 +408,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         all_sT_50_no_met = op.sum(total_e_pt_50, total_mu_pt_50, total_jet_pt_50)
         all_sT_50 = op.switch(met.pt > 50, all_sT_50_no_met + met.pt, all_sT_50_no_met)
         data = op.switch(all_sT_50 == 0, -9999, all_sT_50)
-        data = { "SL_res_2b_x": data, "DL_res_2b": data }
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
         all_sT_50_cut.populate(data, selections)
         return all_sT_50_cut
 
@@ -419,7 +419,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         total_4vec = self._get_total_4vec()
         data = total_4vec.M()
-        data = { "SL_res_2b_x": data, "DL_res_2b": data }
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
         all_mInv.populate(data, selections)
         return all_mInv
 
@@ -430,7 +430,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         total_4vec = self._get_total_4vec()
         data = total_4vec.Mt()
-        data = { "SL_res_2b_x": data, "DL_res_2b": data }
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
         all_mT.populate(data, selections)
         return all_mT
 
