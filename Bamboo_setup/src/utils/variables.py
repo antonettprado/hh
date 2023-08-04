@@ -43,7 +43,7 @@ class Variable():
         self.generate_hist_from_file(file, subcat)
         return self.hists[hist_key]
 
-    def generate_hist_from_file(self, file: TFile, subcat: str) -> None:
+    def _generate_hist_from_file(self, file: TFile, subcat: str) -> None:
         hist_name = self[subcat].ref
         hist_key = '_'.join((hist_name, Path(file.GetName()).stem))
         self.hists[hist_key] = self.get_default_empty_hist(hist_key)
@@ -61,12 +61,12 @@ class Variable():
         if self.is_child():
             subcat = self.subcat
         
-        self.generate_hist(files, subcat, hist_key)
+        self._generate_total_hist(files, subcat, hist_key)
         if normalized:
             self.hists[hist_key].Scale(1/self.hists[hist_key].Integral())
         return self.hists[hist_key]
 
-    def generate_total_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
+    def _generate_total_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
         self.hists[hist_key] = self.get_default_empty_hist(hist_key)
         for file in files:
             this_hist = self.get_hist_from_file(subcat, file)
