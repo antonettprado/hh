@@ -53,7 +53,7 @@ class Variable():
             raise KeyError(f"'{hist_name}' not found in {file.GetName()}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
         self.hists[hist_key].SetDirectory(0)
 
-    def get_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
+    def get_total_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
         # Check if total hist exists. If not, generate it
         if hist_key in self.hists.keys():
             return self.hists[hist_key]
@@ -66,7 +66,7 @@ class Variable():
             self.hists[hist_key].Scale(1/self.hists[hist_key].Integral())
         return self.hists[hist_key]
 
-    def generate_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
+    def generate_total_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
         self.hists[hist_key] = self.get_default_empty_hist(hist_key)
         for file in files:
             this_hist = self.get_hist_from_file(subcat, file)

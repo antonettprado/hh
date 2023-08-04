@@ -215,6 +215,30 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bfatjet_msoftdrop.populate(data, selections)
         return bfatjet_msoftdrop
     
+    def get_bjet0_pT(self) -> Variable1D:
+        bjet0_pT = Variable1D('bjet0_pT')
+        subcat_names = bjet0_pT.subcats
+        selections = self.get_selections_subset(subcat_names)
+        res_bjet0, _, boost_bjet0, _ = self._get_bjets_vars_data()
+        res_data = res_bjet0.pt
+        boost_data = boost_bjet0.pt
+        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+                'SL_boost': boost_data, 'DL_boost': boost_data}
+        bjet0_pT.populate(data, selections)
+        return bjet0_pT
+
+    def get_bjet1_pT(self) -> Variable1D:
+        bjet1_pT = Variable1D('bjet1_pT')
+        subcat_names = bjet1_pT.subcats
+        selections = self.get_selections_subset(subcat_names)
+        _, res_bjet1, _, boost_bjet1 = self._get_bjets_vars_data()
+        res_data = res_bjet1.pt
+        boost_data = boost_bjet1.pt
+        data = {'SL_res_2b_x': res_data, 'DL_res_2b': res_data,
+                'SL_boost': boost_data, 'DL_boost': boost_data}
+        bjet1_pT.populate(data, selections)
+        return bjet1_pT
+
     # Helper function for returning a list of all bjet-related variables for iteration
     def get_bjets_vars(self) -> 'list[Variable1D]':
         vars = [self.get_bjets_mbb(),
@@ -226,7 +250,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 self.get_bjets_pT_bb(),
                 self.get_bjets_mean_pT(),
                 self.get_bfatjet_mass(),
-                self.get_bfatjet_msoftdrop()]
+                self.get_bfatjet_msoftdrop(),
+                self.get_bjet0_pT(),
+                self.get_bjet1_pT()]
         return vars
 
     def _get_jj_W(self):
@@ -485,7 +511,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
-
+        
         # reco_vars = self.get_all_reco_variables()
         reco_vars = self.get_all_reco_variables()
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
@@ -540,8 +566,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_BACKG_SAMPLES if (results_path / name).exists() ]
 
         def output_llr_hist(var: Variable1D) -> ROOT.TH1D:
-            signal_total_hist = var.get_hist('signal', SIGNAL_SAMPLES, normalized=True)
-            backg_total_hist  = var.get_hist('backg', BACKG_SAMPLES, normalized=True)
+            signal_total_hist = var.get_total_hist('signal', SIGNAL_SAMPLES, normalized=True)
+            backg_total_hist  = var.get_total_hist('backg', BACKG_SAMPLES, normalized=True)
 
             ratio_hist = signal_total_hist.Clone()
             ratio_hist.Divide(backg_total_hist)

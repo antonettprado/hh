@@ -176,8 +176,8 @@ def draw_1D_total(hist_signal, hist_backg, xmin, xmax, outname):
 def draw1D(var: Variable1D):
     # For subcat-specific var in var
     for ss_var in var:
-        total_signal = ss_var.get_hist("signal", SIGNAL_SAMPLES, ss_var.subcat)
-        total_backg = ss_var.get_hist("backg", BACKG_SAMPLES, ss_var.subcat)
+        total_signal = ss_var.get_total_hist("signal", SIGNAL_SAMPLES, ss_var.subcat)
+        total_backg = ss_var.get_total_hist("backg", BACKG_SAMPLES, ss_var.subcat)
         draw_1D_total(total_signal, total_backg, ss_var.min, ss_var.max, ss_var.ref)
 
 def draw2D(var: Variable1D):

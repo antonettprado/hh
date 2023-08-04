@@ -14,8 +14,8 @@ Execute these each time you start from a clean shell:
 ```bash
 cd
 source /cvmfs/sft.cern.ch/lcg/views/LCG_102/x86_64-centos7-gcc11-opt/setup.sh
-source bamboodevel/bamboovenv/bin/activate
-cd bamboodevel/hh/Bamboo_setup
+source bamboodev/bamboovenv/bin/activate
+cd bamboodev/hh/Bamboo_setup
 export PYTHONPATH="${PYTHONPATH}:${PWD}/python/"
 voms-proxy-init --voms cms -rfc --valid 192:00 
 

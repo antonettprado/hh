@@ -433,9 +433,9 @@ if __name__ == "__main__":
 
         if subcat not in var.subcats:
             return
-        sig_hist = var.get_hist(subcat+'_signal', SIGNAL_SAMPLES, subcat)
+        sig_hist = var.get_total_hist(subcat+'_signal', SIGNAL_SAMPLES, subcat)
         sig_int = sig_hist.Integral()
-        backg_hist = var.get_hist(subcat+'_backg', BACKG_SAMPLES, subcat)
+        backg_hist = var.get_total_hist(subcat+'_backg', BACKG_SAMPLES, subcat)
         backg_int = backg_hist.Integral()
         print(f'Generated for {subcat+"_"+name}')
         return df.groupby(level=1).apply(fill_func, sig_hist, backg_hist, sig_int, backg_int)
@@ -450,8 +450,8 @@ if __name__ == "__main__":
         frame.sort_index(inplace=True)
         # Header in csv
         var = LikelihoodRatio('bjets_mbb')
-        sig_hist = var.get_hist('signal', SIGNAL_SAMPLES, subcat)
-        backg_hist = var.get_hist('backg', BACKG_SAMPLES, subcat)
+        sig_hist = var.get_total_hist('signal', SIGNAL_SAMPLES, subcat)
+        backg_hist = var.get_total_hist('backg', BACKG_SAMPLES, subcat)
         total_signal = sig_hist.Integral()
         total_backg = backg_hist.Integral()
         total_significance = total_signal / math.sqrt(total_backg)
