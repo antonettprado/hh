@@ -566,7 +566,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_SIGNAL_SAMPLES if (results_path / name).exists() ]
         BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_BACKG_SAMPLES if (results_path / name).exists() ]
 
-        def output_llr_hist(var: Variable1D) -> ROOT.TH1D:
+        def output_lr_hist(var: Variable1D) -> ROOT.TH1D:
             signal_total_hist = var.get_total_hist('signal', SIGNAL_SAMPLES, normalized=True)
             backg_total_hist  = var.get_total_hist('backg', BACKG_SAMPLES, normalized=True)
 
@@ -584,40 +584,21 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             if "SL_res_2b_x" not in var.subcats: 
                 continue
             SL_res_2b_x_var = var["SL_res_2b_x"]
-            ratio_hist = output_llr_hist(SL_res_2b_x_var)
+            ratio_hist = output_lr_hist(SL_res_2b_x_var)
             print('--------------------------')
             print(SL_res_2b_x_var.ref)
             if isinstance(var, Variable1D):
-                np_ratio_hist = np.array(ratio_hist)
-                underflow, overflow = np_ratio_hist[0], np_ratio_hist[-1]
-                lrs = np_ratio_hist[1:-1]
-                print('np_ratio_hist.ndim = ', np_ratio_hist.ndim)
-                print('np_ratio_hist.size = ', np_ratio_hist.size)
-                print('np_ratio_hist.shape = ', np_ratio_hist.shape)
-                print('lrs.shape: ', lrs.shape)
-                bin_edges = np.linspace(SL_res_2b_x_var.min, SL_res_2b_x_var.max, SL_res_2b_x_var.nbins+1)
-                bin_centers = (bin_edges[1:]+bin_edges[:-1])/2
-                print('len(bin_centers)=',len(bin_centers))
-                print('len(bin_edges)=',len(bin_edges))
-                hist = bh.numpy.histogram(bin_centers, bins=bin_edges, weights=lrs, histogram=bh.Histogram)
+                bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.nbins, SL_res_2b_x_var.min, SL_res_2b_x_var.max))
+                for i in range(SL_res_2b_x_var.nbins):
+                    bh_hist[i] = ratio_hist.GetBinContent(i+1) # +1 to skip underflow bin
             elif isinstance(var, Variable2D):
-                np_ratio_hist = np.array(ratio_hist).reshape(ratio_hist.GetXaxis().GetNbins()+2,ratio_hist.GetYaxis().GetNbins()+2)
-                lrs = np_ratio_hist[1:-1,1:-1]
-                print('np_ratio_hist.ndim = ', np_ratio_hist.ndim)
-                print('np_ratio_hist.size = ', np_ratio_hist.size)
-                print('np_ratio_hist.shape = ', np_ratio_hist.shape)
-                print('lrs.shape: ', lrs.shape)
-                xbin_edges = np.linspace(SL_res_2b_x_var.xvar.min, SL_res_2b_x_var.xvar.max, SL_res_2b_x_var.xvar.nbins+1) 
-                ybin_edges = np.linspace(SL_res_2b_x_var.yvar.min, SL_res_2b_x_var.yvar.max, SL_res_2b_x_var.yvar.nbins+1) 
-                xbin_centers = (xbin_edges[1:]+xbin_edges[:-1])/2
-                ybin_centers = (ybin_edges[1:]+ybin_edges[:-1])/2
-                print('len(xbin_centers)=',len(xbin_centers))
-                print('len(ybin_centers)=',len(ybin_centers))
-                print('len(xbin_edges)=',len(xbin_edges))
-                print('len(ybin_edges)=',len(ybin_edges))
-                hist = bh.numpy.histogram2d(xbin_centers, ybin_centers, bins=(xbin_edges, ybin_edges), weights=lrs, histogram=bh.Histogram)
+                bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.xnbins, SL_res_2b_x_var.xmin, SL_res_2b_x_var.xmax),
+                                       bh.axis.Regular(SL_res_2b_x_var.ynbins, SL_res_2b_x_var.ymin, SL_res_2b_x_var.ymax))
+                for i in range(SL_res_2b_x_var.xnbins):
+                    for j in range(SL_res_2b_x_var.ynbins):
+                        bh_hist[i,j] = ratio_hist.GetBinContent(i+1,j+1) # +1 to skip underflow bin
 
-            corr = correctionlib.convert.from_histogram(hist)
+            corr = correctionlib.convert.from_histogram(bh_hist)
             corr.name = SL_res_2b_x_var.ref + '_lr'
             corr.description = f'llr for {SL_res_2b_x_var.ref}'
             corr.data.flow = 'clamp'
