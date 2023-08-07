@@ -40,7 +40,7 @@ class Variable():
         if hist_key in self.hists.keys():
             return self.hists[hist_key]
 
-        self.generate_hist_from_file(file, subcat)
+        self._generate_hist_from_file(file, subcat)
         return self.hists[hist_key]
 
     def _generate_hist_from_file(self, file: TFile, subcat: str) -> None:
