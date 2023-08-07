@@ -118,7 +118,7 @@ class Variable():
         return f"{self.__class__.__name__}('{self.name}')"
 
 class Variable1D(Variable):
-    def __init__(self, json_key, is_lr=False, **kwargs):
+    def __init__(self, json_key, **kwargs):
         super().__init__(json_key)
         json_data = ALL_JSON_DATA['1D'][json_key]
         self.eqbin = None
