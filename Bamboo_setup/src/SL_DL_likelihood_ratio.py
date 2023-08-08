@@ -1,15 +1,12 @@
-from bamboo.analysismodules import NanoAODHistoModule
-from bamboo.treedecorators import NanoAODDescription
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, SummedPlot, CutFlowReport
+from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.plots import Skim
 from bamboo.scalefactors import get_correction
 from bamboo.treeproxies import FloatProxy
 
 from SL_DL_vars_reco import SL_DL_vars_reco
-import object_definition as object_defs
-import event_definition as event_defs
-from constants import *
+from utils.constants import *
 import os
 import ROOT
 from utils.variables import Variable1D, Variable2D, LikelihoodRatio
@@ -32,16 +29,16 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
         
-    def get_var_lr(self, data: list[], var_name, selection, defineOnFirstUse=True):
+    def get_var_lr(self, data: list, var_name, selection, defineOnFirstUse=True):
         local_path = os.path.join(self.args.input_dir, 'results/corrections_llr.json')
         global_path = os.path.join('/afs/cern.ch/user/a/anunezde/bamboodevel/hh/Bamboo_setup', local_path)
         # global_path = os.path.abspath(local_path)
         if len(data) == 1: 
             return get_correction(global_path, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
-        elif len(data) == 2
+        elif len(data) == 2:
             return get_correction(global_path, var_name, params={"xaxis": data[0],"yaxis":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
-    def get_bjets_vars_likelihoodratio(self) -> list[LikelihoodRatio]:
+    def get_bjets_vars_likelihoodratio(self) -> 'list[LikelihoodRatio]':
         bjets_vars = self.get_bjets_vars()
         all_bjets_vars_lr = []
         for var in bjets_vars:
@@ -55,7 +52,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             all_bjets_vars_lr.append(var_lr)
         return all_bjets_vars_lr
 
-    def get_top_vars_likelihoodratio(self) -> list[LikelihoodRatio]:
+    def get_top_vars_likelihoodratio(self) -> 'list[LikelihoodRatio]':
         top_vars = self.get_top_vars()
         all_top_vars_lr = []
         for var in top_vars:
@@ -69,11 +66,11 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             all_top_vars_lr.append(var_lr)
         return all_top_vars_lr
 
-    def get_all_1D_vars_lr(self) -> list[LikelihoodRatio]:
+    def get_all_1D_vars_lr(self) -> 'list[LikelihoodRatio]':
         vars = self.get_bjets_vars_likelihoodratio() + self.get_top_vars_likelihoodratio()
         return vars
 
-    def get_all_2D_vars_lr(self) -> list[LikelihoodRatio]:
+    def get_all_2D_vars_lr(self) -> 'list[LikelihoodRatio]':
         vars_2D = self.get_all_reco_2D_variables()     
         all_2D_vars_lr = []   
         for var in vars_2D:
@@ -85,10 +82,10 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
                 subcat_var_lr = self.get_var_lr([subcat_var_xdata, subcat_var_ydata], subcat_var.ref, subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             var_lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
-            all_2D_vars_lra.append(var_lr)
+            all_2D_vars_lr.append(var_lr)
         return all_2D_vars_lr
 
-    def get_all_1D_corrected_vars_combinations(self) -> Dict[str, FloatProxy]:
+    def get_all_1D_corrected_vars_combinations(self) -> dict[str: FloatProxy]:
         all_1D_corrected_vars = self.get_all_1D_corrected_vars()
         all_1D_var_combos = combinations(all_1D_corrected_vars, 2)
         all_1D_corrected_var_combos = {}
@@ -122,7 +119,6 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
     def test_skim_refined(self, vars, plots):
 
-        from bamboo.plots import Skim
         keys = [var.name for var in vars]
         values = [var.data for var in vars]
         branches = dict(zip(keys, values))

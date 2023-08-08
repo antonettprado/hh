@@ -170,7 +170,7 @@ class Variable2D(Variable):
         self.yvar = Variable1D(y_key)
         self.subcats = list(set(self.xvar.subcats) & set(self.yvar.subcats))
         self.set_refs(self.subcats)
-
+        self.title = self.ytitle + ' vs. ' + self.xtitle 
         self.update(**kwargs)
 
     def get_default_empty_hist(self, hist_key):
@@ -211,20 +211,21 @@ lr_binning = {
                3: { 'nbins':200, 'min':0, 'max':40 }
               }
 class LikelihoodRatio(Variable):
-    def __init__(self, names:Union['list[str]', str], **kwargs):
+    def __init__(self, names: Union['list[str]', str], **kwargs):
         if type(names) == str:
             names = [names]
         self.names = sorted(names)
         self.name = '_x_'.join(self.names)
         super().__init__(self.name)
-        self.vars = { name: Variable1D(name) for name in self.names }
+        self.vars = { name: Variable1D(name) for name in self.names if name in ALL_VARNAMES_1D}
+        self.vars = { name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D}
         self.dimensionality = len(self.names)
         self.update(**lr_binning[self.dimensionality])
         self.generate_eqbin()
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
         self.refs = [ '_'.join((sc, self.name, 'lr')) for sc in self.subcats ]
-        self.full_title = ' '.join([var.title for var in self.vars]) + ' likelihood ratio'
+        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' likelihood ratio'
         self.update(**kwargs)
 
     def generate_eqbin(self):
@@ -262,9 +263,9 @@ def get_all_2D_variables() -> 'dict[str,Variable2D]':
 if __name__ == '__main__':
     var1D = Variable1D('bjets_mbb')
     var1D2 = Variable1D('bjets_dPhi')
-    data = {'SL_res_2b_x': 1, 'DL_res_2b': 2,
+    data = {'SL_res_2b_x': 1, 'SL_res_2b': 9, 'DL_res_2b': 2,
             'SL_boost': 3, 'DL_boost': 4 }
-    sels = {'SL_res_2b_x': 5, 'DL_res_2b': 6,
+    sels = {'SL_res_2b_x': 5, 'SL_res_2b': 9, 'DL_res_2b': 6,
             'SL_boost': 7, 'DL_boost': 8 }
     var1D.populate(data, sels)
     var1D2.populate(data, sels)
@@ -273,7 +274,7 @@ if __name__ == '__main__':
     for i in var2D:
         print(i.subcat, i.xfull_title, i.ref, i.xdata, i.ydata)
 
-    lr1 = LikelihoodRatio(('bjets_mbb', 'bjets_dR'))
+    lr1 = LikelihoodRatio(('bjets_mbb', 'bjets_dR', 'bjets_dR_vs_mbb'))
     print(repr(lr1))
     for i in lr1:
         print(i.subcat, i.ref)
