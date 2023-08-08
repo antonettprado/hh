@@ -27,33 +27,33 @@ export X509_USER_PROXY=$(realpath ~/private/x509up)
 
 To run on condor:
 ```bash
-bambooRun -m python/SL_DL_event_selection.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_EventSelection_0707 --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_event_selection.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_EventSelection_0707 --envConfig config/cern.ini --distributed=driver
 ```
 To run locally:
 ```bash
-bambooRun -m python/SL_DL_event_selection.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_EventSelection
+bambooRun -m src/SL_DL_event_selection.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_EventSelection
 ```
 ## ============ Process NANOAODs: SL_DL_vars_gen  ============
 To run in interactive mode and locally:
 ```bash
-bambooRun -m python/SL_DL_vars_gen.py -i config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsGen
+bambooRun -m src/SL_DL_vars_gen.py -i config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsGen
 ```
 To run in normal mode and locally:
 ```bash
-bambooRun -m python/SL_DL_vars_gen.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsGen
+bambooRun -m src/SL_DL_vars_gen.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsGen
 ```
 To run in normal mode and on condor:
 ```bash
-bambooRun -m python/SL_DL_vars_gen.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsGen_0713 --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_vars_gen.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsGen_0713 --envConfig config/cern.ini --distributed=driver
 ```
 ## ============ Process NANOAODs: SL_DL_vars_reco ============
 To run in normal mode and locally:
 ```bash
-bambooRun -m python/SL_DL_vars_reco.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsReco_0727
+bambooRun -m src/SL_DL_vars_reco.py config/analysis_2018_test.yml -o Z_OUTPUT/Local_VarsReco_0727
 ```
 To run in normal mode and on condor:
 ```bash
-bambooRun -m python/SL_DL_vars_reco.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsReco_0727_TEST --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_vars_reco.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsReco_0727_TEST --envConfig config/cern.ini --distributed=driver
 ```
 ## ============== Postprocessing: Plot Signal vs Background Comparisons ==============
 ```bash
@@ -77,12 +77,12 @@ python3 utils/likelihood_ratio_plot.py -s Z_OUTPUT/TOTAL_VarsReco_0713
 ## ======== Process NANOAODs: SL_DL_likelihood_ratios ========
 To run locally:
 ```bash
-bambooRun -m python/SL_DL_likelihood_ratio.py config/analysis_2018_test.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0727_TEST -o Z_OUTPUT/Local_VarsReco_0727_TEST_LLR
+bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018_test.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0727_TEST -o Z_OUTPUT/Local_VarsReco_0727_TEST_LLR
 ```
 
 To run on condor:
 ```bash
-bambooRun -m python/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0727_TEST -o Z_OUTPUT/TOTAL_VarsReco_0727_TEST_LLR --envConfig config/cern.ini --distributed=finalize
+bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0727_TEST -o Z_OUTPUT/TOTAL_VarsReco_0727_TEST_LLR --envConfig config/cern.ini --distributed=finalize
 ```
 
 
