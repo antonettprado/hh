@@ -1,8 +1,7 @@
-from bamboo.analysismodules import NanoAODHistoModule
-from bamboo.treedecorators import NanoAODDescription
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, SummedPlot, CutFlowReport
+from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.plots import Skim
 from bamboo.scalefactors import get_correction
 from bamboo.treeproxies import FloatProxy
 

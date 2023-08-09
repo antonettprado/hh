@@ -224,7 +224,7 @@
         "sl_lep_pT":
         {
             "nbins": 115,
-            "min": 25,
+            "min": 10,
             "max": 100,
             "unit": "GeV",
             "title": "SL Lepton Cone-pT",

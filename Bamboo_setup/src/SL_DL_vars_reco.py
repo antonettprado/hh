@@ -1,12 +1,7 @@
-from bamboo.analysismodules import NanoAODHistoModule
-from bamboo.treedecorators import NanoAODDescription
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, SummedPlot, CutFlowReport
-from bamboo.plots import EquidistantBinning as EqBin
-
+from bamboo.plots import Plot, CutFlowReport
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.object_definition as object_defs
-import utils.event_definition as event_defs
 from utils import variables
 from utils.variables import Variable1D, Variable2D
 from pathlib import Path

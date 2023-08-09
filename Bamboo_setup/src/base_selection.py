@@ -69,7 +69,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
 
         # Gen Weight and Trigger Selection
         if self.is_MC:
-            noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=()) # cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
+            noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
         else:
             noSel = noSel.refine('trigger', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
 
