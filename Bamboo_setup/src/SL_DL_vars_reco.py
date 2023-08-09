@@ -349,13 +349,88 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         blnu_pT.populate(data, selections)
         return blnu_pT 
 
+    def get_trijet_bijet_dR(self) -> Variable1D:
+        trijet_bijet_dR = Variable1D('trijet_bijet_dR')
+        selections = self.get_selections_subset(trijet_bijet_dR.subcats)
+
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
+        trijet = bijet + bjet.p4
+        data = op.deltaR(bijet, trijet)
+        data = { 'SL_res_2b_x':data }
+        trijet_bijet_dR.populate(data, selections)
+        return trijet_bijet_dR
+
+    def get_trijet_bijet_dPhi(self) -> Variable1D:
+        trijet_bijet_dPhi = Variable1D('trijet_bijet_dPhi')
+        selections = self.get_selections_subset(trijet_bijet_dPhi.subcats)
+
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
+        trijet = bijet + bjet.p4
+        data = op.deltaPhi(trijet, bijet)
+        data = { 'SL_res_2b_x':data }
+        trijet_bijet_dPhi.populate(data, selections)
+        return trijet_bijet_dPhi
+
+    def get_trijet_bijet_dEta(self) -> Variable1D:
+        trijet_bijet_dEta = Variable1D('trijet_bijet_dEta')
+        selections = self.get_selections_subset(trijet_bijet_dEta.subcats)
+
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
+        trijet = bijet + bjet.p4
+        data = trijet.Eta() - bijet.Eta()
+        data = { 'SL_res_2b_x':data }
+        trijet_bijet_dEta.populate(data, selections)
+        return trijet_bijet_dEta
+
+    def get_bjet_bijet_dR(self) -> Variable1D:
+        bjet_bijet_dR = Variable1D('bjet_bijet_dR')
+        selections = self.get_selections_subset(bjet_bijet_dR.subcats)
+
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
+        data = op.deltaR(bjet.p4, bijet)
+        data = { 'SL_res_2b_x':data }
+        bjet_bijet_dR.populate(data, selections)
+        return bjet_bijet_dR
+
+    def get_bjet_bijet_dPhi(self) -> Variable1D:
+        bjet_bijet_dPhi = Variable1D('bjet_bijet_dPhi')
+        selections = self.get_selections_subset(bjet_bijet_dPhi.subcats)
+
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
+        data = op.deltaPhi(bjet.p4, bijet)
+        data = { 'SL_res_2b_x':data }
+        bjet_bijet_dPhi.populate(data, selections)
+        return bjet_bijet_dPhi
+
+    def get_bjet_bijet_dEta(self) -> Variable1D:
+        bjet_bijet_dEta = Variable1D('bjet_bijet_dEta')
+        selections = self.get_selections_subset(bjet_bijet_dEta.subcats)
+
+        j0, j1, bjet = self._get_trijet_data()
+        bijet = j0.p4 + j1.p4
+        data = bjet.p4.Eta() - bijet.Eta()
+        data = { 'SL_res_2b_x':data }
+        bjet_bijet_dEta.populate(data, selections)
+        return bjet_bijet_dEta
+
     # Helper function for returning a list of all top-related variables for iteration
     def get_top_vars(self) -> 'list[Variable1D]':
         vars = [self.get_trijet_mInv(),
                 self.get_trijet_pT(),
                 self.get_trijet_pT_rat(),
                 self.get_blnu_mT(),
-                self.get_blnu_pT()]
+                self.get_blnu_pT(),
+                self.get_trijet_bijet_dR(),
+                self.get_trijet_bijet_dPhi(),
+                self.get_trijet_bijet_dEta(), 
+                self.get_bjet_bijet_dR(),
+                self.get_bjet_bijet_dPhi(),
+                self.get_bjet_bijet_dEta()]
         return vars
 
     def _get_total_vars_data(self):
@@ -436,6 +511,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 self.get_all_mT()]
         return vars
           
+    def get_misc_vars(self) -> 'list[Variable1D]':
+        vars = [self.get_mjj()]
+        return vars
     # ============================= New Variables ================================
     # Once variables are finalized, move them somewhere above here 
 
@@ -454,34 +532,51 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         sl_lep_pT.populate(data, selections)
         return sl_lep_pT
     
-    def get_trijet_bijet_dR(self) -> Variable1D:
-        trijet_bijet_dR = Variable1D('trijet_bijet_dR')
-        selections = self.get_selections_subset(trijet_bijet_dR.subcats)
+    def get_all_pT(self) -> Variable1D:
+        all_pT = Variable1D('all_pT')
+        subcat_names = all_pT.subcats
+        selections = self.get_selections_subset(subcat_names)
 
-        j0, j1, bjet = self._get_trijet_data()
-        bijet = j0.p4 + j1.p4
-        trijet = bijet + bjet.p4
-        data = op.deltaR(bijet, trijet)
-        data = { 'SL_res_2b_x':data }
-        trijet_bijet_dR.populate(data, selections)
-        return trijet_bijet_dR
+        total_4vec = self._get_total_4vec()
+        data = total_4vec.Pt()
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
+        all_pT.populate(data, selections)
+        return all_pT
 
-    def get_bjet_bijet_dR(self) -> Variable1D:
-        bjet_bijet_dR = Variable1D('bjet_bijet_dR')
-        selections = self.get_selections_subset(bjet_bijet_dR.subcats)
+    def _get_leptons(self):
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        if op.rng_len(electrons) == 0 and op.rng_len(muons) == 1:
+            return muons[0], muons[0]
+        elif op.rng_len(electrons) == 0 and op.rng_len(muons) == 2:
+            return muons[0], muons[1]
+        elif op.rng_len(muons) == 0 and op.rng_len(electrons) == 1:
+            return electrons[0], electrons[0]
+        elif op.rng_len(muons) == 0 and op.rng_len(electrons) == 2:
+            return electrons[0], electrons[1]
+        else: # op.rng_len(muons) == 1 and op.rng_len(electrons) == 1
+            return muons[0], electrons[0] 
 
-        j0, j1, bjet = self._get_trijet_data()
-        bijet = j0.p4 + j1.p4
-        data = op.deltaR(bjet.p4, bijet)
-        data = { 'SL_res_2b_x':data }
-        bjet_bijet_dR.populate(data, selections)
-        return bjet_bijet_dR
+    def get_WW_mInv(self) -> Variable1D:
+        WW_mInv = Variable1D('WW_mInv')
+        subcat_names = WW_mInv.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        met = self.objects['met']
+        jj_W = self._get_jj_W()
+        j0, j1 = jj_W[0], jj_W[1]
+        lep0, lep1 = self._get_leptons()
+        # print(type(j0), type(j1), type(lep0), type(lep1), type(met))
+        sl_data = (j0.p4 + j1.p4 + lep0.p4 + met.p4).M()
+        dl_data = (lep0.p4 + lep1.p4 + met.p4).M()
+        data = { 'SL_res_2b_x':sl_data, 'DL_res_2b':dl_data }
+        WW_mInv.populate(data, selections)
+        return WW_mInv
 
     # ============================ End New Variables ==============================
 
     # Helper function for returning a list of all reco variables for iteration
     def get_all_reco_variables(self) -> 'list[Variable1D]':
-        vars = self.get_bjets_vars() + self.get_top_vars() + self.get_total_vars() + [ self.get_mjj(), self.get_sl_lep_pT(), self.get_trijet_bijet_dR(), self.get_bjet_bijet_dR() ]
+        vars = self.get_bjets_vars() + self.get_top_vars() + self.get_total_vars() + self.get_misc_vars() + [ self.get_sl_lep_pT(), self.get_all_pT(), self.get_WW_mInv() ]
         return vars
     
     def get_all_reco_2D_variables(self) -> 'list[Variable2D]':

@@ -85,7 +85,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             all_2D_vars_lr.append(var_lr)
         return all_2D_vars_lr
 
-    def get_all_1D_corrected_vars_combinations(self) -> dict[str: FloatProxy]:
+    def get_all_1D_corrected_vars_combinations(self) -> 'dict[str, FloatProxy]':
         all_1D_corrected_vars = self.get_all_1D_corrected_vars()
         all_1D_var_combos = combinations(all_1D_corrected_vars, 2)
         all_1D_corrected_var_combos = {}
