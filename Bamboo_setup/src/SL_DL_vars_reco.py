@@ -656,46 +656,82 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_SIGNAL_SAMPLES if (results_path / name).exists() ]
         BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_BACKG_SAMPLES if (results_path / name).exists() ]
 
-        def output_lr_hist(var: Variable1D) -> ROOT.TH1D:
-            signal_total_hist = var.get_total_hist('signal', SIGNAL_SAMPLES, normalized=True)
-            backg_total_hist  = var.get_total_hist('backg', BACKG_SAMPLES, normalized=True)
+        sams_function = False
+        antonetts_function_v2 = True
 
-            ratio_hist = signal_total_hist.Clone()
-            ratio_hist.Divide(backg_total_hist)
+        #=================================================================
+        if sams_function:
 
-            var.hists['ratio'] = ratio_hist
-            return ratio_hist
+            all_reco_vars_1D = self.get_all_reco_variables()
+            all_reco_vars_2D = self.get_all_reco_2D_variables()
+            all_reco_vars = all_reco_vars_1D + all_reco_vars_2D
 
-        all_reco_vars_1D = self.get_all_reco_variables()
-        all_reco_vars_2D = self.get_all_reco_2D_variables()
-        all_reco_vars = all_reco_vars_1D + all_reco_vars_2D
-        all_corrections = []
-        for var in all_reco_vars:
-            if "SL_res_2b_x" not in var.subcats: 
-                continue
-            SL_res_2b_x_var = var["SL_res_2b_x"]
-            ratio_hist = output_lr_hist(SL_res_2b_x_var)
-            print('--------------------------')
-            print(SL_res_2b_x_var.ref)
-            if isinstance(var, Variable1D):
-                bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.nbins, SL_res_2b_x_var.min, SL_res_2b_x_var.max))
-                for i in range(SL_res_2b_x_var.nbins):
-                    bh_hist[i] = ratio_hist.GetBinContent(i+1) # +1 to skip underflow bin
-            elif isinstance(var, Variable2D):
-                bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.xnbins, SL_res_2b_x_var.xmin, SL_res_2b_x_var.xmax),
-                                       bh.axis.Regular(SL_res_2b_x_var.ynbins, SL_res_2b_x_var.ymin, SL_res_2b_x_var.ymax))
-                for i in range(SL_res_2b_x_var.xnbins):
-                    for j in range(SL_res_2b_x_var.ynbins):
-                        bh_hist[i,j] = ratio_hist.GetBinContent(i+1,j+1) # +1 to skip underflow bin
+            def output_lr_hist(var: Variable1D) -> ROOT.TH1D:
+                signal_total_hist = var.get_total_hist('signal', SIGNAL_SAMPLES, normalized=True)
+                backg_total_hist  = var.get_total_hist('backg', BACKG_SAMPLES, normalized=True)
 
-            corr = correctionlib.convert.from_histogram(bh_hist)
-            corr.name = SL_res_2b_x_var.ref + '_lr'
-            corr.description = f'llr for {SL_res_2b_x_var.ref}'
-            corr.data.flow = 'clamp'
-            # rich.print(corr)
-            all_corrections.append(corr)
+                ratio_hist = signal_total_hist.Clone()
+                ratio_hist.Divide(backg_total_hist)
 
-        cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(results_path, "corrections_lr.json")
-        with open(output_llr_file, "w") as outfile:
-            outfile.write(cset.json(exclude_unset=False))
+                var.hists['ratio'] = ratio_hist
+                return ratio_hist
+        
+            all_corrections = []
+            for var in all_reco_vars:
+                if "SL_res_2b_x" not in var.subcats: 
+                    continue
+                SL_res_2b_x_var = var["SL_res_2b_x"]
+                ratio_hist = output_lr_hist(SL_res_2b_x_var)
+                print('--------------------------')
+                print(SL_res_2b_x_var.ref)
+                if isinstance(var, Variable1D):
+                    bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.nbins, SL_res_2b_x_var.min, SL_res_2b_x_var.max))
+                    for i in range(SL_res_2b_x_var.nbins):
+                        bh_hist[i] = ratio_hist.GetBinContent(i+1) # +1 to skip underflow bin
+                elif isinstance(var, Variable2D):
+                    bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.xnbins, SL_res_2b_x_var.xmin, SL_res_2b_x_var.xmax),
+                                        bh.axis.Regular(SL_res_2b_x_var.ynbins, SL_res_2b_x_var.ymin, SL_res_2b_x_var.ymax))
+                    for i in range(SL_res_2b_x_var.xnbins):
+                        for j in range(SL_res_2b_x_var.ynbins):
+                            bh_hist[i,j] = ratio_hist.GetBinContent(i+1,j+1) # +1 to skip underflow bin
+
+                corr = correctionlib.convert.from_histogram(bh_hist)
+                corr.name = SL_res_2b_x_var.ref + '_lr'
+                corr.description = f'llr for {SL_res_2b_x_var.ref}'
+                corr.data.flow = 'clamp'
+                # rich.print(corr)
+                all_corrections.append(corr)
+
+            cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
+            output_llr_file = os.path.join(results_path, "corrections_lr.json")
+            with open(output_llr_file, "w") as outfile:
+                outfile.write(cset.json(exclude_unset=False))
+
+        #=================================================================
+        if antonetts_function_v2:
+            import uproot
+            import rich
+            from utils.Draw import Draw
+
+            drawer = Draw(self.args.output)
+            drawer.output_ratios(must_contain="SL_res_2b_x_")
+
+            all_corrections = []
+            with uproot.open(os.path.join(results_path, "output_file.root")) as root_file:
+                for key in root_file.keys():
+                    end_index = key.rfind(';')
+                    hist_name = key[:end_index]
+                    hist = root_file[key]
+                    h = bh.Histogram(hist)
+                    corr = correctionlib.convert.from_histogram(h)
+                    corr.name = hist_name
+                    corr.description = f"lr for " + hist_name
+                    corr.data.flow = "clamp"
+                    # rich.print(corr)
+                    all_corrections.append(corr)
+
+            cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
+            output_lr_file = os.path.join(results_path, "output_file.json")
+            with open(output_lr_file, "w") as outfile:
+                outfile.write(cset.json(exclude_unset=False))
+
