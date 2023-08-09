@@ -531,7 +531,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        # super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         # print("-------------------- Outputtting 2D histograms ---------------------")
         # from bamboo.plots import Plot, DerivedPlot
         # from bamboo.analysisutils import loadPlotIt
@@ -632,7 +632,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                     corr.name = hist_name
                     corr.description = f"lr for " + hist_name
                     corr.data.flow = "clamp"
-                    rich.print(corr)
+                    # rich.print(corr)
                     all_corrections.append(corr)
 
             cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
