@@ -9,40 +9,48 @@ import os
 from pathlib import Path
 from constants import *
 import argparse
-import decimal
-from array import array 
+from itertools import product
 import math
 import csv
 import time
-
-import sys
+import variables
+from variables import Variable1D, Variable2D, LikelihoodRatio
+import pandas as pd
 import numpy as np
 
 SOURCE_PATH = None
-SOURCE_DIR = None
 OUTPUT_PATH = None
-OUTPUT_FILE = None
 SIGNAL_SAMPLES = None
 BACKG_SAMPLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
-
-MANUAL_CUT = False
-MANUAL_CUT_VARIABLE = "bjets_pT_bb"
-MANUAL_CUT_XMIN = 150
-MANUAL_CUT_XMAX = 500
-MANUAL_CUT_YMIN = -1.6
-MANUAL_CUT_YMAX = 1.6
+FAILED_VARIABLES = []
 
 
-def print_to_csv(row):
-    with open(OUTPUT_PATH, "a") as file: 
-        writer = csv.writer(file)
-        writer.writerow(row)
+def initialize_outputs(dir, subcats):
+    ret = {}
+    dir.mkdir(exist_ok=True)
+    for subcat in subcats:
+        var = Variable1D('bjets_mbb')[subcat]
+        sig_size = var.get_total_hist('init_signal', SIGNAL_SAMPLES).Integral()
+        bkg_size = var.get_total_hist('init_backg', BACKG_SAMPLES).Integral()
+        tot_significance = sig_size / math.sqrt(bkg_size)
+        path = dir/(subcat + '.csv')
+        ret[subcat] = tot_significance
+        with open(path, 'w') as file:
+            writer = csv.writer(file)
+            writer.writerow([subcat])
+            writer.writerow(['Signal Size', sig_size])
+            writer.writerow(['Background Size', bkg_size])
+            writer.writerow(['Total Significance', tot_significance])
+            writer.writerow([])
+    return ret
 
-def reset_output_file():
-    log_file = open(OUTPUT_PATH,'w')
-    log_file.close()
+def write_to_csv(df):
+    subcat, dim, name = df.index[0][:3]
+    path = OUTPUT_PATH / (subcat + '.csv')
+    df = df.droplevel([0,1,2])
+    df.to_csv(path, index_label=name, mode='a')
 
 def find_window_1D(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
     if bin_r <= bin_l:
@@ -83,7 +91,7 @@ def find_window_1D(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, tota
         
     return find_window_1D(bin_l_new, bin_r_new, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg)
 
-def find_window_2D(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
+def find_window_2D(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg):
     if xbin_r <= xbin_l or ybin_r <= ybin_l:
         return xbin_l, xbin_r, ybin_l, ybin_r
     signal = histo_signal.Integral(xbin_l, xbin_r, ybin_l, ybin_r)
@@ -143,7 +151,7 @@ def find_window_2D(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, hist
     signal_frac_new = histo_signal.Integral(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new)/total_norm_signal
     if (xbin_l_new == xbin_l and xbin_r_new == xbin_r and ybin_l_new == ybin_l and ybin_r_new == ybin_r) or (signal_frac_new < cut):
         return xbin_l, xbin_r, ybin_l, ybin_r
-    return find_window_2D(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg)
+    return find_window_2D(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg)
 
 def find_window_1D_v2(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
     signal = histo_signal.Integral(bin_l, bin_r)
@@ -248,7 +256,7 @@ def find_window_2D_v2(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, h
         return xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new
     return find_window_2D_v2(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
 
-def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg):
+def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg, fix_rbin=False):
     signal_cdf = np.array(histo_signal.GetCumulative())[1:-1]/total_norm_signal
     bkg_cdf = np.array(histo_bkg.GetCumulative())[1:-1]/total_norm_bkg
     min_search_bin = 0
@@ -256,6 +264,7 @@ def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_nor
 
     def solve_j(i: int) -> int:
         return np.argmax(signal_cdf > (cut + signal_cdf[i]))
+    if fix_rbin: solve_j = lambda x: len(signal_cdf) - 1 
 
     def get_significance(i: int) -> float:
         j = solve_j(i)
@@ -274,282 +283,126 @@ def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_nor
 
     return int(bin_l)+2, int(bin_r)+1 # addition acounts for underflow bin and ROOT TH1::Integral definition
 
-def get_total_hist_of_type(of_type, object_name, dataset, dim=1):
+def fill_by_name(df):
+    var, subcat = df.iloc[0][['variable','subcat']]
+    if subcat not in var.subcats:
+        return 
+    ref = var[subcat].ref
+    # If we can't read the references from the file, ignore and keep going
+    try:
+        sig_hist = var.get_total_hist(subcat+'_signal', SIGNAL_SAMPLES, subcat)
+        bkg_hist = var.get_total_hist(subcat+'_backg', BACKG_SAMPLES, subcat)
+    except KeyError:
+        print(f'Generation for {ref} failed')
+        FAILED_VARIABLES.append(ref)
+        return
+    
+    sig_norm = sig_hist.Integral()
+    bkg_norm = bkg_hist.Integral()
+    # If the histogram data integrates to zero, ignore this too
+    if sig_norm == 0 or bkg_norm == 0:
+        print(f'No data for {ref}')
+        FAILED_VARIABLES.append(ref)
+        return
 
-    object_name = dataset + object_name
-    if of_type == "signal": 
-        SAMPLES_OF_TYPE = SIGNAL_SAMPLES
-    elif of_type == "backg":
-        SAMPLES_OF_TYPE = BACKG_SAMPLES
+    if   isinstance(var, Variable1D):       fill_func = fill_by_eff_1D
+    elif isinstance(var, Variable2D):       fill_func = fill_by_eff_2D
+    elif isinstance(var, LikelihoodRatio):  fill_func = fill_by_eff_LR
+    else: raise TypeError
 
-    sample_one = SAMPLES_OF_TYPE[0]
-    hist_one = sample_one.Get(object_name)
-    if dim == 1:
-        xbins = hist_one.GetNbinsX()
-        xmin = hist_one.GetXaxis().GetXmin()
-        xmax = hist_one.GetXaxis().GetXmax()
-        total_hist_of_type = ROOT.TH1F(of_type, "", xbins, xmin, xmax)
-    elif dim == 2:
-        xbins = hist_one.GetXaxis().GetNbins()
-        xmin = hist_one.GetXaxis().GetXmin()
-        xmax = hist_one.GetXaxis().GetXmax()
-        ybins = hist_one.GetYaxis().GetNbins()
-        ymin = hist_one.GetYaxis().GetBinLowEdge(1)
-        ymax = hist_one.GetYaxis().GetBinUpEdge(ybins)
-        total_hist_of_type = ROOT.TH2F(of_type, "", xbins, xmin, xmax, ybins, ymin, ymax)
+    ret_df = df[['name', 'efficiency', 'subcat']].groupby(level=0).apply(fill_func, sig_hist, bkg_hist, sig_norm, bkg_norm)
+    print(f'Generated for {ref}')
+    return ret_df
 
-    for sample in SAMPLES_OF_TYPE:
-        hist_of_type = sample.Get(object_name)
-        total_hist_of_type.Add(hist_of_type)
+def fill_by_eff_1D(df, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False):
+    df = df.squeeze() # Convert one row of dataframe to a series (better return type)
+    eff = df['efficiency']
 
-    total_hist_of_type = ROOT.gDirectory.Get(of_type)
-    total_hist_of_type.SetDirectory(0)
+    # Calculate best cuts
+    xl_bin_min, xr_bin_min = find_window_1D_v3(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin)
+    xl_min = sig_hist.GetBinCenter(xl_bin_min)
+    xr_min = sig_hist.GetBinCenter(xr_bin_min)
+    min_signal_frac = sig_hist.Integral(xl_bin_min, xr_bin_min)/sig_int
+    min_bkg_frac = backg_hist.Integral(xl_bin_min, xr_bin_min)/backg_int
+    significance = (min_signal_frac*sig_int)/math.sqrt(min_bkg_frac*backg_int)
 
-    return total_hist_of_type
+    # Populate new series with additional rows
+    df['signal frac'] = min_signal_frac
+    df['cuts'] = ([round(xl_min, 2), round(xr_min, 2)])
+    df['backg frac'] = min_bkg_frac
+    df['significance'] = significance
+    df['dim'] = '1D'
+    return df
 
-def get_total_integral_of_type(of_type, object_name, dataset):
+def fill_by_eff_2D(df, sig_hist, backg_hist, sig_int, backg_int):
+    df = df.squeeze() # Convert one row of dataframe to a series (better return type)
+    eff = df['efficiency']
 
-        object_name = dataset + object_name
-        if of_type == "signal":
-            SAMPLES_OF_TYPE = SIGNAL_SAMPLES
-        elif of_type == "backg":
-            SAMPLES_OF_TYPE = BACKG_SAMPLES
+    # Calculate best cuts
+    xl_bin_min = 1
+    xr_bin_min = sig_hist.GetNbinsX()
+    yl_bin_min = 1
+    yr_bin_min = sig_hist.GetNbinsY()
+    xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, 1, eff, sig_hist, backg_hist, sig_int, backg_int)
+    xl_min = sig_hist.GetXaxis().GetBinCenter(xl_bin_min)
+    xr_min = sig_hist.GetXaxis().GetBinCenter(xr_bin_min)
+    yl_min = sig_hist.GetYaxis().GetBinCenter(yl_bin_min)
+    yr_min = sig_hist.GetYaxis().GetBinCenter(yr_bin_min)
+    min_signal_frac = sig_hist.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/sig_int
+    min_bkg_frac = backg_hist.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/backg_int
+    significance = (min_signal_frac*sig_int)/math.sqrt(min_bkg_frac*backg_int)
 
-        total_of_type = 0
-        for sample in SAMPLES_OF_TYPE:
-            object_hist = sample.Get(object_name)
-            of_type_in_sample = object_hist.Integral()
-            total_of_type += of_type_in_sample
-        return total_of_type
+    # Populate new series with additional rows
+    df['signal frac'] = min_signal_frac
+    df['cuts'] = ([round(xl_min, 2), round(xr_min, 2)], [round(yl_min, 2), round(yr_min, 2)])
+    df['backg frac'] = min_bkg_frac
+    df['significance'] = significance
+    df['dim'] = '2D'
+    return df
 
-def get_files_in_directory(directory):
-    signal_files = []
-    backg_files = []
-    final_directory = os.path.join(directory,'results')
-    for filename in os.listdir(final_directory):
-        file_path = os.path.join(final_directory,filename)
-        if filename in ALL_SIGNAL_SAMPLES:
-            f = ROOT.TFile.Open(file_path, 'read')
-            signal_files.append(f)
-            print('Signal sample: ' + filename)
-        elif filename in ALL_BACKG_SAMPLES:
-            f = ROOT.TFile.Open(file_path, 'read')
-            backg_files.append(f)
-            print('Backg sample: ' + filename)
-    return signal_files, backg_files
+def fill_by_eff_LR(df, sig_hist, backg_hist, sig_int, backg_int):
+    df = fill_by_eff_1D(df, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=True)
+    df['dim'] = 'LR'
+    return df
 
-if __name__ == "__main__":
+if __name__ == "__main__":    
     startTime = time.time()
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source directory")
     args = parser.parse_args()
 
-    SOURCE_PATH = args.source_path
-    SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
-    OUTPUT_FILE = SOURCE_DIR + "_cuts.csv"
-    OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_FILE)
-    SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(SOURCE_PATH)
-    reset_output_file()
+    SOURCE_PATH = Path(args.source_path)
+    OUTPUT_PATH = SOURCE_PATH / "cuts"
 
-    print("The source path is: " + SOURCE_PATH)
-    print("The output path is: " + OUTPUT_PATH)
-    # ==================================================================
-    # ==================================================================
-    # ==================================================================
+    results_path = SOURCE_PATH / 'results'
+    SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') 
+                        for name in ALL_SIGNAL_SAMPLES 
+                        if (results_path / name).exists() ]
+    BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') 
+                        for name in ALL_BACKG_SAMPLES 
+                        if (results_path / name).exists() ]
 
-    if MANUAL_CUT:
-        EFFICIENCIES = [-9999]
-    else:
-        EFFICIENCIES = [0.75, 0.80, 0.85, 0.90, 0.95]
+    vars1D = list(variables.get_all_1D_variables().values())
+    vars2D = list(variables.get_all_2D_variables().values())
+    varsLR = [] # some way to get all lrs?
+
+    vars = vars1D + vars2D + varsLR
+    subcats = list(set.union(*(set(var.subcats) for var in vars1D)))
+    efficiencies = [0.75, 0.85, 0.9]
+
+    tot_sigs = initialize_outputs(OUTPUT_PATH, subcats)
+
+    df = pd.DataFrame(list(product(subcats, vars, efficiencies)), columns=['subcat', 'variable', 'efficiency'])
+    df['name'] = df['variable'].apply(lambda x: x.name)
+    df = df.groupby(by=['subcat','name']).apply(fill_by_name)
+    df['dSignificance %'] = (df['significance']/df['subcat'].apply(lambda x: tot_sigs[x]) - 1) * 100
+    df.set_index(['subcat', 'dim', 'name', 'efficiency'], inplace=True)
+    df.sort_index(inplace=True)
+    df.groupby(level=[0,1,2]).apply(write_to_csv)
     
-    print("\n---------------------- For 1D variables ----------------------")
-    variables_1D = {'SL_res_2b_x_':["bjets_mbb", "bjets_dPhi", "bjets_dEta", "t1_mInv", "bjets_dR", "bjets_pT_bb", "bjets0_pT", "bjets_dPhi_abs", "bjets_dEta_abs"],
-                    'DL_res_2b_':  ["bjets_mbb", "bjets_dPhi", "bjets_dEta", "bjets_dR", "bjets_pT_bb", "bjets0_pT", "bjets_dPhi_abs", "bjets_dEta_abs"],
-                    'SL_boost_':   [],
-                    'DL_boost_':   []}
-    # variables_1D = {'SL_res_2b_x_': ["bjets_dEta_abs"]}
-
-    print_to_csv([])
-    print_to_csv(["Directory: " + SOURCE_DIR])
-    print_to_csv([])
-    print_to_csv(["1D Cuts"])
-    for dataset, cutting_variables in variables_1D.items():
-        if not cutting_variables:
-            continue
-
-        object_name = "bjets_mbb"
-        
-        Total_signal = get_total_integral_of_type("signal", object_name, dataset)
-        Total_backg = get_total_integral_of_type("backg", object_name, dataset)
-        print(Total_signal)
-        print(Total_backg)
-        Total_significance = Total_signal/math.sqrt(Total_backg)
-        print('-----------------------------------------------------------')
-        print('Total stats for: ' + dataset)
-        print(f"Total signal = {Total_signal:.4f}")
-        print(f"Total background = {Total_backg:.4f}")
-        print(f"S/sqrt(B) = {Total_significance:.5f}")
-        print('-----------------------------------------------------------')
-        
-        print_to_csv([])
-        print_to_csv([dataset])
-        print_to_csv(["Total Signal", "Total Backg.", "S/sqrt(B)"])
-        print_to_csv([str(round(Total_signal, 4)), str(round(Total_backg, 4)), str(round(Total_significance, 5))])
-        print_to_csv([])
-
-        for var in cutting_variables:
-            if MANUAL_CUT:
-                if var != MANUAL_CUT_VARIABLE:
-                    continue
-
-            print("\tCut for %s:"%var)
-            print_to_csv([var])
-            print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
-            for EFF in EFFICIENCIES:
-                histo_signal = get_total_hist_of_type("signal", var, dataset)
-                histo_backg = get_total_hist_of_type("backg", var, dataset)
-
-                nbins = histo_signal.GetNbinsX()
-                total_norm_signal = histo_signal.Integral()
-                total_norm_bkg = histo_backg.Integral()
-                min_width = 9999
-                min_bkg_frac = 9999
-                min_signal_frac = 9999
-                xl_min = -9999
-                xr_min = -9999
-
-                cut = EFF
-                step = 1
-                if MANUAL_CUT:
-                    xl_min = MANUAL_CUT_XMIN
-                    xr_min = MANUAL_CUT_XMAX
-                    xl_bin_min = histo_signal.FindBin(xl_min)
-                    xr_bin_min = histo_signal.FindBin(xr_min)
-                else:
-                    xl_bin_min = 1
-                    xr_bin_min = nbins
-                    if "t1_mInv" in var:
-                        # xl_bin_min, xr_bin_min = find_window_1D_v2(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
-                        xl_bin_min, xr_bin_min = find_window_1D_v3(cut, histo_signal, histo_backg, total_norm_signal, total_norm_bkg)
-                        # xl_bin_min, xr_bin_mins = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
-                    else:
-                        xl_bin_min, xr_bin_min = find_window_1D_v3(cut, histo_signal, histo_backg, total_norm_signal, total_norm_bkg)
-                        # xl_bin_min, xr_bin_min = find_window_1D(xl_bin_min, xr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)
-
-                    xl_min = histo_signal.GetBinCenter(xl_bin_min)
-                    xr_min = histo_signal.GetBinCenter(xr_bin_min)
-                min_width = xr_min - xl_min
-                min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min)
-                min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min)/total_norm_bkg
-                significance = (min_signal_frac*total_norm_signal)/math.sqrt(min_bkg_frac*total_norm_bkg)
-
-                print("\t\tFor signal efficiency of " + str(EFF))
-                print("\t\tMinimum: %.2f, Maximum: %.2f, Width: %.2f"%(xl_min, xr_min, min_width))
-                print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
-                print("\t\tS/sqrt(B) = " + str(round(significance, 4)))
-                print("\t\t-------------------------------------------------")
-                print_to_csv([round(min_signal_frac*100, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
-
-
-    # print("\n---------------------- For 2D variables ----------------------") 
-    # variables_2D = {"SL_res_2b_x_": ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "t1_mInv_vs_bjets_mbb", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
-    #                 'DL_res_2b_':   ["bjets_dEta_vs_mbb", "bjets_dPhi_vs_mbb", "bjets_dPhi_vs_dEta", "bjets_pT_bb_vs_mbb", "bjets_dEta_vs_pT_bb", "bjets_dPhi_vs_pT_bb", "bjets_dEta_abs_vs_mbb", "bjets_dPhi_abs_vs_mbb", "bjets_dR_vs_mbb"],
-    #                 'SL_boost_':    [],
-    #                 'DL_boost_':    []}
-
-    # print_to_csv([])
-    # print_to_csv(["2D Cuts"])
-    # for dataset, cutting_variables in variables_2D.items():
-    #     if not cutting_variables:
-    #         continue
-
-    #     object_name = "bjets_mbb"
-    #     Total_signal = get_total_integral_of_type("signal", object_name, dataset)
-    #     Total_backg = get_total_integral_of_type("backg", object_name, dataset)
-    #     Total_significance = Total_signal/math.sqrt(Total_backg)
-    #     print('-----------------------------------------------------------')
-    #     print('Total stats for: ' + dataset)
-    #     print(f"Total signal = {Total_signal:.4f}")
-    #     print(f"Total background = {Total_backg:.4f}")
-    #     print(f"S/sqrt(B) = {Total_significance:.5f}")
-    #     print('-----------------------------------------------------------')
-        
-    #     print_to_csv([])
-    #     print_to_csv([dataset])
-    #     print_to_csv(["Total Signal", "Total Backg.", "S/sqrt(B)"])
-    #     print_to_csv([str(round(Total_signal, 4)), str(round(Total_backg, 4)), str(round(Total_significance, 5))])
-    #     print_to_csv([])
-
-    #     for var in cutting_variables:
-    #         if MANUAL_CUT:
-    #             if var != MANUAL_CUT_VARIABLE:
-    #                 continue
-            
-    #         print("\tCut for %s:"%var)
-    #         print_to_csv([var])
-    #         print_to_csv(["Signal fraction", "Cut", "Backg. fraction", "S/sqrt(B)"])
-    #         for EFF in EFFICIENCIES:
-    #             histo_signal = get_total_hist_of_type("signal", var, dataset, dim=2)
-    #             histo_backg = get_total_hist_of_type("backg", var, dataset, dim=2)
-
-    #             nbins_x = histo_signal.GetNbinsX()
-    #             nbins_y = histo_signal.GetNbinsY()
-    #             total_norm_signal = histo_signal.Integral()
-    #             total_norm_bkg = histo_backg.Integral()
-    #             min_bkg_frac = 9999
-    #             min_signal_frac = 9999
-    #             xl_min = -9999
-    #             xr_min = -9999
-    #             xbinl_min = -9999
-    #             xbinr_min = -9999
-    #             yl_min = -9999
-    #             yr_min = -9999
-    #             ybinl_min = -9999
-    #             ybinr_min = -9999
-    #             min_width_x = 9999
-    #             min_width_y = 9999
-
-    #             cut = EFF
-    #             step = 1
-
-    #             if MANUAL_CUT:
-    #                 xl_min = MANUAL_CUT_XMIN
-    #                 xr_min = MANUAL_CUT_XMAX
-    #                 yl_min = MANUAL_CUT_YMIN
-    #                 yr_min = MANUAL_CUT_YMAX
-    #                 xl_bin_min = histo_signal.GetXaxis().FindBin(xl_min)
-    #                 xr_bin_min = histo_signal.GetXaxis().FindBin(xr_min)
-    #                 yl_bin_min = histo_signal.GetYaxis().FindBin(yl_min)
-    #                 yr_bin_min = histo_signal.GetYaxis().FindBin(yr_min)
-    #             else:
-    #                 xl_bin_min = 1
-    #                 xr_bin_min = nbins_x
-    #                 yl_bin_min = 1
-    #                 yr_bin_min = nbins_y
-    #                 if "t1_mInv" in var:
-    #                     # xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D_v2(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
-    #                     xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
-    #                 else:
-    #                     xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min = find_window_2D(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min, step, cut, histo_signal, histo_backg, nbins, total_norm_signal, total_norm_bkg)  #NO nbins
-    #                 xl_min = histo_signal.GetXaxis().GetBinCenter(xl_bin_min)
-    #                 xr_min = histo_signal.GetXaxis().GetBinCenter(xr_bin_min)
-    #                 yl_min = histo_signal.GetYaxis().GetBinCenter(yl_bin_min)
-    #                 yr_min = histo_signal.GetYaxis().GetBinCenter(yr_bin_min)
-    #             min_width_x = xr_min - xl_min
-    #             min_width_y = yr_min - yl_min
-    #             min_signal_frac = histo_signal.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_signal
-    #             min_bkg_frac = histo_backg.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/total_norm_bkg
-    #             significance = (min_signal_frac*total_norm_signal)/math.sqrt(min_bkg_frac*total_norm_bkg)
-
-    #             print("\t\tFor signal efficiency of " + str(EFF))
-    #             print("\t\tX Minimum: %.2f, X Maximum: %.2f, X Width: %.2f"%(xl_min, xr_min, min_width_x))
-    #             print("\t\tY Minimum: %.2f, Y Maximum: %.2f, Y Width: %.2f"%(yl_min, yr_min, min_width_y))
-    #             print("\t\tSignal fraction: %.4f, Background fraction: %.4f"%(min_signal_frac, min_bkg_frac))
-    #             print("\t\tS/sqrt(B) = " + str(round(significance, 4)))
-    #             print("\t\t-------------------------------------------------")
-    #             print_to_csv([round(min_signal_frac, 2), "["+ str(round(xl_min, 2)) + ", " + str(round(xr_min, 2)) +"]", round(min_bkg_frac*100,2), round(significance,4)])
-    #             print_to_csv(["","["+ str(round(yl_min, 2)) + ", " + str(round(yr_min, 2)) +"]", "", ""])
-
-    # executionTime = (time.time() - startTime)
-    # print('Execution time in seconds: ' + str(executionTime))
+    executionTime = time.time() - startTime
+    print(f'Executed in {executionTime:.1f}s')
+    if FAILED_VARIABLES:
+        print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")
+        print(*FAILED_VARIABLES, sep='\n')

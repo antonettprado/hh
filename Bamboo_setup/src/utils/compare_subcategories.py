@@ -6,10 +6,9 @@
 import ROOT
 import os
 from pathlib import Path
-from constants import *
 import argparse
-import variables
-from variables import Variable1D, Variable2D
+from utils import variables
+from utils.variables import Variable1D, Variable2D
 
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
@@ -24,6 +23,7 @@ ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 WITH_TITLES = None
 LEVEL = None
+FAILED_VARIABLES = []
 
 
 # Deprecated
@@ -49,7 +49,7 @@ def get_1D_of_type(of_type, object_name, var: Variable1D):
 
     return total_hist_of_type
 
-def draw_2D_of_type(of_type, object_name, var):
+def draw_2D_of_type(of_type, object_name, var, path):
     if of_type == "signal": 
         SAMPLES_OF_TYPE = SIGNAL_SAMPLES
         color_of_type = ROOT.kBlue
@@ -64,13 +64,9 @@ def draw_2D_of_type(of_type, object_name, var):
     total_hist_of_type.GetXaxis().SetTitle(var.xtitle)
     total_hist_of_type.GetYaxis().SetTitle(var.ytitle)
 
-    variable_output_path = os.path.join(OUTPUT_PATH, var.name)
+    variable_output_path = os.path.join(path, var.name)
     if not os.path.exists(variable_output_path):
         os.makedirs(variable_output_path)
-
-    # sample_output_path = os.path.join(variable_output_path, "samples")
-    # if not os.path.exists(sample_output_path):
-    #     os.makedirs(sample_output_path)
 
     for sample in SAMPLES_OF_TYPE:
 
@@ -83,22 +79,6 @@ def draw_2D_of_type(of_type, object_name, var):
             hist_of_type_s.SetTitle(LEVEL + ": " + var.title + " " + sample_name)
         hist_of_type_s.GetXaxis().SetTitle(var.xtitle)
         hist_of_type_s.GetYaxis().SetTitle(var.ytitle)
-
-        # ------------Plot individual samples------------------------------#
-        # canvas_s = ROOT.TCanvas('', '', 200, 200)
-        # canvas_s.SetLeftMargin(0.12)
-        # canvas_s.SetRightMargin(0.15)
-        # hist_of_type_s.SetOption("colz")
-        # hist_of_type_s.Draw()
-        # canvas_s.Update()
-
-        # s_sample = hist_of_type_s.FindObject("stats")
-        # s_sample.SetTextColor(color_of_type)
-        # s_sample.SetY1NDC(0.6)
-        # s_sample.SetY2NDC(0.8)
-
-        # canvas_s.SaveAs(os.path.join(sample_output_path, sample_name + '.pdf'))
-        # ------------Plot individual samples-------------------------------#
 
         total_hist_of_type.Add(hist_of_type_s)
 
@@ -114,9 +94,9 @@ def draw_2D_of_type(of_type, object_name, var):
     s1.SetY1NDC(0.6)
     s1.SetY2NDC(0.8)
 
-    canvas.SaveAs(os.path.join(variable_output_path, object_name + '_' + of_type + '.pdf'))
+    canvas.SaveAs(os.path.join(variable_output_path, var.name + '_' + of_type + '.pdf'))
 
-def draw_1D_total(hist_signal, hist_backg, xmin, xmax, outname):
+def draw_1D_total(hist_signal, hist_backg, xmin, xmax, outname, path):
 
     hist_signal.SetLineColor(ROOT.kBlue)
     hist_signal.SetLineWidth(3)
@@ -171,36 +151,40 @@ def draw_1D_total(hist_signal, hist_backg, xmin, xmax, outname):
     s2.SetX2NDC(s1.GetX2NDC())
     s2.SetY2NDC(0.6)
 
-    canvas_norm.SaveAs(os.path.join(OUTPUT_PATH, outname + '.pdf'))
+    canvas_norm.SaveAs(os.path.join(path, outname + '.pdf'))
 
 def draw1D(var: Variable1D):
     # For subcat-specific var in var
+    path_1D = os.path.join(OUTPUT_PATH, '1D')
     for ss_var in var:
-        total_signal = ss_var.get_total_hist("signal", SIGNAL_SAMPLES, ss_var.subcat)
-        total_backg = ss_var.get_total_hist("backg", BACKG_SAMPLES, ss_var.subcat)
-        draw_1D_total(total_signal, total_backg, ss_var.min, ss_var.max, ss_var.ref)
+        this_path = os.path.join(path_1D, ss_var.subcat)
+        if not os.path.exists(this_path): os.makedirs(this_path)
+        try:
+            total_signal = ss_var.get_total_hist("signal", SIGNAL_SAMPLES, ss_var.subcat)
+            total_backg = ss_var.get_total_hist("backg", BACKG_SAMPLES, ss_var.subcat)
+            draw_1D_total(total_signal, total_backg, ss_var.min, ss_var.max, ss_var.name, this_path)
+        except KeyError:
+            print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
+            FAILED_VARIABLES.append(ss_var.ref)
+        except ZeroDivisionError:
+            print(f'Comparison for {ss_var.ref} failed: Empty histogram')
+            FAILED_VARIABLES.append(ss_var.ref)
+        
 
-def draw2D(var: Variable1D):
-
-    for full_object_name in var.refs:
-        draw_2D_of_type("signal", full_object_name, var)
-        draw_2D_of_type("backg", full_object_name, var)
-
-def get_files_in_directory(directory):
-    signal_files = []
-    backg_files = []
-    final_directory = os.path.join(directory,'results')
-    for filename in os.listdir(final_directory):
-        file_path = os.path.join(final_directory,filename)
-        if filename in ALL_SIGNAL_SAMPLES:
-            f = ROOT.TFile.Open(file_path, 'read')
-            signal_files.append(f)
-            print('Signal sample: ' + filename)
-        elif filename in ALL_BACKG_SAMPLES:
-            f = ROOT.TFile.Open(file_path, 'read')
-            backg_files.append(f)
-            print('Backg sample: ' + filename)
-    return signal_files, backg_files
+def draw2D(var: Variable2D):
+    path_2D = os.path.join(OUTPUT_PATH, '2D')
+    for subcat, full_object_name in zip(var.subcats, var.refs):
+        this_path = os.path.join(path_2D, subcat)
+        if not os.path.exists(this_path): os.makedirs(this_path)
+        try:
+            draw_2D_of_type("signal", full_object_name, var, this_path)
+            draw_2D_of_type("backg", full_object_name, var, this_path)
+        except KeyError:
+            print(f'Comparison for {var[subcat].ref} failed: Reference not found in file')
+            FAILED_VARIABLES.append(var[subcat].ref)
+        except ZeroDivisionError:
+            print(f'Comparison for {var[subcat].ref} failed: Empty histogram')
+            FAILED_VARIABLES.append(var[subcat].ref)
 
 if __name__ == "__main__":
 
@@ -212,10 +196,14 @@ if __name__ == "__main__":
 
     SOURCE_PATH = args.source_path
     SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
-    OUTPUT_DIR = SOURCE_DIR + "_comp"
-    OUTPUT_PATH = os.path.join("Z_OUTPUT", OUTPUT_DIR)
-    # OUTPUT_PATH = os.path.join("Z_OUTPUT", 'test')
-    SIGNAL_SAMPLES, BACKG_SAMPLES = get_files_in_directory(SOURCE_PATH)
+    OUTPUT_PATH = os.path.join(SOURCE_PATH, "comparisons")
+    results_path = Path(SOURCE_PATH) / 'results'
+    SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') 
+                        for name in ALL_SIGNAL_SAMPLES 
+                        if (results_path / name).exists() ]
+    BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') 
+                        for name in ALL_BACKG_SAMPLES 
+                        if (results_path / name).exists() ]
     LEVEL = args.level
     WITH_TITLES = args.with_titles
     
@@ -230,15 +218,11 @@ if __name__ == "__main__":
     # ==================================================================
     # ==================================================================
 
-    variables1D: 'dict[str, Variable1D]' = { name : Variable1D(name) for name in variables.ALL_VARNAMES_1D }
-    # mjj_test = Variable1D('mjj', refs=["SL_res_2b_x_mjj_new"])
-    # mjj_test.refs[0] = 'SL_res_2b_x_mjj_new'
-    # variables1D = { 'mjj':Variable1D('mjj'), 'mjj_test': mjj_test, 'trijet_pT_rat':Variable1D('trijet_pT_rat') }
+    variables1D = variables.get_all_1D_variables()
+    variables2D = variables.get_all_2D_variables()
+                
     for var in variables1D.values():
-        if var.name == 'bjets0_pT' or var.name == 'bjets1_pT':
-            continue
         draw1D(var)
 
-    variables2D = { name : Variable2D(name) for name in variables.ALL_VARNAMES_2D }
     for var in variables2D.values():
         draw2D(var)
