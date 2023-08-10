@@ -31,8 +31,9 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
         
     def get_var_lr(self, data: List, var_name, selection, defineOnFirstUse=True):
+        Bamboo_setup_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         local_path = os.path.join(self.args.input_dir, 'results/output_file.json')
-        global_path = os.path.join('/afs/cern.ch/user/a/anunezde/bamboodevel/hh/Bamboo_setup', local_path)
+        global_path = os.path.join(Bamboo_setup_path, local_path)
         if len(data) == 1: 
             return get_correction(global_path, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
         elif len(data) == 2:
@@ -96,7 +97,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return all_lrs_for_2D_vars
 
     def get_all_lrs_for_1D_var_combos(self) -> 'list[LikelihoodRatio]':
-        all_lrs_for_1D_vars = self.get_all_lrs_for_1D_vars()
+        all_lrs_for_1D_vars = self.get_lrs_for_bjets_vars()
         all_lrs_for_1D_vars_combos = []
         for combo in combinations(all_lrs_for_1D_vars, 2):
             lr1, lr2 = combo
@@ -146,6 +147,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         all_lrs_from_1D_vars = self.get_all_lrs_for_1D_vars()
         all_lrs_from_1D_var_combos = self.get_all_lrs_for_1D_var_combos()
         all_lrs = all_lrs_from_1D_vars + all_lrs_from_1D_var_combos
+
         hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         plots.extend(hists_1D)
 
