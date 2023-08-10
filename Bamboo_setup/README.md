@@ -82,7 +82,7 @@ bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018_test.yml --input
 
 To run on condor:
 ```bash
-bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0727_TEST -o Z_OUTPUT/TOTAL_VarsReco_0727_TEST_LLR --envConfig config/cern.ini --distributed=finalize
+bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco_0727_TEST -o Z_OUTPUT/TOTAL_VarsReco_0727_TEST_LLR --envConfig config/cern.ini --distributed=driver
 ```
 
 
