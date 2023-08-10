@@ -47,7 +47,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             for subcat_var in var:
                 if subcat_var.subcat != "SL_res_2b_x":
                     continue
-                subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001, subcat_var.data)
+                subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
+                subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
                 subcat_var_lr = self.get_var_lr([subcat_var_data], subcat_var.ref+'_lr', subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
@@ -63,7 +64,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             for subcat_var in var:
                 if subcat_var.subcat != "SL_res_2b_x":
                     continue
-                subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001, subcat_var.data)
+                subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
+                subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
                 subcat_var_lr = self.get_var_lr([subcat_var_data], subcat_var.ref+'_lr', subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
@@ -81,10 +83,14 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             lr = LikelihoodRatio(var.name)
             lr_data = {}
             for subcat_var in var:
-                subcat_var_xdata = op.switch(subcat_var.xdata > var.xvar.max, var.xvar.max - 0.0001, subcat_var.xdata)
-                subcat_var_ydata = op.switch(subcat_var.ydata > var.yvar.max, var.yvar.max - 0.0001, subcat_var.ydata)
+                if subcat_var.subcat != "SL_res_2b_x":
+                    continue
+                subcat_var_xdata = op.switch(subcat_var.xdata < var.xmin, var.xmin + 0.0001*abs(var.xmin), subcat_var.xdata)
+                subcat_var_xdata = op.switch(subcat_var.xdata > var.xmax, var.xmax - 0.0001*abs(var.xmax), subcat_var.xdata)
+                subcat_var_ydata = op.switch(subcat_var.ydata < var.ymin, var.ymin + 0.0001*abs(var.ymin), subcat_var.ydata)
+                subcat_var_ydata = op.switch(subcat_var.ydata > var.ymax, var.ymax - 0.0001*abs(var.ymax), subcat_var.ydata)
                 subcat_var_lr = self.get_var_lr([subcat_var_xdata, subcat_var_ydata], subcat_var.ref, subcat_var.selection)
-                lr_data[subcat_var.subcat] = subcat_var_lr
+            lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
             all_lrs_for_2D_vars.append(lr)
         return all_lrs_for_2D_vars
