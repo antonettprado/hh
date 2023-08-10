@@ -207,7 +207,7 @@ class Variable2D(Variable):
 
 lr_binning = { 
                1: { 'nbins':200, 'min':0, 'max':20 },
-               2: { 'nbins':200, 'min':0, 'max':30 },
+               2: { 'nbins':200, 'min':0, 'max':20 },
                3: { 'nbins':200, 'min':0, 'max':40 }
               }
 class LikelihoodRatio(Variable):
@@ -218,7 +218,7 @@ class LikelihoodRatio(Variable):
         self.name = '_x_'.join(self.names)
         super().__init__(self.name)
         self.vars = { name: Variable1D(name) for name in self.names if name in ALL_VARNAMES_1D}
-        self.vars = { name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D}
+        self.vars.update({ name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D})
         self.dimensionality = len(self.names)
         self.update(**lr_binning[self.dimensionality])
         self.generate_eqbin()

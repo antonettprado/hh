@@ -532,29 +532,14 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        # print("-------------------- Outputtting 2D histograms ---------------------")
-        # from bamboo.plots import Plot, DerivedPlot
-        # from bamboo.analysisutils import loadPlotIt
-        # from plotit.plotit import Stack
-        # from bamboo.root import gbl
-        # import os
-        # plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
-        # p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
-        # for plot in plots_2D:
-        #     expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
-        #     cv = gbl.TCanvas(f"c{plot.name}")
-        #     expStack.obj.Draw("COLZ")
-        #     cv.Update()
-        #     plots_path = os.path.join(self.args.output, "plots_2018")
-        #     cv.SaveAs(os.path.join(plots_path, f"{plot.name}.pdf"))
         print("------------------ Reading scalefactors --------------------")
         import os
         import correctionlib.convert
         import ROOT
         import boost_histogram as bh
         import numpy as np
-        # import root_numpy as rnp
         from typing import Union
+        
         ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
         ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
         results_path = Path(self.args.output) / 'results' # Constructs "output_path/results" using the forward slash operator

@@ -11,7 +11,7 @@ class Draw():
     def __init__(self, input_dir):
         self.input_dir = input_dir
         self.results_path = os.path.join(input_dir, 'results')
-        self.output_dir = input_dir + '_comp_new'
+        self.output_dir = input_dir + '_comp'
         self.interesting_hists = {}
         self.root_files = self._get_root_files()
         self.root_filepaths = self._get_root_filepaths()
@@ -73,7 +73,7 @@ class Draw():
         total_hist.SetDirectory(0)
         return total_hist
     
-    def compare(self, norm=True, must_contain:str = None):
+    def compare(self, must_contain:str = None, norm=True):
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         sample_file = self.root_filepaths[0]
@@ -116,7 +116,7 @@ class Draw():
 
             canvas.SaveAs(os.path.join(self.output_dir, hist_name + '.pdf'))
 
-    def output_ratios(self, output_filename="output_file.root", must_contain:str = None):
+    def output_ratios(self, output_filename="output_file.root", must_contain:str = None, norm=True):
         output_filepath = os.path.join(self.results_path, output_filename)
         print('output_filepath: ', output_filepath)
         sample_file = self.root_filepaths[0]
@@ -126,6 +126,9 @@ class Draw():
         for hist_name, empty_hist in interesting_hists.items():
             hist_signal = self.get_total_hist('signal', self.signal_filepaths, hist_name, empty_hist)
             hist_backg = self.get_total_hist('backg', self.backg_filepaths, hist_name, empty_hist)
+            if norm is True:
+                hist_signal.Scale(1/hist_signal.Integral())
+                hist_backg.Scale(1/hist_backg.Integral())
             ratio_hist = hist_signal.Clone()
             ratio_hist.Divide(hist_backg)
             ratio_hist.SetName(hist_name+"_lr")

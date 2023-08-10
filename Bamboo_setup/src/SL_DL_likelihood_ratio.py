@@ -31,13 +31,12 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input reco vars directory')
         
     def get_var_lr(self, data: List, var_name, selection, defineOnFirstUse=True):
-        local_path = os.path.join(self.args.input_dir, 'results/corrections_lr.json')
+        local_path = os.path.join(self.args.input_dir, 'results/output_file.json')
         global_path = os.path.join('/afs/cern.ch/user/a/anunezde/bamboodevel/hh/Bamboo_setup', local_path)
-        # global_path = os.path.abspath(local_path)
         if len(data) == 1: 
-            return get_correction(global_path, var_name, params={"axis0": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
+            return get_correction(global_path, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
         elif len(data) == 2:
-            return get_correction(global_path, var_name, params={"axis0": data[0],"axis1":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
+            return get_correction(global_path, var_name, params={"xaxis": data[0],"yaxis":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def get_lrs_for_bjets_vars(self) -> 'list[LikelihoodRatio]':
         bjets_vars = self.get_bjets_vars()
@@ -108,11 +107,11 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             all_lrs_for_1D_vars_combos.append(lr_combo)
         return all_lrs_for_1D_vars_combos
 
-    def test_skim_refined(self, vars_lr: 'list[LikelihoodRatio]', selection, plots):
+    def test_skim_refined(self, lrs: 'list[LikelihoodRatio]', selection, plots):
 
         from bamboo.plots import Skim
-        keys = [var_lr.ref for var_lr in vars_lr if "SL_res_2b_x" in var.subcats]
-        values = [i.data for var in vars_lr for i in var if i.subcat == "SL_res_2b_x"]
+        keys = [i.ref for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
+        values = [i.data for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
         branches = dict(zip(keys, values))
         branches.update({"event":None})
         plots.append(Skim('SL_res_2b_x', branches, selection))
@@ -139,41 +138,24 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # ================================== Plots ======================================
         # ===============================================================================
         all_lrs_from_1D_vars = self.get_all_lrs_for_1D_vars()
-        # all_lrs_from_2D_vars = self.get_all_lrs_for_2D_vars()
         all_lrs_from_1D_var_combos = self.get_all_lrs_for_1D_var_combos()
-
         all_lrs = all_lrs_from_1D_vars + all_lrs_from_1D_var_combos
-
-        # all_1D_var_lr_combos = self.get_all_lrs_for_1D_var_combos()
-
         hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         plots.extend(hists_1D)
 
-        # hists_2D = [Plot.make2D(lr.name, [subcat_var_lr.data], subcat_var_lr.selection, EqBin(lr.nbins, lr.min, lr.max)) for lr in all_2D_var_lrs for subcat_var_lr in lr if subcat_var_lr.subcat == "SL_res_2b_x"]
-        # plots.extend(hists_1D)
+        # all_lrs_from_2D_vars = self.get_all_lrs_for_2D_vars()
+        # hists_2D = [Plot.make2D(subcat_lr.ref, [subcat_lr.xdata, subcat_lr.ydata], subcat_lr.selection, lr.eqbin) for lr in all_lrs_from_2D_vars for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
+        # plots.extend(hists_2D)
 
-        # hists_1D_of_combos = [Plot.make1D(ref, result, SL_res_2b_x, EqBin(200, 0, 20), xTitle=ref) for ref, result in all_1D_corrected_vars_combinations.items()]
-        # plots.extend(hists_1D_of_combos)
-
-        # plots = self.test_skim_refined(all_1D_var_lrs, SL_res_2b_x, plots)
-        # ===============================================================================
-        # ============================= Cutflow Report ==================================
-        # ===============================================================================
-        
-        yields.add(SL_res_1b, 'SL_res_1b')
-        yields.add(SL_res_1b_x, 'SL_res_1b_x')
-        yields.add(SL_res_2b, 'SL_res_2b')
-        yields.add(SL_res_2b_x, 'SL_res_2b_x')
-        yields.add(SL_boost, 'SL_boost')
-        yields.add(DL_res_1b, 'DL_res_1b')
-        yields.add(DL_res_2b, 'DL_res_2b')
-        yields.add(DL_boost, 'DL_boost')
+        plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)
 
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        print('hi')
+        from utils.Draw import Draw
+        drawer = Draw(self.args.output)
+        drawer.compare(must_contain="SL_res_2b_x_")
 
         # file1 = os.path.join(self.args.output, 'results/bbWW_sl.root')
         # df = ROOT.RDataFrame("SL_res_2b_x", file1)
