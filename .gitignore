@@ -19,5 +19,6 @@ Bamboo_setup/config/analysis_2018_test.yml
 Bamboo_setup/.vscode/*
 Bamboo_setup/src/myscripts
 Bamboo_setup/get_rdf.py
+Bamboo_setup/myREADME.md
 *.code_workspace
 .gitignore
