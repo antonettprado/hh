@@ -181,6 +181,16 @@
             "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
         },
 
+        "all_pT":
+        {
+            "nbins": 1000,
+            "min": 0,
+            "max": 1500,
+            "unit": "GeV",
+            "title": "all_pT",
+            "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
+        },
+
         "bfatjet_msoftdrop":
         {
             "nbins": 125,
@@ -224,7 +234,7 @@
         "sl_lep_pT":
         {
             "nbins": 115,
-            "min": 10,
+            "min": 0,
             "max": 100,
             "unit": "GeV",
             "title": "SL Lepton Cone-pT",
@@ -241,6 +251,26 @@
             "subcats": ["SL_res_2b_x"]
         },
 
+        "trijet_bijet_dPhi":
+        {
+            "nbins": 100,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "#Delta#phi(bjj, jj)",
+            "subcats": ["SL_res_2b_x"]
+        },
+        
+        "trijet_bijet_dEta":
+        {
+            "nbins": 100,
+            "min": -7,
+            "max": 7,
+            "unit": "",
+            "title": "#Delta#eta(bjj, jj)",
+            "subcats": ["SL_res_2b_x"]
+        },
+
         "bjet_bijet_dR":
         {
             "nbins": 100,
@@ -249,6 +279,36 @@
             "unit": "",
             "title": "#DeltaR(b, jj)",
             "subcats": ["SL_res_2b_x"]
+        },
+
+        "bjet_bijet_dPhi":
+        {
+            "nbins": 100,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "#Delta#phi(b, jj)",
+            "subcats": ["SL_res_2b_x"]
+        },
+
+        "bjet_bijet_dEta":
+        {
+            "nbins": 100,
+            "min": -7,
+            "max": 7,
+            "unit": "",
+            "title": "#Delta#eta(b, jj)",
+            "subcats": ["SL_res_2b_x"]
+        },
+
+        "WW_mInv":
+        {
+            "nbins": 150,
+            "min": 50,
+            "max": 200,
+            "unit": "GeV",
+            "title": "m_{WW}",
+            "subcats": ["SL_res_2b_x", "DL_res_2b"]
         }
     },
 
