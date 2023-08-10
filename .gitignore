@@ -21,4 +21,5 @@ Bamboo_setup/src/myscripts
 Bamboo_setup/get_rdf.py
 Bamboo_setup/myREADME.md
 Bamboo_setup/Bamboo_setup.code-workspace
+Bamboo_setup/config/analysis_2018_test_eos.yml
 .gitignore
