@@ -20,5 +20,5 @@ Bamboo_setup/.vscode/*
 Bamboo_setup/src/myscripts
 Bamboo_setup/get_rdf.py
 Bamboo_setup/myREADME.md
-*.code_workspace
+Bamboo_setup/Bamboo_setup.code_workspace
 .gitignore
