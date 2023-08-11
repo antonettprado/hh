@@ -7,14 +7,14 @@
 import ROOT
 import os
 from pathlib import Path
-from constants import *
+from utils.constants import *
 import argparse
 from itertools import product
 import math
 import csv
 import time
-import variables
-from variables import Variable1D, Variable2D, LikelihoodRatio
+from utils import variables
+from utils.variables import Variable1D, Variable2D, LikelihoodRatio
 import pandas as pd
 import numpy as np
 

@@ -226,3 +226,7 @@ if __name__ == "__main__":
 
     for var in variables2D.values():
         draw2D(var)
+    
+    if FAILED_VARIABLES:
+        print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")
+        print(*FAILED_VARIABLES, sep='\n')
