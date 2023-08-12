@@ -4,12 +4,19 @@
 ###############################################################################
 # 7/14/23 added support for other datasets (SL_boost, DL_res_2b_x, DL_boost)
 
+'''
+Known Bugs:
+If subcats is not precisely the subcats present in the results root files,
+the script will fail - I have no clue why because pandas obfuscates
+the cause of the failure.
+'''
+
 import ROOT
 import os
 from pathlib import Path
 from utils.constants import *
 import argparse
-from itertools import product
+from itertools import product, combinations
 import math
 import csv
 import time
@@ -27,13 +34,27 @@ ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 FAILED_VARIABLES = []
 
 
-def initialize_outputs(dir, subcats):
+def initialize_outputs(dir, subcats, vars):
     ret = {}
     dir.mkdir(exist_ok=True)
     for subcat in subcats:
-        var = Variable1D('bjets_mbb')[subcat]
-        sig_size = var.get_total_hist('init_signal', SIGNAL_SAMPLES).Integral()
-        bkg_size = var.get_total_hist('init_backg', BACKG_SAMPLES).Integral()
+        var = None
+        # Find the first variable with a given subcat
+        for v in vars:
+            if subcat in v.subcats:
+                var = v
+                break
+        # If none exist move to next subcat
+        if not var:
+            continue
+        var = var[subcat]
+        try:
+            sig_hist = var.get_total_hist(subcat+'_init_signal', SIGNAL_SAMPLES)
+            bkg_hist = var.get_total_hist(subcat+'_init_backg', BACKG_SAMPLES)
+        except KeyError:
+            continue
+        sig_size = sig_hist.Integral(0, sig_hist.GetNbinsX()+1)
+        bkg_size = bkg_hist.Integral(0, bkg_hist.GetNbinsX()+1)
         tot_significance = sig_size / math.sqrt(bkg_size)
         path = dir/(subcat + '.csv')
         ret[subcat] = tot_significance
@@ -288,6 +309,7 @@ def fill_by_name(df):
     if subcat not in var.subcats:
         return 
     ref = var[subcat].ref
+    print(f'Generating for {ref}')
     # If we can't read the references from the file, ignore and keep going
     try:
         sig_hist = var.get_total_hist(subcat+'_signal', SIGNAL_SAMPLES, subcat)
@@ -309,9 +331,8 @@ def fill_by_name(df):
     elif isinstance(var, Variable2D):       fill_func = fill_by_eff_2D
     elif isinstance(var, LikelihoodRatio):  fill_func = fill_by_eff_LR
     else: raise TypeError
-
+    
     ret_df = df[['name', 'efficiency', 'subcat']].groupby(level=0).apply(fill_func, sig_hist, bkg_hist, sig_norm, bkg_norm)
-    print(f'Generated for {ref}')
     return ret_df
 
 def fill_by_eff_1D(df, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False):
@@ -370,9 +391,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source directory")
+    parser.add_argument("-l", "--is_lr", action='store_true')
     args = parser.parse_args()
 
     SOURCE_PATH = Path(args.source_path)
+    is_lr = args.is_lr
     OUTPUT_PATH = SOURCE_PATH / "cuts"
 
     results_path = SOURCE_PATH / 'results'
@@ -383,15 +406,21 @@ if __name__ == "__main__":
                         for name in ALL_BACKG_SAMPLES 
                         if (results_path / name).exists() ]
 
-    vars1D = list(variables.get_all_1D_variables().values())
-    vars2D = list(variables.get_all_2D_variables().values())
-    varsLR = [] # some way to get all lrs?
-
-    vars = vars1D + vars2D + varsLR
-    subcats = list(set.union(*(set(var.subcats) for var in vars1D)))
+    if not is_lr:
+        vars1D = list(variables.get_all_1D_variables().values())
+        vars2D = list(variables.get_all_2D_variables().values())
+        vars = vars1D + vars2D
+        subcats = list(set.union(*(set(var.subcats) for var in vars)))
+        # subcats.remove('SL_res_2b') # Temporary
+    else:
+        varnames1d = variables.ALL_VARNAMES_1D
+        vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
+        subcats = list(set.union(*(set(var.subcats) for var in vars)))
+        subcats = ['SL_res_2b_x'] # Temporary
+    
     efficiencies = [0.75, 0.85, 0.9]
 
-    tot_sigs = initialize_outputs(OUTPUT_PATH, subcats)
+    tot_sigs = initialize_outputs(OUTPUT_PATH, subcats, vars)
 
     df = pd.DataFrame(list(product(subcats, vars, efficiencies)), columns=['subcat', 'variable', 'efficiency'])
     df['name'] = df['variable'].apply(lambda x: x.name)
