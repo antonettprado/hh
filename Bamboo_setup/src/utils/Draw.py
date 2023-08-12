@@ -11,7 +11,7 @@ class Draw():
     def __init__(self, input_dir):
         self.input_dir = input_dir
         self.results_path = os.path.join(input_dir, 'results')
-        self.output_dir = input_dir + '_comp'
+        self.output_dir = os.path.join(input_dir, 'comparisons')
         self.interesting_hists = {}
         self.root_files = self._get_root_files()
         self.root_filepaths = self._get_root_filepaths()
@@ -94,27 +94,62 @@ class Draw():
         hist_backg.SetLineWidth(3)
 
         if isinstance(hist_signal, ROOT.TH1) and isinstance(hist_backg, ROOT.TH1):
-            hist_signal.GetXaxis().SetRangeUser(hist_signal.GetXaxis().GetXmin(), hist_signal.GetXaxis().GetXmax())
-            hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
+            
+            if isinstance(hist_signal, ROOT.TH2) and isinstance(hist_backg, ROOT.TH2):
 
-            canvas = ROOT.TCanvas('canvas', '', 200, 200)
-            canvas.SetGrid()
-            hist_signal.Draw("hist")
-            hist_backg.Draw("hist sames")
-            canvas.Update()
+                canvas_signal = ROOT.TCanvas('signal', '', 200, 200)
+                canvas_signal.SetLeftMargin(0.12)
+                canvas_signal.SetRightMargin(0.15)
+                canvas_signal.SetGrid()
+                hist_signal.SetOption("colz")
+                hist_signal.Draw()
+                canvas_signal.Update()
 
-            s1 = hist_signal.FindObject("stats")
-            s1.SetTextColor(ROOT.kBlue)
-            s2 = hist_backg.FindObject("stats")
-            s2.SetTextColor(ROOT.kRed)
-            s1.SetY1NDC(0.6)
-            s1.SetY2NDC(0.8)
-            s2.SetX1NDC(s1.GetX1NDC())
-            s2.SetY1NDC(0.4)
-            s2.SetX2NDC(s1.GetX2NDC())
-            s2.SetY2NDC(0.6)
+                stats_signal = hist_signal.FindObject("stats")
+                stats_signal.SetTextColor(ROOT.kBlue)
+                stats_signal.SetY1NDC(0.6)
+                stats_signal.SetY2NDC(0.8)
 
-            canvas.SaveAs(os.path.join(self.output_dir, hist_name + '.pdf'))
+                canvas_signal.SaveAs(os.path.join(self.output_dir, hist_name + '.pdf'))
+
+                canvas_backg = ROOT.TCanvas('backg', '', 200, 200)
+                canvas_backg.SetLeftMargin(0.12)
+                canvas_backg.SetRightMargin(0.15)
+                canvas_backg.SetGrid()
+                hist_backg.SetOption("colz")
+                hist_backg.Draw()
+                canvas_backg.Update()
+
+                stats_backg = hist_backg.FindObject("stats")
+                stats_backg.SetTextColor(ROOT.kRed)
+                stats_backg.SetY1NDC(0.6)
+                stats_backg.SetY2NDC(0.8)
+
+                canvas_backg.SaveAs(os.path.join(self.output_dir, hist_name + '.pdf'))
+
+            else:
+
+                hist_signal.GetXaxis().SetRangeUser(hist_signal.GetXaxis().GetXmin(), hist_signal.GetXaxis().GetXmax())
+                hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
+
+                canvas = ROOT.TCanvas('canvas', '', 200, 200)
+                canvas.SetGrid()
+                hist_signal.Draw("hist")
+                hist_backg.Draw("hist sames")
+                canvas.Update()
+
+                s1 = hist_signal.FindObject("stats")
+                s1.SetTextColor(ROOT.kBlue)
+                s2 = hist_backg.FindObject("stats")
+                s2.SetTextColor(ROOT.kRed)
+                s1.SetY1NDC(0.6)
+                s1.SetY2NDC(0.8)
+                s2.SetX1NDC(s1.GetX1NDC())
+                s2.SetY1NDC(0.4)
+                s2.SetX2NDC(s1.GetX2NDC())
+                s2.SetY2NDC(0.6)
+
+                canvas.SaveAs(os.path.join(self.output_dir, hist_name + '.pdf'))
 
     def output_ratios(self, output_filename="output_file.root", must_contain:str = None, norm=True):
         output_filepath = os.path.join(self.results_path, output_filename)
@@ -143,5 +178,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     drawer = Draw(args.source_path)
-    drawer.output_ratios(must_contain="SL_res_2b_x_")
+    drawer.compare(must_contain="SL_res_2b_x_")
+    # drawer.output_ratios(must_contain="SL_res_2b_x_")
 
