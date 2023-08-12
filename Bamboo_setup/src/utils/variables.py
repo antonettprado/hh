@@ -7,7 +7,6 @@ import os
 import copy
 VARPATH = os.path.join(os.path.dirname(__file__), 'variables.json')
 
-null_func = lambda *x: None # used to instantiate default function definitions
 # Load all variable names into local namespace (for looping)
 ALL_VARNAMES_1D = None
 ALL_VARNAMES_2D = None
@@ -46,12 +45,12 @@ class Variable():
     def _generate_hist_from_file(self, file: TFile, subcat: str) -> None:
         hist_name = self[subcat].ref
         hist_key = '_'.join((hist_name, Path(file.GetName()).stem))
-        self.hists[hist_key] = self.get_default_empty_hist(hist_key)
         try:
-            self.hists[hist_key].Add(file.Get(hist_name))
-        except TypeError as err:
+            self.hists[hist_key] = file.Get(hist_name)
+            self.hists[hist_key].SetDirectory(0)
+        except AttributeError as err:
             raise KeyError(f"'{hist_name}' not found in {file.GetName()}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
-        self.hists[hist_key].SetDirectory(0)
+        
 
     def get_total_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
         # Check if total hist exists. If not, generate it
@@ -67,12 +66,11 @@ class Variable():
         return self.hists[hist_key]
 
     def _generate_total_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
-        self.hists[hist_key] = self.get_default_empty_hist(hist_key)
-        for file in files:
-            this_hist = self.get_hist_from_file(subcat, file)
-            self.hists[hist_key].Add(this_hist)
+        tot_hist = self.get_hist_from_file(subcat, files[0]) # Get the first histogram from the file list
+        for file in files[1:]:
+            tot_hist.Add(self.get_hist_from_file(subcat, file))
 
-        # self.hists[hist_key] = gDirectory.Get(hist_key)
+        self.hists[hist_key] = tot_hist
         self.hists[hist_key].SetDirectory(0)
 
     def is_child(self) -> bool:
@@ -110,10 +108,6 @@ class Variable():
         self.iter_index += 1
         return child
 
-    # To be overridden in subclasses: Instantiate hist type, bins, and axis titles
-    def get_default_empty_hist(self, hist_key):
-        raise NotImplementedError('Subclasses must implement get_default_empty_hist')
-
     def __str__(self):
         return f"{self.__class__.__name__}('{self.name}')"
 
@@ -146,11 +140,6 @@ class Variable1D(Variable):
         if not (set(self.subcats) == data.keys() and set(self.subcats) == selections.keys()):
             print('WARNING: One or both of the supplied data and selections are not defined over all subcats')
 
-    def get_default_empty_hist(self, hist_key):
-        empty_hist = TH1F(hist_key, '', self.nbins, self.min, self.max)
-        empty_hist.GetXaxis().SetTitle(self.full_title)
-        return empty_hist
-
     def __getitem__(self, subcat: str):
         if self.is_child(): return self
         child = super().__getitem__(subcat)
@@ -172,12 +161,6 @@ class Variable2D(Variable):
         self.set_refs(self.subcats)
         self.title = self.ytitle + ' vs. ' + self.xtitle 
         self.update(**kwargs)
-
-    def get_default_empty_hist(self, hist_key):
-        empty_hist = TH2F(hist_key, '', self.xnbins, self.xmin, self.xmax, self.ynbins, self.ymin, self.ymax)
-        empty_hist.GetXaxis().SetTitle(self.xfull_title)
-        empty_hist.GetYaxis().SetTitle(self.yfull_title)
-        return empty_hist
 
     def populate(self, xvar: Variable1D, yvar: Variable1D):
         consistent = (xvar.name == self.xname) and (yvar.name == self.yname) 
@@ -215,7 +198,7 @@ class LikelihoodRatio(Variable):
         if type(names) == str:
             names = [names]
         self.names = sorted(names)
-        self.name = '_x_'.join(self.names)
+        self.name = '_x_'.join(self.names) + '_lr'
         super().__init__(self.name)
         self.vars = { name: Variable1D(name) for name in self.names if name in ALL_VARNAMES_1D}
         self.vars.update({ name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D})
@@ -224,7 +207,7 @@ class LikelihoodRatio(Variable):
         self.generate_eqbin()
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
-        self.refs = [ '_'.join((sc, self.name, 'lr')) for sc in self.subcats ]
+        self.refs = [ '_'.join((sc, self.name)) for sc in self.subcats ]
         self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' likelihood ratio'
         self.update(**kwargs)
 
@@ -233,11 +216,6 @@ class LikelihoodRatio(Variable):
             print(f"Could not generate ROOT EqBin for {self.name}. Check json file")
             return
         self.eqbin = EqBin(self.nbins, self.min, self.max)
-
-    def get_default_empty_hist(self, hist_key):
-        empty_hist = TH1F(hist_key, '', self.nbins, self.min, self.max)
-        empty_hist.GetXaxis().SetTitle(self.full_title)
-        return empty_hist
 
     def populate(self, data: dict, selections: dict):
         self.data = data
