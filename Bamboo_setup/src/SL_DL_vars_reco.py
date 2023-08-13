@@ -502,13 +502,52 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
         all_mT.populate(data, selections)
         return all_mT
+    
+    def get_all_jets_HT(self) -> Variable1D:
+        all_jets_HT = Variable1D('all_jets_HT')
+        subcat_names = all_jets_HT.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons, met, jets = self._get_total_vars_data()
+        total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
+        data = total_jet_pt
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
+        all_jets_HT.populate(data, selections)
+        return all_jets_HT
+    
+    def get_jet0_pT(self) -> Variable1D:
+        jet0_pT_var = Variable1D('jet0_pT')
+        subcat_names = jet0_pT_var.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons, met, jets = self._get_total_vars_data()
+        sorted_jets = op.sort(jets, lambda jet: -jet.pt)
+        jet0_pT = jets[0].pt
+        data = jet0_pT
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
+        jet0_pT_var.populate(data, selections)
+        return jet0_pT_var
+    
+    def get_MET(self) -> Variable1D:
+        met_var = Variable1D('met')
+        subcat_names = met_var.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons, met, jets = self._get_total_vars_data()
+        data = met.pt
+        data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
+        met_var.populate(data, selections)
+        return met_var
 
     # Helper function for returning a list of all 'total' variables for iteration
     def get_total_vars(self) -> 'list[Variable1D]':
         vars = [self.get_all_sT(),
                 self.get_all_sT_50_cut(),
                 self.get_all_mInv(),
-                self.get_all_mT()]
+                self.get_all_mT(),
+                self.get_all_jets_HT(),
+                self.get_jet0_pT(),
+                self.get_MET()]
         return vars
           
     def get_misc_vars(self) -> 'list[Variable1D]':
