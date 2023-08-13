@@ -32,7 +32,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         
     def get_var_lr(self, data: List, var_name, selection, defineOnFirstUse=True):
         Bamboo_setup_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        local_path = os.path.join(self.args.input_dir, 'results/output_file.json')
+        local_path = os.path.join(self.args.input_dir, 'results/corrections_lr.json')
         global_path = os.path.join(Bamboo_setup_path, local_path)
         if len(data) == 1: 
             return get_correction(global_path, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
