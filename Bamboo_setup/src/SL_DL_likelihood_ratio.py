@@ -97,9 +97,9 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return all_lrs_for_2D_vars
 
     def get_all_lrs_for_1D_var_combos(self) -> 'list[LikelihoodRatio]':
-        all_lrs_for_1D_vars = self.get_lrs_for_bjets_vars()
+        all_vars = self.get_bjets_vars() + self.get_top_vars()
         all_lrs_for_1D_vars_combos = []
-        for combo in combinations(all_lrs_for_1D_vars, 2):
+        for combo in combinations(all_vars, 2):
             lr1, lr2 = combo
             if "SL_res_2b_x" not in lr1.subcats or "SL_res_2b_x" not in lr2.subcats:
                 continue

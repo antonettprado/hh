@@ -5,6 +5,10 @@ import utils.object_definition as object_defs
 from utils import variables
 from utils.variables import Variable1D, Variable2D
 from pathlib import Path
+import os
+import correctionlib.convert
+import ROOT
+import boost_histogram as bh
 
 class SL_DL_vars_reco(SL_DL_event_selection):
 
@@ -666,11 +670,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        print("------------------ Reading scalefactors --------------------")
-        import os
-        import correctionlib.convert
-        import ROOT
-        import boost_histogram as bh
+        print("------------------ Calculating Likelihood Ratios --------------------")
         
         ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
         ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
