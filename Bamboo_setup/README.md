@@ -64,15 +64,15 @@ python3 utils/likelihood_ratio_plot.py -s Z_OUTPUT/TOTAL_VarsReco
 ## Process NANOAODs: SL_DL_likelihood_ratios
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LLR --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LR --envConfig config/cern.ini --distributed=driver
 ```
 
 ### Postprocessing: Compare LR signal vs background 
 ```bash
-python3 utils/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LLR -l reco
+python3 utils/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LR -l reco
 ```
 
 ### Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection 
 ```bash
-python3 utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LLR -lr
+python3 utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR -lr
 ```
