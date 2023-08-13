@@ -530,7 +530,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
     
     def get_MET(self) -> Variable1D:
         met_var = Variable1D('met')
-        subcat_names = all_jets_HT.subcats
+        subcat_names = met_var.subcats
         selections = self.get_selections_subset(subcat_names)
 
         electrons, muons, met, jets = self._get_total_vars_data()
