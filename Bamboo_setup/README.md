@@ -67,7 +67,7 @@ To run on condor (remove --distributed=driver to run locally and add -i to run i
 bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LLR --envConfig config/cern.ini --distributed=driver
 ```
 
-### Postprocessing: Compare llr signal vs background 
+### Postprocessing: Compare LR signal vs background 
 ```bash
 python3 utils/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LLR -l reco
 ```
