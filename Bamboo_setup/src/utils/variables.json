@@ -191,6 +191,16 @@
             "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
         },
 
+        "all_jet_HT":
+        {
+            "nbins": 1000,
+            "min": 0,
+            "max": 1500,
+            "unit": "GeV",
+            "title": "all_jet_HT",
+            "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
+        },
+
         "bfatjet_msoftdrop":
         {
             "nbins": 125,
