@@ -201,6 +201,26 @@
             "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
         },
 
+        "jet0_pT":
+        {
+            "nbins": 500,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "jet0_pT",
+            "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
+        },
+
+        "met":
+        {
+            "nbins": 500,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "pT_miss",
+            "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
+        },
+
         "bfatjet_msoftdrop":
         {
             "nbins": 125,
