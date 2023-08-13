@@ -83,7 +83,7 @@ if __name__ == "__main__":
         os.makedirs(OUTPUT_PATH)
 
     print("The source path is: " + SOURCE_PATH)
-    print("The output path is: " + OUTPUT_PATH)
+    print("The path is: " + OUTPUT_PATH)
     # ==================================================================
     # ==================================================================
     # ==================================================================

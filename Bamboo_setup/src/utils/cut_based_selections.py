@@ -49,8 +49,8 @@ def initialize_outputs(dir, subcats, vars):
             continue
         var = var[subcat]
         try:
-            sig_hist = var.get_total_hist(subcat+'_init_signal', SIGNAL_SAMPLES)
-            bkg_hist = var.get_total_hist(subcat+'_init_backg', BACKG_SAMPLES)
+            sig_hist = var.get_total_hist(subcat+'_signal', SIGNAL_SAMPLES)
+            bkg_hist = var.get_total_hist(subcat+'_backg', BACKG_SAMPLES)
         except KeyError:
             continue
         sig_size = sig_hist.Integral(0, sig_hist.GetNbinsX()+1)
@@ -317,7 +317,7 @@ def fill_by_name(df):
     except KeyError:
         print(f'Generation for {ref} failed')
         FAILED_VARIABLES.append(ref)
-        return
+        return 
     
     sig_norm = sig_hist.Integral()
     bkg_norm = bkg_hist.Integral()
@@ -325,19 +325,23 @@ def fill_by_name(df):
     if sig_norm == 0 or bkg_norm == 0:
         print(f'No data for {ref}')
         FAILED_VARIABLES.append(ref)
-        return
-
+        return 
+    
     if   isinstance(var, Variable1D):       fill_func = fill_by_eff_1D
     elif isinstance(var, Variable2D):       fill_func = fill_by_eff_2D
     elif isinstance(var, LikelihoodRatio):  fill_func = fill_by_eff_LR
     else: raise TypeError
     
-    ret_df = df[['name', 'efficiency', 'subcat']].groupby(level=0).apply(fill_func, sig_hist, bkg_hist, sig_norm, bkg_norm)
+    data_by_efficiency = []
+    for eff in df['efficiency']:
+        data_by_efficiency.append(fill_func(eff, sig_hist, bkg_hist, sig_norm, bkg_norm))
+    new_data_df = pd.DataFrame(data_by_efficiency, index=df.index)
+    ret_df = pd.concat([df[['name', 'subcat', 'efficiency']], new_data_df], axis=1)
+
     return ret_df
 
-def fill_by_eff_1D(df, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False):
-    df = df.squeeze() # Convert one row of dataframe to a series (better return type)
-    eff = df['efficiency']
+def fill_by_eff_1D(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False):
+    df = pd.Series(dtype=object)
 
     # Calculate best cuts
     xl_bin_min, xr_bin_min = find_window_1D_v3(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin)
@@ -345,7 +349,10 @@ def fill_by_eff_1D(df, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False)
     xr_min = sig_hist.GetBinCenter(xr_bin_min)
     min_signal_frac = sig_hist.Integral(xl_bin_min, xr_bin_min)/sig_int
     min_bkg_frac = backg_hist.Integral(xl_bin_min, xr_bin_min)/backg_int
-    significance = (min_signal_frac*sig_int)/math.sqrt(min_bkg_frac*backg_int)
+    if min_bkg_frac == 0:
+        significance = None
+    else:
+        significance = (min_signal_frac*sig_int)/math.sqrt(min_bkg_frac*backg_int)
 
     # Populate new series with additional rows
     df['signal frac'] = min_signal_frac
@@ -355,9 +362,8 @@ def fill_by_eff_1D(df, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False)
     df['dim'] = '1D'
     return df
 
-def fill_by_eff_2D(df, sig_hist, backg_hist, sig_int, backg_int):
-    df = df.squeeze() # Convert one row of dataframe to a series (better return type)
-    eff = df['efficiency']
+def fill_by_eff_2D(eff, sig_hist, backg_hist, sig_int, backg_int):
+    df = pd.Series(dtype=object)
 
     # Calculate best cuts
     xl_bin_min = 1
@@ -371,7 +377,10 @@ def fill_by_eff_2D(df, sig_hist, backg_hist, sig_int, backg_int):
     yr_min = sig_hist.GetYaxis().GetBinCenter(yr_bin_min)
     min_signal_frac = sig_hist.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/sig_int
     min_bkg_frac = backg_hist.Integral(xl_bin_min, xr_bin_min, yl_bin_min, yr_bin_min)/backg_int
-    significance = (min_signal_frac*sig_int)/math.sqrt(min_bkg_frac*backg_int)
+    if min_bkg_frac == 0:
+        significance = None
+    else:
+        significance = (min_signal_frac*sig_int)/math.sqrt(min_bkg_frac*backg_int)
 
     # Populate new series with additional rows
     df['signal frac'] = min_signal_frac
@@ -381,8 +390,8 @@ def fill_by_eff_2D(df, sig_hist, backg_hist, sig_int, backg_int):
     df['dim'] = '2D'
     return df
 
-def fill_by_eff_LR(df, sig_hist, backg_hist, sig_int, backg_int):
-    df = fill_by_eff_1D(df, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=True)
+def fill_by_eff_LR(eff, sig_hist, backg_hist, sig_int, backg_int):
+    df = fill_by_eff_1D(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=True)
     df['dim'] = 'LR'
     return df
 
@@ -411,7 +420,7 @@ if __name__ == "__main__":
         vars2D = list(variables.get_all_2D_variables().values())
         vars = vars1D + vars2D
         subcats = list(set.union(*(set(var.subcats) for var in vars)))
-        # subcats.remove('SL_res_2b') # Temporary
+        subcats.remove('SL_res_2b') # Temporary
     else:
         varnames1d = variables.ALL_VARNAMES_1D
         vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
