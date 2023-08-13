@@ -516,8 +516,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return all_jets_HT
     
     def get_jet0_pT(self) -> Variable1D:
-        jet0_pT = Variable1D('jet0_pT')
-        subcat_names = jet0_pT.subcats
+        jet0_pT_var = Variable1D('jet0_pT')
+        subcat_names = jet0_pT_var.subcats
         selections = self.get_selections_subset(subcat_names)
 
         electrons, muons, met, jets = self._get_total_vars_data()
@@ -525,8 +525,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         jet0_pT = jets[0].pt
         data = jet0_pT
         data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
-        jet0_pT.populate(data, selections)
-        return jet0_pT
+        jet0_pT_var.populate(data, selections)
+        return jet0_pT_var
     
     def get_MET(self) -> Variable1D:
         met_var = Variable1D('met')
