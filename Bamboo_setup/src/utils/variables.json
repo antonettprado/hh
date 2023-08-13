@@ -191,7 +191,7 @@
             "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
         },
 
-        "all_jet_HT":
+        "all_jets_HT":
         {
             "nbins": 1000,
             "min": 0,
