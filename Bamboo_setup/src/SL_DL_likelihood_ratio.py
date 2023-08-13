@@ -35,9 +35,9 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         local_path = os.path.join(self.args.input_dir, 'results/corrections_lr.json')
         global_path = os.path.join(Bamboo_setup_path, local_path)
         if len(data) == 1: 
-            return get_correction(global_path, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
+            return get_correction(global_path, var_name, params={"axis0": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
         elif len(data) == 2:
-            return get_correction(global_path, var_name, params={"xaxis": data[0],"yaxis":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
+            return get_correction(global_path, var_name, params={"axis0": data[0],"axis1":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def get_lrs_for_bjets_vars(self) -> 'list[LikelihoodRatio]':
         bjets_vars = self.get_bjets_vars()
