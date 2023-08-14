@@ -39,10 +39,10 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         elif len(data) == 2:
             return get_correction(global_path, var_name, params={"axis0": data[0],"axis1":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
-    def get_lrs_for_bjets_vars(self) -> 'list[LikelihoodRatio]':
-        bjets_vars = self.get_bjets_vars()
-        lrs_for_bjets_vars = []
-        for var in bjets_vars:
+    def get_lrs_for_reco_1D_vars(self) -> 'list[LikelihoodRatio]':
+        reco_1D_vars = self.get_all_reco_variables()
+        lrs_for_reco_1D_vars = []
+        for var in reco_1D_vars:
             lr = LikelihoodRatio(var.name)
             lr_data = {}
             for subcat_var in var:
@@ -50,37 +50,16 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
                     continue
                 subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
                 subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
-                subcat_var_lr = self.get_var_lr([subcat_var_data], subcat_var.ref+'_lr', subcat_var.selection)
+                subcat_var_lr = self.get_var_lr([subcat_var_data], lr[subcat_var.subcat].ref, subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
-            lrs_for_bjets_vars.append(lr)
-        return lrs_for_bjets_vars
+            lrs_for_reco_1D_vars.append(lr)
+        return lrs_for_reco_1D_vars
 
-    def get_lrs_for_top_vars(self) -> 'list[LikelihoodRatio]':
-        top_vars = self.get_top_vars()
-        lrs_for_top_vars = []
-        for var in top_vars:
-            lr = LikelihoodRatio(var.name)
-            lr_data = {}
-            for subcat_var in var:
-                if subcat_var.subcat != "SL_res_2b_x":
-                    continue
-                subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
-                subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
-                subcat_var_lr = self.get_var_lr([subcat_var_data], subcat_var.ref+'_lr', subcat_var.selection)
-                lr_data[subcat_var.subcat] = subcat_var_lr
-            lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
-            lrs_for_top_vars.append(lr)
-        return lrs_for_top_vars
-
-    def get_all_lrs_for_1D_vars(self) -> 'list[LikelihoodRatio]':
-        all_lrs_for_1D_vars = self.get_lrs_for_bjets_vars() + self.get_lrs_for_top_vars()
-        return all_lrs_for_1D_vars
-
-    def get_all_lrs_for_2D_vars(self) -> 'list[LikelihoodRatio]':
-        vars_2D = self.get_all_reco_2D_variables()     
-        all_lrs_for_2D_vars = []   
-        for var in vars_2D:
+    def get_lrs_for_reco_2D_vars(self) -> 'list[LikelihoodRatio]':
+        reco_2D_vars = self.get_all_reco_2D_variables()     
+        lrs_for_reco_2D_vars = []   
+        for var in reco_2D_vars:
             lr = LikelihoodRatio(var.name)
             lr_data = {}
             for subcat_var in var:
@@ -90,20 +69,19 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
                 subcat_var_xdata = op.switch(subcat_var.xdata > var.xmax, var.xmax - 0.0001*abs(var.xmax), subcat_var.xdata)
                 subcat_var_ydata = op.switch(subcat_var.ydata < var.ymin, var.ymin + 0.0001*abs(var.ymin), subcat_var.ydata)
                 subcat_var_ydata = op.switch(subcat_var.ydata > var.ymax, var.ymax - 0.0001*abs(var.ymax), subcat_var.ydata)
-                subcat_var_lr = self.get_var_lr([subcat_var_xdata, subcat_var_ydata], subcat_var.ref, subcat_var.selection)
-            lr_data[subcat_var.subcat] = subcat_var_lr
+                subcat_var_lr = self.get_var_lr([subcat_var_xdata, subcat_var_ydata], lr[subcat_var.subcat].ref, subcat_var.selection)
+                lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
-            all_lrs_for_2D_vars.append(lr)
-        return all_lrs_for_2D_vars
+            lrs_for_reco_2D_vars.append(lr)
+        return lrs_for_reco_2D_vars
 
-    def get_all_lrs_for_1D_var_combos(self) -> 'list[LikelihoodRatio]':
-        all_vars = self.get_bjets_vars() + self.get_top_vars()
-        all_lrs_for_1D_vars_combos = []
-        for combo in combinations(all_vars, 2):
-            lr1, lr2 = combo
+    def get_lrs_for_reco_1D_vars_combos(self) -> 'list[LikelihoodRatio]':
+        lrs_for_reco_1D_vars = self.get_lrs_for_reco_1D_vars()
+        lrs_for_reco_1D_vars_combos = []
+        for lr1, lr2 in combinations(lrs_for_reco_1D_vars, 2):
             if "SL_res_2b_x" not in lr1.subcats or "SL_res_2b_x" not in lr2.subcats:
                 continue
-            lr_combo = LikelihoodRatio([lr1.name, lr2.name])
+            lr_combo = LikelihoodRatio([lr1.names[0], lr2.names[0]])
             lr_combo_data = {}
             for subcat_lr_combo in lr_combo:
                 if subcat_lr_combo.subcat != "SL_res_2b_x":
@@ -111,8 +89,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
                 subcat_lr_combo_data = op.product(lr1["SL_res_2b_x"].data, lr2["SL_res_2b_x"].data)
                 lr_combo_data[subcat_lr_combo.subcat] = subcat_lr_combo_data
             lr_combo.populate(lr_combo_data, super().get_selections_subset(lr_combo_data.keys()))
-            all_lrs_for_1D_vars_combos.append(lr_combo)
-        return all_lrs_for_1D_vars_combos
+            lrs_for_reco_1D_vars_combos.append(lr_combo)
+        return lrs_for_reco_1D_vars_combos
 
     def test_skim_refined(self, lrs: 'list[LikelihoodRatio]', selection, plots):
 
@@ -144,23 +122,20 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
-        all_lrs_from_1D_vars = self.get_all_lrs_for_1D_vars()
-        all_lrs_from_1D_var_combos = self.get_all_lrs_for_1D_var_combos()
-        all_lrs = all_lrs_from_1D_vars + all_lrs_from_1D_var_combos
-
+        lrs_for_reco_1D_vars = self.get_lrs_for_reco_1D_vars()
+        lrs_for_reco_1D_vars_combos = self.get_lrs_for_reco_1D_vars_combos()
+        lrs_for_reco_2D_vars = self.get_lrs_for_reco_2D_vars()
+        all_lrs = lrs_for_reco_1D_vars + lrs_for_reco_1D_vars_combos + lrs_for_reco_2D_vars
         hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         plots.extend(hists_1D)
 
-        # all_lrs_from_2D_vars = self.get_all_lrs_for_2D_vars()
-        # hists_2D = [Plot.make2D(subcat_lr.ref, [subcat_lr.xdata, subcat_lr.ydata], subcat_lr.selection, lr.eqbin) for lr in all_lrs_from_2D_vars for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
-        # plots.extend(hists_2D)
-
-        #plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)
+        # plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)
 
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        #super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        # super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        print('Printing plots')
         from utils.Draw import Draw
         drawer = Draw(self.args.output)
         drawer.compare(must_contain="SL_res_2b_x_")
