@@ -32,7 +32,8 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
         op.rng_len(muons) == 0,
         electron_ConePt[electrons[0].idx] > 32,
         op.rng_len(taus) == 0,
-        HLT.Ele32_WPTight_Gsf
+        # HLT.Ele32_WPTight_Gsf
+        op.OR(HLT.Ele32_WPTight_Gsf, HLT.HLT_Ele28_eta2p1_WPTight_Gsf_HT150)
         )
     )
 
