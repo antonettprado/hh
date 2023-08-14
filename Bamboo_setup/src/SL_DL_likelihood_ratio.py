@@ -155,12 +155,12 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # hists_2D = [Plot.make2D(subcat_lr.ref, [subcat_lr.xdata, subcat_lr.ydata], subcat_lr.selection, lr.eqbin) for lr in all_lrs_from_2D_vars for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         # plots.extend(hists_2D)
 
-        plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)
+        #plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)
 
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        #super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         from utils.Draw import Draw
         drawer = Draw(self.args.output)
         drawer.compare(must_contain="SL_res_2b_x_")
