@@ -220,12 +220,13 @@ if __name__ == "__main__":
     lr_vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ]
     
     # Determine if there are no 1D or 2D variables, or LR variables. If not, we don't attempt to plot them
-    hist_names = set.union(*[set(samp.GetListOfKeys().GetName()) for samp in SIGNAL_SAMPLES+BACKG_SAMPLES])
-    print(hist_names)
+    hist_names = set([key.GetName() 
+                      for file in SIGNAL_SAMPLES+BACKG_SAMPLES 
+                      for key in file.GetListOfKeys() 
+                      if isinstance(file.Get(key.GetName()), ROOT.TH1) 
+                        or isinstance(file.Get(key.GetName()), ROOT.TH2)])
     vars_in_files = any( ss_var.ref in hist_names for var in list(variables1D) + list(variables2D) for ss_var in var )
     lrs_in_files = any( ss_var.ref in hist_names for var in lr_vars for ss_var in var )
-    print(vars_in_files)
-    print(lrs_in_files)
     
     if vars_in_files:
         for var in variables1D:
