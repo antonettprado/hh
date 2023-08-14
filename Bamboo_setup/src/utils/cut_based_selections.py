@@ -400,11 +400,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source directory")
-    parser.add_argument("-l", "--is_lr", action='store_true')
+    parser.add_argument("-l", "--lr", action='store_true')
     args = parser.parse_args()
 
     SOURCE_PATH = Path(args.source_path)
-    is_lr = args.is_lr
+    is_lr = args.lr
     OUTPUT_PATH = SOURCE_PATH / "cuts"
 
     results_path = SOURCE_PATH / 'results'

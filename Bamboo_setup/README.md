@@ -74,5 +74,5 @@ python3 utils/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LR -l reco
 
 ### Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection 
 ```bash
-python3 utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR -lr
+python3 utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR --lr
 ```
