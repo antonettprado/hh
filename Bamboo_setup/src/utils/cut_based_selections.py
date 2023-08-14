@@ -420,7 +420,6 @@ if __name__ == "__main__":
         vars2D = list(variables.get_all_2D_variables().values())
         vars = vars1D + vars2D
         subcats = list(set.union(*(set(var.subcats) for var in vars)))
-        subcats.remove('SL_res_2b') # Temporary
     else:
         varnames1d = variables.ALL_VARNAMES_1D
         vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
