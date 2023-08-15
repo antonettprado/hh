@@ -59,7 +59,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         # EGamma
         addHLTPath('EGamma', 'Ele32_WPTight_Gsf')
         addHLTPath('EGamma', 'Ele23_Ele12_CaloIdL_TrackIdL_IsoVL')
-        addHLTPath('EGamma', 'HLT_Ele28_eta2p1_WPTight_Gsf_HT150')
+        # addHLTPath('EGamma', 'Ele28_eta2p1_WPTight_Gsf_HT150')
         # SingleMuon
         addHLTPath('SingleMuon', 'IsoMu24')
         addHLTPath('SingleMuon', 'IsoMu27')
