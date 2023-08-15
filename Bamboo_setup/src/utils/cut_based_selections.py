@@ -435,8 +435,11 @@ if __name__ == "__main__":
     df = df.groupby(by=['subcat','name']).apply(fill_by_name)
     df['dSignificance %'] = (df['significance']/df['subcat'].apply(lambda x: tot_sigs[x]) - 1) * 100
     df.set_index(['subcat', 'dim', 'name', 'efficiency'], inplace=True)
-    df.sort_index(inplace=True)
-    df.groupby(level=[0,1,2]).apply(write_to_csv)
+    avg_sig = df.groupby(["subcat", "dim", "name"]).mean().rename(columns={'significance': 'avg_sig'})['avg_sig']
+    df = df.merge(avg_sig, left_index=True, right_index=True)
+    df = df.sort_values(["subcat", "dim", "avg_sig", "name", "efficiency"], ascending=[True, True, False, True, True])
+    df = df.drop(columns=['avg_sig'])
+    df.groupby(level=[0,1,2], sort=False).apply(write_to_csv)
     
     executionTime = time.time() - startTime
     print(f'Executed in {executionTime:.1f}s')
