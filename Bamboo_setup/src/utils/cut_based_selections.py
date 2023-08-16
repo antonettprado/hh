@@ -418,7 +418,8 @@ if __name__ == "__main__":
         subcats = list(set.union(*(set(var.subcats) for var in vars)))
     else:
         varnames1d = variables.ALL_VARNAMES_1D
-        vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
+        varnames2d = variables.ALL_VARNAMES_2D
+        vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d)] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
         subcats = list(set.union(*(set(var.subcats) for var in vars)))
         subcats = ['SL_res_2b_x'] # Temporary
     
