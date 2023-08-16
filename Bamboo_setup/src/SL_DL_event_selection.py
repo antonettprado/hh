@@ -396,11 +396,11 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
-        yields.add(selections["SL_e"]["SL_e"], 'one electron')
-        yields.add(selections["SL_mu"]["SL_mu"], 'one muon')
-        yields.add(selections["DL_ee"]["DL_ee"], 'two electrons')
-        yields.add(selections["DL_emu"]["DL_emu"], 'one elect, one muon')
-        yields.add(selections["DL_mumu"]["DL_mumu"], 'two muons')
+        yields.add(selections["SL_e"]["SL_e"], 'Single Electron')
+        yields.add(selections["SL_mu"]["SL_mu"], 'Single Muon')
+        yields.add(selections["DL_ee"]["DL_ee"], 'Double Electron')
+        yields.add(selections["DL_mumu"]["DL_mumu"], 'Double Muon')
+        yields.add(selections["DL_emu"]["DL_emu"], 'Electron & Muon')
 
         yields.add(selections["SL"]["SL_resolved"], "SL resolved")
         yields.add(selections["SL"]["SL_res_1b"], "SL resolved 1b")
