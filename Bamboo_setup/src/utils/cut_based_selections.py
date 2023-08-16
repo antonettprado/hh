@@ -420,7 +420,11 @@ if __name__ == "__main__":
         varnames1d = variables.ALL_VARNAMES_1D
         varnames2d = variables.ALL_VARNAMES_2D
         vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d)] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
-        subcats = list(set.union(*(set(var.subcats) for var in vars)))
+        vars_custom_combos = []
+        vars_custom_combos.append(['bjets_mbb', 'bjets_dPhi', 'bjets_dEta'])
+        vars_custom_combos.append(['trijet_mInv', 'bjets_dPhi', 'bjets_dEta'])
+        vars_custom = [LikelihoodRatio(combo) for combo in vars_custom_combos]
+        subcats = list(set.union(*(set(var.subcats) for var in vars_custom)))
         subcats = ['SL_res_2b_x'] # Temporary
     
     efficiencies = [0.75, 0.85, 0.9]
