@@ -224,7 +224,10 @@ class Variable2D(Variable):
 lr_binning = { 
                1: { 'nbins':200, 'min':0, 'max':20 },
                2: { 'nbins':200, 'min':0, 'max':20 },
-               3: { 'nbins':200, 'min':0, 'max':40 }
+               3: { 'nbins':400, 'min':0, 'max':40 },
+               4: { 'nbins':400, 'min':0, 'max':40 },
+               5: { 'nbins':600, 'min':0, 'max':60 },
+               6: { 'nbins':600, 'min':0, 'max':60 }
               }
 class LikelihoodRatio(Variable):
     def __init__(self, names: Union['list[str]', str], **kwargs):
