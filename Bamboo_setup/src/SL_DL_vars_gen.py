@@ -72,6 +72,20 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         hists_1D = []
         hists_2D = []
 
+        # Add gen level lepton variables to plots
+        arbitrary_lepton_pt = op.switch(op.rng_len(genElectrons)==1, genElectrons[0].pt, genMuons[0].pt)
+        arbitrary_lepton_eta = op.switch(op.rng_len(genElectrons)==1, genElectrons[0].eta, genMuons[0].eta)
+        SL_res_2b_x_e_only = SL_res_2b_x.refine('only electrons', cut=[op.rng_len(genElectrons)==1])
+        SL_res_2b_x_mu_only = SL_res_2b_x.refine('only muons', cut=[op.rng_len(genMuons)==1])
+        hists_1D.extend([
+            Plot.make1D("SL_res_2b_x_lepton_pT", arbitrary_lepton_pt, SL_res_2b_x, EqBin(250, 0, 500), xTitle="SL_res_2b_x lepton pT (GeV)" ),
+            Plot.make1D("SL_res_2b_x_electron_pT", genElectrons[0].pt, SL_res_2b_x_e_only, EqBin(250, 0, 500), xTitle="SL_res_2b_x electron pT (GeV)"),
+            Plot.make1D("SL_res_2b_x_muon_pT", genMuons[0].pt, SL_res_2b_x_mu_only, EqBin(250, 0, 500), xTitle="SL_res_2b_x muon pT (GeV)" ),
+            Plot.make2D("SL_res_2b_x_lepton_pT_vs_eta", (arbitrary_lepton_eta, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(100, -3, 3), EqBin(250, 0, 500)), xTitle='SL_res_2b_x lepton #eta', yTitle='SL_res_2b_x lepton pT'),
+            Plot.make2D("SL_res_2b_x_electron_pT_vs_eta", (genElectrons[0].eta, genElectrons[0].pt), SL_res_2b_x_e_only, (EqBin(100, -3, 3), EqBin(250, 0, 500)), xTitle='SL_res_2b_x electron #eta', yTitle='SL_res_2b_x electron pT'),
+            Plot.make2D("SL_res_2b_x_muon_pT_vs_eta", (genMuons[0].eta, genMuons[0].pt), SL_res_2b_x_mu_only, (EqBin(100, -3, 3), EqBin(250, 0, 500)), xTitle='SL_res_2b_x muon #eta', yTitle='SL_res_2b_x muon pT'),
+        ])
+
         def get_selection_and_tags(sel_string):
             if "SL" in sel_string:
                 if sel_string == "SL_res_1b":
