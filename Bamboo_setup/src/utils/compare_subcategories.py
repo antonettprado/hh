@@ -192,12 +192,8 @@ if __name__ == "__main__":
     SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
     OUTPUT_PATH = os.path.join(SOURCE_PATH, "comparisons")
     results_path = Path(SOURCE_PATH) / 'results'
-    SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') 
-                        for name in ALL_SIGNAL_SAMPLES 
-                        if (results_path / name).exists() ]
-    BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') 
-                        for name in ALL_BACKG_SAMPLES 
-                        if (results_path / name).exists() ]
+    SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
+    BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
     LEVEL = args.level
     WITH_TITLES = args.with_titles
     

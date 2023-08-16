@@ -1,11 +1,13 @@
-import json
+import json, yaml
+import uproot
 from bamboo.plots import EquidistantBinning as EqBin
-from ROOT import TFile, TH1F, TH2F, gDirectory
+from ROOT import TFile, TH1F, TH2F
 from pathlib import Path
 from typing import Union
 import os
 import copy
-VARPATH = os.path.join(os.path.dirname(__file__), 'variables.json')
+VARPATH = Path(__file__).parent / 'variables.json'
+CFGPATH = Path(__file__).parents[2] / 'config' / 'analysis_2018.yml'
 
 # Load all variable names into local namespace (for looping)
 ALL_VARNAMES_1D = None
@@ -17,6 +19,33 @@ with open(VARPATH, 'r') as f:
     ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
     ALL_VARNAMES_2D = ALL_JSON_DATA['2D'].keys()
 
+# Load config file
+with open(CFGPATH, "r") as yaml_file:
+    yaml_data = yaml.safe_load(yaml_file)
+    LUMINOSITY: float = yaml_data['eras']['2018']['luminosity']
+    CROSS_SECTIONS: 'dict[str, float]' = { sample_name: sample_data['cross-section'] for sample_name, sample_data in yaml_data['samples'].items() }
+
+# Helper utility function for getting the weights stored in root files
+SUM_WEIGHTS = {}
+def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
+    # Open the files
+    path = Path(path)
+    files = [ TFile.Open(str(path / name), 'read') 
+              for name in names if (path / name).exists() ]
+    
+    # Read the weights from the files
+    for file in files:
+        sample_name = Path(file.GetName()).stem
+        tree = file.Get('Runs')
+        sumw = 0
+        for entry in range(tree.GetEntries()):
+            tree.GetEntry(entry)
+            sumw += tree.genEventSumw
+        # Save SUM_WEIGHTS as a global variable to be used in the Variable class
+        SUM_WEIGHTS[sample_name] = sumw     
+        
+    # Return the open files
+    return files
 
 class Variable():
     def __init__(self, name, **kwargs):
@@ -43,14 +72,18 @@ class Variable():
         return self.hists[hist_key]
 
     def _generate_hist_from_file(self, file: TFile, subcat: str) -> None:
+        sample_name = Path(file.GetName()).stem
         hist_name = self[subcat].ref
         hist_key = '_'.join((hist_name, Path(file.GetName()).stem))
         try:
             self.hists[hist_key] = file.Get(hist_name)
             self.hists[hist_key].SetDirectory(0)
         except AttributeError as err:
-            raise KeyError(f"'{hist_name}' not found in {file.GetName()}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
+            raise KeyError(f"'{hist_name}' not found in {sample_name}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
         
+        # Scale the histogram
+        scale_factor = CROSS_SECTIONS[sample_name] * LUMINOSITY / SUM_WEIGHTS[sample_name]
+        self.hists[hist_key].Scale(scale_factor)
 
     def get_total_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
         # Check if total hist exists. If not, generate it
