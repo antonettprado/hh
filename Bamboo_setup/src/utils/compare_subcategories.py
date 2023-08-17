@@ -211,9 +211,26 @@ if __name__ == "__main__":
     variables2D = variables.get_all_2D_variables().values()
 
     from itertools import combinations
+
+    # Fixed variables (1D vars, 2D vars, 2-combos of 1D vars)
     varnames1d = [ var.name for var in variables1D ]
-    lr_vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ]
+    varnames2d = [ var.name for var in variables2D ]
+    fixed_lr_vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(name) for name in varnames2d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ]
     
+    # Custom vars (n-combo of 1D vars, 2-combos of 2D vars)
+    interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
+    interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_x_bjets_mbb']
+    vars_custom_combos = []
+    vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
+    vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
+    vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
+    vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
+    vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
+    vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
+    custom_lr_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
+
+    lr_vars = fixed_lr_vars + custom_lr_vars
+
     # Determine if there are no 1D or 2D variables, or LR variables. If not, we don't attempt to plot them
     hist_names = set([key.GetName() 
                       for file in SIGNAL_SAMPLES+BACKG_SAMPLES 
