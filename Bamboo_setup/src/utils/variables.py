@@ -76,14 +76,14 @@ class Variable():
         hist_name = self[subcat].ref
         hist_key = '_'.join((hist_name, Path(file.GetName()).stem))
         try:
-            self.hists[hist_key] = file.Get(hist_name)
-            self.hists[hist_key].SetDirectory(0)
+            hist = file.Get(hist_name)
+            hist.SetDirectory(0)
         except AttributeError as err:
             raise KeyError(f"'{hist_name}' not found in {sample_name}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
-        
         # Scale the histogram
         scale_factor = CROSS_SECTIONS[sample_name] * LUMINOSITY / SUM_WEIGHTS[sample_name]
-        self.hists[hist_key].Scale(scale_factor)
+        hist.Scale(scale_factor)
+        self.hists[hist_key] = hist
 
     def get_total_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
         # Check if total hist exists. If not, generate it
