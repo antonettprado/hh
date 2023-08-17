@@ -113,7 +113,6 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path):
     hist_backg.Draw("hist sames")
     canvas_norm.SetLeftMargin(0.13)
     canvas_norm.Update()
-
     s1 = hist_signal.FindObject("stats")
     s1.SetTextColor(ROOT.kBlue)
     s2 = hist_backg.FindObject("stats")
@@ -129,7 +128,7 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path):
     canvas_norm.Close()
 
 def draw_2D_total(signal_hist, backg_hist, ss_var, path):
-    for hist, color, of_type in ((signal_hist, ROOT.kRed, 'signal'), (backg_hist, ROOT.kBlue, 'backg')):
+    for hist, color, of_type in ((signal_hist, ROOT.kBlue, 'signal'), (backg_hist, ROOT.kRed, 'backg')):
         canvas = ROOT.TCanvas('canvas', '', 200, 200)
         canvas.SetLeftMargin(0.12)
         canvas.SetRightMargin(0.15)
@@ -153,8 +152,8 @@ def draw1D(var: Variable1D, dirname='1D'):
         this_path = os.path.join(path_1D, ss_var.subcat)
         if not os.path.exists(this_path): os.makedirs(this_path)
         try:
-            total_signal = ss_var.get_total_hist("signal", SIGNAL_SAMPLES, normalized=True)
-            total_backg = ss_var.get_total_hist("backg", BACKG_SAMPLES, normalized=True)
+            total_signal = ss_var.get_total_hist(ss_var.subcat+"_signal", SIGNAL_SAMPLES, normalized=True)
+            total_backg = ss_var.get_total_hist(ss_var.subcat+"_backg", BACKG_SAMPLES, normalized=True)
             draw_1D_total(total_signal, total_backg, ss_var, this_path)
         except KeyError:
             print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
@@ -170,8 +169,8 @@ def draw2D(var: Variable2D):
         this_path = os.path.join(path_2D, ss_var.subcat)
         if not os.path.exists(this_path): os.makedirs(this_path)
         try:
-            total_signal = var.get_total_hist('signal', SIGNAL_SAMPLES, ss_var.subcat, normalized=True)
-            total_backg = var.get_total_hist('backg', BACKG_SAMPLES, ss_var.subcat, normalized=True)
+            total_signal = var.get_total_hist(ss_var.subcat+'_signal', SIGNAL_SAMPLES, ss_var.subcat, normalized=True)
+            total_backg = var.get_total_hist(ss_var.subcat+'_backg', BACKG_SAMPLES, ss_var.subcat, normalized=True)
             draw_2D_total(total_signal, total_backg, ss_var, this_path)
         except KeyError:
             print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
