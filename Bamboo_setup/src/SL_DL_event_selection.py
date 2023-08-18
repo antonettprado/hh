@@ -19,10 +19,18 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    def object_and_event_selection(self, tree, noSel, MC_bjets=False):
+    def object_and_event_selection(self, tree, noSel, MC_bjets=False, events='all'):
         # ===============================================================================
         # ============================= Object Selection ================================
         # ===============================================================================
+        if events == 'all':
+            noSel = noSel
+        elif events == 'even':
+            noSel = noSel.refine('even', cut=[tree.event % 2 == 0])
+        elif events == 'odd':
+            noSel = noSel.refine('odd', cut=[tree.event % 2 == 1])
+        else:
+            raise ValueError("events must be 'all', 'odd', or 'even'")
 
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)
