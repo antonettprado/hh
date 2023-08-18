@@ -45,6 +45,7 @@ def initialize_outputs(dir, subcats, vars):
                 var = v
                 break
         # If none exist move to next subcat
+        print(repr(var))
         if not var:
             continue
         var = var[subcat]
@@ -422,19 +423,33 @@ if __name__ == "__main__":
         varnames2d = variables.ALL_VARNAMES_2D
         lr_fixed_vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d) ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
         
-        # Custom vars (n-combo of 1D vars, 2-combos of 2D vars)
-        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
-        interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_x_bjets_mbb']
+        # -----------------------------------------------------------------
         vars_custom_combos = []
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
+        # interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
+        interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_vs_mbb']
         vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
+        vars_custom_combos.extend([
+            ['bjets_dPhi_vs_mbb', 'bjets_dEta'],
+            ['bjets_dPhi_vs_mbb', 'bjet0_pT'],
+            ['bjets_dPhi_vs_mbb', 'trijet_mInv'],
+            ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi'],
+            ['trijet_mInv_vs_bjets_mbb', 'bjets_dEta'],
+            ['trijet_mInv_vs_bjets_mbb', 'bjet0_pT'],
+            ['bjets_dEta_vs_mbb', 'bjets_dPhi'],
+            ['bjets_dEta_vs_mbb', 'bjet0_pT'],
+            ['bjets_dEta_vs_mbb', 'trijet_mInv'],
+            ['bjets_dR_vs_mbb', 'bjet0_pT'],
+            ['bjets_dR_vs_mbb', 'trijet_mInv']
+        ])
+        # -----------------------------------------------------------------
         lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
 
-        vars = lr_fixed_vars + lr_custom_vars
+        vars = lr_custom_vars
 
         subcats = list(set.union(*(set(var.subcats) for var in vars)))
         subcats = ['SL_res_2b_x'] # Temporary
