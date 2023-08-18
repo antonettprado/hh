@@ -17,12 +17,15 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         parser.add_argument("--bjets_num", action='store', type=int, default=2, help='Minimum number of bjets per event')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
-        return super(NanoAODHistoModule, self).prepareTree(tree=tree,
-                                                            sample=sample,
-                                                            sampleCfg=sampleCfg,
-                                                            description=nanoGenDescription,
-                                                            backend=backend)
-
+        tree, noSel, backend, lumiArcs = super(NanoAODHistoModule, self).prepareTree(
+                                        tree=tree,
+                                        sample=sample,
+                                        sampleCfg=sampleCfg,
+                                        description=nanoGenDescription,
+                                        backend=backend)
+        noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=()) # For weighted gen-level events
+        return tree, noSel, backend, lumiArcs
+                                                    
     def get_SL_DL_vars_reco(self, tree, noSel):
         
         # Retrieve objects ==============================================
@@ -77,13 +80,25 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         arbitrary_lepton_eta = op.switch(op.rng_len(genElectrons)==1, genElectrons[0].eta, genMuons[0].eta)
         SL_res_2b_x_e_only = SL_res_2b_x.refine('only electrons', cut=[op.rng_len(genElectrons)==1])
         SL_res_2b_x_mu_only = SL_res_2b_x.refine('only muons', cut=[op.rng_len(genMuons)==1])
+        
+        # mjj, gen level
+        jj_combos = op.combine((sorted_nonbJets), N=2)
+        jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Pt())
+        jj_mjj_mW = jj_combos[op.rng_max_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
+        mjj = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+
+        # Add additional plots
         hists_1D.extend([
-            Plot.make1D("SL_res_2b_x_lepton_pT", arbitrary_lepton_pt, SL_res_2b_x, EqBin(250, 0, 500), xTitle="SL_res_2b_x lepton pT (GeV)" ),
-            Plot.make1D("SL_res_2b_x_electron_pT", genElectrons[0].pt, SL_res_2b_x_e_only, EqBin(250, 0, 500), xTitle="SL_res_2b_x electron pT (GeV)"),
-            Plot.make1D("SL_res_2b_x_muon_pT", genMuons[0].pt, SL_res_2b_x_mu_only, EqBin(250, 0, 500), xTitle="SL_res_2b_x muon pT (GeV)" ),
-            Plot.make2D("SL_res_2b_x_lepton_pT_vs_eta", (arbitrary_lepton_eta, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(100, -3, 3), EqBin(250, 0, 500)), xTitle='SL_res_2b_x lepton #eta', yTitle='SL_res_2b_x lepton pT'),
-            Plot.make2D("SL_res_2b_x_electron_pT_vs_eta", (genElectrons[0].eta, genElectrons[0].pt), SL_res_2b_x_e_only, (EqBin(100, -3, 3), EqBin(250, 0, 500)), xTitle='SL_res_2b_x electron #eta', yTitle='SL_res_2b_x electron pT'),
-            Plot.make2D("SL_res_2b_x_muon_pT_vs_eta", (genMuons[0].eta, genMuons[0].pt), SL_res_2b_x_mu_only, (EqBin(100, -3, 3), EqBin(250, 0, 500)), xTitle='SL_res_2b_x muon #eta', yTitle='SL_res_2b_x muon pT'),
+            Plot.make1D("SL_res_2b_x_lepton_pT", arbitrary_lepton_pt, SL_res_2b_x, EqBin(250, 0, 250), xTitle="SL_res_2b_x lepton pT (GeV)" ),
+            Plot.make1D("SL_res_2b_x_electron_pT", genElectrons[0].pt, SL_res_2b_x_e_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x electron pT (GeV)"),
+            Plot.make1D("SL_res_2b_x_muon_pT", genMuons[0].pt, SL_res_2b_x_mu_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x muon pT (GeV)" ),
+            Plot.make1D("SL_res_2b_x_mjj", mjj, SL_res_2b_x, EqBin(200, 0, 200), xTitle="SL_res_2b_x mjj (GeV)" ),
+            
+            Plot.make2D("SL_res_2b_x_lepton_pT_vs_eta", (arbitrary_lepton_eta, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x lepton #eta', yTitle='SL_res_2b_x lepton pT (GeV)'),
+            Plot.make2D("SL_res_2b_x_electron_pT_vs_eta", (genElectrons[0].eta, genElectrons[0].pt), SL_res_2b_x_e_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x electron #eta', yTitle='SL_res_2b_x electron pT (GeV)'),
+            Plot.make2D("SL_res_2b_x_muon_pT_vs_eta", (genMuons[0].eta, genMuons[0].pt), SL_res_2b_x_mu_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x muon #eta', yTitle='SL_res_2b_x muon pT (GeV)'),
+            Plot.make2D("SL_res_2b_x_lepton_pT_vs_mjj", (mjj, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(200, 0, 200), EqBin(250, 0, 250)), xTitle='SL_res_2b_x mjj (GeV)', yTitle='SL_res_2b_x lepton pT (GeV)'),
+
         ])
 
         def get_selection_and_tags(sel_string):
