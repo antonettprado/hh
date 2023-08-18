@@ -45,6 +45,7 @@ def initialize_outputs(dir, subcats, vars):
                 var = v
                 break
         # If none exist move to next subcat
+        print(repr(var))
         if not var:
             continue
         var = var[subcat]
@@ -448,12 +449,10 @@ if __name__ == "__main__":
         # -----------------------------------------------------------------
         lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
 
-        lr_vars = lr_fixed_vars + lr_custom_vars
+        vars = lr_custom_vars
 
-        subcats = list(set.union(*(set(var.subcats) for var in lr_vars)))
+        subcats = list(set.union(*(set(var.subcats) for var in vars)))
         subcats = ['SL_res_2b_x'] # Temporary
-
-        
     
     efficiencies = [0.75, 0.85, 0.9]
 
