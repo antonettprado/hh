@@ -217,19 +217,45 @@ if __name__ == "__main__":
     varnames2d = [ var.name for var in variables2D ]
     lr_fixed_vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(name) for name in varnames2d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ]
     
-    # Custom vars (n-combo of 1D vars, 2-combos of 2D vars)
-    interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
-    interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_x_bjets_mbb']
+    # -----------------------------------------------------------------
     vars_custom_combos = []
-    vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
-    vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
-    vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
-    vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
-    vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
+    # interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
+    # vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
+    # vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
+    # vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
+    # vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
+    # vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
+    interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_vs_mbb']
     vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
+    vars_custom_combos.extend([
+        ['bjets_dPhi_vs_mbb', 'bjets_dEta'],
+        ['bjets_dPhi_vs_mbb', 'bjet0_pT'],
+        ['bjets_dPhi_vs_mbb', 'trijet_mInv'],
+        ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi'],
+        ['trijet_mInv_vs_bjets_mbb', 'bjets_dEta'],
+        ['trijet_mInv_vs_bjets_mbb', 'bjet0_pT'],
+        ['bjets_dEta_vs_mbb', 'bjets_dPhi'],
+        ['bjets_dEta_vs_mbb', 'bjet0_pT'],
+        ['bjets_dEta_vs_mbb', 'trijet_mInv'],
+        ['bjets_dR_vs_mbb', 'bjet0_pT'],
+        ['bjets_dR_vs_mbb', 'trijet_mInv']
+    ])
+    # -----------------------------------------------------------------
     lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
 
     lr_vars = lr_fixed_vars + lr_custom_vars
+
+    # List of select vars to custom plot ------------------------------
+    # lr_vars = [ 
+    #     LikelihoodRatio('bjets_mbb', min=0, max=6),
+    #     LikelihoodRatio('bjets_dPhi', min=0, max=4),
+    #     LikelihoodRatio('bjets_dPhi_vs_mbb', min=0, max=14),
+    #     LikelihoodRatio(['bjets_mbb', 'bjets_dPhi'], min=0, max=10),
+    #     LikelihoodRatio('trijet_mInv', min=0, max=3),
+    #     LikelihoodRatio('trijet_mInv_vs_bjets_mbb', min=0, max=14),
+    #     LikelihoodRatio(['trijet_mInv', 'bjets_mbb'], min=0, max=8),
+    # ]
+    # -----------------------------------------------------------------
 
     # Determine if there are no 1D or 2D variables, or LR variables. If not, we don't attempt to plot them
     hist_names = set([key.GetName() 
