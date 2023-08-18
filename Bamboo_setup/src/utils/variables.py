@@ -50,7 +50,6 @@ def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
 class Variable():
     def __init__(self, name, **kwargs):
         self.name = name
-        self.hists = {}
         self.selections = {}
         self.data = {}
         self.update(**kwargs)
@@ -63,48 +62,29 @@ class Variable():
                      for subcat in subcats ]
 
     def get_hist_from_file(self, subcat: str, file: TFile) -> Union[TH1F, TH2F]:
-        # Check if hist exists. If not, generate it
-        hist_key = '_'.join((self[subcat].ref, Path(file.GetName()).stem))
-        if hist_key in self.hists.keys():
-            return self.hists[hist_key]
-
-        self._generate_hist_from_file(file, subcat)
-        return self.hists[hist_key]
-
-    def _generate_hist_from_file(self, file: TFile, subcat: str) -> None:
         sample_name = Path(file.GetName()).stem
         hist_name = self[subcat].ref
-        hist_key = '_'.join((hist_name, Path(file.GetName()).stem))
         try:
             hist = file.Get(hist_name)
             hist.SetDirectory(0)
         except AttributeError as err:
             raise KeyError(f"'{hist_name}' not found in {sample_name}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
+        
         # Scale the histogram
         scale_factor = CROSS_SECTIONS[sample_name] * LUMINOSITY / SUM_WEIGHTS[sample_name]
         hist.Scale(scale_factor)
-        self.hists[hist_key] = hist
+        return hist
 
-    def get_total_hist(self, hist_key: str, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
-        # Check if total hist exists. If not, generate it
-        if hist_key in self.hists.keys():
-            return self.hists[hist_key]
-
-        if self.is_child():
-            subcat = self.subcat
+    def get_total_hist(self, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
+        if self.is_child(): subcat = self.subcat
         
-        self._generate_total_hist(files, subcat, hist_key)
-        if normalized:
-            self.hists[hist_key].Scale(1/self.hists[hist_key].Integral())
-        return self.hists[hist_key]
-
-    def _generate_total_hist(self, files: 'list[TFile]', subcat: str, hist_key: str) -> None:
         tot_hist = self.get_hist_from_file(subcat, files[0]) # Get the first histogram from the file list
         for file in files[1:]:
             tot_hist.Add(self.get_hist_from_file(subcat, file))
 
-        self.hists[hist_key] = tot_hist
-        self.hists[hist_key].SetDirectory(0)
+        if normalized:
+            tot_hist.Scale(1/tot_hist.Integral())
+        return tot_hist
 
     def is_child(self) -> bool:
         return hasattr(self, "subcat")

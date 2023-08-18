@@ -49,8 +49,8 @@ def initialize_outputs(dir, subcats, vars):
             continue
         var = var[subcat]
         try:
-            sig_hist = var.get_total_hist(subcat+'_signal', SIGNAL_SAMPLES)
-            bkg_hist = var.get_total_hist(subcat+'_backg', BACKG_SAMPLES)
+            sig_hist = var.get_total_hist(SIGNAL_SAMPLES)
+            bkg_hist = var.get_total_hist(BACKG_SAMPLES)
         except KeyError:
             continue
         sig_size = sig_hist.Integral(0, sig_hist.GetNbinsX()+1)
@@ -312,8 +312,8 @@ def fill_by_name(df):
     print(f'Generating for {ref}')
     # If we can't read the references from the file, ignore and keep going
     try:
-        sig_hist = var.get_total_hist(subcat+'_signal', SIGNAL_SAMPLES, subcat)
-        bkg_hist = var.get_total_hist(subcat+'_backg', BACKG_SAMPLES, subcat)
+        sig_hist = var.get_total_hist(SIGNAL_SAMPLES, subcat)
+        bkg_hist = var.get_total_hist(BACKG_SAMPLES, subcat)
     except KeyError:
         print(f'Generation for {ref} failed')
         FAILED_VARIABLES.append(ref)
@@ -420,7 +420,7 @@ if __name__ == "__main__":
         # LRs for Fixed variables (1D vars, 2D vars, 2-combos of 1D vars)
         varnames1d = variables.ALL_VARNAMES_1D
         varnames2d = variables.ALL_VARNAMES_2D
-        lr_fixed_vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d)] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
+        lr_fixed_vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d) ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
         
         # Custom vars (n-combo of 1D vars, 2-combos of 2D vars)
         interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
