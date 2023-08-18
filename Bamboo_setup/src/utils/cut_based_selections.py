@@ -417,14 +417,26 @@ if __name__ == "__main__":
         vars = vars1D + vars2D
         subcats = list(set.union(*(set(var.subcats) for var in vars)))
     else:
+        # LRs for Fixed variables (1D vars, 2D vars, 2-combos of 1D vars)
         varnames1d = variables.ALL_VARNAMES_1D
         varnames2d = variables.ALL_VARNAMES_2D
-        vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d)] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
+        lr_fixed_vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d)] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
+        
+        # Custom vars (n-combo of 1D vars, 2-combos of 2D vars)
+        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
+        interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_x_bjets_mbb']
         vars_custom_combos = []
-        vars_custom_combos.append(['bjets_mbb', 'bjets_dPhi', 'bjets_dEta'])
-        vars_custom_combos.append(['trijet_mInv', 'bjets_dPhi', 'bjets_dEta'])
-        vars_custom = [LikelihoodRatio(combo) for combo in vars_custom_combos]
-        subcats = list(set.union(*(set(var.subcats) for var in vars_custom)))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
+        vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
+        lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
+
+        lr_vars = lr_fixed_vars + lr_custom_vars
+
+        subcats = list(set.union(*(set(var.subcats) for var in lr_vars)))
         subcats = ['SL_res_2b_x'] # Temporary
     
     efficiencies = [0.75, 0.85, 0.9]
