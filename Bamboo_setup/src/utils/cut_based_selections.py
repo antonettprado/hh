@@ -447,9 +447,10 @@ if __name__ == "__main__":
         ])
         # -----------------------------------------------------------------
         lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
+
         lr_vars = lr_fixed_vars + lr_custom_vars
-        vars = lr_vars
-        subcats = list(set.union(*(set(var.subcats) for var in vars)))
+
+        subcats = list(set.union(*(set(var.subcats) for var in lr_vars)))
         subcats = ['SL_res_2b_x'] # Temporary
 
         
