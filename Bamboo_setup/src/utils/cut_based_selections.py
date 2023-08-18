@@ -434,9 +434,9 @@ if __name__ == "__main__":
         vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
         lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
 
-        lr_vars = lr_fixed_vars + lr_custom_vars
+        vars = lr_fixed_vars + lr_custom_vars
 
-        subcats = list(set.union(*(set(var.subcats) for var in lr_vars)))
+        subcats = list(set.union(*(set(var.subcats) for var in vars)))
         subcats = ['SL_res_2b_x'] # Temporary
     
     efficiencies = [0.75, 0.85, 0.9]
