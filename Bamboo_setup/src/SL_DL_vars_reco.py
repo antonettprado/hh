@@ -9,6 +9,8 @@ import os
 import correctionlib.convert
 import ROOT
 import boost_histogram as bh
+import numpy as np
+import scipy.interpolate
 
 class SL_DL_vars_reco(SL_DL_event_selection):
 
@@ -24,9 +26,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
     # If you want access to variable data, run this function once to instantiate all the objects and selections for a given tree
-    def object_and_event_selection(self, tree, noSel, mc_truth_b=False):
+    def object_and_event_selection(self, tree, noSel, mc_truth_b=False, events='all'):
         self.tree = tree
-        self.objects, self.selections = super().object_and_event_selection(tree, noSel, mc_truth_b)
+        self.objects, self.selections = super().object_and_event_selection(tree, noSel, mc_truth_b, events)
 
         ak4_jets = self.objects["cleaned_ak4_jets"]
         ak4_btags = self.objects["cleaned_ak4_btags"]
@@ -638,7 +640,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
 
-        self.object_and_event_selection(tree, noSel)
+        self.object_and_event_selection(tree, noSel, events='even')
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -668,6 +670,56 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         return plots
 
+    def _get_interpolated_axis_data(self, root_axis, scale_factor):
+        bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
+        hbw = (bin_centers[1] - bin_centers[0]) / 2
+        bin_edges = np.append(bin_centers - hbw, bin_centers[-1] + hbw)
+        interp_bin_edges = np.linspace(bin_edges[0], bin_edges[-1], num=len(bin_centers) * scale_factor + 1)
+        interp_bin_centers = (interp_bin_edges[:-1] + interp_bin_edges[1:]) / 2
+        interp_seed_data = np.pad(bin_centers, 1, constant_values=(bin_edges[0], bin_edges[-1]))
+        return interp_seed_data, interp_bin_centers
+    
+    def interpolate_1d_root_histogram(self, root_hist, scale_factor):
+        bin_contents = [root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)]
+        x_seed_data, interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+        y_seed_data = np.pad(bin_contents, 1, 'edge')
+
+        interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
+
+        boost_hist = bh.Histogram(
+            bh.axis.Regular(len(interp_bin_centers), x_seed_data[0], x_seed_data[-1]), 
+            storage=bh.storage.Weight()
+        )
+
+        for bin_center, bin_content in zip(interp_bin_centers, interp_bin_contents):
+            boost_hist.fill(bin_center, weight=bin_content)
+
+        return boost_hist
+
+    def interpolate_2d_root_histogram(self, root_hist, scale_factor):
+        bin_contents = np.array([[root_hist.GetBinContent(xbin, ybin) for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
+        x_seed_data, x_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+        y_seed_data, y_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
+        z_seed_data = np.pad(bin_contents, 1, 'edge')
+
+        interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, indexing='ij')).reshape(2,-1).T
+
+        interpolated_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data], z_seed_data, interpolated_bin_centers, method='linear')
+        interpolated_bin_contents = interpolated_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers)))
+
+        boost_hist = bh.Histogram(
+            bh.axis.Regular(len(x_interp_bin_centers), x_seed_data[0], x_seed_data[-1]),
+            bh.axis.Regular(len(y_interp_bin_centers), y_seed_data[0], y_seed_data[-1]),
+            storage=bh.storage.Weight()
+        )
+
+        # Fill the Boost Histogram with interpolated bin contents
+        for i, x_bin in enumerate(x_interp_bin_centers):
+            for j, y_bin in enumerate(y_interp_bin_centers):
+                boost_hist.fill(x_bin, y_bin, weight=interpolated_bin_contents[i,j])
+
+        return boost_hist
+
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         print("------------------ Calculating Likelihood Ratios --------------------")
@@ -675,8 +727,10 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
         ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
         results_path = Path(self.args.output) / 'results' # Constructs "output_path/results" using the forward slash operator
-        SIGNAL_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_SIGNAL_SAMPLES if (results_path / name).exists() ]
-        BACKG_SAMPLES = [ ROOT.TFile.Open(str(results_path / name), 'read') for name in ALL_BACKG_SAMPLES if (results_path / name).exists() ]
+        SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
+        BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
+        INTERPOLATION_SCALE_FACTOR_1D = 9
+        INTERPOLATION_SCALE_FACTOR_2D = 3
 
         all_reco_vars_1D = self.get_all_reco_variables()
         all_reco_vars_2D = self.get_all_reco_2D_variables()
@@ -686,23 +740,18 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         for var in all_reco_vars:
             if "SL_res_2b_x" not in var.subcats: 
                 continue
+            print(var.name)
             SL_res_2b_x_var = var["SL_res_2b_x"]
-            signal_total_hist = SL_res_2b_x_var.get_total_hist('signal', SIGNAL_SAMPLES, normalized=True)
-            backg_total_hist  = SL_res_2b_x_var.get_total_hist('backg', BACKG_SAMPLES, normalized=True)
+            signal_total_hist = SL_res_2b_x_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
+            backg_total_hist  = SL_res_2b_x_var.get_total_hist(BACKG_SAMPLES, normalized=True)
             
             ratio_hist = signal_total_hist.Clone()
             ratio_hist.Divide(backg_total_hist)
 
             if isinstance(var, Variable1D):
-                bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.nbins, SL_res_2b_x_var.min, SL_res_2b_x_var.max))
-                for i in range(SL_res_2b_x_var.nbins):
-                    bh_hist[i] = ratio_hist.GetBinContent(i+1) # +1 to skip underflow bin
+                bh_hist = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
             elif isinstance(var, Variable2D):
-                bh_hist = bh.Histogram(bh.axis.Regular(SL_res_2b_x_var.xnbins, SL_res_2b_x_var.xmin, SL_res_2b_x_var.xmax),
-                                    bh.axis.Regular(SL_res_2b_x_var.ynbins, SL_res_2b_x_var.ymin, SL_res_2b_x_var.ymax))
-                for i in range(SL_res_2b_x_var.xnbins):
-                    for j in range(SL_res_2b_x_var.ynbins):
-                        bh_hist[i,j] = ratio_hist.GetBinContent(i+1,j+1) # +1 to skip underflow bin
+                bh_hist = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
 
             corr = correctionlib.convert.from_histogram(bh_hist)
             corr.name = SL_res_2b_x_var.ref + '_lr'
