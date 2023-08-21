@@ -47,6 +47,47 @@ def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
     # Return the open files
     return files
 
+def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2D, LikelihoodRatio]]':
+    all_subcats = list(set.union(*[set(ALL_JSON_DATA['1D'][name]['subcats']) for name in ALL_VARNAMES_1D]))
+    all_subcats.sort(key=lambda x: -len(x))
+    variables = []
+    for ref in refs:
+        init_ref = ref
+        subcat = None
+        for sc in all_subcats: 
+            ref = ref.replace(sc + '_', '')
+            subcat = sc
+            if len(ref) < len(init_ref): break
+
+        if ref.endswith('_lr'):
+            ref = ref.replace('_lr', '')
+            varnames = ref.split('_x_')
+            var = LikelihoodRatio(varnames)
+        elif ref in ALL_VARNAMES_1D:
+            var = Variable1D(ref)
+        elif ref in ALL_VARNAMES_2D:
+            var = Variable2D(ref)
+        else:
+            print(f"Invalid reference: {init_ref}. Could not be parsed to a Variable.")
+            continue
+        
+        # Get the same variable from the list, if it exists, otherwise return an empty list
+        existing_variable = [ v for v in variables if v.name == var.name ]
+        
+        if existing_variable and subcat not in existing_variable[0].subcats:
+            # If the variable exists already and the subcat is not accounted for, append this subcat
+            existing_variable[0].subcats.append(subcat)
+        elif not existing_variable: 
+            # Otherwise, if there is no existing variable in the list append this new variable to the list with this specific subcat
+            var.subcats = [subcat]
+            variables.append(var)
+
+    for v in variables: v.set_refs(v.subcats)
+    return variables
+            
+
+
+
 class Variable():
     def __init__(self, name, **kwargs):
         self.name = name
@@ -256,20 +297,26 @@ def get_all_2D_variables() -> 'dict[str,Variable2D]':
     return { name: Variable2D(name) for name in ALL_VARNAMES_2D }
 
 if __name__ == '__main__':
-    var1D = Variable1D('bjets_mbb')
-    var1D2 = Variable1D('bjets_dPhi')
-    data = {'SL_res_2b_x': 1, 'SL_res_2b': 9, 'DL_res_2b': 2,
-            'SL_boost': 3, 'DL_boost': 4 }
-    sels = {'SL_res_2b_x': 5, 'SL_res_2b': 9, 'DL_res_2b': 6,
-            'SL_boost': 7, 'DL_boost': 8 }
-    var1D.populate(data, sels)
-    var1D2.populate(data, sels)
-    var2D = Variable2D('bjets_dPhi_vs_mbb')
-    var2D.populate(var1D, var1D2)
-    for i in var2D:
-        print(i.subcat, i.xfull_title, i.ref, i.xdata, i.ydata)
+    # var1D = Variable1D('bjets_mbb')
+    # var1D2 = Variable1D('bjets_dPhi')
+    # data = {'SL_res_2b_x': 1, 'SL_res_2b': 9, 'DL_res_2b': 2,
+    #         'SL_boost': 3, 'DL_boost': 4 }
+    # sels = {'SL_res_2b_x': 5, 'SL_res_2b': 9, 'DL_res_2b': 6,
+    #         'SL_boost': 7, 'DL_boost': 8 }
+    # var1D.populate(data, sels)
+    # var1D2.populate(data, sels)
+    # var2D = Variable2D('bjets_dPhi_vs_mbb')
+    # var2D.populate(var1D, var1D2)
+    # for i in var2D:
+    #     print(i.subcat, i.xfull_title, i.ref, i.xdata, i.ydata)
 
-    lr1 = LikelihoodRatio(('bjets_mbb', 'bjets_dR', 'bjets_dR_vs_mbb'))
-    print(repr(lr1))
-    for i in lr1:
-        print(i.subcat, i.ref)
+    # lr1 = LikelihoodRatio(('bjets_mbb', 'bjets_dR', 'bjets_dR_vs_mbb'))
+    # print(repr(lr1))
+    # for i in lr1:
+    #     print(i.subcat, i.ref)
+    refs = ['SL_res_2b_x_bjets_mbb_x_all_mInv_x_bjets_pT_bb_lr', 'SL_boost_bjets_dEta', 'DL_boost_met_lr', 'DL_boost_bjets_dEta', 'SL_res_2b_bjets_dPhi_vs_mbb']
+    vars = parse_vars_from_refs(refs)
+    print(vars)
+    var = vars[3]
+    for v in var:
+        print(v.subcat)

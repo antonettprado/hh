@@ -21,80 +21,8 @@ SIGNAL_SAMPLES = None
 BACKG_SAMPLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
-WITH_TITLES = None
-LEVEL = None
 FAILED_VARIABLES = []
 
-
-# Deprecated
-def get_1D_of_type(of_type, object_name, var: Variable1D):
-    if of_type == "signal": 
-        SAMPLES_OF_TYPE = SIGNAL_SAMPLES
-    elif of_type == "backg":
-        SAMPLES_OF_TYPE = BACKG_SAMPLES
-
-    total_hist_of_type = ROOT.TH1F(of_type, "", var.nbins, var.min, var.max)
-
-    if WITH_TITLES is True:
-        total_hist_of_type.SetTitle()
-    total_hist_of_type.GetXaxis().SetTitle(var.full_title)
-    total_hist_of_type.GetYaxis().SetTitle("normalized frequency")
-
-    for sample in SAMPLES_OF_TYPE:
-        hist_of_type = sample.Get(object_name)
-        total_hist_of_type.Add(hist_of_type)
-
-    total_hist_of_type = ROOT.gDirectory.Get(of_type)
-    total_hist_of_type.SetDirectory(0)
-
-    return total_hist_of_type
-
-def draw_2D_of_type(of_type, object_name, var, path):
-    if of_type == "signal": 
-        SAMPLES_OF_TYPE = SIGNAL_SAMPLES
-        color_of_type = ROOT.kBlue
-    elif of_type == "backg":
-        SAMPLES_OF_TYPE = BACKG_SAMPLES
-        color_of_type = ROOT.kRed
-
-    total_hist_of_type = ROOT.TH2F(of_type,"", var.xnbins, var.xmin, var.xmax, var.ynbins, var.ymin, var.ymax)
-
-    if WITH_TITLES is True:
-        total_hist_of_type.SetTitle(LEVEL + ": " + var.title)
-    total_hist_of_type.GetXaxis().SetTitle(var.xtitle)
-    total_hist_of_type.GetYaxis().SetTitle(var.ytitle)
-
-    variable_output_path = os.path.join(path, var.name)
-    if not os.path.exists(variable_output_path):
-        os.makedirs(variable_output_path)
-
-    for sample in SAMPLES_OF_TYPE:
-
-        start_index = sample.GetName().rfind('/') + 1
-        end_index = sample.GetName().rfind('.root')
-        sample_name = sample.GetName()[start_index:end_index]
-
-        hist_of_type_s = sample.Get(object_name)
-        if WITH_TITLES is True:
-            hist_of_type_s.SetTitle(LEVEL + ": " + var.title + " " + sample_name)
-        hist_of_type_s.GetXaxis().SetTitle(var.xtitle)
-        hist_of_type_s.GetYaxis().SetTitle(var.ytitle)
-
-        total_hist_of_type.Add(hist_of_type_s)
-
-    canvas = ROOT.TCanvas('canvas', '', 200, 200)
-    canvas.SetLeftMargin(0.12)
-    canvas.SetRightMargin(0.15)
-    total_hist_of_type.SetOption("colz")
-    total_hist_of_type.Draw()
-    canvas.Update()
-
-    s1 = total_hist_of_type.FindObject("stats")
-    s1.SetTextColor(color_of_type)
-    s1.SetY1NDC(0.6)
-    s1.SetY2NDC(0.8)
-
-    canvas.SaveAs(os.path.join(variable_output_path, var.name + '_' + of_type + '.pdf'))
 
 def draw_1D_total(hist_signal, hist_backg, ss_var, path):
     hist_signal.SetLineColor(ROOT.kBlue)
@@ -183,8 +111,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source path")
-    parser.add_argument("-t", "--titles", action="store_true", dest="with_titles", help="Show titles")
-    parser.add_argument("-l", "--level", action="store", dest="level", help="gen or reco")
     args = parser.parse_args()
 
     SOURCE_PATH = args.source_path
@@ -193,89 +119,33 @@ if __name__ == "__main__":
     results_path = Path(SOURCE_PATH) / 'results'
     SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
     BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
-    LEVEL = args.level
-    WITH_TITLES = args.with_titles
     
     if not os.path.exists(OUTPUT_PATH):
         os.makedirs(OUTPUT_PATH)
     
     print("The source path is: " + SOURCE_PATH)
-    print("The level is : " + LEVEL)
-    print("Include titles: " + str(WITH_TITLES))
     print("The output path is: " + OUTPUT_PATH)
-    # ==================================================================
-    # ==================================================================
-    # ==================================================================
 
-    variables1D = variables.get_all_1D_variables().values()
-    variables2D = variables.get_all_2D_variables().values()
+    # Get a list of all the histogram references in a file
+    # Assume these references are identical between files!!
+    file = SIGNAL_SAMPLES[0]
+    refs = []
+    for key in file.GetListOfKeys():
+        obj = key.ReadObj()
+        if isinstance(obj, ROOT.TH1) or isinstance(obj, ROOT.TH2):
+            refs.append(obj.GetName())
 
-    from itertools import combinations
+    vars = variables.parse_vars_from_refs(refs)
 
-    # LRs for Fixed variables (1D vars, 2D vars, 2-combos of 1D vars)
-    varnames1d = [ var.name for var in variables1D ]
-    varnames2d = [ var.name for var in variables2D ]
-    lr_fixed_vars = [ LikelihoodRatio(name) for name in varnames1d ] + [ LikelihoodRatio(name) for name in varnames2d ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ]
-    
-    # -----------------------------------------------------------------
-    vars_custom_combos = []
-    # interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
-    # vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
-    # vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
-    # vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
-    # vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
-    # vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
-    interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_vs_mbb']
-    vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
-    vars_custom_combos.extend([
-        ['bjets_dPhi_vs_mbb', 'bjets_dEta'],
-        ['bjets_dPhi_vs_mbb', 'bjet0_pT'],
-        ['bjets_dPhi_vs_mbb', 'trijet_mInv'],
-        ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi'],
-        ['trijet_mInv_vs_bjets_mbb', 'bjets_dEta'],
-        ['trijet_mInv_vs_bjets_mbb', 'bjet0_pT'],
-        ['bjets_dEta_vs_mbb', 'bjets_dPhi'],
-        ['bjets_dEta_vs_mbb', 'bjet0_pT'],
-        ['bjets_dEta_vs_mbb', 'trijet_mInv'],
-        ['bjets_dR_vs_mbb', 'bjet0_pT'],
-        ['bjets_dR_vs_mbb', 'trijet_mInv']
-    ])
-    # -----------------------------------------------------------------
-    lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
-
-    lr_vars = lr_fixed_vars + lr_custom_vars
-
-    # List of select vars to custom plot ------------------------------
-    # lr_vars = [ 
-    #     LikelihoodRatio('bjets_mbb', min=0, max=6),
-    #     LikelihoodRatio('bjets_dPhi', min=0, max=4),
-    #     LikelihoodRatio('bjets_dPhi_vs_mbb', min=0, max=14),
-    #     LikelihoodRatio(['bjets_mbb', 'bjets_dPhi'], min=0, max=10),
-    #     LikelihoodRatio('trijet_mInv', min=0, max=3),
-    #     LikelihoodRatio('trijet_mInv_vs_bjets_mbb', min=0, max=14),
-    #     LikelihoodRatio(['trijet_mInv', 'bjets_mbb'], min=0, max=8),
-    # ]
-    # -----------------------------------------------------------------
-
-    # Determine if there are no 1D or 2D variables, or LR variables. If not, we don't attempt to plot them
-    hist_names = set([key.GetName() 
-                      for file in SIGNAL_SAMPLES+BACKG_SAMPLES 
-                      for key in file.GetListOfKeys() 
-                      if isinstance(file.Get(key.GetName()), ROOT.TH1) 
-                        or isinstance(file.Get(key.GetName()), ROOT.TH2)])
-    vars_in_files = any( ss_var.ref in hist_names for var in list(variables1D) + list(variables2D) for ss_var in var )
-    lrs_in_files = any( ss_var.ref in hist_names for var in lr_vars for ss_var in var )
-    
-    if vars_in_files:
-        for var in variables1D:
+    for var in vars:
+        if isinstance(var, Variable1D):
             draw1D(var)
-
-        for var in variables2D:
+        elif isinstance(var, Variable2D):
             draw2D(var)
-    
-    if lrs_in_files:
-        for var in lr_vars:
+        elif isinstance(var, LikelihoodRatio):
             draw1D(var, dirname='LR')
+        else:
+            FAILED_VARIABLES.append(var)
 
     if FAILED_VARIABLES:
         print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")

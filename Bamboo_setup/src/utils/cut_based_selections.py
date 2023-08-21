@@ -45,7 +45,7 @@ def initialize_outputs(dir, subcats, vars):
                 var = v
                 break
         # If none exist move to next subcat
-        print(repr(var))
+        
         if not var:
             continue
         var = var[subcat]
@@ -401,59 +401,25 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source directory")
-    parser.add_argument("-l", "--lr", action='store_true')
     args = parser.parse_args()
 
     SOURCE_PATH = Path(args.source_path)
-    is_lr = args.lr
     OUTPUT_PATH = SOURCE_PATH / "cuts"
 
     results_path = SOURCE_PATH / 'results'
     SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
     BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
 
-    if not is_lr:
-        vars1D = list(variables.get_all_1D_variables().values())
-        vars2D = list(variables.get_all_2D_variables().values())
-        vars = vars1D + vars2D
-        subcats = list(set.union(*(set(var.subcats) for var in vars)))
-    else:
-        # LRs for Fixed variables (1D vars, 2D vars, 2-combos of 1D vars)
-        varnames1d = variables.ALL_VARNAMES_1D
-        varnames2d = variables.ALL_VARNAMES_2D
-        lr_fixed_vars = [ LikelihoodRatio(name) for name in list(varnames1d) + list(varnames2d) ] + [ LikelihoodRatio(comb) for comb in combinations(varnames1d, 2) ] # some way to get all lrs?
-        
-        # -----------------------------------------------------------------
-        vars_custom_combos = []
-        # interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
-        interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_vs_mbb']
-        vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
-        vars_custom_combos.extend([
-            ['bjets_dPhi_vs_mbb', 'bjets_dEta'],
-            ['bjets_dPhi_vs_mbb', 'bjet0_pT'],
-            ['bjets_dPhi_vs_mbb', 'trijet_mInv'],
-            ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi'],
-            ['trijet_mInv_vs_bjets_mbb', 'bjets_dEta'],
-            ['trijet_mInv_vs_bjets_mbb', 'bjet0_pT'],
-            ['bjets_dEta_vs_mbb', 'bjets_dPhi'],
-            ['bjets_dEta_vs_mbb', 'bjet0_pT'],
-            ['bjets_dEta_vs_mbb', 'trijet_mInv'],
-            ['bjets_dR_vs_mbb', 'bjet0_pT'],
-            ['bjets_dR_vs_mbb', 'trijet_mInv']
-        ])
-        # -----------------------------------------------------------------
-        lr_custom_vars = [LikelihoodRatio([var for var in combo_list]) for combo_list in vars_custom_combos] 
-
-        vars = lr_custom_vars
-
-        subcats = list(set.union(*(set(var.subcats) for var in vars)))
-        subcats = ['SL_res_2b_x'] # Temporary
-    
+    # Get a list of all the histogram references in a file
+    # Assume these references are identical between files!!
+    file = SIGNAL_SAMPLES[0]
+    refs = []
+    for key in file.GetListOfKeys():
+        obj = key.ReadObj()
+        if isinstance(obj, ROOT.TH1) or isinstance(obj, ROOT.TH2):
+            refs.append(obj.GetName())
+    vars = variables.parse_vars_from_refs(refs)
+    subcats = list(set.union(*(set(var.subcats) for var in vars)))
     efficiencies = [0.75, 0.85, 0.9]
 
     tot_sigs = initialize_outputs(OUTPUT_PATH, subcats, vars)
