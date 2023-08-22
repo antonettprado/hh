@@ -24,7 +24,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def __init__(self, args):
         super(SL_DL_likelihood_ratio, self).__init__(args)
         print("The input dir is: " + self.args.input_dir)
-        print("The output path is:" + self.args.output)
+        print("The output path is: " + self.args.output)
 
     def addArgs(self, parser):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
@@ -165,12 +165,12 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # ===============================================================================
         # ================================== Plots ======================================
         # # ===============================================================================
-        # lrs_for_vars_1D = self.get_lrs_for_vars_1D()
-        # lrs_for_vars_2D = self.get_lrs_for_vars_2D()
-        # lrs_for_vars_1D_2combos = self.get_lrs_for_vars_1D_2combos()
-        # all_lrs = lrs_for_vars_1D + lrs_for_vars_1D_combos + lrs_for_vars_2D + lrs_for_vars_1D_2combos
-        
-        all_lrs = self.get_lrs_for_vars_custom_combos()
+        lrs_for_vars_1D = self.get_lrs_for_vars_1D()
+        lrs_for_vars_2D = self.get_lrs_for_vars_2D()
+        lrs_for_vars_1D_2combos = self.get_lrs_for_vars_1D_2combos()
+        lrs_for_vars_custom_combos = self.get_lrs_for_vars_custom_combos()
+        all_lrs = lrs_for_vars_1D + lrs_for_vars_2D + lrs_for_vars_1D_2combos + lrs_for_vars_custom_combos
+
         hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         plots.extend(hists_1D)
 
