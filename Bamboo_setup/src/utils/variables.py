@@ -12,12 +12,14 @@ CFGPATH = Path(__file__).parents[2] / 'config' / 'analysis_2018.yml'
 # Load all variable names into local namespace (for looping)
 ALL_VARNAMES_1D = None
 ALL_VARNAMES_2D = None
+ALL_VARNAMES_3D = None
 ALL_JSON_DATA = None
 
 with open(VARPATH, 'r') as f:
     ALL_JSON_DATA = json.load(f)
     ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
     ALL_VARNAMES_2D = ALL_JSON_DATA['2D'].keys()
+    ALL_VARNAMES_3D = ALL_JSON_DATA['3D'].keys()
 
 # Load config file
 with open(CFGPATH, "r") as yaml_file:
@@ -47,7 +49,7 @@ def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
     # Return the open files
     return files
 
-def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2D, LikelihoodRatio]]':
+def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2D, Variable3D, LikelihoodRatio]]':
     all_subcats = list(set.union(*[set(ALL_JSON_DATA['1D'][name]['subcats']) for name in ALL_VARNAMES_1D]))
     all_subcats.sort(key=lambda x: -len(x))
     variables = []
@@ -67,6 +69,8 @@ def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2
             var = Variable1D(ref)
         elif ref in ALL_VARNAMES_2D:
             var = Variable2D(ref)
+        elif ref in ALL_VARNAMES_3D:
+            var = Variable3D(ref)
         else:
             print(f"Invalid reference: {init_ref}. Could not be parsed to a Variable.")
             continue
@@ -242,6 +246,48 @@ class Variable2D(Variable):
         return '\n'.join((repr(self.xvar), repr(self.yvar)))
 
 
+class Variable3D(Variable):
+    def __init__(self, name, **kwargs):
+        super().__init__(name)
+        json_data = ALL_JSON_DATA['3D'][name]
+        x_key, y_key, z_key = json_data['x'], json_data['y'], json_data['z']
+        self.xvar = Variable1D(x_key)
+        self.yvar = Variable1D(y_key)
+        self.zvar = Variable1D(z_key)        
+        self.subcats = list(set(self.xvar.subcats) & set(self.yvar.subcats) & set(self.zvar.subcats))
+        self.set_refs(self.subcats)
+        self.title = self.ztitle + 'vs. ' + self.ytitle + 'vs. ' + self.xtitle
+        self.update(**kwargs)
+
+    def populate(self, xvar: Variable1D, yvar: Variable1D, zvar:Variable1D):
+        consistent = (xvar.name == self.xname) and (yvar.name == self.yname) and (zvar.name == self.zname)
+        if not consistent:
+            raise ValueError(f"{xvar.name} + {yvar.name} + {zvar.name} != {self.name}")
+        self.xvar = xvar
+        self.yvar = yvar
+        self.zvar = zvar
+        self.selections = {k:self.xvar.selections[k] for k in self.subcats}
+
+    def __getattr__(self, attr_name):
+        prefix = attr_name[0]
+        attr_name_1D = attr_name[1:]
+        if prefix == 'x': return self.xvar.__dict__[attr_name_1D]
+        if prefix == 'y': return self.yvar.__dict__[attr_name_1D]
+        if prefix == 'z': return self.zvar.__dict__[attr_name_1D]
+        raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{attr_name}'")
+    
+    def __getitem__(self, subcat: str):
+        if self.is_child(): return self
+        child = super().__getitem__(subcat)
+        child.xdata = self.xdata.get(subcat, None)
+        child.ydata = self.ydata.get(subcat, None)
+        child.zdata = self.zdata.get(subcat, None)
+        return child
+
+    def __repr__(self):
+        return '\n'.join((repr(self.xvar), repr(self.yvar), repr(self.zvar)))
+
+
 lr_binning = { 
                1: { 'nbins':200, 'min':0, 'max':20 },
                2: { 'nbins':200, 'min':0, 'max':20 },
@@ -260,6 +306,7 @@ class LikelihoodRatio(Variable):
         super().__init__(self.name)
         self.vars = { name: Variable1D(name) for name in self.names if name in ALL_VARNAMES_1D}
         self.vars.update({ name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D})
+        self.vars.update({ name: Variable3D(name) for name in self.names if name in ALL_VARNAMES_3D})
         self.dimensionality = len(self.names)
         self.update(**lr_binning[self.dimensionality])
         self.generate_eqbin()
@@ -295,6 +342,8 @@ def get_all_1D_variables() -> 'dict[str,Variable1D]':
     return { name: Variable1D(name) for name in ALL_VARNAMES_1D }
 def get_all_2D_variables() -> 'dict[str,Variable2D]':
     return { name: Variable2D(name) for name in ALL_VARNAMES_2D }
+def get_all_3D_variables() -> 'dict[str,Variable3D]':
+    return { name: Variable3D(name) for name in ALL_VARNAMES_3D }
 
 if __name__ == '__main__':
     # var1D = Variable1D('bjets_mbb')
