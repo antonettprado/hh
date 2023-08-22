@@ -24,7 +24,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def __init__(self, args):
         super(SL_DL_likelihood_ratio, self).__init__(args)
         print("The input dir is: " + self.args.input_dir)
-        print("The output path is:" + self.args.output)
+        print("The output path is: " + self.args.output)
 
     def addArgs(self, parser):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
