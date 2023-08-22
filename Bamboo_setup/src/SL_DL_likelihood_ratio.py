@@ -10,7 +10,7 @@ import utils.object_definition as object_defs
 import utils.event_definition as event_defs
 import os
 import ROOT
-from utils.variables import Variable1D, Variable2D, LikelihoodRatio
+from utils.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
 from typing import Dict, List
 from itertools import combinations
 
@@ -38,6 +38,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             return get_correction(global_path, var_name, params={"axis0": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
         elif len(data) == 2:
             return get_correction(global_path, var_name, params={"axis0": data[0],"axis1":data[1]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
+        elif len(data) == 3:
+            return get_correction(global_path, var_name, params={"axis0": data[0],"axis1":data[1], "axis2":data[2]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def get_lrs_for_vars_1D(self) -> 'list[LikelihoodRatio]':
         vars_1D = self.get_all_reco_variables()
@@ -75,6 +77,27 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             lrs_for_vars_2D.append(lr)
         return lrs_for_vars_2D
 
+    def get_lrs_for_vars_3D(self) -> 'list[LikelihoodRatio]':
+        vars_3D = self.get_all_reco_3D_variables()     
+        lrs_for_vars_3D = []   
+        for var in vars_3D:
+            lr = LikelihoodRatio(var.name)
+            lr_data = {}
+            for subcat_var in var:
+                if subcat_var.subcat != "SL_res_2b_x":
+                    continue
+                subcat_var_xdata = op.switch(subcat_var.xdata < var.xmin, var.xmin + 0.0001*abs(var.xmin), subcat_var.xdata)
+                subcat_var_xdata = op.switch(subcat_var.xdata > var.xmax, var.xmax - 0.0001*abs(var.xmax), subcat_var.xdata)
+                subcat_var_ydata = op.switch(subcat_var.ydata < var.ymin, var.ymin + 0.0001*abs(var.ymin), subcat_var.ydata)
+                subcat_var_ydata = op.switch(subcat_var.ydata > var.ymax, var.ymax - 0.0001*abs(var.ymax), subcat_var.ydata)
+                subcat_var_zdata = op.switch(subcat_var.zdata < var.zmin, var.zmin + 0.0001*abs(var.zmin), subcat_var.zdata)
+                subcat_var_zdata = op.switch(subcat_var.zdata > var.zmax, var.zmax - 0.0001*abs(var.zmax), subcat_var.zdata)
+                subcat_var_lr = self.get_var_lr([subcat_var_xdata, subcat_var_ydata, subcat_var_zdata], lr[subcat_var.subcat].ref, subcat_var.selection)
+                lr_data[subcat_var.subcat] = subcat_var_lr
+            lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
+            lrs_for_vars_3D.append(lr)
+        return lrs_for_vars_3D
+
     def get_lrs_for_vars_1D_2combos(self) -> 'list[LikelihoodRatio]':
         lrs_for_vars_1D = self.get_lrs_for_vars_1D()
         lrs_for_vars_1D_combos = []
@@ -96,18 +119,19 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def get_lrs_for_vars_custom_combos(self) -> 'list[LikelihoodRatio]':
         # -----------------------------------------------------------------
         vars_custom_combos = []
-        # interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
+        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
         interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_vs_mbb']
         vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
         vars_custom_combos.extend([
             ['bjets_dPhi_vs_mbb', 'bjets_dEta'],
             ['bjets_dPhi_vs_mbb', 'bjet0_pT'],
             ['bjets_dPhi_vs_mbb', 'trijet_mInv'],
+            ['bjets_dPhi_vs_dEta', 'bjets_mbb'],
             ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi'],
             ['trijet_mInv_vs_bjets_mbb', 'bjets_dEta'],
             ['trijet_mInv_vs_bjets_mbb', 'bjet0_pT'],
@@ -165,12 +189,13 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # ===============================================================================
         # ================================== Plots ======================================
         # # ===============================================================================
-        # lrs_for_vars_1D = self.get_lrs_for_vars_1D()
-        # lrs_for_vars_2D = self.get_lrs_for_vars_2D()
-        # lrs_for_vars_1D_2combos = self.get_lrs_for_vars_1D_2combos()
-        # all_lrs = lrs_for_vars_1D + lrs_for_vars_1D_combos + lrs_for_vars_2D + lrs_for_vars_1D_2combos
+        lrs_for_vars_1D = self.get_lrs_for_vars_1D()
+        lrs_for_vars_2D = self.get_lrs_for_vars_2D()
+        lrs_for_vars_3D = self.get_lrs_for_vars_3D()
+        lrs_for_vars_1D_2combos = self.get_lrs_for_vars_1D_2combos()
+        lrs_for_vars_custom_combos = self.get_lrs_for_vars_custom_combos()
+        all_lrs = lrs_for_vars_1D + lrs_for_vars_2D + lrs_for_vars_3D + lrs_for_vars_1D_2combos + lrs_for_vars_custom_combos
         
-        all_lrs = self.get_lrs_for_vars_custom_combos()
         hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         plots.extend(hists_1D)
 
