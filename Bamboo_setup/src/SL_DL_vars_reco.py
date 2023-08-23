@@ -3,7 +3,7 @@ from bamboo.plots import Plot, CutFlowReport
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.object_definition as object_defs
 from utils import variables
-from utils.variables import Variable1D, Variable2D
+from utils.variables import Variable1D, Variable2D, Variable3D
 from pathlib import Path
 import os
 import correctionlib.convert
@@ -635,6 +635,21 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         
         return vars2D
 
+    def get_all_reco_3D_variables(self) -> 'list[Variable3D]':
+        vars1D = self.get_all_reco_variables()
+        vars1D_lookup = { var.name: var for var in vars1D}
+        vars3D = [ Variable3D(name) for name in variables.ALL_VARNAMES_3D ]
+        for var3D in vars3D:
+            xvar = vars1D_lookup[var3D.xname]
+            yvar = vars1D_lookup[var3D.yname]
+            zvar = vars1D_lookup[var3D.zname]
+            for var1D in [xvar, yvar, zvar]:           
+                var1D.update(nbins=10)
+                var1D.generate_eqbin()
+            var3D.populate(xvar, yvar, zvar)
+
+        return vars3D
+
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
@@ -654,6 +669,10 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         reco_2D_vars = self.get_all_reco_2D_variables()
         hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
         plots.extend(hists_2D)
+
+        reco_3D_vars = self.get_all_reco_3D_variables()
+        hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
+        plots.extend(hists_3D)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -720,6 +739,33 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         return boost_hist
 
+    def interpolate_3D_root_histogram(self, root_hist, scale_factor):
+        bin_contents = np.array([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
+        x_seed_data, x_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+        y_seed_data, y_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
+        z_seed_data, z_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetZaxis(), scale_factor)
+        a_seed_data = np.pad(bin_contents, 1, 'edge')
+
+        interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, z_interp_bin_centers, indexing='ij')).reshape(3,-1).T
+
+        interpolated_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data, z_seed_data], a_seed_data, interpolated_bin_centers, method='linear')
+        interpolated_bin_contents = interpolated_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers)))
+
+        boost_hist = bh.Histogram(
+            bh.axis.Regular(len(x_interp_bin_centers), x_seed_data[0], x_seed_data[-1]),
+            bh.axis.Regular(len(y_interp_bin_centers), y_seed_data[0], y_seed_data[-1]),
+            bh.axis.Regular(len(z_interp_bin_centers), z_seed_data[0], z_seed_data[-1]),
+            storage=bh.storage.Weight()
+        )
+
+        # Fill the Boost Histogram with interpolated bin contents
+        for i, x_bin in enumerate(x_interp_bin_centers):
+            for j, y_bin in enumerate(y_interp_bin_centers):
+                for k, z_bin in enumerate(z_interp_bin_centers):
+                    boost_hist.fill(x_bin, y_bin, z_bin, weight=interpolated_bin_contents[i,j,k])
+
+        return boost_hist
+
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         print("------------------ Calculating Likelihood Ratios --------------------")
@@ -731,10 +777,12 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
         INTERPOLATION_SCALE_FACTOR_1D = 9
         INTERPOLATION_SCALE_FACTOR_2D = 3
+        INTERPOLATION_SCALE_FACTOR_3D = 3
 
         all_reco_vars_1D = self.get_all_reco_variables()
         all_reco_vars_2D = self.get_all_reco_2D_variables()
-        all_reco_vars = all_reco_vars_1D + all_reco_vars_2D
+        all_reco_vars_3D = self.get_all_reco_3D_variables()
+        all_reco_vars = all_reco_vars_1D + all_reco_vars_2D + all_reco_vars_3D
 
         all_corrections = []
         for var in all_reco_vars:
@@ -752,7 +800,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 bh_hist = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
             elif isinstance(var, Variable2D):
                 bh_hist = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-
+            elif isinstance(var, Variable3D):
+                bh_hist = self.interpolate_3D_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
+            
             corr = correctionlib.convert.from_histogram(bh_hist)
             corr.name = SL_res_2b_x_var.ref + '_lr'
             corr.description = f'lr for {SL_res_2b_x_var.ref}'
