@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import argparse
 from utils import variables
-from utils.variables import Variable1D, Variable2D, LikelihoodRatio
+from utils.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
 
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     for var in vars:
         if isinstance(var, Variable1D):
             draw1D(var)
-        elif isinstance(var, Variable2D):
+        elif isinstance(var, Variable2D) or isinstance(var, Variable3D):
             draw2D(var)
         elif isinstance(var, LikelihoodRatio):
             draw1D(var, dirname='LR')
