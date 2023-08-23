@@ -409,7 +409,7 @@ def fill_by_eff_2D(eff, sig_hist, backg_hist, ref=''):
     df['dim'] = '2D'
     return df
 
-def fill_by_eff_LR(eff, sig_hist, backg_hist ref=''):
+def fill_by_eff_LR(eff, sig_hist, backg_hist, ref=''):
     df = fill_by_eff_1D(eff, sig_hist, backg_hist, ref, fix_rbin=True)
     df['dim'] = 'LR'
     return df
