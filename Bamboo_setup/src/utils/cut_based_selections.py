@@ -4,13 +4,6 @@
 ###############################################################################
 # 7/14/23 added support for other datasets (SL_boost, DL_res_2b_x, DL_boost)
 
-'''
-Known Bugs:
-If subcats is not precisely the subcats present in the results root files,
-the script will fail - I have no clue why because pandas obfuscates
-the cause of the failure.
-'''
-
 import ROOT
 import os
 from pathlib import Path
@@ -45,7 +38,7 @@ def initialize_outputs(dir, subcats, vars):
                 var = v
                 break
         # If none exist move to next subcat
-        
+
         if not var:
             continue
         var = var[subcat]
@@ -279,8 +272,8 @@ def find_window_2D_v2(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, h
     return find_window_2D_v2(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, nbins_x, nbins_y, total_norm_signal, total_norm_bkg)
 
 def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg, fix_rbin=False):
-    signal_cdf = np.array(histo_signal.GetCumulative())[1:-1]/total_norm_signal
-    bkg_cdf = np.array(histo_bkg.GetCumulative())[1:-1]/total_norm_bkg
+    signal_cdf = np.array(histo_signal.GetCumulative())/total_norm_signal
+    bkg_cdf = np.array(histo_bkg.GetCumulative())/total_norm_bkg
     min_search_bin = 0
     max_search_bin = np.argmax(signal_cdf > (1-cut))
 
@@ -297,13 +290,13 @@ def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_nor
         return significance
 
     if max_search_bin <= min_search_bin:
-        return int(min_search_bin)+2, len(signal_cdf)+1
+        return int(min_search_bin), len(signal_cdf)-1
 
     fv = np.vectorize(get_significance)
     bin_l = np.argmax(fv(np.arange(min_search_bin, max_search_bin))) + min_search_bin
     bin_r = solve_j(bin_l)
 
-    return int(bin_l)+2, int(bin_r)+1 # addition acounts for underflow bin and ROOT TH1::Integral definition
+    return int(bin_l), int(bin_r) # addition acounts for underflow bin and ROOT TH1::Integral definition
 
 def fill_by_name(df):
     var, subcat = df.iloc[0][['variable','subcat']]
@@ -311,7 +304,7 @@ def fill_by_name(df):
         return 
     ref = var[subcat].ref
     print(f'Generating for {ref}')
-    # If we can't read the references from the file, ignore and keep going
+    # If we can't read the references from the file, ignore and keep going 
     try:
         sig_hist = var.get_total_hist(SIGNAL_SAMPLES, subcat)
         bkg_hist = var.get_total_hist(BACKG_SAMPLES, subcat)
@@ -319,15 +312,7 @@ def fill_by_name(df):
         print(f'Generation for {ref} failed')
         FAILED_VARIABLES.append(ref)
         return 
-    
-    sig_norm = sig_hist.Integral()
-    bkg_norm = bkg_hist.Integral()
-    # If the histogram data integrates to zero, ignore this too
-    if sig_norm == 0 or bkg_norm == 0:
-        print(f'No data for {ref}')
-        FAILED_VARIABLES.append(ref)
-        return 
-    
+
     if   isinstance(var, Variable1D):       fill_func = fill_by_eff_1D
     elif isinstance(var, Variable2D):       fill_func = fill_by_eff_2D
     elif isinstance(var, LikelihoodRatio):  fill_func = fill_by_eff_LR
@@ -335,21 +320,45 @@ def fill_by_name(df):
     
     data_by_efficiency = []
     for eff in df['efficiency']:
-        data_by_efficiency.append(fill_func(eff, sig_hist, bkg_hist, sig_norm, bkg_norm))
+        data_by_efficiency.append(fill_func(eff, sig_hist, bkg_hist))
     new_data_df = pd.DataFrame(data_by_efficiency, index=df.index)
     ret_df = pd.concat([df[['name', 'subcat', 'efficiency']], new_data_df], axis=1)
 
     return ret_df
 
-def fill_by_eff_1D(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False):
+def fill_by_eff_1D(eff, sig_hist, backg_hist, fix_rbin=False):
     df = pd.Series(dtype=object)
+    
+    # Set the x range to include underflow and overflow bins
+    sig_hist.GetXaxis().SetRange(0, sig_hist.GetNbinsX()+1)
+    backg_hist.GetXaxis().SetRange(0, backg_hist.GetNbinsX()+1)
+
+    # Get the norms
+    sig_int = sig_hist.Integral()
+    backg_int = backg_hist.Integral()
+
+    # If the histogram data integrates to zero, ignore this too
+    if sig_int == 0 or backg_int == 0:
+        print(f'No data for {ref}')
+        FAILED_VARIABLES.append(ref)
+        return
 
     # Calculate best cuts
     xl_bin_min, xr_bin_min = find_window_1D_v3(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin)
-    xl_min = sig_hist.GetBinCenter(xl_bin_min)
-    xr_min = sig_hist.GetBinCenter(xr_bin_min)
+    
+    # Get the corresponding edges
+    xl_min = sig_hist.GetXaxis().GetBinLowEdge(xl_bin_min)
+    xr_min = sig_hist.GetXaxis().GetBinUpEdge(xr_bin_min)
+
+    # If either of the best cuts are at the underflow or overflow bins, represent this with +/-np.inf
+    if xl_bin_min <= 0:                         xl_min = -np.inf
+    if xr_bin_min >= sig_hist.GetNbinsX()+1:    xr_min = np.inf
+
+    # Compute the signal and background fractions
     min_signal_frac = sig_hist.Integral(xl_bin_min, xr_bin_min)/sig_int
     min_bkg_frac = backg_hist.Integral(xl_bin_min, xr_bin_min)/backg_int
+
+    
     if min_bkg_frac == 0:
         significance = None
     else:
@@ -357,14 +366,23 @@ def fill_by_eff_1D(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=False
 
     # Populate new series with additional rows
     df['signal frac'] = min_signal_frac
-    df['cuts'] = ([round(xl_min, 2), round(xr_min, 2)])
+    df['cuts'] = ([round(xl_min, 4), round(xr_min, 4)])
     df['backg frac'] = min_bkg_frac
     df['significance'] = significance
     df['dim'] = '1D'
     return df
 
-def fill_by_eff_2D(eff, sig_hist, backg_hist, sig_int, backg_int):
+def fill_by_eff_2D(eff, sig_hist, backg_hist):
     df = pd.Series(dtype=object)
+
+    sig_int = sig_hist.Integral()
+    backg_int = backg_hist.Integral()
+
+    # If the histogram data integrates to zero, ignore this too
+    if sig_int == 0 or backg_int == 0:
+        print(f'No data for {ref}')
+        FAILED_VARIABLES.append(ref)
+        return
 
     # Calculate best cuts
     xl_bin_min = 1
@@ -391,8 +409,8 @@ def fill_by_eff_2D(eff, sig_hist, backg_hist, sig_int, backg_int):
     df['dim'] = '2D'
     return df
 
-def fill_by_eff_LR(eff, sig_hist, backg_hist, sig_int, backg_int):
-    df = fill_by_eff_1D(eff, sig_hist, backg_hist, sig_int, backg_int, fix_rbin=True)
+def fill_by_eff_LR(eff, sig_hist, backg_hist):
+    df = fill_by_eff_1D(eff, sig_hist, backg_hist, fix_rbin=True)
     df['dim'] = 'LR'
     return df
 
