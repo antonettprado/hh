@@ -320,13 +320,13 @@ def fill_by_name(df):
     
     data_by_efficiency = []
     for eff in df['efficiency']:
-        data_by_efficiency.append(fill_func(eff, sig_hist, bkg_hist))
+        data_by_efficiency.append(fill_func(eff, sig_hist, bkg_hist, ref))
     new_data_df = pd.DataFrame(data_by_efficiency, index=df.index)
     ret_df = pd.concat([df[['name', 'subcat', 'efficiency']], new_data_df], axis=1)
 
     return ret_df
 
-def fill_by_eff_1D(eff, sig_hist, backg_hist, fix_rbin=False):
+def fill_by_eff_1D(eff, sig_hist, backg_hist, ref='', fix_rbin=False):
     df = pd.Series(dtype=object)
     
     # Set the x range to include underflow and overflow bins
@@ -372,7 +372,7 @@ def fill_by_eff_1D(eff, sig_hist, backg_hist, fix_rbin=False):
     df['dim'] = '1D'
     return df
 
-def fill_by_eff_2D(eff, sig_hist, backg_hist):
+def fill_by_eff_2D(eff, sig_hist, backg_hist, ref=''):
     df = pd.Series(dtype=object)
 
     sig_int = sig_hist.Integral()
@@ -409,8 +409,8 @@ def fill_by_eff_2D(eff, sig_hist, backg_hist):
     df['dim'] = '2D'
     return df
 
-def fill_by_eff_LR(eff, sig_hist, backg_hist):
-    df = fill_by_eff_1D(eff, sig_hist, backg_hist, fix_rbin=True)
+def fill_by_eff_LR(eff, sig_hist, backg_hist ref=''):
+    df = fill_by_eff_1D(eff, sig_hist, backg_hist, ref, fix_rbin=True)
     df['dim'] = 'LR'
     return df
 
