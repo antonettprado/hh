@@ -14,7 +14,7 @@ import math
 import csv
 import time
 from utils import variables
-from utils.variables import Variable1D, Variable2D, LikelihoodRatio
+from utils.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
 import pandas as pd
 import numpy as np
 
@@ -315,6 +315,7 @@ def fill_by_name(df):
 
     if   isinstance(var, Variable1D):       fill_func = fill_by_eff_1D
     elif isinstance(var, Variable2D):       fill_func = fill_by_eff_2D
+    elif isinstance(var, Variable3D):       return # not supported yet
     elif isinstance(var, LikelihoodRatio):  fill_func = fill_by_eff_LR
     else: raise TypeError
     
