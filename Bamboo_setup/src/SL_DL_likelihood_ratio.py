@@ -173,9 +173,9 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
-        # plots.append(yields)
+        plots.append(yields)
 
-        self.object_and_event_selection(tree, noSel, self.args.mc_truth_b, events='odd')
+        self.object_and_event_selection(tree, noSel, yields, self.args.mc_truth_b, events='odd')
 
         SL_res_1b = self.selections["SL_res_1b"]
         SL_res_2b = self.selections["SL_res_2b"]

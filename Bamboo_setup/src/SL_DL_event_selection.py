@@ -19,19 +19,27 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    def object_and_event_selection(self, tree, noSel, MC_bjets=False, events='all'):
+    def object_and_event_selection(self, tree, noSel, yields, MC_bjets=False, events='all'):
         # ===============================================================================
         # ============================= Object Selection ================================
         # ===============================================================================
+        # Determine the cut to use
         if events == 'all':
-            noSel = noSel
+            cut = ()
         elif events == 'even':
-            noSel = noSel.refine('even', cut=[tree.event % 2 == 0])
+            cut = (tree.event % 2 == 0)
         elif events == 'odd':
-            noSel = noSel.refine('odd', cut=[tree.event % 2 == 1])
+            cut = (tree.event % 2 == 1)
         else:
             raise ValueError("events must be 'all', 'odd', or 'even'")
 
+        # Gen the base selection from base_selection, refine it with the relevant cut, and add to the yields table
+        baseSel = self.baseSel.refine('genEventSumWeight', cut=cut)        
+        yields.add(baseSel, "Sample Sum of Weights") # This changes the yields in the list, even though we don't return it!
+
+        # Refine the working selection (noSel) with the parity cut
+        noSel = noSel.refine(events, cut=cut)
+        
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)
         electron_ConePt = object_defs.elConePt(tree.Electron, tree.Jet)
@@ -311,9 +319,11 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
+        
+        objects, selections = self.object_and_event_selection(tree, noSel, yields, self.args.mc_truth_b)
+        
         yields.add(noSel, 'Basic Event Selection')
 
-        objects, selections = self.object_and_event_selection(tree, noSel, self.args.mc_truth_b)
         tight_electrons = objects["tight_electrons"]
         tight_muons = objects["tight_muons"]
         cleaned_ak4_jets = objects["cleaned_ak4_jets"]
@@ -430,7 +440,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         yields.add(selections["SL"]["SL"], "SL")
         yields.add(selections["DL"]["DL"], "DL")
-        
         
 
         return plots

@@ -1,5 +1,4 @@
 import json, yaml
-import uproot
 from bamboo.plots import EquidistantBinning as EqBin
 from ROOT import TFile, TH1F, TH2F
 from pathlib import Path
@@ -38,11 +37,9 @@ def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
     # Read the weights from the files
     for file in files:
         sample_name = Path(file.GetName()).stem
-        tree = file.Get('Runs')
-        sumw = 0
-        for entry in range(tree.GetEntries()):
-            tree.GetEntry(entry)
-            sumw += tree.genEventSumw
+        yld_hist = file.Get('yields_genEventSumWeight')
+        sumw = yld_hist.Integral() # The histogram is a signle bin, this is just a fast way to get the bin height
+
         # Save SUM_WEIGHTS as a global variable to be used in the Variable class
         SUM_WEIGHTS[sample_name] = sumw     
         
@@ -89,8 +86,6 @@ def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2
     for v in variables: v.set_refs(v.subcats)
     return variables
             
-
-
 
 class Variable():
     def __init__(self, name, **kwargs):
@@ -363,9 +358,12 @@ if __name__ == '__main__':
     # print(repr(lr1))
     # for i in lr1:
     #     print(i.subcat, i.ref)
-    refs = ['SL_res_2b_x_bjets_mbb_x_all_mInv_x_bjets_pT_bb_lr', 'SL_boost_bjets_dEta', 'DL_boost_met_lr', 'DL_boost_bjets_dEta', 'SL_res_2b_bjets_dPhi_vs_mbb']
-    vars = parse_vars_from_refs(refs)
-    print(vars)
-    var = vars[3]
-    for v in var:
-        print(v.subcat)
+    # refs = ['SL_res_2b_x_bjets_mbb_x_all_mInv_x_bjets_pT_bb_lr', 'SL_boost_bjets_dEta', 'DL_boost_met_lr', 'DL_boost_bjets_dEta', 'SL_res_2b_bjets_dPhi_vs_mbb']
+    # vars = parse_vars_from_refs(refs)
+    # print(vars)
+    # var = vars[3]
+    # for v in var:
+    #     print(v.subcat)
+
+    open_root_files(['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root', 'TTbar_sl.root', 'TTbar_dl.root'], 'Z_OUTPUT/TOTAL_VarsReco_0824/results')
+    print(SUM_WEIGHTS)

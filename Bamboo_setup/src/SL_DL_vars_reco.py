@@ -26,9 +26,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
     # If you want access to variable data, run this function once to instantiate all the objects and selections for a given tree
-    def object_and_event_selection(self, tree, noSel, mc_truth_b=False, events='all'):
+    def object_and_event_selection(self, tree, noSel, yields, mc_truth_b=False, events='all'):
         self.tree = tree
-        self.objects, self.selections = super().object_and_event_selection(tree, noSel, mc_truth_b, events)
+        self.objects, self.selections = super().object_and_event_selection(tree, noSel, yields, mc_truth_b, events)
 
         ak4_jets = self.objects["cleaned_ak4_jets"]
         ak4_btags = self.objects["cleaned_ak4_btags"]
@@ -655,7 +655,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
 
-        self.object_and_event_selection(tree, noSel, events='even')
+        self.object_and_event_selection(tree, noSel, yields, events='even')
 
         # ===============================================================================
         # ================================== Plots ======================================
