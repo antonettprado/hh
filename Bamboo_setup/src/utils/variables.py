@@ -3,7 +3,6 @@ from bamboo.plots import EquidistantBinning as EqBin
 from ROOT import TFile, TH1F, TH2F
 from pathlib import Path
 from typing import Union
-import os
 import copy
 VARPATH = Path(__file__).parent / 'variables.json'
 CFGPATH = Path(__file__).parents[2] / 'config' / 'analysis_2018.yml'
