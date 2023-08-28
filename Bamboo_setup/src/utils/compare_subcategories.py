@@ -37,6 +37,17 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path):
     hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
     hist_signal.GetYaxis().SetTitle('normalized events')
 
+    # Zoom as necessary
+    if isinstance(ss_var, LikelihoodRatio):
+        max_sbin, max_bbin = 0, 0
+        right_padding = 5
+        basically_zero = 0.001
+        for i in range(1, hist_signal.GetNbinsX()+1):
+            if hist_signal.GetBinContent(i) > basically_zero: max_sbin = i
+            if hist_backg.GetBinContent(i) > basically_zero: max_bbin = i
+        max_bin = min(ss_var.nbins, max(max_sbin + right_padding, max_bbin + right_padding))
+        hist_signal.GetXaxis().SetRange(1, max_bin)
+    
     leg = ROOT.TLegend(0.6, 0.8, 0.9, 0.9)
     leg.AddEntry(hist_signal, 'Signal', 'l')
     leg.AddEntry(hist_backg, 'Background', 'l')
