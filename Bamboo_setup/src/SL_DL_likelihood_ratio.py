@@ -32,7 +32,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         
     def get_var_lr(self, data: List, var_name, selection, defineOnFirstUse=True):
         Bamboo_setup_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        local_path = os.path.join(self.args.input_dir, 'results/corrections_lr.json')
+        local_path = os.path.join(self.args.input_dir, 'results/corrections_llr.json')
         global_path = os.path.join(Bamboo_setup_path, local_path)
         if len(data) == 1: 
             return get_correction(global_path, var_name, params={"axis0": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
@@ -110,7 +110,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             for subcat_lr_combo in lr_combo:
                 if subcat_lr_combo.subcat != "SL_res_2b_x":
                     continue
-                subcat_lr_combo_data = op.product(lr1["SL_res_2b_x"].data, lr2["SL_res_2b_x"].data)
+                subcat_lr_combo_data = op.sum(lr1["SL_res_2b_x"].data, lr2["SL_res_2b_x"].data)
                 lr_combo_data[subcat_lr_combo.subcat] = subcat_lr_combo_data
             lr_combo.populate(lr_combo_data, super().get_selections_subset(lr_combo_data.keys()))
             lrs_for_vars_1D_combos.append(lr_combo)
@@ -152,7 +152,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             for subcat_lr_combo in lr_combo:
                 if subcat_lr_combo.subcat != "SL_res_2b_x":
                     continue
-                subcat_lr_combo_data = op.product(*[lr['SL_res_2b_x'].data for lr in lrs_for_vars if lr.name.strip('_lr') in combo_list])
+                subcat_lr_combo_data = op.sum(*[lr['SL_res_2b_x'].data for lr in lrs_for_vars if lr.name.strip('_lr') in combo_list])
                 lr_combo_data[subcat_lr_combo.subcat] = subcat_lr_combo_data
             lr_combo.populate(lr_combo_data, super().get_selections_subset(lr_combo_data.keys()))
             lrs_for_vars_custom_combos.append(lr_combo)

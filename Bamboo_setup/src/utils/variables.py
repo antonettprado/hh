@@ -283,13 +283,13 @@ class Variable3D(Variable):
 
 
 lr_binning = { 
-               1: { 'nbins':200, 'min':0, 'max':20 },
-               2: { 'nbins':200, 'min':0, 'max':20 },
-               3: { 'nbins':300, 'min':0, 'max':30 },
-               4: { 'nbins':300, 'min':0, 'max':30 },
-               5: { 'nbins':300, 'min':0, 'max':30 },
-               6: { 'nbins':300, 'min':0, 'max':30 },
-               7: { 'nbins':300, 'min':0, 'max':30 },
+               1: { 'nbins':200, 'min':-3, 'max':3 },
+               2: { 'nbins':200, 'min':-3, 'max':3 },
+               3: { 'nbins':200, 'min':-4, 'max':4 },
+               4: { 'nbins':300, 'min':-5, 'max':5 },
+               5: { 'nbins':300, 'min':-6, 'max':6 },
+               6: { 'nbins':300, 'min':-6, 'max':6 },
+               7: { 'nbins':400, 'min':-7, 'max':7 },
               }
 class LikelihoodRatio(Variable):
     def __init__(self, names: Union['list[str]', str], **kwargs):

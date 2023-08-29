@@ -699,7 +699,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return interp_seed_data, interp_bin_centers
     
     def interpolate_1d_root_histogram(self, root_hist, scale_factor):
-        bin_contents = [root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)]
+        bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
         x_seed_data, interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
         y_seed_data = np.pad(bin_contents, 1, 'edge')
 
@@ -716,7 +716,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return boost_hist
 
     def interpolate_2d_root_histogram(self, root_hist, scale_factor):
-        bin_contents = np.array([[root_hist.GetBinContent(xbin, ybin) for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
+        bin_contents = np.log([[root_hist.GetBinContent(xbin, ybin) for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
         x_seed_data, x_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
         y_seed_data, y_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
         z_seed_data = np.pad(bin_contents, 1, 'edge')
@@ -740,7 +740,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return boost_hist
 
     def interpolate_3D_root_histogram(self, root_hist, scale_factor):
-        bin_contents = np.array([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
+        bin_contents = np.log([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
         x_seed_data, x_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
         y_seed_data, y_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
         z_seed_data, z_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetZaxis(), scale_factor)
@@ -810,6 +810,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             all_corrections.append(corr)
 
         cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(results_path, "corrections_lr.json")
+        output_llr_file = os.path.join(results_path, "corrections_llr.json")
         with open(output_llr_file, "w") as outfile:
             outfile.write(cset.json(exclude_unset=False))

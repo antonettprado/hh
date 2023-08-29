@@ -40,13 +40,19 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path):
     # Zoom as necessary
     if isinstance(ss_var, LikelihoodRatio):
         max_sbin, max_bbin = 0, 0
+        min_sbin, min_bbin = hist_signal.GetNbinsX()+1, hist_signal.GetNbinsX()+1
         right_padding = 5
+        left_padding = 5
         basically_zero = 0.001
         for i in range(1, hist_signal.GetNbinsX()+1):
             if hist_signal.GetBinContent(i) > basically_zero: max_sbin = i
             if hist_backg.GetBinContent(i) > basically_zero: max_bbin = i
+        for i in reversed(range(1, hist_signal.GetNbinsX()+1)):
+            if hist_signal.GetBinContent(i) > basically_zero: min_sbin = i
+            if hist_backg.GetBinContent(i) > basically_zero: min_bbin = i
         max_bin = min(ss_var.nbins, max(max_sbin + right_padding, max_bbin + right_padding))
-        hist_signal.GetXaxis().SetRange(1, max_bin)
+        min_bin = max(1, min(min_sbin - left_padding, min_bbin - left_padding))
+        hist_signal.GetXaxis().SetRange(min_bin, max_bin)
     
     leg = ROOT.TLegend(0.6, 0.8, 0.9, 0.9)
     leg.AddEntry(hist_signal, 'Signal', 'l')
