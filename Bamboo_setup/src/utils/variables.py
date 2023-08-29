@@ -307,7 +307,7 @@ class LikelihoodRatio(Variable):
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
         self.refs = [ '_'.join((sc, self.name)) for sc in self.subcats ]
-        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' likelihood ratio'
+        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' LR'
         self.update(**kwargs)
 
     def generate_eqbin(self):

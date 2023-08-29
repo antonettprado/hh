@@ -422,6 +422,42 @@
             "y": "bjets_dPhi_abs"
         },
 
+        "bjet0_pT_vs_bjet1_pT":
+        {
+            "x": "bjet0_pT",
+            "y": "bjet1_pT"
+        },
+
+        "bjet0_pT_vs_bjet_bijet_dPhi":
+        {
+            "x": "bjet0_pT",
+            "y": "bjet_bijet_dPhi"
+        },
+        
+        "bjet0_pT_vs_bjet_bijet_dR":
+        {
+            "x": "bjet0_pT",
+            "y": "bjet_bijet_dR"
+        },
+
+        "bjet0_pT_vs_trijet_pT_rat":
+        {
+            "x": "bjet0_pT",
+            "y": "trijet_pT_rat"
+        },
+
+        "bjet0_pT_vs_mjj":
+        {
+            "x": "bjet0_pT",
+            "y": "mjj"
+        },
+
+        "bjet_bijet_dR_vs_trijet_pT_rat":
+        {
+            "x": "bjet_bijet_dR",
+            "y": "trijet_pT_rat"
+        },
+
         "trijet_mInv_vs_bjets_mbb":
         {
             "x": "bjets_mbb",
@@ -467,5 +503,6 @@
             "y": "bjets_dEta",
             "z": "trijet_mInv"
         }
+        
     }
 }

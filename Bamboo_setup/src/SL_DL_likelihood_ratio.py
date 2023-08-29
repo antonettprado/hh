@@ -119,13 +119,15 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def get_lrs_for_vars_custom_combos(self) -> 'list[LikelihoodRatio]':
         # -----------------------------------------------------------------
         vars_custom_combos = []
-        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjets_dPhi_abs', 'trijet_mInv']
+        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjet1_pT', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_bijet_dPhi',
+            'trijet_pT_rat', 'bjet_bijet_dR', 'bjet_bijet_dPhi', 'mjj']
         vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
-        interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_vs_mbb']
+        interesting_vars_2D = ['trijet_mInv_vs_bjets_mbb', 'bjets_dPhi_vs_mbb', 'bjets_dEta_vs_mbb', 'bjets_dR_vs_mbb', 'bjet0_pT_vs_bjet1_pT',
+            'bjet0_pT_vs_bjet_bijet_dPhi', 'bjet0_pT_vs_bjet_bijet_dR', 'bjet0_pT_vs_trijet_pT_rat', 'bjet0_pT_vs_mjj', 'bjet_bijet_dR_vs_trijet_pT_rat']
         vars_custom_combos.extend(combinations(interesting_vars_2D, 2))
         vars_custom_combos.extend([
             ['bjets_dPhi_vs_mbb', 'bjets_dEta'],
