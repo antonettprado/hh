@@ -13,13 +13,14 @@ ALL_VARNAMES_2D = None
 ALL_VARNAMES_3D = None
 ALL_JSON_DATA = None
 
+# Load JSON
 with open(VARPATH, 'r') as f:
     ALL_JSON_DATA = json.load(f)
     ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
     ALL_VARNAMES_2D = ALL_JSON_DATA['2D'].keys()
     ALL_VARNAMES_3D = ALL_JSON_DATA['3D'].keys()
 
-# Load config file
+# Load config file and get the luminosity and cross sections
 with open(CFGPATH, "r") as yaml_file:
     yaml_data = yaml.safe_load(yaml_file)
     LUMINOSITY: float = yaml_data['eras']['2018']['luminosity']
@@ -28,6 +29,19 @@ with open(CFGPATH, "r") as yaml_file:
 # Helper utility function for getting the weights stored in root files
 SUM_WEIGHTS = {}
 def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
+    '''
+    Opens a group of ROOT files and extracts the total sum of weights saved to the yield histogram
+    called "genEventSumWeight". The histogram is saved with the sum of MC weights over the whole sample,
+    used to scale the outputs. These weights are saved to SUM_WEIGHTS and automatically used when
+    reading a histogram to scale it appropriately
+
+    Args:
+        names (list[str]): the names of the root files
+        path (str): the path to the directory containing the root files
+
+    Returns:
+        list[ROOT.TFile]: the opened files
+    '''
     # Open the files
     path = Path(path)
     files = [ TFile.Open(str(path / name), 'read') 
@@ -46,6 +60,18 @@ def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
     return files
 
 def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2D, Variable3D, LikelihoodRatio]]':
+    '''
+    Helper function that will take in a variable reference (eg. SL_res_2b_x_bjets_mbb_x_bjets_pT_bb_lr) and return
+    the corresponding Variable object (eg. LikelihoodRatio(['bjets_mbb', 'bjets_pT_bb'])) with ONLY the relevant subcats
+    present (eg. SL_res_2b_x). If two or more references to the same variable with different subcats are included, then
+    the subcats are added to the original variable
+
+    Args:
+        refs (list[str]): a list of references
+
+    Returns:
+        list[Variable]: the list of variables
+    '''
     all_subcats = list(set.union(*[set(ALL_JSON_DATA['1D'][name]['subcats']) for name in ALL_VARNAMES_1D]))
     all_subcats.sort(key=lambda x: -len(x))
     variables = []
@@ -87,6 +113,21 @@ def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2
             
 
 class Variable():
+    '''
+    Base class for all variables.
+
+    Attributes (Almost all variables defined by either Variable1D, Variable2D, Variable3D, or LikelihoodRatio will have these):
+        name (str)
+        subcats (list[str]): list of subcat names, these define the keys of every dictionary attribute
+        refs (list[str]): list of root histogram references saved to files of the form "{subcat}_{name}" for each subcat
+        title (str): title of the variable in ROOT string formatting (eg. "#Delta#eta")
+        unit (str): units associated with the variable for axis label printing (eg. "GeV")
+        full_title (str): title + unit
+
+        Only defined when using in bamboo
+        selections (dict(str:bamboo.SelectionProxy)): a dictionary of the selections used in bamboo
+        data (dict(str:bamboo.FloatProxy)): a dictionary of data corresponding to each selection used in bamboo
+    '''
     def __init__(self, name, **kwargs):
         self.name = name
         self.selections = {}
@@ -94,6 +135,14 @@ class Variable():
         self.update(**kwargs)
 
     def update(self, **kwargs):
+        '''
+        Takes a dictionary of keyword arguments and adds them as attributes to the Variable (or replaces existing attributes) 
+        
+        Example: var = Variable1D('bjets_mbb')
+                 print(var.min) # 0
+                 var.update(min=20)
+                 print(var.min) # 20
+        '''
         self.__dict__.update(**kwargs)
 
     def set_refs(self, subcats: 'list[str]'):
@@ -101,6 +150,18 @@ class Variable():
                      for subcat in subcats ]
 
     def get_hist_from_file(self, subcat: str, file: TFile) -> Union[TH1F, TH2F]:
+        '''
+        Gets a histogram of a given subcategory from a given file. Given the subcat, this function determines the reference that
+        should be used to look up the histogram in the file, then gets this hitogram. If it is not present in the file, raise
+        a KeyError. Scales the histogram according to the MC weighting and luminosity
+
+        Args:
+            subcat (str)
+            file (ROOT.TFile)
+        
+        Returns:
+            ROOT.TH1 or ROOT.TH2: the histogram
+        '''
         sample_name = Path(file.GetName()).stem
         hist_name = self[subcat].ref
         try:
@@ -115,6 +176,15 @@ class Variable():
         return hist
 
     def get_total_hist(self, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
+        '''
+        The same as get_hist_from_file, but merges histograms from many file for a given subcat
+
+        Args:
+            files (list[ROOT.TFile]): list of files
+            subcat (str)
+            normalized (bool): flag for whether to normalize the distribution or not (default: False)
+
+        '''
         if self.is_child(): subcat = self.subcat
         
         tot_hist = self.get_hist_from_file(subcat, files[0]) # Get the first histogram from the file list
@@ -129,6 +199,22 @@ class Variable():
         return hasattr(self, "subcat")
         
     def __getitem__(self, subcat: str):
+        '''
+        Get a subcat-specific "child" variable of the existing variable. Since many of the attributes of a Variable
+        object are dictionaries with keys equal to the list of subcats, it is sometimes helpful to first specify which
+        subcat you care about, then access these attributes directly. This is what a child variable does.
+        Instead of:
+            var = Variable1D('bjets_mbb')
+            bamboo.plots.Plot.Make1D(var.refs['SL_res_2b_x'], var.data['SL_res_2b_x'], var.selections['SL_res_2b_x'] ... )
+        We can do:
+            var = Variable1D('bjets_mbb')
+            cvar = var['SL_res_2b_x']
+            bamboo.plots.Plot.Make1D(cvar.ref, cvar.data, cvar.selection ... )
+        The child variable holds all the same information as the parent variable when it is instantiated, but it resolves
+        the dictionaries (and lists) that depend on the subcat to the corresponding entries.
+        Note: Once created, a child variable is not linked with its parent; altering the child in some way will not affect 
+        the parent and vice versa
+        '''
         # If already the child, do nothing
         if self.is_child(): return self
         # If invalid subcat, raise error
@@ -148,6 +234,10 @@ class Variable():
         return child
     
     def __iter__(self):
+        '''
+        Variable objects support iteration. This will loop through all possible child variables of the Variable, given
+        the subcats attribute.
+        '''
         self.iter_index = 0
         return self
 
@@ -156,7 +246,7 @@ class Variable():
             raise StopIteration
         index = self.iter_index
         this_subcat = self.subcats[index]
-        child = self.__getitem__(this_subcat)
+        child = self.__getitem__(this_subcat) # Get the child for the subcat
         self.iter_index += 1
         return child
 
@@ -164,7 +254,15 @@ class Variable():
         return f"{self.__class__.__name__}('{self.name}')"
 
 class Variable1D(Variable):
+    '''
+    Variable subclass for 1D variables. These inherit attributes from variables.json, including binning information,
+    subcats, titles, etc.
+    '''
     def __init__(self, json_key, **kwargs):
+        '''
+        Constructor, takes in the variable name as a json key and uses the json file to look up information about the variable
+        These are stored as variable attributes
+        '''
         super().__init__(json_key)
         json_data = ALL_JSON_DATA['1D'][json_key]
         self.eqbin = None
@@ -179,12 +277,22 @@ class Variable1D(Variable):
         self.update(**kwargs)
 
     def generate_eqbin(self):
+        '''
+        Takes the nbins, min, and max from the json file and creates a bamboo.plots.EquidistantBinning object
+        '''
         if not all(item in self.__dict__ for item in ['nbins', 'min', 'max']):
             print(f"Could not generate ROOT EqBin for {self.name}. Check json file")
             return
         self.eqbin = EqBin(self.nbins, self.min, self.max)
 
     def populate(self, data: dict, selections: dict):
+        '''
+        Populate the variable with data and the corresponding selections dictionaries
+
+        Args:
+            data (dict[str:FloatProxy]): dictionary of subcat:data
+            selections (dict[str:SelectionProxy]): dictionary of subcat:selection
+        '''
         self.data = data
         self.selections = selections
         if data.keys() != selections.keys():
@@ -193,17 +301,33 @@ class Variable1D(Variable):
             print('WARNING: One or both of the supplied data and selections are not defined over all subcats')
 
     def __getitem__(self, subcat: str):
+        '''
+        Same as the super class, but also gives the child variable the relevant data (None if the data is not set)
+        '''
         if self.is_child(): return self
         child = super().__getitem__(subcat)
         child.data = self.data.get(subcat, None)
         return child
 
-    def __repr__(self):
-        return "<%s>" % str('\n '.join(f'{k} : {repr(v)}' for (k, v) in self.__dict__.items())) 
-
 
 class Variable2D(Variable):
+    '''
+    Variable subclass for 1D variables. These inherit attributes from the relevant 1D variables in variables.json, including binning information,
+    subcats, titles, etc.
+
+    Attributes:
+        xvar (Variable1D): the 1D variable on the x axis
+        yvar (Variable1D): the 1D variable on the y axis
+        subcats (list[str]): the set intersection of xvar.subcats and yvar.subcats
+        (x/y) + {Variable1D attribute}: the attribute of the x/y variable (eg. var2D.xvar.name is equivalent to var2D.xname)
+        title (str): ytitle + ' vs. ' + xtitle
+    '''
+
     def __init__(self, name, **kwargs):
+        '''
+        Constructor. Takes the 2D variable name as a json key. Finds the 2D variable in the json file, which points to 2 1D variables.
+        Finds those 1D variables in the json file and creates 2 Variable1D objects stored as xvar and yvar
+        '''
         super().__init__(name)
         json_data = ALL_JSON_DATA['2D'][name]
         x_key, y_key = json_data['x'], json_data['y']
@@ -215,6 +339,13 @@ class Variable2D(Variable):
         self.update(**kwargs)
 
     def populate(self, xvar: Variable1D, yvar: Variable1D):
+        '''
+        Populate data and selections using pre-populated(!!) xvar and yvar. Data can be accessed via self.xdata and self.ydata
+
+        Args:
+            xvar (Variable1D): an instance of the same xvar that defines the Variable2D, but populated with data and selections
+            yvar (Variable1D): an instance of the same yvar that defines the Variable2D, but populated with data and selections
+        '''
         consistent = (xvar.name == self.xname) and (yvar.name == self.yname) 
         if not consistent:
             raise ValueError(f"{xvar.name} + {yvar.name} != {self.name}")
@@ -223,6 +354,7 @@ class Variable2D(Variable):
         self.selections = { k:self.xvar.selections[k] for k in self.subcats }
 
     def __getattr__(self, attr_name):
+        '''Allows shortening var2D.xvar.name to var2D.xname'''
         prefix = attr_name[0]
         attr_name_1D = attr_name[1:]
         if prefix == 'x': return self.xvar.__dict__[attr_name_1D]
@@ -230,17 +362,20 @@ class Variable2D(Variable):
         raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{attr_name}'")
 
     def __getitem__(self, subcat: str):
+        '''
+        Same as super, execpt logic for xdata and ydata are added
+        '''
         if self.is_child(): return self
         child = super().__getitem__(subcat)
         child.xdata = self.xdata.get(subcat, None)
         child.ydata = self.ydata.get(subcat, None)
         return child
-    
-    def __repr__(self):
-        return '\n'.join((repr(self.xvar), repr(self.yvar)))
 
 
 class Variable3D(Variable):
+    '''
+    Essentially the same as Variable2D, but for 3D
+    '''
     def __init__(self, name, **kwargs):
         super().__init__(name)
         json_data = ALL_JSON_DATA['3D'][name]
@@ -278,10 +413,7 @@ class Variable3D(Variable):
         child.zdata = self.zdata.get(subcat, None)
         return child
 
-    def __repr__(self):
-        return '\n'.join((repr(self.xvar), repr(self.yvar), repr(self.zvar)))
-
-
+# Definitions of the LLR binning for various dimensions of LLR
 lr_binning = { 
                1: { 'nbins':200, 'min':-3, 'max':3 },
                2: { 'nbins':200, 'min':-3, 'max':3 },
@@ -292,7 +424,19 @@ lr_binning = {
                7: { 'nbins':400, 'min':-7, 'max':7 },
               }
 class LikelihoodRatio(Variable):
+    '''
+    Variable subclass for (multidimensional) likelihood ratios.
+
+    Attributes (on top of Variable super class):
+        dimensionality (int): the number of constituent LLRs, used to determin binning from lr_binning
+        vars (dict[str:Variable]): dictionary of all the constituent variables
+        subcats (list[str]): set intersection of all the constituent variable subcats
+    '''
     def __init__(self, names: Union['list[str]', str], **kwargs):
+        '''
+        Constructor. Creates a LikelihoodRatio object from a list of variable names. Variable names can be either 1D, 2D, 3D, or
+        any combination of these; the only condition is that they all appear in the JSON file.
+        '''
         if type(names) == str:
             names = [names]
         self.names = sorted(names)
@@ -307,16 +451,20 @@ class LikelihoodRatio(Variable):
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
         self.refs = [ '_'.join((sc, self.name)) for sc in self.subcats ]
-        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' LR'
+        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' LLR'
         self.update(**kwargs)
 
     def generate_eqbin(self):
+        '''Generates the bamboo.plots.EquidistantBinning object from the dimensionality and lr_binning'''
         if not all(item in self.__dict__ for item in ['nbins', 'min', 'max']):
             print(f"Could not generate ROOT EqBin for {self.name}. Check json file")
             return
         self.eqbin = EqBin(self.nbins, self.min, self.max)
 
     def populate(self, data: dict, selections: dict):
+        '''
+        Populates the LikelihoodRatio object with data and selections, same as Variable1D
+        '''
         self.data = data
         self.selections = selections
         if data.keys() != selections.keys():
@@ -327,9 +475,7 @@ class LikelihoodRatio(Variable):
         child = super().__getitem__(subcat)
         child.data = self.data.get(subcat, None)
         return child
-
-    def __repr__(self):
-        return "<%s>" % str('\n '.join(f'{k} : {repr(v)}' for (k, v) in self.__dict__.items())) 
+    
 
 # Helper functions to quickly get all the variables in a script
 def get_all_1D_variables() -> 'dict[str,Variable1D]':
@@ -340,29 +486,7 @@ def get_all_3D_variables() -> 'dict[str,Variable3D]':
     return { name: Variable3D(name) for name in ALL_VARNAMES_3D }
 
 if __name__ == '__main__':
-    # var1D = Variable1D('bjets_mbb')
-    # var1D2 = Variable1D('bjets_dPhi')
-    # data = {'SL_res_2b_x': 1, 'SL_res_2b': 9, 'DL_res_2b': 2,
-    #         'SL_boost': 3, 'DL_boost': 4 }
-    # sels = {'SL_res_2b_x': 5, 'SL_res_2b': 9, 'DL_res_2b': 6,
-    #         'SL_boost': 7, 'DL_boost': 8 }
-    # var1D.populate(data, sels)
-    # var1D2.populate(data, sels)
-    # var2D = Variable2D('bjets_dPhi_vs_mbb')
-    # var2D.populate(var1D, var1D2)
-    # for i in var2D:
-    #     print(i.subcat, i.xfull_title, i.ref, i.xdata, i.ydata)
-
-    # lr1 = LikelihoodRatio(('bjets_mbb', 'bjets_dR', 'bjets_dR_vs_mbb'))
-    # print(repr(lr1))
-    # for i in lr1:
-    #     print(i.subcat, i.ref)
-    # refs = ['SL_res_2b_x_bjets_mbb_x_all_mInv_x_bjets_pT_bb_lr', 'SL_boost_bjets_dEta', 'DL_boost_met_lr', 'DL_boost_bjets_dEta', 'SL_res_2b_bjets_dPhi_vs_mbb']
-    # vars = parse_vars_from_refs(refs)
-    # print(vars)
-    # var = vars[3]
-    # for v in var:
-    #     print(v.subcat)
+    # Test scripts go here
 
     open_root_files(['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root', 'TTbar_sl.root', 'TTbar_dl.root'], 'Z_OUTPUT/TOTAL_VarsReco_0824/results')
     print(SUM_WEIGHTS)

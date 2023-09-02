@@ -28,6 +28,21 @@ FAILED_VARIABLES = []
 
 
 def initialize_outputs(dir, subcats, vars):
+    '''
+    Create the output csv files and populate them each with the header entries.
+    These include the subcategory for the csv file, the total number of signal and background
+    events in each subcategory (including undeflow and overflow) and the nominal S/sqrt(B).
+    It does this by finding the first variable with a given subcat from `vars` and calculates the
+    nominal S, B, and S/sqrt(B) from that variable, then writes all this header data to the file
+
+    Args:
+        dir (Path): directory to write the csv files to
+        subcats (list[str]): list of the subcategories, one csv is created for each
+        vars (list[Variable]): list of the variables in the files
+
+    Returns:
+        dict[str:float]: nominal significance for each subcategory
+    '''
     ret = {}
     dir.mkdir(exist_ok=True)
     for subcat in subcats:
@@ -58,15 +73,20 @@ def initialize_outputs(dir, subcats, vars):
             writer.writerow(['Signal Size', sig_size])
             writer.writerow(['Background Size', bkg_size])
             writer.writerow(['Total Significance', tot_significance])
-            writer.writerow([])
     return ret
 
 def write_to_csv(df):
+    '''
+    Writes the variable cut data to the correct csv. This is a groupby function so it takes a pandas dataframe
+    grouped by the subcat and variable name. Then it prints this dataframe subset to the csv, with the headers.
+    '''
     subcat, dim, name = df.index[0][:3]
     path = OUTPUT_PATH / (subcat + '.csv')
     df = df.droplevel([0,1,2])
+
     df.to_csv(path, index_label=name, mode='a')
 
+# Deprecated
 def find_window_1D(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
     if bin_r <= bin_l:
         return bin_l, bin_r
@@ -106,6 +126,7 @@ def find_window_1D(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, tota
         
     return find_window_1D(bin_l_new, bin_r_new, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg)
 
+# Deprecated
 def find_window_2D(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg):
     if xbin_r <= xbin_l or ybin_r <= ybin_l:
         return xbin_l, xbin_r, ybin_l, ybin_r
@@ -168,6 +189,7 @@ def find_window_2D(xbin_l, xbin_r, ybin_l, ybin_r, step, cut, histo_signal, hist
         return xbin_l, xbin_r, ybin_l, ybin_r
     return find_window_2D(xbin_l_new, xbin_r_new, ybin_l_new, ybin_r_new, step, cut, histo_signal, histo_bkg, total_norm_signal, total_norm_bkg)
 
+# Deprecated
 def find_window_1D_v2(bin_l, bin_r, step, cut, histo_signal, histo_bkg, nbins, total_norm_signal, total_norm_bkg):
     signal = histo_signal.Integral(bin_l, bin_r)
     bkg = histo_bkg.Integral(bin_l, bin_r)
@@ -299,6 +321,17 @@ def find_window_1D_v3(cut, histo_signal, histo_bkg, total_norm_signal, total_nor
     return int(bin_l), int(bin_r) # addition acounts for underflow bin and ROOT TH1::Integral definition
 
 def fill_by_name(df):
+    '''
+    The first level of dataframe grouping. Takes entries of the main dataframe with a common name and subcategory.
+    Gets the histograms for that variable and determines based on the type of variable how to proceed to fill by signal efficiency.
+    If variable histogram is not found for that subcategory, append the variable to a list of failed vars and move on
+
+    Args:
+        df (pandas.DataFrame(columns=['variable', 'subcat', 'efficiency', 'name'])): dataframe group with common name and subcat
+
+    Returns:
+        pandas.DataFrame(columns=['name', 'subcat', 'efficiency', 'signal frac', 'cuts', 'backg frac', 'significance', 'dim'])
+    '''
     var, subcat = df.iloc[0][['variable','subcat']]
     if subcat not in var.subcats:
         return 
@@ -309,25 +342,40 @@ def fill_by_name(df):
         sig_hist = var.get_total_hist(SIGNAL_SAMPLES, subcat)
         bkg_hist = var.get_total_hist(BACKG_SAMPLES, subcat)
     except KeyError:
+        global FAILED_VARIABLES
         print(f'Generation for {ref} failed')
         FAILED_VARIABLES.append(ref)
         return 
 
+    # Determine how to proceed
     if   isinstance(var, Variable1D):       fill_func = fill_by_eff_1D
     elif isinstance(var, Variable2D):       fill_func = fill_by_eff_2D
     elif isinstance(var, Variable3D):       return # not supported yet
     elif isinstance(var, LikelihoodRatio):  fill_func = fill_by_eff_LR
     else: raise TypeError
     
+    # Loop through the signal efficiencies and apply the fill_func for each efficiency
     data_by_efficiency = []
     for eff in df['efficiency']:
         data_by_efficiency.append(fill_func(eff, sig_hist, bkg_hist, ref))
-    new_data_df = pd.DataFrame(data_by_efficiency, index=df.index)
-    ret_df = pd.concat([df[['name', 'subcat', 'efficiency']], new_data_df], axis=1)
+    new_data_df = pd.DataFrame(data_by_efficiency, index=df.index)  # The extra columns
+    ret_df = pd.concat([df[['name', 'subcat', 'efficiency']], new_data_df], axis=1) # Merge the dataframe with the extra columns
 
     return ret_df
 
 def fill_by_eff_1D(eff, sig_hist, backg_hist, ref='', fix_rbin=False):
+    '''
+    Generates the extra columns of the dataframe in fill_by_name for 1D variables for a given efficiency
+    
+    Args:
+        eff (int): target signal efficiency
+        sig_hist / backg_hist (ROOT.TH1): signal/background histogram
+        ref (str): utility string for error handling
+        fix_rbin (bool): fixes the right bin to infinity (default: False)
+
+    Returns:
+        pd.Series(index=['signal frac', 'cuts', 'backg frac', 'significance', 'dim']): the new columns for the df
+    '''
     df = pd.Series(dtype=object)
     
     # Set the x range to include underflow and overflow bins
@@ -340,6 +388,7 @@ def fill_by_eff_1D(eff, sig_hist, backg_hist, ref='', fix_rbin=False):
 
     # If the histogram data integrates to zero, ignore this too
     if sig_int == 0 or backg_int == 0:
+        global FAILED_VARIABLES
         print(f'No data for {ref}')
         FAILED_VARIABLES.append(ref)
         return
@@ -374,6 +423,17 @@ def fill_by_eff_1D(eff, sig_hist, backg_hist, ref='', fix_rbin=False):
     return df
 
 def fill_by_eff_2D(eff, sig_hist, backg_hist, ref=''):
+    '''
+    Generates the extra columns of the dataframe in fill_by_name for 2D variables for a given efficiency
+    
+    Args:
+        eff (int): target signal efficiency
+        sig_hist / backg_hist (ROOT.TH1): signal/background histogram
+        ref (str): utility string for error handling
+
+    Returns:
+        pd.Series(index=['signal frac', 'cuts', 'backg frac', 'significance', 'dim']): the new columns for the df
+    '''
     df = pd.Series(dtype=object)
 
     sig_int = sig_hist.Integral()
@@ -381,6 +441,7 @@ def fill_by_eff_2D(eff, sig_hist, backg_hist, ref=''):
 
     # If the histogram data integrates to zero, ignore this too
     if sig_int == 0 or backg_int == 0:
+        global FAILED_VARIABLES
         print(f'No data for {ref}')
         FAILED_VARIABLES.append(ref)
         return
@@ -411,21 +472,41 @@ def fill_by_eff_2D(eff, sig_hist, backg_hist, ref=''):
     return df
 
 def fill_by_eff_LR(eff, sig_hist, backg_hist, ref=''):
+    '''
+    Generates the extra columns of the dataframe in fill_by_name for LLR variables for a given efficiency
+    Calls fill_by_eff_1D with fix_rbin=True
+    
+    Args:
+        eff (int): target signal efficiency
+        sig_hist / backg_hist (ROOT.TH1): signal/background histogram
+        ref (str): utility string for error handling
+
+    Returns:
+        pd.Series(index=['signal frac', 'cuts', 'backg frac', 'significance', 'dim']): the new columns for the df
+    '''
     df = fill_by_eff_1D(eff, sig_hist, backg_hist, ref, fix_rbin=True)
-    df['dim'] = 'LR'
+    var = variables.parse_vars_from_refs([ref])[0]
+    df['dim'] = 'LLR'
+    # Code to categorieze LLRs within their dimension
+    # dim = var.dimensionality
+    # num_1D = str(sum(isinstance(v, Variable1D) for v in var.vars.values()))
+    # num_2D = str(sum(isinstance(v, Variable2D) for v in var.vars.values()))
+    # num_3D = str(sum(isinstance(v, Variable3D) for v in var.vars.values()))
+    # dimstr = f'{dim}-combo LLR | (#3D,#2D,#1D)=({",".join((num_3D, num_2D, num_1D))})'
+
+    # df['dim'] = dimstr
     return df
 
-if __name__ == "__main__":    
+
+def main(source_path):
+    global SIGNAL_SAMPLES, BACKG_SAMPLES, FAILED_VARIABLES, OUTPUT_PATH, SOURCE_PATH
+
     startTime = time.time()
-
-    parser = argparse.ArgumentParser(description="Comparing signal vs background")
-    parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source directory")
-    args = parser.parse_args()
-
-    SOURCE_PATH = Path(args.source_path)
+    SOURCE_PATH = Path(source_path)
     OUTPUT_PATH = SOURCE_PATH / "cuts"
 
     results_path = SOURCE_PATH / 'results'
+    
     SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
     BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
 
@@ -443,19 +524,27 @@ if __name__ == "__main__":
 
     tot_sigs = initialize_outputs(OUTPUT_PATH, subcats, vars)
 
-    df = pd.DataFrame(list(product(subcats, vars, efficiencies)), columns=['subcat', 'variable', 'efficiency'])
-    df['name'] = df['variable'].apply(lambda x: x.name)
-    df = df.groupby(by=['subcat','name']).apply(fill_by_name)
-    df['dSignificance %'] = (df['significance']/df['subcat'].apply(lambda x: tot_sigs[x]) - 1) * 100
-    df.set_index(['subcat', 'dim', 'name', 'efficiency'], inplace=True)
-    avg_sig = df.groupby(["subcat", "dim", "name"]).mean().rename(columns={'significance': 'avg_sig'})['avg_sig']
-    df = df.merge(avg_sig, left_index=True, right_index=True)
-    df = df.sort_values(["subcat", "dim", "avg_sig", "name", "efficiency"], ascending=[True, True, False, True, True])
-    df = df.drop(columns=['avg_sig'])
-    df.groupby(level=[0,1,2], sort=False).apply(write_to_csv)
+    df = pd.DataFrame(list(product(subcats, vars, efficiencies)), columns=['subcat', 'variable', 'efficiency'])         # Create the initial dataframe of subcats, variables, and efficiencies
+    df['name'] = df['variable'].apply(lambda x: x.name)                                                                 # Add a name column with the variable name
+    df = df.groupby(by=['subcat','name']).apply(fill_by_name)                                                           # Group dataframe into common subcat and name groups, then over each group run the fill_by_name function which computes all the cuts
+    df['dSignificance %'] = (df['significance']/df['subcat'].apply(lambda x: tot_sigs[x]) - 1) * 100                    # Compute the dSignificance % from the computed significance and nominal significance
+    df.set_index(['subcat', 'dim', 'name', 'efficiency'], inplace=True)                                                 # Set subcat, dim, name, and efficiency as dataframe indices
+    avg_sig = df.groupby(["subcat", "dim", "name"]).mean().rename(columns={'significance': 'avg_sig'})['avg_sig']       # Compute the average significance for each variable and subcat group
+    df = df.merge(avg_sig, left_index=True, right_index=True)                                                           # Add this average significance column to the dataframe
+    df = df.sort_values(["subcat", "dim", "avg_sig", "name", "efficiency"], ascending=[True, True, False, True, True])  # Sort the dataframe by the subcats, dimension, average significance, name, and signal_efficiency
+    df = df.drop(columns=['avg_sig'])                                                                                   # Remove the average significance column (just used for sorting)
+    df.groupby(level=[0,1,2], sort=False).apply(write_to_csv)                                                           # Write each group to a csv
     
     executionTime = time.time() - startTime
     print(f'Executed in {executionTime:.1f}s')
     if FAILED_VARIABLES:
         print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")
         print(*FAILED_VARIABLES, sep='\n')
+
+
+if __name__ == "__main__":    
+    parser = argparse.ArgumentParser(description="Comparing signal vs background")
+    parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source directory")
+    args = parser.parse_args()
+
+    main(args.source_path)
