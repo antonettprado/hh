@@ -4,6 +4,7 @@
 ###############################################################################
 
 import ROOT
+from ROOT import TFile
 import os
 from pathlib import Path
 import argparse
@@ -116,13 +117,62 @@ def draw2D(var: Variable2D):
             print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
             FAILED_VARIABLES.append(ss_var.ref)
         except ZeroDivisionError:
-            print(f'Comparison for {ss_var.ref} failed: Empty histogram')
+            parint(f'Comparison for {ss_var.ref} failed: Empty histogram')
             FAILED_VARIABLES.append(ss_var.ref)
+
+def draw1D_bare(ref, path):
+    print(ref)
+    def get_hist_from_i_file(hist_ref: str, file: TFile):
+        file_name = Path(file.GetName()).stem
+        try:
+            hist = file.Get(hist_ref)
+            hist.SetDirectory(0)
+        except AttributeError as err:
+            raise KeyError(f"'{hist_ref}' not found in {file_name}") from err
+        scale_factor = variables.CROSS_SECTIONS[file_name] * variables.LUMINOSITY / variables.SUM_WEIGHTS[file_name]
+        hist.Scale(scale_factor)
+        return  hist
+
+    def get_total_hist(hist_ref:str, files:'list[TFile]', normalized:bool = False):
+        total_hist = get_hist_from_i_file(hist_ref, files[0])
+        for i_file in files[1:]:
+            total_hist.Add(get_hist_from_i_file(hist_ref, i_file))
+        if normalized:
+            total_hist.Scale(1/total_hist.Integral())
+        return total_hist
+        
+    hist_signal = get_total_hist(ref, SIGNAL_SAMPLES, normalized=True)
+    hist_backg = get_total_hist(ref, BACKG_SAMPLES, normalized=True)
+
+    hist_signal.SetLineColor(ROOT.kBlue)
+    hist_signal.SetLineWidth(3)
+    hist_signal.SetStats(0)
+    hist_backg.SetLineColor(ROOT.kRed)
+    hist_backg.SetLineWidth(3)
+    hist_backg.SetStats(0)
+
+    leg = ROOT.TLegend(0.6, 0.8, 0.9, 0.9)
+    leg.AddEntry(hist_signal, 'Signal', 'l')
+    leg.AddEntry(hist_backg, 'Background', 'l')
+
+    canvas = ROOT.TCanvas("canvas", '', 200, 200)
+    canvas.SetGrid()
+    canvas.SetLeftMargin(0.13)
+    # canvas.SetRightMargin(0.15)
+
+    hist_signal.Draw("hist")
+    hist_backg.Draw("hist sames")
+    leg.Draw()
+
+    canvas.Update()
+    canvas.SaveAs(os.path.join(path, ref + '.pdf'))
+    canvas.Close()
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source path")
+    parser.add_argument("-nt", "--no_type", action="store_true", default=False, help="No Variable type")
     args = parser.parse_args()
 
     SOURCE_PATH = args.source_path
@@ -147,18 +197,23 @@ if __name__ == "__main__":
         if isinstance(obj, ROOT.TH1) or isinstance(obj, ROOT.TH2):
             refs.append(obj.GetName())
 
-    vars = variables.parse_vars_from_refs(refs)
-
-    for var in vars:
-        if isinstance(var, Variable1D):
-            draw1D(var)
-        elif isinstance(var, Variable2D) or isinstance(var, Variable3D):
-            draw2D(var)
-        elif isinstance(var, LikelihoodRatio):
-            draw1D(var, dirname='LR')
-        else:
-            FAILED_VARIABLES.append(var)
-
-    if FAILED_VARIABLES:
-        print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")
-        print(*FAILED_VARIABLES, sep='\n')
+    if args.no_type:
+        path_notype = os.path.join(OUTPUT_PATH, "notype")
+        if not os.path.exists(path_notype): os.makedirs(path_notype)
+        for ref in refs:
+            if 'yield' not in ref:
+                draw1D_bare(ref, path_notype)
+    else:
+        vars = variables.parse_vars_from_refs(refs)
+        for var in vars:
+            if isinstance(var, Variable1D):
+                draw1D(var)
+            elif isinstance(var, Variable2D) or isinstance(var, Variable3D):
+                draw2D(var)
+            elif isinstance(var, LikelihoodRatio):
+                draw1D(var, dirname='LR')
+            else:
+                FAILED_VARIABLES.append(var)
+        if FAILED_VARIABLES:
+            print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")
+            print(*FAILED_VARIABLES, sep='\n')
