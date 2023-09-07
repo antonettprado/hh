@@ -8,7 +8,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "m_{bb}",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjets_dPhi": 
@@ -18,17 +18,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(b,b)",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
-        },
-
-        "bjets_dEta":
-        {
-            "nbins": 100,
-            "min": -7,
-            "max": 7,
-            "unit": "",
-            "title": "#Delta#eta(b,b)",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjets_dPhi_abs":
@@ -38,7 +28,17 @@
             "max": 4,
             "unit": "",
             "title": "|#Delta#phi(b,b)|",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
+        },
+
+        "bjets_dEta":
+        {
+            "nbins": 100,
+            "min": -7,
+            "max": 7,
+            "unit": "",
+            "title": "#Delta#eta(b,b)",
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjets_dEta_abs":
@@ -48,7 +48,7 @@
             "max": 7,
             "unit": "",
             "title": "|#Delta#eta(b,b)|",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjets_dR":
@@ -58,7 +58,7 @@
             "max": 7,
             "unit": "",
             "title": "#DeltaR(b,b)",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjets_pT_bb":
@@ -68,7 +68,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "p_{T}^{bb}",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjet0_pT":
@@ -78,7 +78,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "leading b-jet p_{T}",
-            "subcats": ["SL_res_2b_x", "SL_res_2b","SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjet1_pT":
@@ -88,7 +88,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "sub-leading b-jet p_{T}",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
         },
 
         "bjets_mean_pT":
@@ -98,7 +98,27 @@
             "max": 500,
             "unit": "GeV",
             "title": "mean b-jet p_{T}",
-            "subcats": ["SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_2b", "DL_boost"]
+            "subcats": ["SL_res_1b", "SL_res_2b_x", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
+        },
+
+        "bfatjet_mass":
+        {
+            "nbins": 125,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "bfatjet_mass",
+            "subcats": ["SL_boost", "DL_boost"]
+        },
+        
+        "bfatjet_msoftdrop":
+        {
+            "nbins": 125,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "bfatjet_msoftdrop",
+            "subcats": ["SL_boost", "DL_boost"]
         },
 
         "trijet_mInv":
@@ -219,26 +239,6 @@
             "unit": "GeV",
             "title": "pT_miss",
             "subcats": ["SL_res_2b_x", "SL_res_2b", "DL_res_2b"]
-        },
-
-        "bfatjet_msoftdrop":
-        {
-            "nbins": 125,
-            "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "bfatjet_msoftdrop",
-            "subcats": ["SL_boost", "DL_boost"]
-        },
-
-        "bfatjet_mass":
-        {
-            "nbins": 125,
-            "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "bfatjet_mass",
-            "subcats": ["SL_boost", "DL_boost"]
         },
 
         "mjj":

@@ -422,6 +422,7 @@ lr_binning = {
                5: { 'nbins':300, 'min':-6, 'max':6 },
                6: { 'nbins':300, 'min':-6, 'max':6 },
                7: { 'nbins':400, 'min':-7, 'max':7 },
+               8: { 'nbins':400, 'min':-7, 'max':7 },
               }
 class LikelihoodRatio(Variable):
     '''

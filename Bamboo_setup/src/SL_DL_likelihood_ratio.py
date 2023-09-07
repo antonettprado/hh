@@ -160,6 +160,63 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             lrs_for_vars_custom_combos.append(lr_combo)
         return lrs_for_vars_custom_combos
 
+    def get_lrs_for_bjets_vars_1D(self) -> 'list[LikelihoodRatio]':
+        bjets_vars_1D = self.get_bjets_vars()
+        lrs_for_bjets_vars_1D = []
+        for var in bjets_vars_1D:
+            lr = LikelihoodRatio(var.name)
+            lr_data = {}
+            for subcat_var in var:
+                subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
+                subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
+                subcat_var_lr = self.get_var_lr([subcat_var_data], lr[subcat_var.subcat].ref, subcat_var.selection)
+                lr_data[subcat_var.subcat] = subcat_var_lr
+            lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
+            lrs_for_bjets_vars_1D.append(lr)
+        return lrs_for_bjets_vars_1D
+
+    def get_lrs_for_bjets_vars_2D(self) -> 'list[LikelihoodRatio]':
+        bjets_vars_2D = self.get_bjets_2D_vars()     
+        lrs_for_bjets_vars_2D = []   
+        for var in bjets_vars_2D:
+            lr = LikelihoodRatio(var.name)
+            lr_data = {}
+            for subcat_var in var:
+                subcat_var_xdata = op.switch(subcat_var.xdata < var.xmin, var.xmin + 0.0001*abs(var.xmin), subcat_var.xdata)
+                subcat_var_xdata = op.switch(subcat_var.xdata > var.xmax, var.xmax - 0.0001*abs(var.xmax), subcat_var.xdata)
+                subcat_var_ydata = op.switch(subcat_var.ydata < var.ymin, var.ymin + 0.0001*abs(var.ymin), subcat_var.ydata)
+                subcat_var_ydata = op.switch(subcat_var.ydata > var.ymax, var.ymax - 0.0001*abs(var.ymax), subcat_var.ydata)
+                subcat_var_lr = self.get_var_lr([subcat_var_xdata, subcat_var_ydata], lr[subcat_var.subcat].ref, subcat_var.selection)
+                lr_data[subcat_var.subcat] = subcat_var_lr
+            lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
+            lrs_for_bjets_vars_2D.append(lr)
+        return lrs_for_bjets_vars_2D
+
+    def get_lrs_for_bjets_vars_custom_combos(self) -> 'list[LikelihoodRatio]':
+        # -----------------------------------------------------------------
+        vars_custom_combos = []
+        bjets_vars_1D_names = [var.name for var in self.get_bjets_vars() if all(substring not in var.name for substring in ['abs', 'bfatjet'])]
+        print(bjets_vars_1D_names)
+        vars_custom_combos.extend(combinations(bjets_vars_1D_names, 3))
+        vars_custom_combos.extend(combinations(bjets_vars_1D_names, 4))
+        vars_custom_combos.extend(combinations(bjets_vars_1D_names, 5))
+        vars_custom_combos.extend(combinations(bjets_vars_1D_names, 6))
+        vars_custom_combos.extend(combinations(bjets_vars_1D_names, 7))
+        vars_custom_combos.extend(combinations(bjets_vars_1D_names, 8))
+        # -----------------------------------------------------------------
+        lrs_for_bjets_vars_1D = self.get_lrs_for_bjets_vars_1D()
+        # lrs_for_bjets_vars_2D = self.get_lrs_for_bjets_vars_2D()
+        lrs_for_bjets_vars = lrs_for_bjets_vars_1D 
+        lrs_for_bjets_vars_custom_combos = []
+        for combo_list in vars_custom_combos:
+            lr_combo = LikelihoodRatio([var for var in combo_list])
+            lr_combo_data = {}
+            for subcat_lr_combo in lr_combo:
+                subcat_lr_combo_data = op.sum(*[lr[subcat_lr_combo.subcat].data for lr in lrs_for_bjets_vars if lr.name.strip('_lr') in combo_list])
+                lr_combo_data[subcat_lr_combo.subcat] = subcat_lr_combo_data
+            lr_combo.populate(lr_combo_data, super().get_selections_subset(lr_combo_data.keys()))
+            lrs_for_bjets_vars_custom_combos.append(lr_combo)
+        return lrs_for_bjets_vars_custom_combos
 
     def test_skim_refined(self, lrs: 'list[LikelihoodRatio]', selection, plots):
 
@@ -191,14 +248,22 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # ===============================================================================
         # ================================== Plots ======================================
         # # ===============================================================================
-        lrs_for_vars_1D = self.get_lrs_for_vars_1D()
-        lrs_for_vars_2D = self.get_lrs_for_vars_2D()
-        lrs_for_vars_3D = self.get_lrs_for_vars_3D()
-        lrs_for_vars_1D_2combos = self.get_lrs_for_vars_1D_2combos()
-        lrs_for_vars_custom_combos = self.get_lrs_for_vars_custom_combos()
-        all_lrs = lrs_for_vars_1D + lrs_for_vars_2D + lrs_for_vars_3D + lrs_for_vars_1D_2combos + lrs_for_vars_custom_combos
+        # lrs_for_vars_1D = self.get_lrs_for_vars_1D()
+        # lrs_for_vars_2D = self.get_lrs_for_vars_2D()
+        # lrs_for_vars_3D = self.get_lrs_for_vars_3D()
+        # lrs_for_vars_1D_2combos = self.get_lrs_for_vars_1D_2combos()
+        # lrs_for_vars_custom_combos = self.get_lrs_for_vars_custom_combos()
+        # all_lrs = lrs_for_vars_1D + lrs_for_vars_2D + lrs_for_vars_3D + lrs_for_vars_1D_2combos + lrs_for_vars_custom_combos
         
-        hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
+        # hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
+        # plots.extend(hists_1D)
+
+        lrs_for_bjets_vars_1D = self.get_lrs_for_bjets_vars_1D()
+        lrs_for_bjets_vars_2D = self.get_lrs_for_bjets_vars_2D()
+        lrs_for_bjets_vars_custom_combos = self.get_lrs_for_bjets_vars_custom_combos()
+        all_lrs = lrs_for_bjets_vars_1D + lrs_for_bjets_vars_2D + lrs_for_bjets_vars_custom_combos
+
+        hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr]
         plots.extend(hists_1D)
 
         # plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)

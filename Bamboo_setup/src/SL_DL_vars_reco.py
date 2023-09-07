@@ -1,5 +1,6 @@
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, CutFlowReport
+from bamboo.plots import Plot, CutFlowReport, Skim
+from bamboo.plots import EquidistantBinning as EqBin
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.object_definition as object_defs
 from utils import variables
@@ -77,10 +78,11 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # Define the variable for each subcat separately
         # In this case, the only difference is in res/boost, but in principle you can do this for all subcats individually
         res_bjet0, res_bjet1 = sorted_ak4_btags[0], sorted_ak4_btags[1]
+        best_nonbtag = op.sort(ak4_nonbtags, lambda jet: -jet.btagDeepFlavB)[0]
         fatjet = sorted_ak8_btags[0]
         fat_subjets = object_defs.find_subjets(fatjet, ak8_subjets)
         boost_bjet0, boost_bjet1 = fat_subjets[0], fat_subjets[1]
-        return res_bjet0, res_bjet1, boost_bjet0, boost_bjet1
+        return res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag
         
     # For each reco variable, define the variable data using self.objects and self.get_selection
     # Add the data to the variable object using Variable1D.popuklate() and return the variable object
@@ -93,15 +95,17 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         selections = self.get_selections_subset(subcat_names) # gets a sub-dictionary of self.selections
 
         # Helper function for the bjets variables, returns the bjets
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
 
         # Define the variable (bjets_mbb)
-        res_data = op.invariant_mass(res_bjet0.p4, res_bjet1.p4)
+        res1b_data = op.invariant_mass(res_bjet0.p4, best_nonbtag.p4)
+        res2b_data = op.invariant_mass(res_bjet0.p4, res_bjet1.p4)
         boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)
         
         # Must have exactly the same keys as selections!!
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
 
         # Populate the Variable1D object with the data dictionary and the selections dictionary
         bjets_mbb.populate(data, selections)
@@ -113,11 +117,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bjets_dPhi = Variable1D('bjets_dPhi')
         subcat_names = bjets_dPhi.subcats
         selections = self.get_selections_subset(subcat_names)
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = op.deltaPhi(res_bjet0.p4, res_bjet1.p4)
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = op.deltaPhi(res_bjet0.p4, best_nonbtag.p4)
+        res2b_data = op.deltaPhi(res_bjet0.p4, res_bjet1.p4)
         boost_data = op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4)
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
         bjets_dPhi.populate(data, selections)
         return bjets_dPhi
 
@@ -125,11 +131,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bjets_dPhi_abs = Variable1D('bjets_dPhi_abs')
         subcat_names = bjets_dPhi_abs.subcats
         selections = self.get_selections_subset(subcat_names)
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = op.abs(op.deltaPhi(res_bjet0.p4, res_bjet1.p4))
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = op.abs(op.deltaPhi(res_bjet0.p4, best_nonbtag.p4))
+        res2b_data = op.abs(op.deltaPhi(res_bjet0.p4, res_bjet1.p4))
         boost_data = op.abs(op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4))
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
         bjets_dPhi_abs.populate(data, selections)
         return bjets_dPhi_abs
 
@@ -137,11 +145,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bjets_dEta = Variable1D('bjets_dEta')
         subcat_names = bjets_dEta.subcats
         selections = self.get_selections_subset(subcat_names)
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = res_bjet0.eta - res_bjet1.eta
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = res_bjet0.eta - best_nonbtag.eta
+        res2b_data = res_bjet0.eta - res_bjet1.eta
         boost_data = boost_bjet0.eta - boost_bjet1.eta
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
         bjets_dEta.populate(data, selections)
         return bjets_dEta
 
@@ -149,11 +159,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bjets_dEta_abs = Variable1D('bjets_dEta_abs')
         subcat_names = bjets_dEta_abs.subcats
         selections = self.get_selections_subset(subcat_names)
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = op.abs(res_bjet0.eta - res_bjet1.eta)
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = op.abs(res_bjet0.eta - best_nonbtag.eta)
+        res2b_data = op.abs(res_bjet0.eta - res_bjet1.eta)
         boost_data = op.abs(boost_bjet0.eta - boost_bjet1.eta)
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
         bjets_dEta_abs.populate(data, selections)
         return bjets_dEta_abs
 
@@ -161,11 +173,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bjets_dR = Variable1D('bjets_dR')
         subcat_names = bjets_dR.subcats
         selections = self.get_selections_subset(subcat_names)
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = op.deltaR(res_bjet0.p4, res_bjet1.p4) 
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = op.deltaR(res_bjet0.p4, best_nonbtag.p4) 
+        res2b_data = op.deltaR(res_bjet0.p4, res_bjet1.p4) 
         boost_data = op.deltaR(boost_bjet0.p4, boost_bjet1.p4) 
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
         bjets_dR.populate(data, selections)
         return bjets_dR
 
@@ -173,23 +187,55 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bjets_pT_bb = Variable1D('bjets_pT_bb')
         subcat_names = bjets_pT_bb.subcats
         selections = self.get_selections_subset(subcat_names)
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = (res_bjet0.p4 + res_bjet1.p4).Pt() 
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = (res_bjet0.p4 + best_nonbtag.p4).Pt() 
+        res2b_data = (res_bjet0.p4 + res_bjet1.p4).Pt() 
         boost_data = (boost_bjet0.p4 + boost_bjet1.p4).Pt()
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
         bjets_pT_bb.populate(data, selections)
         return bjets_pT_bb
+ 
+    def get_bjet0_pT(self) -> Variable1D:
+        bjet0_pT = Variable1D('bjet0_pT')
+        subcat_names = bjet0_pT.subcats
+        selections = self.get_selections_subset(subcat_names)
+        res_bjet0, _, boost_bjet0, _, _ = self._get_bjets_vars_data()
+        res1b_data = res_bjet0.pt
+        res2b_data = res_bjet0.pt
+        boost_data = boost_bjet0.pt
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
+        bjet0_pT.populate(data, selections)
+        return bjet0_pT
+
+    def get_bjet1_pT(self) -> Variable1D:
+        bjet1_pT = Variable1D('bjet1_pT')
+        subcat_names = bjet1_pT.subcats
+        selections = self.get_selections_subset(subcat_names)
+        _, res_bjet1, _, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = best_nonbtag.pt
+        res2b_data = res_bjet1.pt
+        boost_data = boost_bjet1.pt
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
+        bjet1_pT.populate(data, selections)
+        return bjet1_pT
 
     def get_bjets_mean_pT(self) -> Variable1D:
         bjets_mean_pT = Variable1D('bjets_mean_pT')
         subcat_names = bjets_mean_pT.subcats
         selections = self.get_selections_subset(subcat_names)
-        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = (res_bjet0.pt + res_bjet1.pt)/2
+        res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
+        res1b_data = (res_bjet0.pt + best_nonbtag.pt)/2
+        res2b_data = (res_bjet0.pt + res_bjet1.pt)/2
         boost_data = (boost_bjet0.pt + boost_bjet1.pt)/2
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
+        data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boost': boost_data,
+                'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boost': boost_data,
+                'SL_res_2b_x': res2b_data }
         bjets_mean_pT.populate(data, selections)
         return bjets_mean_pT
 
@@ -214,31 +260,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = {'SL_boost': boost_data, 'DL_boost': boost_data}
         bfatjet_msoftdrop.populate(data, selections)
         return bfatjet_msoftdrop
-    
-    def get_bjet0_pT(self) -> Variable1D:
-        bjet0_pT = Variable1D('bjet0_pT')
-        subcat_names = bjet0_pT.subcats
-        selections = self.get_selections_subset(subcat_names)
-        res_bjet0, _, boost_bjet0, _ = self._get_bjets_vars_data()
-        res_data = res_bjet0.pt
-        boost_data = boost_bjet0.pt
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
-        bjet0_pT.populate(data, selections)
-        return bjet0_pT
-
-    def get_bjet1_pT(self) -> Variable1D:
-        bjet1_pT = Variable1D('bjet1_pT')
-        subcat_names = bjet1_pT.subcats
-        selections = self.get_selections_subset(subcat_names)
-        _, res_bjet1, _, boost_bjet1 = self._get_bjets_vars_data()
-        res_data = res_bjet1.pt
-        boost_data = boost_bjet1.pt
-        data = {'SL_res_2b_x': res_data, 'SL_res_2b': res_data, 'DL_res_2b': res_data,
-                'SL_boost': boost_data, 'DL_boost': boost_data}
-        bjet1_pT.populate(data, selections)
-        return bjet1_pT
-
+       
     # Helper function for returning a list of all bjet-related variables for iteration
     def get_bjets_vars(self) -> 'list[Variable1D]':
         vars = [self.get_bjets_mbb(),
@@ -248,12 +270,26 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 self.get_bjets_dEta_abs(),
                 self.get_bjets_dR(),
                 self.get_bjets_pT_bb(),
+                self.get_bjet0_pT(),
+                self.get_bjet1_pT(),
                 self.get_bjets_mean_pT(),
                 self.get_bfatjet_mass(),
-                self.get_bfatjet_msoftdrop(),
-                self.get_bjet0_pT(),
-                self.get_bjet1_pT()]
+                self.get_bfatjet_msoftdrop()]
         return vars
+
+    def get_bjets_2D_vars(self) -> 'list[Variable2D]':
+        bjets_vars= self.get_bjets_vars()
+        bjets_vars_lookup = { var.name: var for var in bjets_vars }
+        vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
+        bjets_2D_vars = []
+        for var in vars2D:
+            if var.xname in bjets_vars_lookup.keys() and var.yname in bjets_vars_lookup.keys():
+                xvar = bjets_vars_lookup[var.xname]
+                yvar = bjets_vars_lookup[var.yname]
+                var.populate(xvar, yvar)
+                bjets_2D_vars.append(var)
+        
+        return bjets_2D_vars
 
     def _get_jj_W(self):
         sorted_nonbjets = self.objects['sorted_ak4_nonbtags']
@@ -662,17 +698,24 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # ===============================================================================
         
         # reco_vars = self.get_all_reco_variables()
-        reco_vars = self.get_all_reco_variables()
+        # hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
+        # plots.extend(hists_1D)
+
+        # reco_2D_vars = self.get_all_reco_2D_variables()
+        # hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
+        # plots.extend(hists_2D)
+
+        # reco_3D_vars = self.get_all_reco_3D_variables()
+        # hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
+        # plots.extend(hists_3D)
+
+        reco_vars = self.get_bjets_vars()
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
         plots.extend(hists_1D)
 
-        reco_2D_vars = self.get_all_reco_2D_variables()
+        reco_2D_vars = self.get_bjets_2D_vars()
         hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
         plots.extend(hists_2D)
-
-        reco_3D_vars = self.get_all_reco_3D_variables()
-        hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
-        plots.extend(hists_3D)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -784,30 +827,33 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         all_reco_vars_3D = self.get_all_reco_3D_variables()
         all_reco_vars = all_reco_vars_1D + all_reco_vars_2D + all_reco_vars_3D
 
-        all_corrections = []
-        for var in all_reco_vars:
-            if "SL_res_2b_x" not in var.subcats: 
-                continue
-            print(var.name)
-            SL_res_2b_x_var = var["SL_res_2b_x"]
-            signal_total_hist = SL_res_2b_x_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
-            backg_total_hist  = SL_res_2b_x_var.get_total_hist(BACKG_SAMPLES, normalized=True)
-            
-            ratio_hist = signal_total_hist.Clone()
-            ratio_hist.Divide(backg_total_hist)
+        all_bjets_vars_1D = self.get_bjets_vars()
+        all_bjets_vars_2D = self.get_bjets_2D_vars()
+        all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
 
-            if isinstance(var, Variable1D):
-                bh_hist = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
-            elif isinstance(var, Variable2D):
-                bh_hist = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-            elif isinstance(var, Variable3D):
-                bh_hist = self.interpolate_3D_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
-            
-            corr = correctionlib.convert.from_histogram(bh_hist)
-            corr.name = SL_res_2b_x_var.ref + '_lr'
-            corr.description = f'lr for {SL_res_2b_x_var.ref}'
-            corr.data.flow = 'clamp'
-            all_corrections.append(corr)
+        all_corrections = []
+        for var in all_bjets_vars:
+            print(var.name)
+            for subcat_var in var:
+                print('\t', subcat_var.ref)
+                signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
+                backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
+                
+                ratio_hist = signal_total_hist.Clone()
+                ratio_hist.Divide(backg_total_hist)
+
+                if isinstance(var, Variable1D):
+                    bh_hist = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+                elif isinstance(var, Variable2D):
+                    bh_hist = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                elif isinstance(var, Variable3D):
+                    bh_hist = self.interpolate_3D_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
+                
+                corr = correctionlib.convert.from_histogram(bh_hist)
+                corr.name = subcat_var.ref + '_llr'
+                corr.description = f'llr for {subcat_var.ref}'
+                corr.data.flow = 'clamp'
+                all_corrections.append(corr)
 
         cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
         output_llr_file = os.path.join(results_path, "corrections_llr.json")
