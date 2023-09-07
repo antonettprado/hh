@@ -120,7 +120,7 @@ def draw2D(var: Variable2D):
             parint(f'Comparison for {ss_var.ref} failed: Empty histogram')
             FAILED_VARIABLES.append(ss_var.ref)
 
-def draw1D_bare(ref, path):
+def draw1D_notype(ref, path):
     print(ref)
     def get_hist_from_i_file(hist_ref: str, file: TFile):
         file_name = Path(file.GetName()).stem
@@ -202,7 +202,7 @@ if __name__ == "__main__":
         if not os.path.exists(path_notype): os.makedirs(path_notype)
         for ref in refs:
             if 'yield' not in ref:
-                draw1D_bare(ref, path_notype)
+                draw1D_notype(ref, path_notype)
     else:
         vars = variables.parse_vars_from_refs(refs)
         for var in vars:
