@@ -160,6 +160,9 @@ def draw1D_notype(ref, path):
     canvas.SetLeftMargin(0.13)
     # canvas.SetRightMargin(0.15)
 
+    hist_signal.GetXaxis().SetRangeUser(hist_signal.GetXaxis().GetXmin(), hist_signal.GetXaxis().GetXmax())
+    hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
+
     hist_signal.Draw("hist")
     hist_backg.Draw("hist sames")
     leg.Draw()
