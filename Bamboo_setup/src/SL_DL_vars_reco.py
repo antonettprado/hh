@@ -29,7 +29,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
     # If you want access to variable data, run this function once to instantiate all the objects and selections for a given tree
     def object_and_event_selection(self, tree, noSel, yields, mc_truth_b=False, events='all'):
         self.tree = tree
-        self.objects, self.selections = super().object_and_event_selection(tree, noSel, yields, mc_truth_b, events)
+        self.objects = super().object_selection(tree, mc_truth_b)
+        self.selections = super().event_selection(tree, noSel, yields, events)
 
         ak4_jets = self.objects["cleaned_ak4_jets"]
         ak4_btags = self.objects["cleaned_ak4_btags"]
