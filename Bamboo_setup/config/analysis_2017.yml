@@ -1,7 +1,7 @@
 tree: Events
 eras:
   "2017":
-    luminosity: 59700 # pb^-1  <===== CHECK!!!!!!
+    luminosity: 41500 # pb^-1
 #dbcache: dascache
 samples:
   # # Signal MC
