@@ -1,0 +1,67 @@
+tree: Events
+eras:
+  "2017":
+    luminosity: 59700 # pb^-1  <===== CHECK!!!!!!
+#dbcache: dascache
+samples:
+  # # Signal MC
+  bbWW_sl:
+    era: "2017"
+    group: "HH_bbWW"
+    files: 
+      - /eos/user/a/anunezde/MC_Samples/trigger_test/L1nano_HHbbWW_2b2VLnu2J_Fall17.root
+
+# Plotting configuration parameters ====================================================
+
+plotIt:
+  configuration:
+    width: 800
+    height: 600
+    margin-left: 0.2
+    margin-right: 0.03
+    margin-top: 0.05
+    margin-bottom: 0.15
+    luminosity-label: '%1$.2f fb^{-1} (13.6 TeV)'
+    experiment: CMS
+    extra-label: Run 2 (2018) - Work in progress
+    error-fill-style: 3154
+    error-fill-color: "#ee556270"
+    ratio-fit-error-fill-style: 1001
+    ratio-fit-error-fill-color: "#aa556270"
+    ratio-fit-line-color: "#0B486B"
+    yields-table-align: v
+  legend:
+    position: [0.7, 0.6, 0.91, 0.91]
+  groups:
+    data:
+      legend: data
+    HH_bbWW:
+      legend: HH_bbWW
+      fill-color: "#EDC951"
+    HH_bbtautau:
+      legend: HH_bbtautau
+      fill-color: "#EDC951"
+    TTbar:
+      legend: TTbar
+      fill-color: "#99ccff"
+    DY:
+      legend: DY
+      fill-color: "#9FFF33"
+    WJets:
+      legend: WJets
+      fill-color: "#FFC300"
+    VV:
+      legend: VV
+      fill-color: "#C900FF"
+  plotdefaults:
+    y-axis: Events
+    # log-y: both
+    y-axis-show-zero: True
+    save-extensions: [pdf]
+    show-ratio: True
+    sort-by-yields: True
+    legend-columns: 2
+    ratio-y-axis: '#frac{Data}{MC}'
+    ratio-y-axis-range: [0.8, 1.2]
+    normalized: False
+ 

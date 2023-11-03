@@ -14,7 +14,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_event_selection, self).__init__(args)
         
-
     def addArgs(self, parser):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')

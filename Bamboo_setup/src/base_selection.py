@@ -11,6 +11,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
 
     def addArgs(self, parser):
         super(NanoBaseHHbbWW, self).addArgs(parser)
+        parser.add_argument("--noHLT", action='store_true', help='No HLT triggers')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
         def isMC():
@@ -71,8 +72,14 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
 
         # Gen Weight and Trigger Selection
         if self.is_MC:
-            noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
+            if self.args.noHLT:
+                noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=())
+            else:
+                noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
         else:
-            noSel = noSel.refine('trigger', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
+            if self.args.noHLT:
+                noSel = noSel.refine('trigger', cut=[])
+            else:
+                noSel = noSel.refine('trigger', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
 
         return tree, noSel, backend, lumiArgs
