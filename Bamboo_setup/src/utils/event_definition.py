@@ -26,26 +26,35 @@ def mll_selection(electrons, muons):
         )
     )
 
-def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, HLT):
+def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, HLT, noHLT=False):
     return (op.AND(
         op.rng_len(electrons) == 1, 
         op.rng_len(muons) == 0,
         electron_ConePt[electrons[0].idx] > 32,
         op.rng_len(taus) == 0,
-        HLT.Ele32_WPTight_Gsf
-        # op.OR(HLT.Ele32_WPTight_Gsf, HLT.Ele28_eta2p1_WPTight_Gsf_HT150)
+        op.OR(
+            noHLT,
+            op.AND(
+                not HLT,
+                HLT.Ele32_WPTight_Gsf
+                # op.OR(HLT.Ele32_WPTight_Gsf, HLT.Ele28_eta2p1_WPTight_Gsf_HT150)
+                )
+            )
         )
     )
 
-def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, HLT):
+def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, HLT, noHLT=False):
     return (op.AND(
         op.rng_len(muons) == 1, 
         op.rng_len(electrons) == 0,
         muon_ConePt[muons[0].idx] > 25,
         op.rng_len(taus) == 0,
         op.OR(
-            HLT.IsoMu24,
-            HLT.IsoMu27
+            noHLT,
+            op.AND(
+                not HLT,
+                op.OR(HLT.IsoMu24, HLT.IsoMu27)
+                )
             )
         )
     )
@@ -90,18 +99,24 @@ def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
         )
     )
 
-def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT):
+def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT, noHLT=False):
     return (op.AND(
         op.rng_len(electrons) == 2,
         op.rng_len(muons) == 0,
         electron_ConePt[electrons[0].idx] > 25,
         electron_ConePt[electrons[1].idx] > 15,
         op.sum(electrons[0].charge, electrons[1].charge) == 0,
-        op.OR(HLT.Ele32_WPTight_Gsf, HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
+        op.OR(
+            noHLT,
+            op.AND(
+                not HLT,
+                op.OR(HLT.Ele32_WPTight_Gsf, HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
+                )
+            )
         )
     )
 
-def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT):
+def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT, noHLT=False):
     return (op.AND(
         op.rng_len(electrons) == 1,
         op.rng_len(muons) == 1,
@@ -114,18 +129,30 @@ def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT)
             muon_ConePt[muons[0].idx] > 25
             ),
         op.sum(electrons[0].charge, muons[0].charge) == 0,
-        op.OR(HLT.Ele32_WPTight_Gsf, HLT.IsoMu24, HLT.IsoMu27, HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ)
+        op.OR(
+            noHLT,
+            op.AND(
+                not HLT,
+                op.OR(HLT.Ele32_WPTight_Gsf, HLT.IsoMu24, HLT.IsoMu27, HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ)
+                )
+            )
         )
     )
 
-def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT):
+def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT, noHLT=False):
     return (op.AND(
         op.rng_len(muons) == 2,
         op.rng_len(electrons) == 0,
         muon_ConePt[muons[0].idx] > 25,
         muon_ConePt[muons[1].idx] > 15,
         op.sum(muons[0].charge, muons[1].charge) == 0,
-        op.OR(HLT.IsoMu24, HLT.IsoMu27, HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
+        op.OR(
+            noHLT,
+            op.AND(
+                not HLT,
+                op.OR(HLT.IsoMu24, HLT.IsoMu27, HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
+                )
+            )
         )
     )
 

@@ -27,11 +27,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
     # If you want access to variable data, run this function once to instantiate all the objects and selections for a given tree
-    def object_and_event_selection(self, tree, noSel, yields, mc_truth_b=False, events='all'):
+    def additional_event_selection(self, tree, noSel, yields):
         self.tree = tree
-        self.objects = super().object_selection(tree, mc_truth_b)
-        self.selections = super().event_selection(tree, noSel, yields, events)
-
+        
         ak4_jets = self.objects["cleaned_ak4_jets"]
         ak4_btags = self.objects["cleaned_ak4_btags"]
         ak8_btags = self.objects["cleaned_ak8_btags"]
@@ -52,9 +50,11 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
         SL_res_2b_x = SL_res_2b.refine("Nonbjets>=2 for SL_res_2b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
 
-        self.selections =  {'SL_res_1b':  SL_res_1b,   'SL_res_2b':  SL_res_2b,   'SL_boost':SL_boost, 
-                            'DL_res_1b':  DL_res_1b,   'DL_res_2b':  DL_res_2b,   'DL_boost':DL_boost,
-                            'SL_res_1b_x':SL_res_1b_x, 'SL_res_2b_x':SL_res_2b_x, 'noSel':noSel}
+        selections =  {'SL_res_1b':  SL_res_1b,   'SL_res_2b':  SL_res_2b,   'SL_boost':SL_boost, 
+                      'DL_res_1b':  DL_res_1b,   'DL_res_2b':  DL_res_2b,   'DL_boost':DL_boost,
+                      'SL_res_1b_x':SL_res_1b_x, 'SL_res_2b_x':SL_res_2b_x, 'noSel':noSel}
+
+        return selections
 
     # Returns dictionary of only elements in self.selections with keys in subcats
     def get_selections_subset(self, subcats: 'list[str]'):
@@ -692,7 +692,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
 
-        self.object_and_event_selection(tree, noSel, yields, events='even')
+        self.objects = super().object_selection(tree, self.args.mc_truth_b)
+        self.selections = super().event_selection(tree, noSel, self.objects, yields, events='even')
+        self.selections = self.additional_event_selection(tree, noSel, yields)
 
         # ===============================================================================
         # ================================== Plots ======================================
