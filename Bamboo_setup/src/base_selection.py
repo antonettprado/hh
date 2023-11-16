@@ -13,7 +13,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         super(NanoBaseHHbbWW, self).addArgs(parser)
         parser.add_argument("--noHLT", action='store_true', help='No HLT triggers')
 
-    def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
+    def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
             if sampleCfg['type'] == 'data':
                 return False

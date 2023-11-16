@@ -10,6 +10,9 @@ samples:
     group: "HH_bbWW"
     files: 
       - /eos/user/a/anunezde/MC_Samples/trigger_test/L1nano_HHbbWW_2b2VLnu2J_Fall17.root
+    type: mc
+    generated-events: genEventSumw
+    split: -1
 
 # Plotting configuration parameters ====================================================
 
@@ -30,6 +33,8 @@ plotIt:
     ratio-fit-error-fill-color: "#aa556270"
     ratio-fit-line-color: "#0B486B"
     yields-table-align: v
+    yields-table-numerical-precision-yields: 3
+    yields-table-numerical-precision-ratio: 3
   legend:
     position: [0.7, 0.6, 0.91, 0.91]
   groups:
