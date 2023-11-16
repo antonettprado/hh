@@ -150,7 +150,7 @@ def tau_selection(taus):
     return op.select(taus, lambda tau: op.AND(
         tau.pt > 20,
         op.abs(tau.eta) < 2.3,
-        # tau.idDeepTau2017v2p1VSjet > 16, # WP_M
+        tau.idDeepTau2017v2p1VSjet > 16, # WP_M
         op.OR( ## TO DO: check tau decay modes
             tau.decayMode == 0,
             tau.decayMode == 1,
