@@ -35,7 +35,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         def getNanoAODDescription():
             # groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
-            groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_"]
+            groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1_"]
             collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet", "nL1Mu", "nL1EG", "nL1Tau", "nL1Jet", "nL1EtSum"]
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
@@ -116,7 +116,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         # pass events whose leading muon/e pass the seed trigger
 
     def pass_seed_trigger(self, seed, sel):
-        print(f"{seed.Index}: njets={seed.njets}")
+
         if "EG" in seed.Index:
             L1_object_names = self.L1_objects_for_EG
             L1_lep = self.L1_electrons[0]
@@ -147,6 +147,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
     def _test_triggers(self, tree, noSel):
 
+        print(".....................................TESTING ONLY .....................................")
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
@@ -154,18 +155,28 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         muons = tree.L1Mu
         l1sums = tree.L1EtSum
         l1HT = op.rng_find(l1sums, lambda l1sum: l1sum.etSumType == 1)
+        l1triggers = tree.L1
 
         sel_SingleMu22 = noSel.refine("SingleMu22", cut=[
             op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
-        yields.add(sel_SingleMu22, "SingleMu22")
+        
 
         sel_Mu6_HTT250er = noSel.refine("Mu6_HTT250er", cut=[op.AND(
             op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)),
             l1HT.pt >= 250)])
+        
+
+        sel_L1_SingleMu22 = noSel.refine("L1_SingleMu22", cut=[l1triggers.SingleMu22])
+        sel_L1_Mu6_HTT250er = noSel.refine("L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
+
+        yields.add(sel_SingleMu22, "SingleMu22")
         yields.add(sel_Mu6_HTT250er, "Mu6_HTT250er")
+        yields.add(sel_L1_SingleMu22, "L1_SingleMu22")
+        yields.add(sel_L1_Mu6_HTT250er, "L1_Mu6_HTT250er")
 
         # Must have at least a plot for definePlots to run
-        plots.append(Plot.make1D("muon0_pt", muons[0].pt, sel_Mu6_HTT250er, EqBin(200, 0, 200)))
+        plots.append(Plot.make1D("muon0_pt", muons[0].pt, sel_SingleMu22, EqBin(200, 0, 200)))
+        plots.append(Plot.make1D("HT", l1HT.pt, sel_SingleMu22, EqBin(200, 0, 200)))
 
         # branches = {
         #     "event":None, 
@@ -179,7 +190,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
         
         # For testing only (comment out the rest of definePlots) -------
-        # plots = self._test_triggers(tree, noSel)
+        plots = self._test_triggers(tree, noSel)
         # --------------------------------------------------------------
 
         plots = []
@@ -199,7 +210,6 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         all_selections["SL_e"] = SL_e
 
         seeds_Mu, seeds_EG = self.get_seeds()
-        print(seeds_Mu.columns)
 
         if len(seeds_Mu) > 0:
             yields.add(SL_mu, 'SL_mu')
@@ -215,13 +225,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 all_selections[seed.Index] = sel_w_seed
                 yields.add(sel_w_seed, 'SL_e + '+seed.Index)
 
-        # Plot pt ,eta, HT, njets, jet1 pt , jet2 pt for every 
         if len(seeds_EG) > 0 or len(seeds_Mu) > 0:
             for seed_name, sel_w_seed in all_selections.items():
-                if "EG" in seed_name or "SL_e" in seed_name:
-                    lep = self.L1_electrons
-                elif "Mu" in seed_name or "SL_mu" in seed_name:
-                    lep = self.L1_muons
+                if "EG" in seed_name or "SL_e" in seed_name: lep = self.L1_electrons
+                elif "Mu" in seed_name or "SL_mu" in seed_name: lep = self.L1_muons
                 plots.extend([
                     Plot.make1D(seed_name + "_pt", lep[0].pt, sel_w_seed, EqBin(200, 0, 200)),
                     Plot.make1D(seed_name + "_eta", lep[0].eta, sel_w_seed, EqBin(100, -4, 4)),
