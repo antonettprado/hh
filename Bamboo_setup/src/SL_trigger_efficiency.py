@@ -20,6 +20,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
     def __init__(self, args):
         super(SL_trigger_efficiency, self).__init__(args)
 
+    def addArgs(self, parser):
+        super(SL_trigger_efficiency, self).addArgs(parser)
+        parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
+
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
 
         def isMC():
@@ -60,7 +64,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         if not self.is_MC:
             noSel = noSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
         #--------------------------------------------------------------------------
-
+        print(SL_trigger_efficiency.__mro__)
         return tree, noSel, backend, lumiArgs
 
     def get_seeds(self):
@@ -148,7 +152,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
     def _test_triggers(self, tree, noSel):
 
-        print(".....................................TESTING ONLY .....................................")
+        print("......................... TESTING ONLY .........................")
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
@@ -161,23 +165,22 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         sel_SingleMu22 = noSel.refine("SingleMu22", cut=[
             op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
         
-
         sel_Mu6_HTT250er = noSel.refine("Mu6_HTT250er", cut=[op.AND(
             op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)),
             l1HT.pt >= 250)])
-        
 
         sel_L1_SingleMu22 = noSel.refine("L1_SingleMu22", cut=[l1triggers.SingleMu22])
         sel_L1_Mu6_HTT250er = noSel.refine("L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
 
+        yields.add(noSel, "noSel")
         yields.add(sel_SingleMu22, "SingleMu22")
         yields.add(sel_Mu6_HTT250er, "Mu6_HTT250er")
         yields.add(sel_L1_SingleMu22, "L1_SingleMu22")
         yields.add(sel_L1_Mu6_HTT250er, "L1_Mu6_HTT250er")
 
         # Must have at least a plot for definePlots to run
-        plots.append(Plot.make1D("muon0_pt", muons[0].pt, sel_SingleMu22, EqBin(200, 0, 200)))
-        plots.append(Plot.make1D("HT", l1HT.pt, sel_SingleMu22, EqBin(200, 0, 200)))
+        plots.append(Plot.make1D("muon0_pt", muons[0].pt, noSel, EqBin(200, 0, 200)))
+        plots.append(Plot.make1D("HT", l1HT.pt, noSel, EqBin(200, 0, 200)))
 
         # branches = {
         #     "event":None, 
@@ -188,11 +191,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         return plots
 
-    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
-        
-        # For testing only (comment out the rest of definePlots) -------
-        plots = self._test_triggers(tree, noSel)
-        # --------------------------------------------------------------
+    def SL_trigger_efficiency(self, tree, noSel):
 
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
@@ -241,6 +240,15 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         
         return plots
 
+    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+        
+        if self.args.test_only:
+            plots = self._test_triggers(tree, noSel)
+        else:
+            plots = self.SL_trigger_efficiency(tree, noSel)
+
+        return plots
+
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
         super(SL_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
@@ -253,12 +261,16 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         for line_number, line in enumerate(lines, 1):
             if line_number >= 26 and line_number <= (len(lines)-2):
                 line_data = line.strip().split('&')  # Modify this according to table structure
-                column0 = line_data[0].strip()
-                column1 = line_data[1].split(r'\pm')[0]
-                column1 = column1.strip()[1:]
-                column2 = line_data[1].split(r'\pm')[1]
-                column2 = column2.strip()[:-4]
-                table_data.append([column0, column1, column2])
+                sel_name = line_data[0].strip()
+                if "---" in line:
+                    eff = float("nan")
+                    eff_error = float("nan")
+                else:
+                    eff = line_data[1].split(r'\pm')[0]
+                    eff = eff.strip()[1:]
+                    eff_error = line_data[1].split(r'\pm')[1]
+                    eff_error = eff_error.strip()[:-4]
+                table_data.append([sel_name, eff, eff_error])
 
         df = pd.DataFrame(table_data)
         df.columns = ['Selection', 'Yield', 'Yield_Error']
@@ -269,9 +281,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         nom_mu_sel = df.loc['SL_mu', 'Yield'] if 'SL_mu' in df.index else 0
         nom_e_sel = df.loc['SL_e', 'Yield'] if 'SL_e' in df.index else 0
+        nom_noSel = df.loc['noSel', 'Yield'] if 'noSel' in df.index else 0
 
-        cond_list = ['SL_mu' in df.index, 'SL_e' in df.index]
-        choice_list = [df['Yield']/nom_mu_sel, df['Yield']/nom_e_sel]
+        cond_list = ['SL_mu' in df.index, 'SL_e' in df.index, all(SL_sel not in df.index for SL_sel in ['SL_e','SL_mu'])]
+        choice_list = [df.Yield/nom_mu_sel, df.Yield/nom_e_sel, df.Yield/nom_noSel]
         df['Efficiency'] = np.select(cond_list, choice_list, default=None)
         df['Efficiency'] = df['Efficiency'].apply(lambda x: round(x, 3) if not pd.isnull(x) else x)
         
