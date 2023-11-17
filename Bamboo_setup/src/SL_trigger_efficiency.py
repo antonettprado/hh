@@ -94,7 +94,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         # pt cut: 10, 15, 20
         if lep == "e":
             SL_e_only = mllSel.refine("SL electron only selection", 
-                cut=[op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0, electrons[0].pt > 5, op.rng_len(taus) == 0)])
+                cut=[op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0, electrons[0].pt > 10, op.rng_len(taus) == 0)])
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
@@ -103,7 +103,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         # pt cut: 5, 10 15
         elif lep == "mu":
             SL_mu_only = mllSel.refine("SL muon only selection", 
-                cut=[op.AND(op.rng_len(muons) == 1, op.rng_len(electrons) == 0, muons[0].pt > 0, op.rng_len(taus) == 0)])
+                cut=[op.AND(op.rng_len(muons) == 1, op.rng_len(electrons) == 0, muons[0].pt > 10, op.rng_len(taus) == 0)])
             SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
@@ -137,13 +137,14 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 cut = op.AND(*jet_er_cuts)
             return cut
     
+        trigger_sel = sel.refine(seed.Index, cut=())
         for L1_object_name in L1_object_names:
             L1_cut = getattr(seed, L1_object_name)
             if isinstance(L1_cut, numbers.Number):
                 if pd.isna(L1_cut): continue
-            sel = sel.refine(seed.Index + L1_object_name, cut=get_cut(L1_object_name, L1_cut))
+            trigger_sel = trigger_sel.refine(seed.Index + L1_object_name, cut=get_cut(L1_object_name, L1_cut))
         
-        return sel
+        return trigger_sel
 
     def _test_triggers(self, tree, noSel):
 
