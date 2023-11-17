@@ -11,6 +11,7 @@ samples:
     files: 
       - /eos/user/a/anunezde/MC_Samples/trigger_test/L1nano_HHbbWW_2b2VLnu2J_Fall17.root
     type: mc
+    cross-section:  0.00334825583
     generated-events: genEventSumw
     split: -1
 
