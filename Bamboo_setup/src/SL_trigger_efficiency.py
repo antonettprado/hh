@@ -39,8 +39,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         def getNanoAODDescription():
             # groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
-            groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1_"]
-            collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet", "nL1Mu", "nL1EG", "nL1Tau", "nL1Jet", "nL1EtSum"]
+            groups = ["PV_", "Flag_", "HLT_", "MET_", "L1_"]
+            collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet",
+                "nL1Mu", "nL1EG", "nL1Tau", "nL1Jet", "nL1EtSum",
+                "nGenPart", "nGenJet", "nGenJetAK8"]
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
 
@@ -50,22 +52,22 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                                             description=getNanoAODDescription(),
                                             backend=backend)
 
-        # Comment lines below to proceed with testing only -----------------------
         noSel = noSel.refine('weights', weight=tree.genWeight)
-        
+        self.noSel = noSel
+
+        # Base Selection -----------------------------------------------------
         # PV Selection
-        noSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
+        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
 
         # MET Filter Selection
-        noSel = noSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
+        baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
         self.era = sampleCfg['era'] 
         if self.era in ["2017", "2018"]:
-            noSel = noSel.refine('met_filter_2017_2018', cut=[tree.Flag.ecalBadCalibFilterV2])
+            baseSel = baseSel.refine('met_filter_2017_2018', cut=[tree.Flag.ecalBadCalibFilterV2])
         if not self.is_MC:
-            noSel = noSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
-        #--------------------------------------------------------------------------
-        print(SL_trigger_efficiency.__mro__)
-        return tree, noSel, backend, lumiArgs
+            baseSel = baseSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
+
+        return tree, baseSel, backend, lumiArgs
 
     def get_seeds(self):
         filename = Path(__file__).parent / 'utils' / 'L1T_seeds_objects.yml'
@@ -92,6 +94,9 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         
         electrons = tight_electrons
         muons = tight_muons
+
+        self.electrons = electrons
+        self.muons = muons
 
         mllSel = sel.refine(lep+"mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
 
@@ -146,11 +151,11 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             L1_cut = getattr(seed, L1_object_name)
             if isinstance(L1_cut, numbers.Number):
                 if pd.isna(L1_cut): continue
-            trigger_sel = trigger_sel.refine(seed.Index + L1_object_name, cut=get_cut(L1_object_name, L1_cut))
+            trigger_sel = trigger_sel.refine(seed.Index+'_'+L1_object_name, cut=get_cut(L1_object_name, L1_cut))
         
         return trigger_sel
 
-    def _test_triggers(self, tree, noSel):
+    def _test_triggers(self, tree, baseSel):
 
         print("......................... TESTING ONLY .........................")
         plots = []
@@ -162,39 +167,64 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         l1HT = op.rng_find(l1sums, lambda l1sum: l1sum.etSumType == 1)
         l1triggers = tree.L1
 
-        sel_SingleMu22 = noSel.refine("SingleMu22", cut=[
-            op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
-        
-        sel_Mu6_HTT250er = noSel.refine("Mu6_HTT250er", cut=[op.AND(
+        # baseSel_SingleMu22 = baseSel.refine("baseSel_SingleMu22", cut=[op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
+        # baseSel_Mu6_HTT250er = baseSel.refine("baseSel_Mu6_HTT250er", cut=[op.AND(
+        #     op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)),
+        #     l1HT.pt >= 250)])
+        # baseSel_L1_SingleMu22 = baseSel.refine("baseSel_L1_SingleMu22", cut=[l1triggers.SingleMu22])
+        # baseSel_L1_Mu6_HTT250er = baseSel.refine("baseSel_L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
+
+        # yields.add(baseSel, "baseSel")
+        # yields.add(baseSel_SingleMu22, "baseSel_SingleMu22")
+        # yields.add(baseSel_Mu6_HTT250er, "baseSel_Mu6_HTT250er")
+        # yields.add(baseSel_L1_SingleMu22, "baseSel_L1_SingleMu22")
+        # yields.add(baseSel_L1_Mu6_HTT250er, "baseSel_L1_Mu6_HTT250er")
+
+        # Selections based on noSel ---------------------------------------
+
+        noSel = self.noSel
+        noSel_SingleMu22 = noSel.refine("noSel_SingleMu22", cut=[op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
+        noSel_Mu6_HTT250er = noSel.refine("noSel_Mu6_HTT250er", cut=[op.AND(
             op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)),
             l1HT.pt >= 250)])
-
-        sel_L1_SingleMu22 = noSel.refine("L1_SingleMu22", cut=[l1triggers.SingleMu22])
-        sel_L1_Mu6_HTT250er = noSel.refine("L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
+        noSel_L1_SingleMu22 = noSel.refine("noSel_L1_SingleMu22", cut=[l1triggers.SingleMu22])
+        noSel_L1_Mu6_HTT250er = noSel.refine("noSel_L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
 
         yields.add(noSel, "noSel")
-        yields.add(sel_SingleMu22, "SingleMu22")
-        yields.add(sel_Mu6_HTT250er, "Mu6_HTT250er")
-        yields.add(sel_L1_SingleMu22, "L1_SingleMu22")
-        yields.add(sel_L1_Mu6_HTT250er, "L1_Mu6_HTT250er")
+        yields.add(noSel_SingleMu22, "noSel_SingleMu22")
+        yields.add(noSel_Mu6_HTT250er, "noSel_Mu6_HTT250er")
+        yields.add(noSel_L1_SingleMu22, "noSel_L1_SingleMu22")
+        yields.add(noSel_L1_Mu6_HTT250er, "noSel_L1_Mu6_HTT250er")
+        
+
+        # Selections based on genMuonSels ---------------------------------------
+
+        genParts = tree.GenPart
+
+        genMuons = op.select(genParts, lambda part: op.AND(part.status == 1, op.abs(part.pdgId)==13))
+        genMuonSel = noSel.refine("genMuonSel", cut=(op.rng_len(genMuons) > 0))
+        genMuonSel_L1_SingleMu22 = genMuonSel.refine("genMuonSel_L1_SingleMu22", cut=[l1triggers.SingleMu22])
+
+        genMuonsFromW = op.select(genParts, lambda part: op.AND(part.status == 1, op.abs(part.pdgId)==13, op.abs(part.genPartMother.pdgId)==24))
+        genMuonsFromWSel = noSel.refine("genMuonFromWSel", cut=(op.rng_len(genMuonsFromW) > 0))
+        genMuonsFromWSel_L1_SingleMu22 = genMuonsFromWSel.refine("genMuonsFromWSel_L1_SingleMu22", cut=[l1triggers.SingleMu22])
+
+        yields.add(genMuonSel ,"genMuonSel")
+        yields.add(genMuonSel_L1_SingleMu22 ,"genMuonSel_L1_SingleMu22")
+        yields.add(genMuonsFromWSel ,"genMuonsFromWSel")
+        yields.add(genMuonsFromWSel_L1_SingleMu22 ,"genMuonsFromWSel_L1_SingleMu22")
 
         # Must have at least a plot for definePlots to run
-        plots.append(Plot.make1D("muon0_pt", muons[0].pt, noSel, EqBin(200, 0, 200)))
+        plots.append(Plot.make1D("noSel_muon0_pt", muons[0].pt, noSel, EqBin(200, 0, 200)))
         plots.append(Plot.make1D("HT", l1HT.pt, noSel, EqBin(200, 0, 200)))
-
-        # branches = {
-        #     "event":None, 
-        #     "muon0_pt":muons[0].pt,
-        #     "muon1_pt":muons[1].pt,
-        #     }
-        # plots.append(Skim("l1sums", branches, noSel))
+        plots.append(Plot.make1D("baseSel_muon0_pt", l1HT.pt, baseSel, EqBin(200, 0, 200)))
 
         return plots
 
-    def SL_trigger_efficiency(self, tree, noSel):
+    def SL_trigger_efficiency(self, tree, baseSel):
 
         plots = []
-        yields = CutFlowReport("yields", printInLog=True, recursive=False)
+        yields = CutFlowReport("yields", printInLog=True, recursive=True)
         plots.append(yields)
 
         self.L1_electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
@@ -202,8 +232,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         self.L1_jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
         self.L1_HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
 
-        SL_mu = self.SL_selections(noSel, 'mu', tree)
-        SL_e = self.SL_selections(noSel, 'e', tree)
+        SL_mu = self.SL_selections(baseSel, 'mu', tree)
+        SL_e = self.SL_selections(baseSel, 'e', tree)
 
         all_selections = {}
         all_selections["SL_mu"] = SL_mu
@@ -215,20 +245,22 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             yields.add(SL_mu, 'SL_mu')
             for seed in seeds_Mu.itertuples():    
                 sel_w_seed = self.pass_seed_trigger(seed, SL_mu)
-                all_selections[seed.Index] = sel_w_seed
-                yields.add(sel_w_seed, 'SL_mu + '+seed.Index)
+                sel_name = 'SL_mu' + '_' + seed.Index
+                all_selections[sel_name] = sel_w_seed
+                yields.add(sel_w_seed, sel_name)
 
         if len(seeds_EG) > 0:
             yields.add(SL_e, 'SL_e')
             for seed in seeds_Mu.itertuples():    
                 sel_w_seed = self.pass_seed_trigger(seed, SL_e)
-                all_selections[seed.Index] = sel_w_seed
-                yields.add(sel_w_seed, 'SL_e + '+seed.Index)
+                sel_name = 'SL_e' + '_' + seed.Index
+                all_selections[sel_name] = sel_w_seed
+                yields.add(sel_w_seed, sel_name)
 
         if len(seeds_EG) > 0 or len(seeds_Mu) > 0:
             for seed_name, sel_w_seed in all_selections.items():
-                if "EG" in seed_name or "SL_e" in seed_name: lep = self.L1_electrons
-                elif "Mu" in seed_name or "SL_mu" in seed_name: lep = self.L1_muons
+                if "EG" in seed_name or "SL_e" in seed_name: lep = self.electrons
+                elif "Mu" in seed_name or "SL_mu" in seed_name: lep = self.muons
                 plots.extend([
                     Plot.make1D(seed_name + "_pt", lep[0].pt, sel_w_seed, EqBin(200, 0, 200)),
                     Plot.make1D(seed_name + "_eta", lep[0].eta, sel_w_seed, EqBin(100, -4, 4)),
@@ -240,13 +272,13 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         
         return plots
 
-    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+    def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         
         if self.args.test_only:
-            plots = self._test_triggers(tree, noSel)
+            plots = self._test_triggers(tree, baseSel)
         else:
-            plots = self.SL_trigger_efficiency(tree, noSel)
-
+            plots = self.SL_trigger_efficiency(tree, baseSel)
+        
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
@@ -254,9 +286,9 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         super(SL_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         yields_file = os.path.join(self.args.output, 'yields_2017.tex')
-
         with open(yields_file, 'r') as file: lines = file.readlines()
 
+        # Extracting relevant info from yields table into table_data
         table_data = []
         for line_number, line in enumerate(lines, 1):
             if line_number >= 26 and line_number <= (len(lines)-2):
@@ -272,6 +304,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                     eff_error = eff_error.strip()[:-4]
                 table_data.append([sel_name, eff, eff_error])
 
+        # Making pandas dataframe from table
         df = pd.DataFrame(table_data)
         df.columns = ['Selection', 'Yield', 'Yield_Error']
         df = df.set_index('Selection')
@@ -279,14 +312,37 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         df['Yield'] = df['Yield'].astype(float)
         df['Yield_Error'] = df['Yield_Error'].astype(float)
 
+        # Adding efficiency column to pandas df: Effi will depend on type of selection name
         nom_mu_sel = df.loc['SL_mu', 'Yield'] if 'SL_mu' in df.index else 0
         nom_e_sel = df.loc['SL_e', 'Yield'] if 'SL_e' in df.index else 0
         nom_noSel = df.loc['noSel', 'Yield'] if 'noSel' in df.index else 0
+        nom_baseSel = df.loc['baseSel', 'Yield'] if 'baseSel' in df.index else 0
+        nom_genMuonSel = df.loc['genMuonSel', 'Yield'] if 'genMuonSel' in df.index else 0
+        nom_genMuonsFromWSel = df.loc['genMuonsFromWSel', 'Yield'] if 'genMuonsFromWSel' in df.index else 0
 
-        cond_list = ['SL_mu' in df.index, 'SL_e' in df.index, all(SL_sel not in df.index for SL_sel in ['SL_e','SL_mu'])]
-        choice_list = [df.Yield/nom_mu_sel, df.Yield/nom_e_sel, df.Yield/nom_noSel]
-        df['Efficiency'] = np.select(cond_list, choice_list, default=None)
+        def set_value_based_on_index(index):
+            sel_yield = df.loc[index, 'Yield'] 
+            if 'SL_mu' in index:
+                return sel_yield / nom_mu_sel  # Calculate efficiency based on condition
+            elif 'SL_e' in index:
+                return sel_yield / nom_e_sel  # Calculate efficiency based on condition
+            elif 'noSel' in index:
+                return sel_yield / nom_noSel
+            elif 'baseSel' in index:
+                return sel_yield / nom_baseSel
+            elif 'genMuonSel' in index:
+                return sel_yield / nom_genMuonSel
+            elif 'genMuonsFromWSel' in index:
+                return sel_yield / nom_genMuonsFromWSel
+            else:
+                return None  # Set default value if no condition is met
+
+        # Apply the function to create a new column based on the index
+        df['Efficiency'] = df.index.to_series().apply(set_value_based_on_index)
+
+        # Rounding every value in table to 3 digits
         df['Efficiency'] = df['Efficiency'].apply(lambda x: round(x, 3) if not pd.isnull(x) else x)
         
+        # Converting table to csv and Printing
         df.to_csv(os.path.join(self.args.output, 'Efficiencies.csv'), index=True)
         print(df)
