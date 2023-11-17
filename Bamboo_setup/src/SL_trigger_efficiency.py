@@ -14,6 +14,7 @@ import numpy as np
 import yaml
 import pandas as pd
 import math
+import numbers
 
 class SL_trigger_efficiency(SL_DL_event_selection):
     def __init__(self, args):
@@ -93,7 +94,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         # pt cut: 10, 15, 20
         if lep == "e":
             SL_e_only = mllSel.refine("SL electron only selection", 
-                cut=[op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0, electrons[0].pt > 15, op.rng_len(taus) == 0)])
+                cut=[op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0, electrons[0].pt > 5, op.rng_len(taus) == 0)])
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
@@ -102,7 +103,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         # pt cut: 5, 10 15
         elif lep == "mu":
             SL_mu_only = mllSel.refine("SL muon only selection", 
-                cut=[op.AND(op.rng_len(muons) == 1, op.rng_len(electrons) == 0, muons[0].pt > 15, op.rng_len(taus) == 0)])
+                cut=[op.AND(op.rng_len(muons) == 1, op.rng_len(electrons) == 0, muons[0].pt > 0, op.rng_len(taus) == 0)])
             SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
@@ -115,7 +116,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         # pass events whose leading muon/e pass the seed trigger
 
     def pass_seed_trigger(self, seed, sel):
-
+        print(f"{seed.Index}: njets={seed.njets}")
         if "EG" in seed.Index:
             L1_object_names = self.L1_objects_for_EG
             L1_lep = self.L1_electrons[0]
@@ -129,13 +130,17 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             elif L1_object_name == "er": cut = (L1_lep.eta < L1_cut)
             elif L1_object_name == "HT": cut = (self.L1_HT.pt >= L1_cut)
             elif L1_object_name == "jet_pt": 
-                jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(len(L1_cut))]
+                jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 cut = op.AND(*jet_pt_cuts)
+            elif L1_object_name == "jet_er":
+                jet_er_cuts = [self.L1_jets[i].eta <= L1_cut for i in range(seed.njets)]
+                cut = op.AND(*jet_er_cuts)
             return cut
     
         for L1_object_name in L1_object_names:
             L1_cut = getattr(seed, L1_object_name)
-            if pd.isna(L1_cut): continue
+            if isinstance(L1_cut, numbers.Number):
+                if pd.isna(L1_cut): continue
             sel = sel.refine(seed.Index + L1_object_name, cut=get_cut(L1_object_name, L1_cut))
         
         return sel
@@ -194,6 +199,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         all_selections["SL_e"] = SL_e
 
         seeds_Mu, seeds_EG = self.get_seeds()
+        print(seeds_Mu.columns)
 
         if len(seeds_Mu) > 0:
             yields.add(SL_mu, 'SL_mu')
@@ -263,6 +269,3 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         
         df.to_csv(os.path.join(self.args.output, 'Efficiencies.csv'), index=True)
         print(df)
-
-#add er for jets, multiple jets
-#run for various offline pt cuts
