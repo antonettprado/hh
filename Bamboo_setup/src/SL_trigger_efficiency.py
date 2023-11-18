@@ -23,6 +23,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
     def addArgs(self, parser):
         super(SL_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
+        parser.add_argument("-ept", "--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
+        parser.add_argument("-mupt", "--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
 
@@ -102,8 +104,9 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         # pt cut: 10, 15, 20
         if lep == "e":
+            e_pt_cut = self.args.electron_pt if self.args.electron_pt is not None else 10
             SL_e_only = mllSel.refine("SL electron only selection", 
-                cut=[op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0, electrons[0].pt > 10, op.rng_len(taus) == 0)])
+                cut=[op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0, electrons[0].pt > e_pt_cut, op.rng_len(taus) == 0)])
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
@@ -111,18 +114,15 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         # pt cut: 5, 10 15
         elif lep == "mu":
+            mu_pt_cut = self.args.muon_pt if self.args.muon_pt is not None else 10
             SL_mu_only = mllSel.refine("SL muon only selection", 
-                cut=[op.AND(op.rng_len(muons) == 1, op.rng_len(electrons) == 0, muons[0].pt > 10, op.rng_len(taus) == 0)])
+                cut=[op.AND(op.rng_len(muons) == 1, op.rng_len(electrons) == 0, muons[0].pt > mu_pt_cut, op.rng_len(taus) == 0)])
             SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
             return SL_mu
 
         else: raise ValueError("Invalid lep value. lep must be 'e' or 'mu'.")
-
-        # check muon objects incoming - length must be greater than or equal to 1
-        # sort by pt
-        # pass events whose leading muon/e pass the seed trigger
 
     def pass_seed_trigger(self, seed, sel):
 
