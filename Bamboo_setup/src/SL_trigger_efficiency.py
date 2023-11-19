@@ -151,18 +151,13 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             if L1_object_name == "pt": cut = (op.AND(L1_lep.pt >= L1_cut, L1_lep.hwQual >= 12))
             elif L1_object_name == "er": cut = (op.abs(L1_lep.eta) <= L1_cut)
             elif L1_object_name == "HT": cut = (self.L1_HT.pt >= L1_cut)
+            elif L1_object_name == "njets": cut = (op.rng_len(self.L1_jets) >= L1_cut)
             elif L1_object_name == "jet_pt": 
                 jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 cut = op.AND(*jet_pt_cuts)
-                #cut = (jet_pt_cuts[0])
-                #for i in range(1, seed.njets):
-                #    cut = (op.AND(cut, jet_pt_cuts[i]))
             elif L1_object_name == "jet_er":
                 jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= L1_cut for i in range(seed.njets)]
                 cut = op.AND(*jet_er_cuts)
-                #cut = (jet_er_cuts[0])
-                #for i in range(1, seed.njets):
-                #    cut = (op.AND(cut, jet_er_cuts[i]))
             return cut
     
         '''
@@ -188,16 +183,11 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         '''
         passed_cuts = []
         for L1_object_name in L1_object_names:
-            if L1_object_name == "njets":
-                continue
             L1_cut = getattr(seed, L1_object_name)
             if isinstance(L1_cut, numbers.Number):
                 if pd.isna(L1_cut): continue
             passed_cuts.append(get_cut(L1_object_name, L1_cut))
         final_passed_cut = op.AND(*passed_cuts)
-        #final_passed_cut = (passed_cuts[0])
-        #for i in range(1, len(passed_cuts)):
-        #    final_passed_cut = op.AND(final_passed_cut, passed_cuts[i])
         return final_passed_cut
 
     def _test_triggers(self, tree, baseSel):
