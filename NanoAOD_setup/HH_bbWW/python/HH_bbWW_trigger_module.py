@@ -48,7 +48,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         flag = Object(event, "Flag")
         hlt = Object(event, "HLT")
         l1 = Object(event, "L1")
-        genpart = Collection(event, "GenPart")
+        genpart = Object(event, "GenPart")
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         taus = Collection(event, "Tau")
@@ -84,7 +84,7 @@ class HH_bbWW_Trigger_Analysis(Module):
             self.n_event_sl_gen_e += 1
         elif len(gen_mu_sel_index) == 0 and len(gen_e_sel_index) == 0 and len(gen_tau_sel_index) == 1:
             self.n_event_sl_gen_tau += 1
-            
+
         ## PV Selection
         pass_pv_sel = pv_selection(pv)
         if not pass_pv_sel:
