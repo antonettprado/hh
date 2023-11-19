@@ -70,7 +70,7 @@ class HH_bbWW_Trigger_Analysis(Module):
             parent_index = gen.genPartIdxMother
             if parent_index == -1:
                 continue
-            if abs(genpart[parent_index].genPartIdxMother) == 24:
+            if abs(genpart[parent_index].pdgId) == 24:
                 if abs(gen.pdgId) == 13:
                     gen_mu_sel_index.append(i)
                 elif abs(gen.pdgId) == 11:
