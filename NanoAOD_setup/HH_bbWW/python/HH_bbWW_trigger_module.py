@@ -64,18 +64,19 @@ class HH_bbWW_Trigger_Analysis(Module):
         gen_mu_sel_index = []
         gen_e_sel_index = []
         gen_tau_sel_index = []
-        if len(genpart) > 0:
-            for (i, gen) in enumerate(genpart):
-                if gen.status != 1:
-                    continue
-                parent_index = gen.genPartIdxMother
-                if abs(genpart[parent_index].genPartIdxMother) == 24:
-                    if abs(gen.pdgId) == 13:
-                        gen_mu_sel_index.append(i)
-                    elif abs(gen.pdgId) == 11:
-                        gen_e_sel_index.append(i)
-                    elif abs(gen.pdgId) == 15:
-                        gen_tau_sel_index.append(i)
+        for (i, gen) in enumerate(genpart):
+            if gen.status != 1:
+                continue
+            parent_index = gen.genPartIdxMother
+            if parent_index == -1:
+                continue
+            if abs(genpart[parent_index].genPartIdxMother) == 24:
+                if abs(gen.pdgId) == 13:
+                    gen_mu_sel_index.append(i)
+                elif abs(gen.pdgId) == 11:
+                    gen_e_sel_index.append(i)
+                elif abs(gen.pdgId) == 15:
+                    gen_tau_sel_index.append(i)
 
         if len(gen_mu_sel_index) == 1 and len(gen_e_sel_index) == 0 and len(gen_tau_sel_index) == 0:
             self.n_event_sl_gen_mu += 1
