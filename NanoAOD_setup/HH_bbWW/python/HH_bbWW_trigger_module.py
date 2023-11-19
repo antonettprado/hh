@@ -24,6 +24,8 @@ class HH_bbWW_Trigger_Analysis(Module):
         self.n_event = 0
         self.n_event_sl_mu = 0
         self.n_event_sl_mu_L1_Mu22 = 0
+        self.n_event_sl_mu_L1_Mu6_HT250 = 0
+        self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250 = 0
         self.n_event_sl_gen_mu = 0
         self.n_event_sl_gen_e = 0
         self.n_event_sl_gen_tau = 0
@@ -36,6 +38,8 @@ class HH_bbWW_Trigger_Analysis(Module):
         print ("Total nr. of Events: %d\n"%self.n_event)
         print ("Total nr. of SL Mu Events: %d\n"%self.n_event_sl_mu)
         print ("Total nr. of SL Mu Events passing L1 Mu22: %d, Efficiency: %.4f \n"%(self.n_event_sl_mu_L1_Mu22, self.n_event_sl_mu_L1_Mu22/self.n_event_sl_mu))
+        print ("Total nr. of SL Mu Events passing L1 Mu6_HT250: %d, Efficiency: %.4f \n"%(self.n_event_sl_mu_L1_Mu6_HT250, self.n_event_sl_mu_L1_Mu6_HT250/self.n_event_sl_mu))
+        print ("Total nr. of SL Mu Events passing L1 Mu22 OR Mu6_HT250: %d, Efficiency: %.4f \n"%(self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250, self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250/self.n_event_sl_mu))
         print ("Total nr. of SL E Events (1 Gen E from W): %d\n"%self.n_event_sl_gen_e)
         print ("Total nr. of SL Mu Events (1 Gen Mu from W): %d\n"%self.n_event_sl_gen_mu)
         print ("Total nr. of SL Tau Events (1 Gen Tau from W): %d\n"%self.n_event_sl_gen_tau)
@@ -171,6 +175,10 @@ class HH_bbWW_Trigger_Analysis(Module):
             self.n_event_sl_mu += 1
         if is_sl_mu and l1.SingleMu22:
             self.n_event_sl_mu_L1_Mu22 += 1
+        if is_sl_mu and l1.Mu6_HTT250er:
+            self.n_event_sl_mu_L1_Mu6_HT250 += 1
+        if is_sl_mu and (l1.SingleMu22 or l1.Mu6_HTT250er):
+            self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250 += 1
 
         if not is_sl and not is_dl:
             return False
