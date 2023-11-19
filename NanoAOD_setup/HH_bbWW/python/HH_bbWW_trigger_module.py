@@ -65,8 +65,8 @@ class HH_bbWW_Trigger_Analysis(Module):
         gen_e_sel_index = []
         gen_tau_sel_index = []
         for (i, gen) in enumerate(genpart):
-            if gen.status != 1:
-                continue
+            #if gen.status != 1:
+            #    continue
             parent_index = gen.genPartIdxMother
             if parent_index == -1:
                 continue
