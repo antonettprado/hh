@@ -48,7 +48,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         flag = Object(event, "Flag")
         hlt = Object(event, "HLT")
         l1 = Object(event, "L1")
-        genpart = Object(event, "GenPart")
+        genpart = Collection(event, "GenPart")
         electrons = Collection(event, "Electron")
         muons = Collection(event, "Muon")
         taus = Collection(event, "Tau")
@@ -64,17 +64,18 @@ class HH_bbWW_Trigger_Analysis(Module):
         gen_mu_sel_index = []
         gen_e_sel_index = []
         gen_tau_sel_index = []
-        for (i, gen) in enumerate(genpart):
-            if gen.status != 1:
-                continue
-            parent_index = gen.genPartIdxMother
-            if abs(genpart[parent_index].genPartIdxMother) == 24:
-                if abs(gen.pdgId) == 13:
-                    gen_mu_sel_index.append(i)
-                elif abs(gen.pdgId) == 11:
-                    gen_e_sel_index.append(i)
-                elif abs(gen.pdgId) == 15:
-                    gen_tau_sel_index.append(i)
+        if len(genpart) > 0:
+            for (i, gen) in enumerate(genpart):
+                if gen.status != 1:
+                    continue
+                parent_index = gen.genPartIdxMother
+                if abs(genpart[parent_index].genPartIdxMother) == 24:
+                    if abs(gen.pdgId) == 13:
+                        gen_mu_sel_index.append(i)
+                    elif abs(gen.pdgId) == 11:
+                        gen_e_sel_index.append(i)
+                    elif abs(gen.pdgId) == 15:
+                        gen_tau_sel_index.append(i)
 
         if len(gen_mu_sel_index) == 1 and len(gen_e_sel_index) == 0 and len(gen_tau_sel_index) == 0:
             self.n_event_sl_gen_mu += 1
