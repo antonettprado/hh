@@ -149,16 +149,17 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         def get_cut(L1_object_name, L1_cut):
             cut=()
             if L1_object_name == "pt": cut = (op.AND(L1_lep.pt >= L1_cut, L1_lep.hwQual >= 12))
-            elif L1_object_name == "er": cut = (L1_lep.eta < L1_cut)
+            elif L1_object_name == "er": cut = (op.abs(L1_lep.eta) <= L1_cut)
             elif L1_object_name == "HT": cut = (self.L1_HT.pt >= L1_cut)
             elif L1_object_name == "jet_pt": 
                 jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 cut = op.AND(*jet_pt_cuts)
             elif L1_object_name == "jet_er":
-                jet_er_cuts = [self.L1_jets[i].eta <= L1_cut for i in range(seed.njets)]
+                jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= L1_cut for i in range(seed.njets)]
                 cut = op.AND(*jet_er_cuts)
             return cut
     
+        '''
         passed_sels = []
 
         sel_w_seed = sel.refine(seed.Index, cut=())
@@ -175,9 +176,18 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                     self.L1_triggers.SingleMu22
                     ))
                 passed_sels.append(sel_w_seed_OR_Mu22)
-                
+
         
         return passed_sels
+        '''
+        passed_cuts = []
+        for L1_object_name in L1_object_names:
+            L1_cut = getattr(seed, L1_object_name)
+            if isinstance(L1_cut, numbers.Number):
+                if pd.isna(L1_cut): continue
+            passed_cuts.append(get_cut(L1_object_name, L1_cut))
+        final_passed_cut = op.AND(*passed_cuts)
+        return final_passed_cut
 
     def _test_triggers(self, tree, baseSel):
 
@@ -269,11 +279,11 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         if len(seeds_Mu) > 0:
             yields.add(SL_mu, 'SL_mu')
             for seed in seeds_Mu.itertuples():    
-                passed_sels = self.pass_seed_trigger(seed, SL_mu, "mu")
-                sel_w_seed = passed_sels[0]
-                sel_w_seed_OR_Mu22 = passed_sels[1]
+                final_passed_cut = self.pass_seed_trigger(seed, SL_mu, "mu")
                 sel_w_seed_name = '_'.join(['SL_mu', seed.Index]) 
                 sel_w_seed_OR_Mu22_name = '_'.join(['SL_mu', seed.Index,'OR','Mu22']) 
+                sel_w_seed = SL_mu.refine(sel_w_seed_name, cut=final_passed_cut)
+                sel_w_seed_OR_Mu22 = SL_mu.refine(sel_w_seed_OR_Mu22_name, cut=op.OR(final_passed_cut, self.L1_triggers.SingleMu22))
                 all_selections[sel_w_seed_name] = sel_w_seed
                 all_selections[sel_w_seed_OR_Mu22_name] = sel_w_seed_OR_Mu22
                 yields.add(sel_w_seed, sel_w_seed_name)
@@ -282,10 +292,11 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         if len(seeds_EG) > 0:
             yields.add(SL_e, 'SL_e')
             for seed in seeds_Mu.itertuples():    
-                sel_w_seed = self.pass_seed_trigger(seed, SL_e, "e")
-                sel_name = 'SL_e' + '_' + seed.Index
-                all_selections[sel_name] = sel_w_seed
-                yields.add(sel_w_seed, sel_name)
+                final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
+                sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
+                sel_w_seed = SL_e.refine(sel_w_seed_name, cut=final_passed_cut)
+                all_selections[sel_w_seed_name] = sel_w_seed
+                yields.add(sel_w_seed, sel_w_seed_name)
 
         if len(seeds_EG) > 0 or len(seeds_Mu) > 0:
             for sel_name, sel in all_selections.items():
