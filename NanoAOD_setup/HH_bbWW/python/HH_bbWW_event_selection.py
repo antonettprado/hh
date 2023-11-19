@@ -113,7 +113,7 @@ def is_emu_trigger(hlt):
         pass_emu_trigger = 1
     return pass_emu_trigger
 
-def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, cuts):
+def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, cuts, skip_trigger=False):
     is_sl = 1
     is_sl_e = 0
     is_sl_mu = 0
@@ -123,7 +123,10 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
         # TO DO: calculate cone-pT
         ele_cone_pt = electrons[electrons_tight_sel_index[0]].pt
         if ele_cone_pt > cuts["sl_e_pt"]:
-            if is_e_trigger(hlt):
+            if not skip_trigger:
+                if is_e_trigger(hlt):
+                    is_sl_e = 1
+            else:
                 is_sl_e = 1
 
     # Check if event is Single Muon
@@ -131,7 +134,10 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
         # TO DO: calculate cone-pT
         mu_cone_pt = muons[muons_tight_sel_index[0]].pt
         if mu_cone_pt > cuts["sl_mu_pt"]:
-            if is_mu_trigger(hlt):
+            if not skip_trigger:
+                if is_mu_trigger(hlt):
+                    is_sl_mu = 1
+            else:
                 is_sl_mu = 1
 
     if not is_sl_e and not is_sl_mu:
@@ -177,7 +183,7 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
         is_sl = 0 
     return is_sl, is_sl_e, is_sl_mu
 
-def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, cuts):       
+def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, cuts, skip_trigger=False):       
     is_dl = 1
     is_dl_ee = 0
     is_dl_emu = 0
@@ -193,7 +199,10 @@ def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, el
         if ele1_cone_pt > cuts["dl_subleading_pt"] and ele2_cone_pt > cuts["dl_subleading_pt"]:
             if ele1_cone_pt > cuts["dl_leading_pt"] or ele2_cone_pt > cuts["dl_leading_pt"]:
                 if ele1_charge * ele2_charge < 0:
-                    if is_ee_trigger(hlt):
+                    if not skip_trigger:
+                        if is_ee_trigger(hlt):
+                            is_dl_ee = 1
+                    else:
                         is_dl_ee = 1
 
     # Check if event is Double Muon
@@ -206,7 +215,10 @@ def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, el
         if mu1_cone_pt > cuts["dl_subleading_pt"] and mu2_cone_pt > cuts["dl_subleading_pt"]:
             if mu1_cone_pt > cuts["dl_leading_pt"] or mu2_cone_pt > cuts["dl_leading_pt"]:
                 if mu1_charge * mu2_charge < 0:
-                    if is_mumu_trigger(hlt):
+                    if not skip_trigger:
+                        if is_mumu_trigger(hlt):
+                            is_dl_mumu = 1
+                    else:
                         is_dl_mumu = 1
 
     # Check if event is Electron Muon
@@ -219,7 +231,10 @@ def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, el
         if ele_cone_pt > cuts["dl_subleading_pt"] and mu_cone_pt > cuts["dl_subleading_pt"]:
             if ele_cone_pt > cuts["dl_leading_pt"] or mu_cone_pt > cuts["dl_leading_pt"]:
                 if ele_charge * mu_charge < 0:
-                    if is_emu_trigger(hlt):
+                    if not skip_trigger:
+                        if is_emu_trigger(hlt):
+                            is_dl_emu = 1
+                    else:
                         is_dl_emu = 1
 
     if not is_dl_ee and not is_dl_mumu and not is_dl_emu:
