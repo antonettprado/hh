@@ -133,7 +133,7 @@ def muon_selection(muons, jets, muons_basic_sel_index, cuts):
         muons_final_sel_index.append(i)
     return muons_final_sel_index
 
-def tau_selection(taus, cuts):
+def tau_selection(taus, cuts, skip_id=False):
     taus_final_sel_index = []
     for (i,tau) in enumerate(taus):
 
@@ -145,8 +145,9 @@ def tau_selection(taus, cuts):
         id_cut = -9999
         if cuts["id"] == "WP_M":
             id_cut = 16
-        if tau.idDeepTau2017v2p1VSjet < id_cut:
-            continue
+        if not skip_id:
+            if tau.idDeepTau2017v2p1VSjet < id_cut:
+                continue
         
         # TO DO: tau decay modes in cuts json
         #if tau.decayMode not in cuts["decay_modes"]:
