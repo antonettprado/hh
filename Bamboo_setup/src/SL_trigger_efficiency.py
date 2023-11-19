@@ -155,12 +155,18 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 #jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 #cut = op.AND(*jet_pt_cuts)
                 for i in range(seed.njets):
-                    cut = (op.AND(cut, self.L1_jets[i].pt >= L1_cut[i]))
+                    if cut == ():
+                        cut = (self.L1_jets[i].pt >= L1_cut[i])
+                    else:
+                        cut = (op.AND(cut, self.L1_jets[i].pt >= L1_cut[i]))
             elif L1_object_name == "jet_er":
                 #jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= L1_cut for i in range(seed.njets)]
                 #cut = op.AND(*jet_er_cuts)
                 for i in range(seed.njets):
-                    cut = (op.AND(cut, op.abs(self.L1_jets[i].eta) <= L1_cut))
+                    if cut == ():
+                        cut = (op.abs(self.L1_jets[i].eta) <= L1_cut)
+                    else:
+                        cut = (op.AND(cut, op.abs(self.L1_jets[i].eta) <= L1_cut))
             return cut
     
         '''
@@ -191,7 +197,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             if isinstance(L1_cut, numbers.Number):
                 if pd.isna(L1_cut): continue
             #passed_cuts.append(get_cut(L1_object_name, L1_cut))
-            final_passed_cut = (op.AND(final_passed_cut, get_cut(L1_object_name, L1_cut)))
+            if final_passed_cut == ():
+                final_passed_cut = (get_cut(L1_object_name, L1_cut))
+            else:
+                final_passed_cut = (op.AND(final_passed_cut, get_cut(L1_object_name, L1_cut)))
         #final_passed_cut = op.AND(*passed_cuts)
         return final_passed_cut
 
