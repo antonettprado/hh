@@ -144,19 +144,21 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             L1_lep = self.L1_electrons[0]
         elif lep == "mu":
             L1_object_names = self.L1_objects_for_Mu
-            L1_lep = self.L1_muons[0]
+            L1_muons_hwQual = op.select(self.L1_muons, lambda mu: mu.hwQual >= 12)
+            L1_lep = L1_muons_hwQual[0]
+        L1_jets_er = op.select(self.L1_jets, lambda jet: op.abs(jet.eta) <= seed.jet_er)
 
         def get_cut(L1_object_name, L1_cut):
             cut=()
-            if L1_object_name == "pt": cut = (op.AND(L1_lep.pt >= L1_cut, L1_lep.hwQual >= 12))
+            if L1_object_name == "pt": cut = (L1_lep.pt >= L1_cut)
             elif L1_object_name == "er": cut = (op.abs(L1_lep.eta) <= L1_cut)
             elif L1_object_name == "HT": cut = (self.L1_HT.pt >= L1_cut)
             elif L1_object_name == "njets": cut = (op.rng_len(self.L1_jets) >= L1_cut)
             elif L1_object_name == "jet_pt": 
-                jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
+                jet_pt_cuts = [self.L1_jets_er[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 cut = op.AND(*jet_pt_cuts)
             elif L1_object_name == "jet_er":
-                jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= L1_cut for i in range(seed.njets)]
+                jet_er_cuts = [op.abs(self.L1_jets_er[i].eta) <= L1_cut for i in range(seed.njets)]
                 cut = op.AND(*jet_er_cuts)
             return cut
     
