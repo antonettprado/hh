@@ -185,7 +185,9 @@ class HH_bbWW_Trigger_Analysis(Module):
         for ele in l1_electrons:
             if (ele.pt >= 35 and ele.hwIso >= 3):
                 SingleIsoEG35_emulated = 1
+                break
 
+        print ("Event: ", event.event)
         if l1.SingleIsoEG35 != SingleIsoEG35_emulated:
             print ("Flag: ", l1.SingleIsoEG35, "Emulated: ", SingleIsoEG35_emulated)
             for ele in l1_electrons:
