@@ -190,7 +190,7 @@ class HH_bbWW_Trigger_Analysis(Module):
             print ("Flag: ", l1.SingleIsoEG35, "Emulated: ", SingleIsoEG35_emulated)
             for ele in l1_electrons:
                 print ("SingleIsoEG35: ", ele.pt, ele.eta, ele.hwIso)
-        print ("")
+            print ("")
         #if l1.LooseIsoEG28er2p1_HTT100er:
         #    for ele in l1_electrons:
         #        print ("LooseIsoEG28er2p1_HTT100er: ", ele.pt, ele.eta, ele.hwIso)
