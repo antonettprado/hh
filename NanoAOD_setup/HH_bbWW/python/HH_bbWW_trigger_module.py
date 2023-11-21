@@ -181,13 +181,13 @@ class HH_bbWW_Trigger_Analysis(Module):
         if is_sl_mu and (l1.SingleMu22 or l1.Mu6_HTT250er):
             self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250 += 1
 
-        if l1.SingleIsoEG30er2p5:
+        if l1.SingleIsoEG35er2p5:
             for ele in l1_electrons:
-                print ("  SingleIsoEG30er2p5: ", ele.pt, ele.eta, ele.hwIso)
+                print ("SingleIsoEG30er2p5: ", ele.pt, ele.eta, ele.hwIso)
         print ("")
         if l1.LooseIsoEG28er2p1_HTT100er:
             for ele in l1_electrons:
-                print ("  LooseIsoEG28er2p1_HTT100er: ", ele.pt, ele.eta, ele.hwIso)
+                print ("LooseIsoEG28er2p1_HTT100er: ", ele.pt, ele.eta, ele.hwIso)
         print ("\n")
 
         if not is_sl and not is_dl:
