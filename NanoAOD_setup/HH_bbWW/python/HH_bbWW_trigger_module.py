@@ -31,6 +31,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         self.n_event_sl_gen_tau = 0
         self.n_event_sl_gen_mu_L1_Mu22 = 0
 
+        self.n_event_sl_e = 0
         self.n_event_sl_eg_L1_SingleIsoEG24er2p1 = 0
         self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated = 0
 
