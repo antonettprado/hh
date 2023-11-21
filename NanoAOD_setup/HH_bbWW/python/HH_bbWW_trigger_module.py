@@ -193,7 +193,7 @@ class HH_bbWW_Trigger_Analysis(Module):
 
         SingleIsoEG24er2p1_emulated = 0
         for ele in l1_electrons:
-            if (ele.pt >= 24 and abs(ele.eta) <= 2.13 and ele.hwIso >= 1):
+            if (ele.pt >= 24 and abs(ele.eta) <= 2.131 and ele.hwIso & 0x1 != 0):
                 SingleIsoEG24er2p1_emulated = 1
                 break
         
