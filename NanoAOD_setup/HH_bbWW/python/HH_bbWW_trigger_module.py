@@ -204,7 +204,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         if is_sl_e and SingleIsoEG24er2p1_emulated:
             self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated += 1
 
-        print ("Event: ", event.event)
+        #print ("Event: ", event.event)
         if l1.SingleIsoEG24er2p1 != SingleIsoEG24er2p1_emulated:
             print ("Flag: ", l1.SingleIsoEG24er2p1, "Emulated: ", SingleIsoEG24er2p1_emulated)
             for ele in l1_electrons:
