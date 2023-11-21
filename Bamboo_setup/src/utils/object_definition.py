@@ -1,7 +1,7 @@
 from bamboo import treefunctions as op
 
-UNIFORM_ELECTRON_PT = False
-UNIFORM_MUON_PT = False
+UNIFORM_ELECTRON_PT = True
+UNIFORM_MUON_PT = True
 ELECTRON_PT = 0
 MUON_PT = 0
 
@@ -59,6 +59,7 @@ def electron_basic_selection(electrons):
 
 def electron_loose_selection(electrons, electron_ConePt, jets):
     pt_cut = ELECTRON_PT if UNIFORM_ELECTRON_PT else 7
+    print(f"electron_loose_selection: pt cut of {pt_cut}")
     return op.select(electrons, lambda el: op.AND(
         electron_ConePt[el.idx] > pt_cut, ## TO DO: Clean electrons (from muons) for cone-pT?
         op.abs(el.eta) < 2.5,
@@ -73,6 +74,7 @@ def electron_loose_selection(electrons, electron_ConePt, jets):
 
 def electron_fakeable_selection(electrons, electron_ConePt, jets):
     pt_cut = ELECTRON_PT if UNIFORM_ELECTRON_PT else 10
+    print(f"electron_fakeable_selection: pt cut of {pt_cut}")
     return op.select(electrons, lambda el: op.AND(
         electron_ConePt[el.idx] > pt_cut, ## TO DO: Clean electrons (from muons) for cone-pT?
         op.abs(el.eta) < 2.5,
@@ -93,6 +95,7 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets):
 
 def electron_tight_selection(electrons, electron_ConePt, jets):
     pt_cut = ELECTRON_PT if UNIFORM_ELECTRON_PT else 10
+    print(f"electron_tight_selection: pt cut of {pt_cut}")
     return op.select(electrons, lambda el: op.AND(
         electron_ConePt[el.idx] > pt_cut, ## TO DO: Clean electrons (from muons) for cone-pT?
         op.abs(el.eta) < 2.5,
@@ -116,6 +119,7 @@ def muon_basic_selection(muons):
 
 def muon_loose_selection(muons, muon_ConePt, jets):
     pt_cut = MUON_PT if UNIFORM_MUON_PT else 5
+    print(f"muon_loose_selection: pt cut of {pt_cut}")
     return op.select(muons, lambda mu: op.AND(
         muon_ConePt[mu.idx] > pt_cut,
         op.abs(mu.eta) < 2.4,
@@ -129,6 +133,7 @@ def muon_loose_selection(muons, muon_ConePt, jets):
 
 def muon_fakeable_selection(muons, muon_ConePt, jets):
     pt_cut = MUON_PT if UNIFORM_MUON_PT else 10
+    print(f"muon_fakeable_selection: pt cut of {pt_cut}")
     return op.select(muons, lambda mu: op.AND(
         muon_ConePt[mu.idx] > pt_cut,
         op.abs(mu.eta) < 2.4,
@@ -144,6 +149,7 @@ def muon_fakeable_selection(muons, muon_ConePt, jets):
 
 def muon_tight_selection(muons, muon_ConePt, jets): 
     pt_cut = MUON_PT if UNIFORM_MUON_PT else 10
+    print(f"muon_tight_selection: pt cut of {pt_cut}")
     return op.select(muons, lambda mu: op.AND(
         muon_ConePt[mu.idx] > pt_cut,
         op.abs(mu.eta) < 2.4,

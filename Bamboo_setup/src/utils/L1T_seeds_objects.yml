@@ -140,4 +140,6 @@ seeds:
     L1_Mu15er2p1_HTT120er: {pt: 15, er: 2.1, HT: 120}
 
   EG:
+    # L1_LooseIsoEG24er2p1_HTT100er: {iso: 'loose', pt: 24, er: 2.1, HT: 100}
+    # L1_SingleEG28: {iso: 'single', pt: 28}
 
