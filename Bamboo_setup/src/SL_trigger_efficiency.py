@@ -80,7 +80,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         seeds_EG = pd.DataFrame(seeds['EG']).T
         self.L1_objects_for_Mu = seeds_Mu.columns
         self.L1_objects_for_EG = seeds_EG.columns
-        print(seeds_EG)
+
         return seeds_Mu, seeds_EG
 
     def SL_selections(self, sel, lep, tree):
@@ -148,8 +148,6 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             L1_muons_hwQual = op.select(self.L1_muons, lambda mu: mu.hwQual >= 12)
             L1_lep = L1_muons_hwQual[0]
 
-        L1_jets = self.L1_jets
-
         def get_cut(L1_object_name, L1_cut):
             cut=()
             if L1_object_name == "pt": 
@@ -169,8 +167,9 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 cut = op.AND(*jet_pt_cuts)
             elif L1_object_name == "jet_er":
-                jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= L1_cut for i in range(seed.njets)]
-                cut = op.AND(*jet_er_cuts)
+                if L1_cut == 2.5:
+                    jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= 2.523 for i in range(seed.njets)]
+                    cut = op.AND(*jet_er_cuts)
             elif L1_object_name == "HT": 
                 cut = (self.L1_HT.pt >= L1_cut)
             elif L1_object_name == "iso":
@@ -280,13 +279,14 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         if len(seeds_EG) > 0:
             yields.add(SL_e, 'SL_e')
+            yields.add(SL_e.refine('SingleEG28', cut=[self.L1_triggers.SingleEG28]), 'SingleEG28')
+            yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
             for seed in seeds_EG.itertuples():  
-                print(seed.Index)
                 final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
                 sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[final_passed_cut])
                 all_selections[sel_w_seed_name] = sel_w_seed
-                yields.add(sel_w_seed, sel_w_seed_name)
+                yields.add(sel_w_seed, sel_w_seed_name)        
 
         if len(seeds_EG) > 0 or len(seeds_Mu) > 0:
             for sel_name, sel in all_selections.items():
