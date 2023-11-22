@@ -30,6 +30,11 @@ class HH_bbWW_Trigger_Analysis(Module):
         self.n_event_sl_gen_e = 0
         self.n_event_sl_gen_tau = 0
         self.n_event_sl_gen_mu_L1_Mu22 = 0
+
+        self.n_event_sl_e = 0
+        self.n_event_sl_eg_L1_SingleIsoEG24er2p1 = 0
+        self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated = 0
+
         self.cuts = json.load(open("data/input_HH_bbWW_cuts.json"))
 
     def endJob(self):
@@ -44,6 +49,11 @@ class HH_bbWW_Trigger_Analysis(Module):
         print ("Total nr. of SL Mu Events (1 Gen Mu from W): %d\n"%self.n_event_sl_gen_mu)
         print ("Total nr. of SL Tau Events (1 Gen Tau from W): %d\n"%self.n_event_sl_gen_tau)
         print ("Total nr. of SL Mu Events (1 Gen Mu from W) passing L1 Mu22: %d, Efficiency: %.4f \n"%(self.n_event_sl_gen_mu_L1_Mu22, self.n_event_sl_gen_mu_L1_Mu22/self.n_event_sl_gen_mu))
+        print("")
+        print ("Total nr. of SL EG Events: %d\n"%self.n_event_sl_e)
+        print ("Total nr. of SL EG Events passing L1 SingleIsoEG24er2p1: %d, Efficiency: %.4f \n"%(self.n_event_sl_eg_L1_SingleIsoEG24er2p1, self.n_event_sl_eg_L1_SingleIsoEG24er2p1/self.n_event_sl_e))
+        print ("Total nr. of SL EG Events passing L1 SingleIsoEG24er2p1 Emulated: %d, Efficiency: %.4f \n"%(self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated, self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated/self.n_event_sl_e))
+        print("")
 
     def analyze(self, event):
 
@@ -181,14 +191,29 @@ class HH_bbWW_Trigger_Analysis(Module):
         if is_sl_mu and (l1.SingleMu22 or l1.Mu6_HTT250er):
             self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250 += 1
 
-        if l1.SingleIsoEG35:
+        SingleIsoEG24er2p1_emulated = 0
+        for ele in l1_electrons:
+            if (ele.pt >= 24 and (ele.eta >= -2.131 and ele.eta <= 2.13) and ele.hwIso & 0x1 != 0):
+                SingleIsoEG24er2p1_emulated = 1
+                break
+        
+        if is_sl_e:
+            self.n_event_sl_e += 1
+        if is_sl_e and l1.SingleIsoEG24er2p1:
+            self.n_event_sl_eg_L1_SingleIsoEG24er2p1 += 1
+        if is_sl_e and SingleIsoEG24er2p1_emulated:
+            self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated += 1
+
+        #print ("Event: ", event.event)
+        if l1.SingleIsoEG24er2p1 != SingleIsoEG24er2p1_emulated:
+            print ("Flag: ", l1.SingleIsoEG24er2p1, "Emulated: ", SingleIsoEG24er2p1_emulated)
             for ele in l1_electrons:
-                print ("SingleIsoEG35: ", ele.pt, ele.eta, ele.hwIso)
-        print ("")
-        if l1.LooseIsoEG28er2p1_HTT100er:
-            for ele in l1_electrons:
-                print ("LooseIsoEG28er2p1_HTT100er: ", ele.pt, ele.eta, ele.hwIso)
-        print ("\n")
+                print (ele.pt, ele.eta, ele.hwIso)
+            print ("")
+        #if l1.LooseIsoEG28er2p1_HTT100er:
+        #    for ele in l1_electrons:
+        #        print ("LooseIsoEG28er2p1_HTT100er: ", ele.pt, ele.eta, ele.hwIso)
+        #print ("\n")
 
         if not is_sl and not is_dl:
             return False
