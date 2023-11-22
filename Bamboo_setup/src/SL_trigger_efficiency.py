@@ -80,6 +80,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         seeds_EG = pd.DataFrame(seeds['EG']).T
         self.L1_objects_for_Mu = seeds_Mu.columns
         self.L1_objects_for_EG = seeds_EG.columns
+        print(seeds_EG)
         return seeds_Mu, seeds_EG
 
     def SL_selections(self, sel, lep, tree):
@@ -146,20 +147,37 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             L1_object_names = self.L1_objects_for_Mu
             L1_muons_hwQual = op.select(self.L1_muons, lambda mu: mu.hwQual >= 12)
             L1_lep = L1_muons_hwQual[0]
-        L1_jets_er = op.select(self.L1_jets, lambda jet: op.abs(jet.eta) <= seed.jet_er)
+
+        L1_jets = self.L1_jets
 
         def get_cut(L1_object_name, L1_cut):
             cut=()
-            if L1_object_name == "pt": cut = (L1_lep.pt >= L1_cut)
-            elif L1_object_name == "er": cut = (op.abs(L1_lep.eta) <= L1_cut)
-            elif L1_object_name == "HT": cut = (self.L1_HT.pt >= L1_cut)
-            elif L1_object_name == "njets": cut = (op.rng_len(self.L1_jets) >= L1_cut)
+            if L1_object_name == "pt": 
+                cut = (L1_lep.pt >= L1_cut)
+            elif L1_object_name == "er":
+                if lep == "e" and L1_cut == 1.2:
+                    cut = (op.abs(L1_lep.eta) <= 1.218)
+                if lep == "e" and L1_cut == 1.5:
+                    cut = (op.abs(L1_lep.eta) <= 1.522)
+                if lep == "e" and L1_cut == 2.1:
+                    cut = (op.AND(L1_lep.eta >= -2.131, L1_lep.eta <= 2.13))
+                else: 
+                    cut = (op.abs(L1_lep.eta) <= L1_cut)
+            elif L1_object_name == "njets": 
+                cut = (op.rng_len(self.L1_jets) >= L1_cut)
             elif L1_object_name == "jet_pt": 
-                jet_pt_cuts = [L1_jets_er[i].pt >= L1_cut[i] for i in range(seed.njets)]
+                jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 cut = op.AND(*jet_pt_cuts)
             elif L1_object_name == "jet_er":
-                jet_er_cuts = [op.abs(L1_jets_er[i].eta) <= L1_cut for i in range(seed.njets)]
+                jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= L1_cut for i in range(seed.njets)]
                 cut = op.AND(*jet_er_cuts)
+            elif L1_object_name == "HT": 
+                cut = (self.L1_HT.pt >= L1_cut)
+            elif L1_object_name == "iso":
+                if L1_cut == "loose":
+                    cut = (op.OR(L1_lep.hwIso==2, L1_lep.hwIso==3))
+                elif L1_cut == "single":
+                    cut = (op.OR(L1_lep.hwIso==1, L1_lep.hwIso==3))
             return cut
 
         passed_cuts = []
@@ -177,6 +195,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         print("......................... TESTING ONLY .........................")
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
+        plots.append(yields)
         yields.add(baseSel, "baseSel")
 
         electrons = tree.L1EG
@@ -195,15 +214,26 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         # yields.add(baseSel_Mu6_HTT250er, "baseSel_Mu6_HTT250er")
         # yields.add(baseSel_L1_Mu6_HTT250er, "baseSel_L1_Mu6_HTT250er")
 
-        baseSel_SingleEG28 = baseSel.refine("baseSel_SingleEG28", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 28, e.hwIso <= 12))])
+        baseSel_SingleEG28 = baseSel.refine("baseSel_SingleEG28", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 28))])
         baseSel_L1_SingleEG28 = baseSel.refine("baseSel_L1_SingleEG28", cut=[l1triggers.SingleEG28])
-        baseSel_SingleIsoEG24er2p1 = baseSel.refine("baseSel_SingleIsoEG24er2p1", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, op.abs(e.eta) <= 2.131, e.hwIso <= 12))])
+        baseSel_SingleIsoEG24er2p1 = baseSel.refine("baseSel_SingleIsoEG24er2p1", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3)))])
         baseSel_L1_SingleIsoEG24er2p1 = baseSel.refine("baseSel_L1_SingleIsoEG24er2p1", cut=[l1triggers.SingleIsoEG24er2p1])
-        
-        yields.add(baseSel_SingleEG28, "baseSel_SingleEG28")
-        yields.add(baseSel_L1_SingleEG28, "baseSel_L1_SingleEG28")
-        yields.add(baseSel_SingleIsoEG24er2p1, "baseSel_SingleIsoEG24er2p1")
-        yields.add(baseSel_L1_SingleIsoEG24er2p1, "baseSel_L1_SingleIsoEG24er2p1")
+
+        baseSel_SingleIsoEG35 = baseSel.refine("baseSel_SingleIsoEG35", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 35, op.OR(e.hwIso==1, e.hwIso==3)))])
+        baseSel_L1_SingleIsoEG35 = baseSel.refine("baseSel_L1_SingleIsoEG35", cut=[l1triggers.SingleIsoEG35])
+        baseSel_LooseIsoEG28er2p1_HTT100er = baseSel.refine("baseSel_LooseIsoEG28er2p1_HTT100er", cut=[op.AND(
+            op.rng_any(electrons, lambda e: op.AND(e.pt >= 28, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))),
+            l1HT.pt >= 100)])
+        baseSel_L1_LooseIsoEG28er2p1_HTT100er = baseSel.refine("baseSel_L1_LooseIsoEG28er2p1_HTT100er", cut=[l1triggers.LooseIsoEG28er2p1_HTT100er])
+
+        # yields.add(baseSel_SingleEG28, "baseSel_SingleEG28")
+        # yields.add(baseSel_L1_SingleEG28, "baseSel_L1_SingleEG28")
+        # yields.add(baseSel_SingleIsoEG24er2p1, "baseSel_SingleIsoEG24er2p1")
+        # yields.add(baseSel_L1_SingleIsoEG24er2p1, "baseSel_L1_SingleIsoEG24er2p1")
+        yields.add(baseSel_SingleIsoEG35, "baseSel_SingleIsoEG35")
+        yields.add(baseSel_L1_SingleIsoEG35, "baseSel_L1_SingleIsoEG35")
+        yields.add(baseSel_LooseIsoEG28er2p1_HTT100er, "baseSel_LooseIsoEG28er2p1_HTT100er")
+        yields.add(baseSel_L1_LooseIsoEG28er2p1_HTT100er, "baseSel_L1_LooseIsoEG28er2p1_HTT100er")
 
         # Must have at least a plot for definePlots to run
         plots.append(Plot.make1D("baseSel_muon0_pt", l1HT.pt, baseSel, EqBin(200, 0, 200)))
@@ -250,7 +280,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         if len(seeds_EG) > 0:
             yields.add(SL_e, 'SL_e')
-            for seed in seeds_Mu.itertuples():    
+            for seed in seeds_EG.itertuples():  
+                print(seed.Index)
                 final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
                 sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[final_passed_cut])
@@ -347,7 +378,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         df.to_csv(os.path.join(self.args.output, 'Efficiencies.csv'), index=True)
         print(df)
 
-        # Plotting efficiency curves
-        if not self.args.test_only:
-            from utils.plot_trigger_efficiencies import plot_effis
-            plot_effis(self.args.output)
+        # # Plotting efficiency curves
+        # if not self.args.test_only:
+        #     from utils.plot_trigger_efficiencies import plot_effis
+        #     plot_effis(self.args.output)
