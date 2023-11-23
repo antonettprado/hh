@@ -32,6 +32,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         self.n_event_sl_gen_mu_L1_Mu22 = 0
 
         self.n_event_sl_e = 0
+        self.n_event_sl_eg_L1_SingleEG28 = 0
         self.n_event_sl_eg_L1_SingleIsoEG24er2p1 = 0
         self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated = 0
         self.n_event_sl_eg_L1_LooseIsoEG24er2p1_HTT100er = 0
@@ -53,6 +54,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         print ("Total nr. of SL Mu Events (1 Gen Mu from W) passing L1 Mu22: %d, Efficiency: %.4f \n"%(self.n_event_sl_gen_mu_L1_Mu22, self.n_event_sl_gen_mu_L1_Mu22/self.n_event_sl_gen_mu))
         print("")
         print ("Total nr. of SL EG Events: %d\n"%self.n_event_sl_e)
+        print ("Total nr. of SL EG Events passing L1 SingleEG28: %d, Efficiency: %.4f \n"%(self.n_event_sl_eg_L1_SingleEG28, self.n_event_sl_eg_L1_SingleEG28/self.n_event_sl_e))
         print ("Total nr. of SL EG Events passing L1 SingleIsoEG24er2p1: %d, Efficiency: %.4f \n"%(self.n_event_sl_eg_L1_SingleIsoEG24er2p1, self.n_event_sl_eg_L1_SingleIsoEG24er2p1/self.n_event_sl_e))
         print ("Total nr. of SL EG Events passing L1 SingleIsoEG24er2p1 Emulated: %d, Efficiency: %.4f \n"%(self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated, self.n_event_sl_eg_L1_SingleIsoEG24er2p1_emulated/self.n_event_sl_e))
         print ("Total nr. of SL EG Events passing L1 LooseIsoEG24er2p1_HTT100er: %d, Efficiency: %.4f \n"%(self.n_event_sl_eg_L1_LooseIsoEG24er2p1_HTT100er, self.n_event_sl_eg_L1_LooseIsoEG24er2p1_HTT100er/self.n_event_sl_e))
@@ -197,11 +199,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         if is_sl_mu and (l1.SingleMu22 or l1.Mu6_HTT250er):
             self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250 += 1
 
-        l1_ht = 0
-        for et in l1_etsum:
-            if l1_etsum.etSumType == 1:
-                l1_ht = l1_etsum.pt
-                break
+        l1_ht = l1_etsum[l1_etsum.etSumType == 1][:,0].pt
 
         SingleIsoEG24er2p1_emulated = 0
         LooseIsoEG24er2p1_HTT100er_emulated = 0
@@ -216,6 +214,8 @@ class HH_bbWW_Trigger_Analysis(Module):
         
         if is_sl_e:
             self.n_event_sl_e += 1
+        if is_sl_e and l1.SingleEG28:
+            self.n_event_sl_eg_L1_SingleEG28 += 1
         if is_sl_e and l1.SingleIsoEG24er2p1:
             self.n_event_sl_eg_L1_SingleIsoEG24er2p1 += 1
         if is_sl_e and SingleIsoEG24er2p1_emulated:
