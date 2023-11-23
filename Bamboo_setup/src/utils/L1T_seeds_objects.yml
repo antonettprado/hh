@@ -5,17 +5,17 @@ seeds:
     # L1_Mu6_HTT250er: {pt: 6, HT: 250}   # Test seed
 
     # L1_Mu8er0p8: {pt: 8, er: 0.81}
-    # L1_Mu8er1p5: {pt: 8, er: 1.5}
-    # L1_Mu8er2p1: {pt: 8, er: 2.1}
+    # L1_Mu8er1p5: {pt: 8, er: 1.506}
+    # L1_Mu8er2p1: {pt: 8, er: 2.104}
     # L1_Mu10er0p8: {pt: 10, er: 0.81}
-    # L1_Mu10er1p5: {pt: 10, er: 1.5}
-    # L1_Mu10er2p1: {pt: 10, er: 2.1}
+    # L1_Mu10er1p5: {pt: 10, er: 1.506}
+    # L1_Mu10er2p1: {pt: 10, er: 2.104}
     # L1_Mu12er0p8: {pt: 12, er: 0.81}
-    # L1_Mu12er1p5: {pt: 12, er: 1.5}
-    # L1_Mu12er2p1: {pt: 12, er: 2.1}
+    # L1_Mu12er1p5: {pt: 12, er: 1.506}
+    # L1_Mu12er2p1: {pt: 12, er: 2.104}
     # L1_Mu15er0p8: {pt: 15, er: 0.81}
-    # L1_Mu15er1p5: {pt: 15, er: 1.5}
-    # L1_Mu15er2p1: {pt: 15, er: 2.1}
+    # L1_Mu15er1p5: {pt: 15, er: 1.506}
+    # L1_Mu15er2p1: {pt: 15, er: 2.104}
 
     # L1_Mu8_HTT50er: {pt: 8, HT: 50}
     # L1_Mu8_HTT80er: {pt: 8, HT: 80}
@@ -42,274 +42,274 @@ seeds:
     # L1_Mu15_HTT150er: {pt: 15, HT: 150}
     # L1_Mu15_HTT200er: {pt: 15, HT: 200}
 
-    # L1_Mu8er1p5_HTT80er: {pt: 8, er: 1.5, HT: 80}
-    # L1_Mu8er1p5_HTT100er: {pt: 8, er: 1.5, HT: 100}
-    # L1_Mu8er1p5_HTT120er: {pt: 8, er: 1.5, HT: 120}
-    # L1_Mu10er1p5_HTT80er: {pt: 10, er: 1.5, HT: 80}
-    # L1_Mu10er1p5_HTT100er: {pt: 10, er: 1.5, HT: 100}
-    # L1_Mu10er1p5_HTT120er: {pt: 10, er: 1.5, HT: 120}
-    # L1_Mu12er1p5_HTT80er: {pt: 12, er: 1.5, HT: 80}
-    # L1_Mu12er1p5_HTT100er: {pt: 12, er: 1.5, HT: 100}
-    # L1_Mu12er1p5_HTT120er: {pt: 12, er: 1.5, HT: 120}
-    # L1_Mu15er1p5_HTT80er: {pt: 15, er: 1.5, HT: 80}
-    # L1_Mu15er1p5_HTT100er: {pt: 15, er: 1.5, HT: 100}
-    # L1_Mu15er1p5_HTT120er: {pt: 15, er: 1.5, HT: 120}
-    # L1_Mu8er2p1_HTT80er: {pt: 8, er: 2.1, HT: 80}
-    # L1_Mu8er2p1_HTT100er: {pt: 8, er: 2.1, HT: 100}
-    # L1_Mu8er2p1_HTT120er: {pt: 8, er: 2.1, HT: 120}
-    # L1_Mu10er2p1_HTT80er: {pt: 10, er: 2.1, HT: 80}
-    # L1_Mu10er2p1_HTT100er: {pt: 10, er: 2.1, HT: 100}
-    # L1_Mu10er2p1_HTT120er: {pt: 10, er: 2.1, HT: 120}
-    # L1_Mu12er2p1_HTT80er: {pt: 12, er: 2.1, HT: 80}
-    # L1_Mu12er2p1_HTT100er: {pt: 12, er: 2.1, HT: 100}
-    # L1_Mu12er2p1_HTT120er: {pt: 12, er: 2.1, HT: 120}
-    # L1_Mu15er2p1_HTT80er: {pt: 15, er: 2.1, HT: 80}
-    # L1_Mu15er2p1_HTT100er: {pt: 15, er: 2.1, HT: 100}
-    # L1_Mu15er2p1_HTT120er: {pt: 15, er: 2.1, HT: 120}
+    # L1_Mu8er1p5_HTT80er: {pt: 8, er: 1.506, HT: 80}
+    # L1_Mu8er1p5_HTT100er: {pt: 8, er: 1.506, HT: 100}
+    # L1_Mu8er1p5_HTT120er: {pt: 8, er: 1.506, HT: 120}
+    # L1_Mu10er1p5_HTT80er: {pt: 10, er: 1.506, HT: 80}
+    # L1_Mu10er1p5_HTT100er: {pt: 10, er: 1.506, HT: 100}
+    # L1_Mu10er1p5_HTT120er: {pt: 10, er: 1.506, HT: 120}
+    # L1_Mu12er1p5_HTT80er: {pt: 12, er: 1.506, HT: 80}
+    # L1_Mu12er1p5_HTT100er: {pt: 12, er: 1.506, HT: 100}
+    # L1_Mu12er1p5_HTT120er: {pt: 12, er: 1.506, HT: 120}
+    # L1_Mu15er1p5_HTT80er: {pt: 15, er: 1.506, HT: 80}
+    # L1_Mu15er1p5_HTT100er: {pt: 15, er: 1.506, HT: 100}
+    # L1_Mu15er1p5_HTT120er: {pt: 15, er: 1.506, HT: 120}
+    # L1_Mu8er2p1_HTT80er: {pt: 8, er: 2.104, HT: 80}
+    # L1_Mu8er2p1_HTT100er: {pt: 8, er: 2.104, HT: 100}
+    # L1_Mu8er2p1_HTT120er: {pt: 8, er: 2.104, HT: 120}
+    # L1_Mu10er2p1_HTT80er: {pt: 10, er: 2.104, HT: 80}
+    # L1_Mu10er2p1_HTT100er: {pt: 10, er: 2.104, HT: 100}
+    # L1_Mu10er2p1_HTT120er: {pt: 10, er: 2.104, HT: 120}
+    # L1_Mu12er2p1_HTT80er: {pt: 12, er: 2.104, HT: 80}
+    # L1_Mu12er2p1_HTT100er: {pt: 12, er: 2.104, HT: 100}
+    # L1_Mu12er2p1_HTT120er: {pt: 12, er: 2.104, HT: 120}
+    # L1_Mu15er2p1_HTT80er: {pt: 15, er: 2.104, HT: 80}
+    # L1_Mu15er2p1_HTT100er: {pt: 15, er: 2.104, HT: 100}
+    # L1_Mu15er2p1_HTT120er: {pt: 15, er: 2.104, HT: 120}
 
     # L1_SingleMu8: {pt: 8}
     # L1_SingleMu10: {pt: 10}
     # L1_SingleMu12: {pt: 12}
     # L1_SingleMu15: {pt: 15}
 
-    # L1_Mu8_QuadJet_40_30_20_10_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 10], jet_er: 2.5}
-    # L1_Mu8_QuadJet_40_30_20_20_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5}
-    # L1_Mu8_QuadJet_40_30_30_20_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 20], jet_er: 2.5}
-    # L1_Mu8_QuadJet_40_30_30_30_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5}
-    # L1_Mu8_QuadJet_40_40_40_40_er2p5: {pt: 8, njets: 4, jet_pt: [40, 40, 40, 40], jet_er: 2.5}
-    # L1_Mu8_QuadJet_40_30_20_10_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 10], jet_er: 2.5, HT: 100}
-    # L1_Mu8_QuadJet_40_30_20_20_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5, HT: 100}
-    # L1_Mu8_QuadJet_40_30_30_20_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 20], jet_er: 2.5, HT: 100}
-    # L1_Mu8_QuadJet_40_30_30_30_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 100}
-    # L1_Mu8_QuadJet_40_40_40_40_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 40, 40, 40], jet_er: 2.5, HT: 100}
-    # L1_Mu8_QuadJet_40_30_20_10_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 10], jet_er: 2.5, HT: 150}
-    # L1_Mu8_QuadJet_40_30_20_20_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5, HT: 150}
-    # L1_Mu8_QuadJet_40_30_30_20_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 20], jet_er: 2.5, HT: 150}
-    # L1_Mu8_QuadJet_40_30_30_30_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 150}
-    # L1_Mu8_QuadJet_40_40_40_40_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 40, 40, 40], jet_er: 2.5, HT: 150}
+    # L1_Mu8_QuadJet_40_30_20_10_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 10], jet_er: 2.523}
+    # L1_Mu8_QuadJet_40_30_20_20_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523}
+    # L1_Mu8_QuadJet_40_30_30_20_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 20], jet_er: 2.523}
+    # L1_Mu8_QuadJet_40_30_30_30_er2p5: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523}
+    # L1_Mu8_QuadJet_40_40_40_40_er2p5: {pt: 8, njets: 4, jet_pt: [40, 40, 40, 40], jet_er: 2.523}
+    # L1_Mu8_QuadJet_40_30_20_10_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 10], jet_er: 2.523, HT: 100}
+    # L1_Mu8_QuadJet_40_30_20_20_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523, HT: 100}
+    # L1_Mu8_QuadJet_40_30_30_20_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 20], jet_er: 2.523, HT: 100}
+    # L1_Mu8_QuadJet_40_30_30_30_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_Mu8_QuadJet_40_40_40_40_er2p5_HTT100er: {pt: 8, njets: 4, jet_pt: [40, 40, 40, 40], jet_er: 2.523, HT: 100}
+    # L1_Mu8_QuadJet_40_30_20_10_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 10], jet_er: 2.523, HT: 150}
+    # L1_Mu8_QuadJet_40_30_20_20_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523, HT: 150}
+    # L1_Mu8_QuadJet_40_30_30_20_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 20], jet_er: 2.523, HT: 150}
+    # L1_Mu8_QuadJet_40_30_30_30_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_Mu8_QuadJet_40_40_40_40_er2p5_HTT150er: {pt: 8, njets: 4, jet_pt: [40, 40, 40, 40], jet_er: 2.523, HT: 150}
 
-    # L1_Mu10_Jet30er2p5: {pt: 10, njets: 1, jet_pt: [30], jet_er: 2.5}
-    # L1_Mu10_Jet40er2p5: {pt: 10, njets: 1, jet_pt: [40], jet_er: 2.5}
-    # L1_Mu10_Jet50er2p5: {pt: 10, njets: 1, jet_pt: [50], jet_er: 2.5}
-    # L1_Mu10_Jet30er2p5_HTT100er: {pt: 10, njets: 1, jet_pt: [30], jet_er: 2.5, HT: 100}
-    # L1_Mu10_Jet40er2p5_HTT100er: {pt: 10, njets: 1, jet_pt: [40], jet_er: 2.5, HT: 100}
-    # L1_Mu10_Jet50er2p5_HTT100er: {pt: 10, njets: 1, jet_pt: [50], jet_er: 2.5, HT: 100}
-    # L1_Mu10_DoubleJet_40_20_er2p5: {pt: 10, njets: 2, jet_pt: [40, 20], jet_er: 2.5}
-    # L1_Mu10_DoubleJet_40_25_er2p5: {pt: 10, njets: 2, jet_pt: [40, 25], jet_er: 2.5}
-    # L1_Mu10_DoubleJet_40_30_er2p5: {pt: 10, njets: 2, jet_pt: [40, 30], jet_er: 2.5}
-    # L1_Mu10_DoubleJet_40_35_er2p5: {pt: 10, njets: 2, jet_pt: [40, 35], jet_er: 2.5}
-    # L1_Mu10_DoubleJet_40_40_er2p5: {pt: 10, njets: 2, jet_pt: [40, 40], jet_er: 2.5}
-    # L1_Mu10_DoubleJet_40_20_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 20], jet_er: 2.5, HT: 100}
-    # L1_Mu10_DoubleJet_40_25_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 25], jet_er: 2.5, HT: 100}
-    # L1_Mu10_DoubleJet_40_30_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 30], jet_er: 2.5, HT: 100}
-    # L1_Mu10_DoubleJet_40_35_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 35], jet_er: 2.5, HT: 100}
-    # L1_Mu10_DoubleJet_40_40_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 40], jet_er: 2.5, HT: 100}
-    # L1_Mu10_TripleJet_40_20_20_er2p5: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.5}
-    # L1_Mu10_TripleJet_40_30_30_er2p5: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5}
-    # L1_Mu10_TripleJet_40_40_40_er2p5: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.5}
-    # L1_Mu10_TripleJet_40_20_20_er2p5_HTT100er: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.5, HT: 100}
-    # L1_Mu10_TripleJet_40_30_30_er2p5_HTT100er: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 100}
-    # L1_Mu10_TripleJet_40_40_40_er2p5_HTT100er: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.5, HT: 100}
-    # L1_Mu10_TripleJet_40_20_20_er2p5_HTT150er: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.5, HT: 150}
-    # L1_Mu10_TripleJet_40_30_30_er2p5_HTT150er: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 150}
-    # L1_Mu10_TripleJet_40_40_40_er2p5_HTT150er: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.5, HT: 150}
-    # L1_Mu10_TripleJet_40_20_20_er2p5_HTT200er: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.5, HT: 200}
-    # L1_Mu10_TripleJet_40_30_30_er2p5_HTT200er: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 200}
-    # L1_Mu10_TripleJet_40_40_40_er2p5_HTT200er: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.5, HT: 200}
-    # L1_Mu10_QuadJet_40_20_20_20_er2p5: {pt: 10, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.5}
-    # L1_Mu10_QuadJet_40_30_20_20_er2p5: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5}
-    # L1_Mu10_QuadJet_40_30_20_15_er2p5: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.5}
-    # L1_Mu10_QuadJet_40_20_20_20_er2p5_HTT100er: {pt: 10, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.5, HT: 100}
-    # L1_Mu10_QuadJet_40_30_20_20_er2p5_HTT100er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5, HT: 100}
-    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT100er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.5, HT: 100}
-    # L1_Mu10_QuadJet_40_20_20_20_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.5, HT: 150}
-    # L1_Mu10_QuadJet_40_30_20_20_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5, HT: 150}
-    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.5, HT: 150}
-    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.5, HT: 150}
-    # L1_Mu10_QuadJet_40_30_20_20_er2p5_HTT200er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5, HT: 200}
-    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT200er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.5, HT: 200}
+    # L1_Mu10_Jet30er2p5: {pt: 10, njets: 1, jet_pt: [30], jet_er: 2.523}
+    # L1_Mu10_Jet40er2p5: {pt: 10, njets: 1, jet_pt: [40], jet_er: 2.523}
+    # L1_Mu10_Jet50er2p5: {pt: 10, njets: 1, jet_pt: [50], jet_er: 2.523}
+    # L1_Mu10_Jet30er2p5_HTT100er: {pt: 10, njets: 1, jet_pt: [30], jet_er: 2.523, HT: 100}
+    # L1_Mu10_Jet40er2p5_HTT100er: {pt: 10, njets: 1, jet_pt: [40], jet_er: 2.523, HT: 100}
+    # L1_Mu10_Jet50er2p5_HTT100er: {pt: 10, njets: 1, jet_pt: [50], jet_er: 2.523, HT: 100}
+    # L1_Mu10_DoubleJet_40_20_er2p5: {pt: 10, njets: 2, jet_pt: [40, 20], jet_er: 2.523}
+    # L1_Mu10_DoubleJet_40_25_er2p5: {pt: 10, njets: 2, jet_pt: [40, 25], jet_er: 2.523}
+    # L1_Mu10_DoubleJet_40_30_er2p5: {pt: 10, njets: 2, jet_pt: [40, 30], jet_er: 2.523}
+    # L1_Mu10_DoubleJet_40_35_er2p5: {pt: 10, njets: 2, jet_pt: [40, 35], jet_er: 2.523}
+    # L1_Mu10_DoubleJet_40_40_er2p5: {pt: 10, njets: 2, jet_pt: [40, 40], jet_er: 2.523}
+    # L1_Mu10_DoubleJet_40_20_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 20], jet_er: 2.523, HT: 100}
+    # L1_Mu10_DoubleJet_40_25_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 25], jet_er: 2.523, HT: 100}
+    # L1_Mu10_DoubleJet_40_30_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 30], jet_er: 2.523, HT: 100}
+    # L1_Mu10_DoubleJet_40_35_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 35], jet_er: 2.523, HT: 100}
+    # L1_Mu10_DoubleJet_40_40_er2p5_HTT100er: {pt: 10, njets: 2, jet_pt: [40, 40], jet_er: 2.523, HT: 100}
+    # L1_Mu10_TripleJet_40_20_20_er2p5: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.523}
+    # L1_Mu10_TripleJet_40_30_30_er2p5: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523}
+    # L1_Mu10_TripleJet_40_40_40_er2p5: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.523}
+    # L1_Mu10_TripleJet_40_20_20_er2p5_HTT100er: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.523, HT: 100}
+    # L1_Mu10_TripleJet_40_30_30_er2p5_HTT100er: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_Mu10_TripleJet_40_40_40_er2p5_HTT100er: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.523, HT: 100}
+    # L1_Mu10_TripleJet_40_20_20_er2p5_HTT150er: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.523, HT: 150}
+    # L1_Mu10_TripleJet_40_30_30_er2p5_HTT150er: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_Mu10_TripleJet_40_40_40_er2p5_HTT150er: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.523, HT: 150}
+    # L1_Mu10_TripleJet_40_20_20_er2p5_HTT200er: {pt: 10, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.523, HT: 200}
+    # L1_Mu10_TripleJet_40_30_30_er2p5_HTT200er: {pt: 10, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_Mu10_TripleJet_40_40_40_er2p5_HTT200er: {pt: 10, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.523, HT: 200}
+    # L1_Mu10_QuadJet_40_20_20_20_er2p5: {pt: 10, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.523}
+    # L1_Mu10_QuadJet_40_30_20_20_er2p5: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523}
+    # L1_Mu10_QuadJet_40_30_20_15_er2p5: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523}
+    # L1_Mu10_QuadJet_40_20_20_20_er2p5_HTT100er: {pt: 10, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.523, HT: 100}
+    # L1_Mu10_QuadJet_40_30_20_20_er2p5_HTT100er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523, HT: 100}
+    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT100er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523, HT: 100}
+    # L1_Mu10_QuadJet_40_20_20_20_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.523, HT: 150}
+    # L1_Mu10_QuadJet_40_30_20_20_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523, HT: 150}
+    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523, HT: 150}
+    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT150er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523, HT: 150}
+    # L1_Mu10_QuadJet_40_30_20_20_er2p5_HTT200er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523, HT: 200}
+    # L1_Mu10_QuadJet_40_30_20_15_er2p5_HTT200er: {pt: 10, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523, HT: 200}
 
-    # L1_Mu12_Jet40er2p5: {pt: 12, njets: 1, jet_pt: [40], jet_er: 2.5}
-    # L1_Mu12_Jet30er2p5_HTT100er: {pt: 12, njets: 1, jet_pt: [30], jet_er: 2.5, HT: 100}
-    # L1_Mu12_Jet40er2p5_HTT100er: {pt: 12, njets: 1, jet_pt: [40], jet_er: 2.5, HT: 100}
-    # L1_Mu12_DoubleJet_40_35_er2p5: {pt: 12, njets: 2, jet_pt: [40, 35], jet_er: 2.5}
-    # L1_Mu12_DoubleJet_40_30_er2p5_HTT100er: {pt: 12, njets: 2, jet_pt: [40, 30], jet_er: 2.5, HT: 100}
-    # L1_Mu12_DoubleJet_40_35_er2p5_HTT100er: {pt: 12, njets: 2, jet_pt: [40, 35], jet_er: 2.5, HT: 100}
-    # L1_Mu12_TripleJet_40_20_20_er2p5: {pt: 12, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.5}
-    # L1_Mu12_TripleJet_40_30_30_er2p5: {pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5}
-    # L1_Mu12_TripleJet_40_40_40_er2p5: {pt: 12, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.5}
-    # L1_Mu12_QuadJet_40_20_20_20_er2p5: {pt: 12, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.5}
-    # L1_Mu12_QuadJet_40_30_20_20_er2p5: {pt: 12, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5}
-    # L1_Mu12_QuadJet_40_30_20_15_er2p5: {pt: 12, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.5}
+    # L1_Mu12_Jet40er2p5: {pt: 12, njets: 1, jet_pt: [40], jet_er: 2.523}
+    # L1_Mu12_Jet30er2p5_HTT100er: {pt: 12, njets: 1, jet_pt: [30], jet_er: 2.523, HT: 100}
+    # L1_Mu12_Jet40er2p5_HTT100er: {pt: 12, njets: 1, jet_pt: [40], jet_er: 2.523, HT: 100}
+    # L1_Mu12_DoubleJet_40_35_er2p5: {pt: 12, njets: 2, jet_pt: [40, 35], jet_er: 2.523}
+    # L1_Mu12_DoubleJet_40_30_er2p5_HTT100er: {pt: 12, njets: 2, jet_pt: [40, 30], jet_er: 2.523, HT: 100}
+    # L1_Mu12_DoubleJet_40_35_er2p5_HTT100er: {pt: 12, njets: 2, jet_pt: [40, 35], jet_er: 2.523, HT: 100}
+    # L1_Mu12_TripleJet_40_20_20_er2p5: {pt: 12, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.523}
+    # L1_Mu12_TripleJet_40_30_30_er2p5: {pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523}
+    # L1_Mu12_TripleJet_40_40_40_er2p5: {pt: 12, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.523}
+    # L1_Mu12_QuadJet_40_20_20_20_er2p5: {pt: 12, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.523}
+    # L1_Mu12_QuadJet_40_30_20_20_er2p5: {pt: 12, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523}
+    # L1_Mu12_QuadJet_40_30_20_15_er2p5: {pt: 12, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523}
 
-    # L1_Mu15_Jet40er2p5: {pt: 15, njets: 1, jet_pt: [40], jet_er: 2.5}
-    # L1_Mu15_Jet30er2p5_HTT100er: {pt: 15, njets: 1, jet_pt: [30], jet_er: 2.5, HT: 100}
-    # L1_Mu15_Jet40er2p5_HTT100er: {pt: 15, njets: 1, jet_pt: [40], jet_er: 2.5, HT: 100}
-    # L1_Mu15_DoubleJet_40_30_er2p5: {pt: 15, njets: 2, jet_pt: [40, 30], jet_er: 2.5}
-    # L1_Mu15_DoubleJet_40_35_er2p5: {pt: 15, njets: 2, jet_pt: [40, 35], jet_er: 2.5}
-    # L1_Mu15_DoubleJet_40_30_er2p5_HTT100er: {pt: 15, njets: 2, jet_pt: [40, 30], jet_er: 2.5, HT: 100}
-    # L1_Mu15_DoubleJet_40_35_er2p5_HTT100er: {pt: 15, njets: 2, jet_pt: [40, 35], jet_er: 2.5, HT: 100}
-    # L1_Mu15_TripleJet_40_20_20_er2p5: {pt: 15, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.5}
-    # L1_Mu15_TripleJet_40_30_30_er2p5: {pt: 15, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5}
-    # L1_Mu15_TripleJet_40_40_40_er2p5: {pt: 15, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.5}
-    # L1_Mu15_QuadJet_40_20_20_20_er2p5: {pt: 15, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.5}
-    # L1_Mu15_QuadJet_40_30_20_20_er2p5: {pt: 15, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.5}
-    # L1_Mu15_QuadJet_40_30_20_15_er2p5: {pt: 15, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.5}
+    # L1_Mu15_Jet40er2p5: {pt: 15, njets: 1, jet_pt: [40], jet_er: 2.523}
+    # L1_Mu15_Jet30er2p5_HTT100er: {pt: 15, njets: 1, jet_pt: [30], jet_er: 2.523, HT: 100}
+    # L1_Mu15_Jet40er2p5_HTT100er: {pt: 15, njets: 1, jet_pt: [40], jet_er: 2.523, HT: 100}
+    # L1_Mu15_DoubleJet_40_30_er2p5: {pt: 15, njets: 2, jet_pt: [40, 30], jet_er: 2.523}
+    # L1_Mu15_DoubleJet_40_35_er2p5: {pt: 15, njets: 2, jet_pt: [40, 35], jet_er: 2.523}
+    # L1_Mu15_DoubleJet_40_30_er2p5_HTT100er: {pt: 15, njets: 2, jet_pt: [40, 30], jet_er: 2.523, HT: 100}
+    # L1_Mu15_DoubleJet_40_35_er2p5_HTT100er: {pt: 15, njets: 2, jet_pt: [40, 35], jet_er: 2.523, HT: 100}
+    # L1_Mu15_TripleJet_40_20_20_er2p5: {pt: 15, njets: 3, jet_pt: [40, 20, 20], jet_er: 2.523}
+    # L1_Mu15_TripleJet_40_30_30_er2p5: {pt: 15, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523}
+    # L1_Mu15_TripleJet_40_40_40_er2p5: {pt: 15, njets: 3, jet_pt: [40, 40, 40], jet_er: 2.523}
+    # L1_Mu15_QuadJet_40_20_20_20_er2p5: {pt: 15, njets: 4, jet_pt: [40, 20, 20, 20], jet_er: 2.523}
+    # L1_Mu15_QuadJet_40_30_20_20_er2p5: {pt: 15, njets: 4, jet_pt: [40, 30, 20, 20], jet_er: 2.523}
+    # L1_Mu15_QuadJet_40_30_20_15_er2p5: {pt: 15, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523}
     
   EG:
-    L1_LooseIsoEG24er2p1_HTT100er: {iso: 'loose', pt: 24, er: 2.1, HT: 100}  #Test seeds
     L1_SingleEG28: {pt: 28}
+    L1_LooseIsoEG24er2p1_HTT100er: {iso: 'loose', pt: 24, er: 2.131, HT: 100}  #Test seeds
 
     # LooseIsoEGer1p2
-    L1_looseIsoEG12er1p2_HTT80er: {iso: 'loose', pt: 12, er: 1.2, HT: 80}
-    L1_looseIsoEG12er1p2_HTT100er: {iso: 'loose', pt: 12, er: 1.2, HT: 100}
-    L1_looseIsoEG12er1p2_HTT120er: {iso: 'loose', pt: 12, er: 1.2, HT: 120}
-    L1_looseIsoEG12er1p2_HTT150er: {iso: 'loose', pt: 12, er: 1.2, HT: 150}
-    L1_looseIsoEG12er1p2_HTT175er: {iso: 'loose', pt: 12, er: 1.2, HT: 175}
-    L1_looseIsoEG12er1p2_HTT200er: {iso: 'loose', pt: 12, er: 1.2, HT: 200}
-    L1_looseIsoEG16er1p2_HTT80er: {iso: 'loose', pt: 16, er: 1.2, HT: 80}
-    L1_looseIsoEG16er1p2_HTT100er: {iso: 'loose', pt: 16, er: 1.2, HT: 100}
-    L1_looseIsoEG16er1p2_HTT120er: {iso: 'loose', pt: 16, er: 1.2, HT: 120}
-    L1_looseIsoEG16er1p2_HTT150er: {iso: 'loose', pt: 16, er: 1.2, HT: 150}
-    L1_looseIsoEG16er1p2_HTT175er: {iso: 'loose', pt: 16, er: 1.2, HT: 175}
-    L1_looseIsoEG16er1p2_HTT200er: {iso: 'loose', pt: 16, er: 1.2, HT: 200}
-    L1_looseIsoEG20er1p2_HTT80er: {iso: 'loose', pt: 20, er: 1.2, HT: 80}
-    L1_looseIsoEG20er1p2_HTT100er: {iso: 'loose', pt: 20, er: 1.2, HT: 100}
-    L1_looseIsoEG20er1p2_HTT120er: {iso: 'loose', pt: 20, er: 1.2, HT: 120}
-    L1_looseIsoEG20er1p2_HTT150er: {iso: 'loose', pt: 20, er: 1.2, HT: 150}
-    L1_looseIsoEG20er1p2_HTT175er: {iso: 'loose', pt: 20, er: 1.2, HT: 175}
-    L1_looseIsoEG20er1p2_HTT200er: {iso: 'loose', pt: 20, er: 1.2, HT: 200}
+    L1_looseIsoEG12er1p2_HTT80er: {iso: 'loose', pt: 12, er: 1.218, HT: 80}
+    L1_looseIsoEG12er1p2_HTT100er: {iso: 'loose', pt: 12, er: 1.218, HT: 100}
+    L1_looseIsoEG12er1p2_HTT120er: {iso: 'loose', pt: 12, er: 1.218, HT: 120}
+    L1_looseIsoEG12er1p2_HTT150er: {iso: 'loose', pt: 12, er: 1.218, HT: 150}
+    L1_looseIsoEG12er1p2_HTT175er: {iso: 'loose', pt: 12, er: 1.218, HT: 175}
+    L1_looseIsoEG12er1p2_HTT200er: {iso: 'loose', pt: 12, er: 1.218, HT: 200}
+    L1_looseIsoEG16er1p2_HTT80er: {iso: 'loose', pt: 16, er: 1.218, HT: 80}
+    L1_looseIsoEG16er1p2_HTT100er: {iso: 'loose', pt: 16, er: 1.218, HT: 100}
+    L1_looseIsoEG16er1p2_HTT120er: {iso: 'loose', pt: 16, er: 1.218, HT: 120}
+    L1_looseIsoEG16er1p2_HTT150er: {iso: 'loose', pt: 16, er: 1.218, HT: 150}
+    L1_looseIsoEG16er1p2_HTT175er: {iso: 'loose', pt: 16, er: 1.218, HT: 175}
+    L1_looseIsoEG16er1p2_HTT200er: {iso: 'loose', pt: 16, er: 1.218, HT: 200}
+    L1_looseIsoEG20er1p2_HTT80er: {iso: 'loose', pt: 20, er: 1.218, HT: 80}
+    L1_looseIsoEG20er1p2_HTT100er: {iso: 'loose', pt: 20, er: 1.218, HT: 100}
+    L1_looseIsoEG20er1p2_HTT120er: {iso: 'loose', pt: 20, er: 1.218, HT: 120}
+    L1_looseIsoEG20er1p2_HTT150er: {iso: 'loose', pt: 20, er: 1.218, HT: 150}
+    L1_looseIsoEG20er1p2_HTT175er: {iso: 'loose', pt: 20, er: 1.218, HT: 175}
+    L1_looseIsoEG20er1p2_HTT200er: {iso: 'loose', pt: 20, er: 1.218, HT: 200}
 
-    # LooseIsoEGer1p5
-    L1_LooseIsoEG12er1p5_HTT80er: {iso: 'loose', pt: 12, er: 1.5, HT: 80}
-    L1_LooseIsoEG12er1p5_HTT100er: {iso: 'loose', pt: 12, er: 1.5, HT: 100}
-    L1_LooseIsoEG12er1p5_HTT120er: {iso: 'loose', pt: 12, er: 1.5, HT: 120}
-    L1_LooseIsoEG12er1p5_HTT150er: {iso: 'loose', pt: 12, er: 1.5, HT: 150}
-    L1_LooseIsoEG12er1p5_HTT175er: {iso: 'loose', pt: 12, er: 1.5, HT: 175}
-    L1_LooseIsoEG12er1p5_HTT200er: {iso: 'loose', pt: 12, er: 1.5, HT: 200}
-    L1_LooseIsoEG16er1p5_HTT80er: {iso: 'loose', pt: 16, er: 1.5, HT: 80}
-    L1_LooseIsoEG16er1p5_HTT100er: {iso: 'loose', pt: 16, er: 1.5, HT: 100}
-    L1_LooseIsoEG16er1p5_HTT120er: {iso: 'loose', pt: 16, er: 1.5, HT: 120}
-    L1_LooseIsoEG16er1p5_HTT150er: {iso: 'loose', pt: 16, er: 1.5, HT: 150}
-    L1_LooseIsoEG16er1p5_HTT175er: {iso: 'loose', pt: 16, er: 1.5, HT: 175}
-    L1_LooseIsoEG16er1p5_HTT200er: {iso: 'loose', pt: 16, er: 1.5, HT: 200}
-    L1_LooseIsoEG20er1p5_HTT80er: {iso: 'loose', pt: 20, er: 1.5, HT: 80}
-    L1_LooseIsoEG20er1p5_HTT100er: {iso: 'loose', pt: 20, er: 1.5, HT: 100}
-    L1_LooseIsoEG20er1p5_HTT120er: {iso: 'loose', pt: 20, er: 1.5, HT: 120}
-    L1_LooseIsoEG20er1p5_HTT150er: {iso: 'loose', pt: 20, er: 1.5, HT: 150}
-    L1_LooseIsoEG20er1p5_HTT175er: {iso: 'loose', pt: 20, er: 1.5, HT: 175}
-    L1_LooseIsoEG20er1p5_HTT200er: {iso: 'loose', pt: 20, er: 1.5, HT: 200}
+    # # LooseIsoEGer1p5
+    # L1_LooseIsoEG12er1p5_HTT80er: {iso: 'loose', pt: 12, er: 1.522, HT: 80}
+    # L1_LooseIsoEG12er1p5_HTT100er: {iso: 'loose', pt: 12, er: 1.522, HT: 100}
+    # L1_LooseIsoEG12er1p5_HTT120er: {iso: 'loose', pt: 12, er: 1.522, HT: 120}
+    # L1_LooseIsoEG12er1p5_HTT150er: {iso: 'loose', pt: 12, er: 1.522, HT: 150}
+    # L1_LooseIsoEG12er1p5_HTT175er: {iso: 'loose', pt: 12, er: 1.522, HT: 175}
+    # L1_LooseIsoEG12er1p5_HTT200er: {iso: 'loose', pt: 12, er: 1.522, HT: 200}
+    # L1_LooseIsoEG16er1p5_HTT80er: {iso: 'loose', pt: 16, er: 1.522, HT: 80}
+    # L1_LooseIsoEG16er1p5_HTT100er: {iso: 'loose', pt: 16, er: 1.522, HT: 100}
+    # L1_LooseIsoEG16er1p5_HTT120er: {iso: 'loose', pt: 16, er: 1.522, HT: 120}
+    # L1_LooseIsoEG16er1p5_HTT150er: {iso: 'loose', pt: 16, er: 1.522, HT: 150}
+    # L1_LooseIsoEG16er1p5_HTT175er: {iso: 'loose', pt: 16, er: 1.522, HT: 175}
+    # L1_LooseIsoEG16er1p5_HTT200er: {iso: 'loose', pt: 16, er: 1.522, HT: 200}
+    # L1_LooseIsoEG20er1p5_HTT80er: {iso: 'loose', pt: 20, er: 1.522, HT: 80}
+    # L1_LooseIsoEG20er1p5_HTT100er: {iso: 'loose', pt: 20, er: 1.522, HT: 100}
+    # L1_LooseIsoEG20er1p5_HTT120er: {iso: 'loose', pt: 20, er: 1.522, HT: 120}
+    # L1_LooseIsoEG20er1p5_HTT150er: {iso: 'loose', pt: 20, er: 1.522, HT: 150}
+    # L1_LooseIsoEG20er1p5_HTT175er: {iso: 'loose', pt: 20, er: 1.522, HT: 175}
+    # L1_LooseIsoEG20er1p5_HTT200er: {iso: 'loose', pt: 20, er: 1.522, HT: 200}
 
-    # LooseIsoEGer2p1
-    L1_LooseIsoEG12er2p1_HTT80er: {iso: 'loose', pt: 12, er: 2.1, HT: 80}
-    L1_LooseIsoEG12er2p1_HTT100er: {iso: 'loose', pt: 12, er: 2.1, HT: 100}
-    L1_LooseIsoEG12er2p1_HTT120er: {iso: 'loose', pt: 12, er: 2.1, HT: 120}
-    L1_LooseIsoEG12er2p1_HTT150er: {iso: 'loose', pt: 12, er: 2.1, HT: 150}
-    L1_LooseIsoEG12er2p1_HTT175er: {iso: 'loose', pt: 12, er: 2.1, HT: 175}
-    L1_LooseIsoEG12er2p1_HTT200er: {iso: 'loose', pt: 12, er: 2.1, HT: 200}
-    L1_LooseIsoEG16er2p1_HTT80er: {iso: 'loose', pt: 16, er: 2.1, HT: 80}
-    L1_LooseIsoEG16er2p1_HTT100er: {iso: 'loose', pt: 16, er: 2.1, HT: 100}
-    L1_LooseIsoEG16er2p1_HTT120er: {iso: 'loose', pt: 16, er: 2.1, HT: 120}
-    L1_LooseIsoEG16er2p1_HTT150er: {iso: 'loose', pt: 16, er: 2.1, HT: 150}
-    L1_LooseIsoEG16er2p1_HTT175er: {iso: 'loose', pt: 16, er: 2.1, HT: 175}
-    L1_LooseIsoEG16er2p1_HTT200er: {iso: 'loose', pt: 16, er: 2.1, HT: 200}
-    L1_LooseIsoEG20er2p1_HTT80er: {iso: 'loose', pt: 20, er: 2.1, HT: 80}
-    L1_LooseIsoEG20er2p1_HTT100er: {iso: 'loose', pt: 20, er: 2.1, HT: 100}
-    L1_LooseIsoEG20er2p1_HTT120er: {iso: 'loose', pt: 20, er: 2.1, HT: 120}
-    L1_LooseIsoEG20er2p1_HTT150er: {iso: 'loose', pt: 20, er: 2.1, HT: 150}
-    L1_LooseIsoEG20er2p1_HTT175er: {iso: 'loose', pt: 20, er: 2.1, HT: 175}
-    L1_LooseIsoEG20er2p1_HTT200er: {iso: 'loose', pt: 20, er: 2.1, HT: 200}
+    # # LooseIsoEGer2p1
+    # L1_LooseIsoEG12er2p1_HTT80er: {iso: 'loose', pt: 12, er: 2.131, HT: 80}
+    # L1_LooseIsoEG12er2p1_HTT100er: {iso: 'loose', pt: 12, er: 2.131, HT: 100}
+    # L1_LooseIsoEG12er2p1_HTT120er: {iso: 'loose', pt: 12, er: 2.131, HT: 120}
+    # L1_LooseIsoEG12er2p1_HTT150er: {iso: 'loose', pt: 12, er: 2.131, HT: 150}
+    # L1_LooseIsoEG12er2p1_HTT175er: {iso: 'loose', pt: 12, er: 2.131, HT: 175}
+    # L1_LooseIsoEG12er2p1_HTT200er: {iso: 'loose', pt: 12, er: 2.131, HT: 200}
+    # L1_LooseIsoEG16er2p1_HTT80er: {iso: 'loose', pt: 16, er: 2.131, HT: 80}
+    # L1_LooseIsoEG16er2p1_HTT100er: {iso: 'loose', pt: 16, er: 2.131, HT: 100}
+    # L1_LooseIsoEG16er2p1_HTT120er: {iso: 'loose', pt: 16, er: 2.131, HT: 120}
+    # L1_LooseIsoEG16er2p1_HTT150er: {iso: 'loose', pt: 16, er: 2.131, HT: 150}
+    # L1_LooseIsoEG16er2p1_HTT175er: {iso: 'loose', pt: 16, er: 2.131, HT: 175}
+    # L1_LooseIsoEG16er2p1_HTT200er: {iso: 'loose', pt: 16, er: 2.131, HT: 200}
+    # L1_LooseIsoEG20er2p1_HTT80er: {iso: 'loose', pt: 20, er: 2.131, HT: 80}
+    # L1_LooseIsoEG20er2p1_HTT100er: {iso: 'loose', pt: 20, er: 2.131, HT: 100}
+    # L1_LooseIsoEG20er2p1_HTT120er: {iso: 'loose', pt: 20, er: 2.131, HT: 120}
+    # L1_LooseIsoEG20er2p1_HTT150er: {iso: 'loose', pt: 20, er: 2.131, HT: 150}
+    # L1_LooseIsoEG20er2p1_HTT175er: {iso: 'loose', pt: 20, er: 2.131, HT: 175}
+    # L1_LooseIsoEG20er2p1_HTT200er: {iso: 'loose', pt: 20, er: 2.131, HT: 200}
 
-    # SingleIsoEGer2p1
-    L1_SingleIsoEG12er2p1_HTT80er: {iso: 'single', pt: 12, er: 2.1, HT: 80}
-    L1_SingleIsoEG12er2p1_HTT100er: {iso: 'single', pt: 12, er: 2.1, HT: 100}
-    L1_SingleIsoEG12er2p1_HTT120er: {iso: 'single', pt: 12, er: 2.1, HT: 120}
-    L1_SingleIsoEG12er2p1_HTT150er: {iso: 'single', pt: 12, er: 2.1, HT: 150}
-    L1_SingleIsoEG12er2p1_HTT175er: {iso: 'single', pt: 12, er: 2.1, HT: 175}
-    L1_SingleIsoEG12er2p1_HTT200er: {iso: 'single', pt: 12, er: 2.1, HT: 200}
-    L1_SingleIsoEG16er2p1_HTT80er: {iso: 'single', pt: 16, er: 2.1, HT: 80}
-    L1_SingleIsoEG16er2p1_HTT100er: {iso: 'single', pt: 16, er: 2.1, HT: 100}
-    L1_SingleIsoEG16er2p1_HTT120er: {iso: 'single', pt: 16, er: 2.1, HT: 120}
-    L1_SingleIsoEG16er2p1_HTT150er: {iso: 'single', pt: 16, er: 2.1, HT: 150}
-    L1_SingleIsoEG16er2p1_HTT175er: {iso: 'single', pt: 16, er: 2.1, HT: 175}
-    L1_SingleIsoEG16er2p1_HTT200er: {iso: 'single', pt: 16, er: 2.1, HT: 200}
-    L1_SingleIsoEG20er2p1_HTT80er: {iso: 'single', pt: 20, er: 2.1, HT: 80}
-    L1_SingleIsoEG20er2p1_HTT100er: {iso: 'single', pt: 20, er: 2.1, HT: 100}
-    L1_SingleIsoEG20er2p1_HTT120er: {iso: 'single', pt: 20, er: 2.1, HT: 120}
-    L1_SingleIsoEG20er2p1_HTT150er: {iso: 'single', pt: 20, er: 2.1, HT: 150}
-    L1_SingleIsoEG20er2p1_HTT175er: {iso: 'single', pt: 20, er: 2.1, HT: 175}
-    L1_SingleIsoEG20er2p1_HTT200er: {iso: 'single', pt: 20, er: 2.1, HT: 200}
+    # # SingleIsoEGer2p1
+    # L1_SingleIsoEG12er2p1_HTT80er: {iso: 'single', pt: 12, er: 2.131, HT: 80}
+    # L1_SingleIsoEG12er2p1_HTT100er: {iso: 'single', pt: 12, er: 2.131, HT: 100}
+    # L1_SingleIsoEG12er2p1_HTT120er: {iso: 'single', pt: 12, er: 2.131, HT: 120}
+    # L1_SingleIsoEG12er2p1_HTT150er: {iso: 'single', pt: 12, er: 2.131, HT: 150}
+    # L1_SingleIsoEG12er2p1_HTT175er: {iso: 'single', pt: 12, er: 2.131, HT: 175}
+    # L1_SingleIsoEG12er2p1_HTT200er: {iso: 'single', pt: 12, er: 2.131, HT: 200}
+    # L1_SingleIsoEG16er2p1_HTT80er: {iso: 'single', pt: 16, er: 2.131, HT: 80}
+    # L1_SingleIsoEG16er2p1_HTT100er: {iso: 'single', pt: 16, er: 2.131, HT: 100}
+    # L1_SingleIsoEG16er2p1_HTT120er: {iso: 'single', pt: 16, er: 2.131, HT: 120}
+    # L1_SingleIsoEG16er2p1_HTT150er: {iso: 'single', pt: 16, er: 2.131, HT: 150}
+    # L1_SingleIsoEG16er2p1_HTT175er: {iso: 'single', pt: 16, er: 2.131, HT: 175}
+    # L1_SingleIsoEG16er2p1_HTT200er: {iso: 'single', pt: 16, er: 2.131, HT: 200}
+    # L1_SingleIsoEG20er2p1_HTT80er: {iso: 'single', pt: 20, er: 2.131, HT: 80}
+    # L1_SingleIsoEG20er2p1_HTT100er: {iso: 'single', pt: 20, er: 2.131, HT: 100}
+    # L1_SingleIsoEG20er2p1_HTT120er: {iso: 'single', pt: 20, er: 2.131, HT: 120}
+    # L1_SingleIsoEG20er2p1_HTT150er: {iso: 'single', pt: 20, er: 2.131, HT: 150}
+    # L1_SingleIsoEG20er2p1_HTT175er: {iso: 'single', pt: 20, er: 2.131, HT: 175}
+    # L1_SingleIsoEG20er2p1_HTT200er: {iso: 'single', pt: 20, er: 2.131, HT: 200}
 
-    L1_EG12_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG12_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG12_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG12_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG12_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG12_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG16_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG16_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG16_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG16_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG16_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG16_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG20_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG20_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG20_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG20_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG20_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG20_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, er: 2.1, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.5, HT: 200}
+    L1_EG12_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 80}
+    L1_EG12_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 100}
+    L1_EG12_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 120}
+    L1_EG12_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 150}
+    L1_EG12_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 175}
+    L1_EG12_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG12er2p1_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG16_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG16_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG16_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG16_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG16_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG16_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG16er2p1_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG20_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG20_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG20_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG20_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG20_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG20_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG20er2p1_TripleJet_40_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, er: 2.131, njets: 3, jet_pt: [40, 30, 30], jet_er: 2.523, HT: 200}
 
-    L1_EG12_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG12_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG12_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG12_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG12_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG12_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG16_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG16_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG16_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG16_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG16_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG16_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG20_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG20_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG20_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG20_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG20_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG20_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 200}
-    L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 80}
-    L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 100}
-    L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 120}
-    L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 150}
-    L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 175}
-    L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, er: 2.1, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.5, HT: 200}
+    # L1_EG12_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG12_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG12_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG12_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG12_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG12_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 12, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 12, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 12, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 12, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 12, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG12er2p1_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 12, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG16_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG16_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG16_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG16_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG16_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG16_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 16, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 16, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 16, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 16, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 16, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG16er2p1_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 16, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG20_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG20_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG20_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG20_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG20_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG20_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 200}
+    # L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT80er: {iso: 'loose', pt: 20, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 80}
+    # L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT100er: {iso: 'loose', pt: 20, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 100}
+    # L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT120er: {iso: 'loose', pt: 20, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 120}
+    # L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT150er: {iso: 'loose', pt: 20, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 150}
+    # L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT175er: {iso: 'loose', pt: 20, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 175}
+    # L1_EG20er2p1_QuadJet_40_30_30_30_er2p5_HTT200er: {iso: 'loose', pt: 20, er: 2.131, njets: 4, jet_pt: [40, 30, 30, 30], jet_er: 2.523, HT: 200}
