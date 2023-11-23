@@ -199,7 +199,10 @@ class HH_bbWW_Trigger_Analysis(Module):
         if is_sl_mu and (l1.SingleMu22 or l1.Mu6_HTT250er):
             self.n_event_sl_mu_L1_Mu22_OR_Mu6_HT250 += 1
 
-        l1_ht = l1_etsum[l1_etsum.EtSumType == 1][:,0].pt
+        l1_ht = 0
+        for l1sum in l1_etsum:
+            if l1sum.etSumType == 1:
+                l1_ht = l1sum.pt
 
         SingleIsoEG24er2p1_emulated = 0
         LooseIsoEG24er2p1_HTT100er_emulated = 0
