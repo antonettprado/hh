@@ -167,9 +167,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 jet_pt_cuts = [self.L1_jets[i].pt >= L1_cut[i] for i in range(seed.njets)]
                 cut = op.AND(*jet_pt_cuts)
             elif L1_object_name == "jet_er":
-                if L1_cut == 2.5:
-                    jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= 2.523 for i in range(seed.njets)]
-                    cut = op.AND(*jet_er_cuts)
+                for i in len(seed.njets):
+                    if L1_cut[i] = 2.5:
+                        jet_er_cuts = [op.abs(self.L1_jets[i].eta) <= 2.523]
+                cut = op.AND(*jet_er_cuts)
             elif L1_object_name == "HT": 
                 cut = (self.L1_HT.pt >= L1_cut)
             elif L1_object_name == "iso":
@@ -281,6 +282,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             yields.add(SL_e, 'SL_e')
             yields.add(SL_e.refine('SingleEG28', cut=[self.L1_triggers.SingleEG28]), 'SingleEG28')
             yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
+            yields.add(SL_e.refine('LooseIsoEG24er2p1_TripleJet_26er2p7_26_26er2p7', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_TripleJet_26er2p7_26_26er2p7')
             for seed in seeds_EG.itertuples():  
                 final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
