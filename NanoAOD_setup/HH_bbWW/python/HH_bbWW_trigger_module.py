@@ -187,6 +187,7 @@ class HH_bbWW_Trigger_Analysis(Module):
         is_dl_mumu = 0
 
         self.cuts["single_lepton_event"]["sl_mu_pt"] = 10
+        self.cuts["single_lepton_event"]["sl_e_pt"] = 10
         is_sl, is_sl_e, is_sl_mu = single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["single_lepton_event"], skip_trigger=True)
         is_dl, is_dl_ee, is_dl_emu, is_dl_mumu = dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, electrons_tight_sel_index, muons_tight_sel_index, tau_sel_clean_index, ak4_jet_sel_clean_index, ak4_btag_sel_clean_index, ak8_jet_sel_clean_index, ak8_btag_sel_clean_index, self.cuts["dilepton_event"], skip_trigger=True)        
 
