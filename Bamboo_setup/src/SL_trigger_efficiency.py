@@ -237,14 +237,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         SL_e_SingleIsoEG35 = SL_e.refine("SL_e_SingleIsoEG35", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 35, op.OR(e.hwIso==1, e.hwIso==3)))])
         SL_e_L1_SingleIsoEG35 = SL_e.refine("SL_e_L1_SingleIsoEG35", cut=[l1triggers.SingleIsoEG35])
         
-        SL_e_LooseIsoEG28er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG28er2p1_HTT100er", cut=[op.AND(
-            op.rng_any(electrons, lambda e: op.AND(e.pt >= 28, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))),
-            l1HT.pt >= 100)])
+        SL_e_LooseIsoEG28er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG28er2p1_HTT100er", cut=[op.AND(op.rng_any(electrons, lambda e: op.AND(e.pt >= 28, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))), l1HT.pt >= 100)])
         SL_e_L1_LooseIsoEG28er2p1_HTT100er = SL_e.refine("SL_e_L1_LooseIsoEG28er2p1_HTT100er", cut=[l1triggers.LooseIsoEG28er2p1_HTT100er])
 
-        SL_e_LooseIsoEG24er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG24er2p1_HTT100er", cut=[op.AND(
-            op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))),
-            l1HT.pt >= 100)])
+        SL_e_LooseIsoEG24er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG24er2p1_HTT100er", cut=[op.AND(op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))), l1HT.pt >= 100)])
         SL_e_L1_LooseIsoEG24er2p1_HTT100er = SL_e.refine("SL_e_L1_LooseIsoEG24er2p1_HTT100er", cut=[l1triggers.LooseIsoEG24er2p1_HTT100er])
 
 
@@ -306,7 +302,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             yields.add(SL_e, 'SL_e')
             yields.add(SL_e.refine('SingleEG28', cut=[self.L1_triggers.SingleEG28]), 'SingleEG28')
             yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
-            yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
+            yields.add(SL_e.refine('SingleIsoEG24er2p1', cut=[self.L1_triggers.SingleIsoEG24er2p1]), 'SingleIsoEG24er2p1')
+
             for seed in seeds_EG.itertuples():  
                 final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 

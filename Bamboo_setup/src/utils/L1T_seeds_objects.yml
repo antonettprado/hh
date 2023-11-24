@@ -157,7 +157,8 @@ seeds:
     # L1_Mu15_QuadJet_40_30_20_15_er2p5: {pt: 15, njets: 4, jet_pt: [40, 30, 20, 15], jet_er: 2.523}
     
   EG:
-    L1_SingleEG28: {pt: 28}
+    L1_SingleEG28: {iso: 'single', pt: 28}
+    L1_SingleIsoEG24er2p1: {iso: 'single', pt: 24, er: 2.131}
     L1_LooseIsoEG24er2p1_HTT100er: {iso: 'loose', pt: 24, er: 2.131, HT: 100}  #Test seeds
 
     # LooseIsoEGer1p2
