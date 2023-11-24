@@ -143,21 +143,25 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         if lep == "e":
             L1_object_names = self.L1_objects_for_EG
 
-            if seed.iso == "loose":
-                L1_electrons_Iso = op.select(self.L1_electrons, lambda e: op.OR(e.hwIso==2, e.hwIso==3))
-            elif seed.iso == "single":
-                L1_electrons_Iso = op.select(self.L1_electrons, lambda e: op.OR(e.hwIso==1, e.hwIso==3))
-            else:
-                L1_electrons_Iso = self.L1_electrons
-
             if pd.isna(seed.er):
-                L1_electrons_erIso = L1_electrons_Iso
+                L1_electrons_er = self.L1_electrons
             elif seed.er == 2.131:
-                L1_electrons_erIso = op.select(L1_electrons_Iso, lambda e: op.AND(e.eta >= -2.131, e.eta <= 2.13))
+                L1_electrons_er = op.select(self.L1_electrons, lambda e: op.AND(e.eta >= -2.131, e.eta <= 2.13))
             else:
-                L1_electrons_erIso = op.select(L1_electrons_Iso, lambda e: op.abs(e.eta) <= seed.er)
+                L1_electrons_er = op.select(self.L1_electrons, lambda e: op.abs(e.eta) <= seed.er)
 
-            L1_lep = L1_electrons_erIso[0]
+            if seed.iso == "loose":
+                L1_electrons_erIso_v1 = op.select(L1_electrons_er, lambda e: e.hwIso==2)
+                L1_electrons_erIso_v2 = op.select(L1_electrons_er, lambda e: e.hwIso==3)
+            elif seed.iso == "single":
+                L1_electrons_erIso_v1 = op.select(L1_electrons_er, lambda e: e.hwIso==1)
+                L1_electrons_erIso_v2 = op.select(L1_electrons_er, lambda e: e.hwIso==3)
+            else:
+                L1_electrons_erIso_v1 = L1_electrons_er
+                L1_electrons_erIso_v2 = L1_electrons_er
+
+            L1_lep_v1 = L1_electrons_erIso_v1[0]
+            L1_lep_v2 = L1_electrons_erIso_v2[0]
 
         elif lep == "mu":
             L1_object_names = self.L1_objects_for_Mu
@@ -174,22 +178,16 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             L1_jets_er = op.select(self.L1_jets, lambda jet: op.abs(jet.eta) <= seed.jet_er)
 
         def get_cut(L1_object_name, L1_cut):
-            cut=()
+            cut=(True)
             if L1_object_name == "pt": 
-                cut = (L1_lep.pt >= L1_cut)
-            elif L1_object_name == "er": 
-                cut = (True)
+                cut = op.OR(L1_lep_v1.pt >= L1_cut, L1_lep_v2.pt >= L1_cut)
             elif L1_object_name == "njets": 
-                cut = (op.rng_len(self.L1_jets) >= L1_cut)
+                cut = (op.rng_len(L1_jets_er) >= L1_cut)
             elif L1_object_name == "jet_pt": 
-                jet_pt_cuts = [L1_jets_er[i].pt >= L1_cut[i] for i in range(seed.njets)]
+                jet_pt_cuts = [L1_jets_er[i].pt >= L1_cut[i] for i in range(L1_jets_er)]
                 cut = op.AND(*jet_pt_cuts)
-            elif L1_object_name == "jet_er":
-                cut = (True)
             elif L1_object_name == "HT": 
                 cut = (self.L1_HT.pt >= L1_cut)
-            elif L1_object_name == "iso":
-                cut = (True)
             return cut
 
         passed_cuts = []
