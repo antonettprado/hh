@@ -151,17 +151,13 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 L1_electrons_er = op.select(self.L1_electrons, lambda e: op.abs(e.eta) <= seed.er)
 
             if seed.iso == "loose":
-                L1_electrons_erIso_v1 = op.select(L1_electrons_er, lambda e: e.hwIso==2)
-                L1_electrons_erIso_v2 = op.select(L1_electrons_er, lambda e: e.hwIso==3)
+                L1_electrons_erIso = op.select(L1_electrons_er, lambda e: op.OR(e.hwIso==2, e.hwIso==3))
             elif seed.iso == "single":
-                L1_electrons_erIso_v1 = op.select(L1_electrons_er, lambda e: e.hwIso==1)
-                L1_electrons_erIso_v2 = op.select(L1_electrons_er, lambda e: e.hwIso==3)
+                L1_electrons_erIso = op.select(L1_electrons_er, lambda e: op.OR(e.hwIso==1, e.hwIso==3))
             else:
-                L1_electrons_erIso_v1 = L1_electrons_er
-                L1_electrons_erIso_v2 = L1_electrons_er
+                L1_electrons_erIso = L1_electrons_er
 
-            L1_lep_v1 = L1_electrons_erIso_v1[0]
-            L1_lep_v2 = L1_electrons_erIso_v2[0]
+            L1_lep = L1_electrons_erIso
 
         elif lep == "mu":
             L1_object_names = self.L1_objects_for_Mu
@@ -170,7 +166,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 L1_muons_erhwQual = L1_muons_hwQual
             else:
                 L1_muons_erhwQual = op.select(L1_muons_hwQual, lambda mu: op.abs(mu.eta) <= seed.er)
-            L1_lep = L1_muons_erhwQual[0]
+            L1_lep = L1_muons_erhwQual
 
         if pd.isna(seed.jet_er):
             L1_jets_er = self.L1_jets
@@ -180,7 +176,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         def get_cut(L1_object_name, L1_cut):
             cut=(True)
             if L1_object_name == "pt": 
-                cut = op.OR(L1_lep_v1.pt >= L1_cut, L1_lep_v2.pt >= L1_cut)
+                cut= (op.rng_any(L1_lep, lambda l: l.pt >= L1_cut))
             elif L1_object_name == "njets": 
                 cut = (op.rng_len(L1_jets_er) >= L1_cut)
             elif L1_object_name == "jet_pt": 
