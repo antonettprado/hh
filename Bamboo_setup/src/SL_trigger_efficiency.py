@@ -212,6 +212,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         SL_mu = self.SL_selections(baseSel, 'mu', tree)
         SL_e = self.SL_selections(baseSel, 'e', tree)
+        yields.add(SL_mu, "SL_mu")
+        yields.add(SL_e, "SL_e")
 
         SL_mu_SingleMu22 = SL_mu.refine("SL_mu_SingleMu22", cut=[op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
         SL_mu_Mu6_HTT250er = SL_mu.refine("SL_mu_Mu6_HTT250er", cut=[op.AND(op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)), l1HT.pt >= 250)])
@@ -295,8 +297,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         if len(seeds_EG) > 0:
             yields.add(SL_e, 'SL_e')
             yields.add(SL_e.refine('SingleEG28', cut=[self.L1_triggers.SingleEG28]), 'SingleEG28')
-            yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
             yields.add(SL_e.refine('SingleIsoEG24er2p1', cut=[self.L1_triggers.SingleIsoEG24er2p1]), 'SingleIsoEG24er2p1')
+            yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
 
             for seed in seeds_EG.itertuples():  
                 final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
