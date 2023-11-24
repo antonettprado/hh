@@ -216,44 +216,48 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         l1HT = op.rng_find(l1sums, lambda l1sum: l1sum.etSumType == 1)
         l1triggers = tree.L1
 
-        # baseSel_SingleMu22 = baseSel.refine("baseSel_SingleMu22", cut=[op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
-        # baseSel_Mu6_HTT250er = baseSel.refine("baseSel_Mu6_HTT250er", cut=[op.AND(op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)), l1HT.pt >= 250)])
-        # baseSel_L1_SingleMu22 = baseSel.refine("baseSel_L1_SingleMu22", cut=[l1triggers.SingleMu22])
-        # baseSel_L1_Mu6_HTT250er = baseSel.refine("baseSel_L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
+        SL_mu = self.SL_selections(baseSel, 'mu', tree)
+        SL_e = self.SL_selections(baseSel, 'e', tree)
+
+        SL_mu_SingleMu22 = SL_mu.refine("SL_mu_SingleMu22", cut=[op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
+        SL_mu_Mu6_HTT250er = SL_mu.refine("SL_mu_Mu6_HTT250er", cut=[op.AND(op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)), l1HT.pt >= 250)])
+        SL_mu_L1_SingleMu22 = SL_mu.refine("SL_mu_L1_SingleMu22", cut=[l1triggers.SingleMu22])
+        SL_mu_L1_Mu6_HTT250er = SL_mu.refine("SL_mu_L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
         
-        # yields.add(baseSel_SingleMu22, "baseSel_SingleMu22")
-        # yields.add(baseSel_L1_SingleMu22, "baseSel_L1_SingleMu22")
-        # yields.add(baseSel_Mu6_HTT250er, "baseSel_Mu6_HTT250er")
-        # yields.add(baseSel_L1_Mu6_HTT250er, "baseSel_L1_Mu6_HTT250er")
+        yields.add(SL_mu_SingleMu22, "SL_mu_SingleMu22")
+        yields.add(SL_mu_L1_SingleMu22, "SL_mu_L1_SingleMu22")
+        yields.add(SL_mu_Mu6_HTT250er, "SL_mu_Mu6_HTT250er")
+        yields.add(SL_mu_L1_Mu6_HTT250er, "SL_mu_L1_Mu6_HTT250er")
 
-        baseSel_SingleEG28 = baseSel.refine("baseSel_SingleEG28", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 28))])
-        baseSel_L1_SingleEG28 = baseSel.refine("baseSel_L1_SingleEG28", cut=[l1triggers.SingleEG28])
-        baseSel_SingleIsoEG24er2p1 = baseSel.refine("baseSel_SingleIsoEG24er2p1", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==1, e.hwIso==3)))])
-        baseSel_L1_SingleIsoEG24er2p1 = baseSel.refine("baseSel_L1_SingleIsoEG24er2p1", cut=[l1triggers.SingleIsoEG24er2p1])
+        SL_e_SingleEG28 = SL_e.refine("SL_e_SingleEG28", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 28))])
+        SL_e_L1_SingleEG28 = SL_e.refine("SL_e_L1_SingleEG28", cut=[l1triggers.SingleEG28])
+        SL_e_SingleIsoEG24er2p1 = SL_e.refine("SL_e_SingleIsoEG24er2p1", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==1, e.hwIso==3)))])
+        SL_e_L1_SingleIsoEG24er2p1 = SL_e.refine("SL_e_L1_SingleIsoEG24er2p1", cut=[l1triggers.SingleIsoEG24er2p1])
 
-        baseSel_SingleIsoEG35 = baseSel.refine("baseSel_SingleIsoEG35", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 35, op.OR(e.hwIso==1, e.hwIso==3)))])
-        baseSel_L1_SingleIsoEG35 = baseSel.refine("baseSel_L1_SingleIsoEG35", cut=[l1triggers.SingleIsoEG35])
-        baseSel_LooseIsoEG28er2p1_HTT100er = baseSel.refine("baseSel_LooseIsoEG28er2p1_HTT100er", cut=[op.AND(
+        SL_e_SingleIsoEG35 = SL_e.refine("SL_e_SingleIsoEG35", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 35, op.OR(e.hwIso==1, e.hwIso==3)))])
+        SL_e_L1_SingleIsoEG35 = SL_e.refine("SL_e_L1_SingleIsoEG35", cut=[l1triggers.SingleIsoEG35])
+        
+        SL_e_LooseIsoEG28er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG28er2p1_HTT100er", cut=[op.AND(
             op.rng_any(electrons, lambda e: op.AND(e.pt >= 28, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))),
             l1HT.pt >= 100)])
-        baseSel_L1_LooseIsoEG28er2p1_HTT100er = baseSel.refine("baseSel_L1_LooseIsoEG28er2p1_HTT100er", cut=[l1triggers.LooseIsoEG28er2p1_HTT100er])
+        SL_e_L1_LooseIsoEG28er2p1_HTT100er = SL_e.refine("SL_e_L1_LooseIsoEG28er2p1_HTT100er", cut=[l1triggers.LooseIsoEG28er2p1_HTT100er])
 
-        baseSel_LooseIsoEG24er2p1_HTT100er = baseSel.refine("baseSel_LooseIsoEG24er2p1_HTT100er", cut=[op.AND(
+        SL_e_LooseIsoEG24er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG24er2p1_HTT100er", cut=[op.AND(
             op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))),
             l1HT.pt >= 100)])
-        baseSel_L1_LooseIsoEG24er2p1_HTT100er = baseSel.refine("baseSel_L1_LooseIsoEG24er2p1_HTT100er", cut=[l1triggers.LooseIsoEG24er2p1_HTT100er])
+        SL_e_L1_LooseIsoEG24er2p1_HTT100er = SL_e.refine("SL_e_L1_LooseIsoEG24er2p1_HTT100er", cut=[l1triggers.LooseIsoEG24er2p1_HTT100er])
 
 
-        yields.add(baseSel_SingleEG28, "baseSel_SingleEG28")
-        yields.add(baseSel_L1_SingleEG28, "baseSel_L1_SingleEG28")
-        yields.add(baseSel_SingleIsoEG24er2p1, "baseSel_SingleIsoEG24er2p1")
-        yields.add(baseSel_L1_SingleIsoEG24er2p1, "baseSel_L1_SingleIsoEG24er2p1")
-        yields.add(baseSel_SingleIsoEG35, "baseSel_SingleIsoEG35")
-        yields.add(baseSel_L1_SingleIsoEG35, "baseSel_L1_SingleIsoEG35")
-        yields.add(baseSel_LooseIsoEG28er2p1_HTT100er, "baseSel_LooseIsoEG28er2p1_HTT100er")
-        yields.add(baseSel_L1_LooseIsoEG28er2p1_HTT100er, "baseSel_L1_LooseIsoEG28er2p1_HTT100er")
-        yields.add(baseSel_LooseIsoEG24er2p1_HTT100er, "baseSel_LooseIsoEG24er2p1_HTT100er")
-        yields.add(baseSel_L1_LooseIsoEG24er2p1_HTT100er, "baseSel_L1_LooseIsoEG24er2p1_HTT100er")
+        yields.add(SL_e_SingleEG28, "SL_e_SingleEG28")
+        yields.add(SL_e_L1_SingleEG28, "SL_e_L1_SingleEG28")
+        yields.add(SL_e_SingleIsoEG24er2p1, "SL_e_SingleIsoEG24er2p1")
+        yields.add(SL_e_L1_SingleIsoEG24er2p1, "SL_e_L1_SingleIsoEG24er2p1")
+        yields.add(SL_e_SingleIsoEG35, "SL_e_SingleIsoEG35")
+        yields.add(SL_e_L1_SingleIsoEG35, "SL_e_L1_SingleIsoEG35")
+        yields.add(SL_e_LooseIsoEG28er2p1_HTT100er, "SL_e_LooseIsoEG28er2p1_HTT100er")
+        yields.add(SL_e_L1_LooseIsoEG28er2p1_HTT100er, "SL_e_L1_LooseIsoEG28er2p1_HTT100er")
+        yields.add(SL_e_LooseIsoEG24er2p1_HTT100er, "SL_e_LooseIsoEG24er2p1_HTT100er")
+        yields.add(SL_e_L1_LooseIsoEG24er2p1_HTT100er, "SL_e_L1_LooseIsoEG24er2p1_HTT100er")
 
         # Must have at least a plot for definePlots to run
         plots.append(Plot.make1D("baseSel_muon0_pt", l1HT.pt, baseSel, EqBin(200, 0, 200)))
@@ -301,6 +305,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         if len(seeds_EG) > 0:
             yields.add(SL_e, 'SL_e')
             yields.add(SL_e.refine('SingleEG28', cut=[self.L1_triggers.SingleEG28]), 'SingleEG28')
+            yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
             yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
             for seed in seeds_EG.itertuples():  
                 final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
