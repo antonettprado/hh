@@ -184,7 +184,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             elif L1_object_name == "njets": 
                 cut = (op.rng_len(L1_jets_er) >= L1_cut)
             elif L1_object_name == "jet_pt": 
-                jet_pt_cuts = [L1_jets_er[i].pt >= L1_cut[i] for i in range(L1_jets_er)]
+                jet_pt_cuts = [L1_jets_er[i].pt >= L1_cut[i] for i in range(op.rng_len(L1_jets_er))]
                 cut = op.AND(*jet_pt_cuts)
             elif L1_object_name == "HT": 
                 cut = (self.L1_HT.pt >= L1_cut)
