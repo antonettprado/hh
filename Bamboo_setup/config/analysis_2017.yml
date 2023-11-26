@@ -34,8 +34,8 @@ plotIt:
     ratio-fit-error-fill-color: "#aa556270"
     ratio-fit-line-color: "#0B486B"
     yields-table-align: v
-    yields-table-numerical-precision-yields: 3
-    yields-table-numerical-precision-ratio: 3
+    yields-table-numerical-precision-yields: 4
+    yields-table-numerical-precision-ratio: 4
   legend:
     position: [0.7, 0.6, 0.91, 0.91]
   groups:
