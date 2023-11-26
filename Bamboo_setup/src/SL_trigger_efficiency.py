@@ -129,7 +129,6 @@ class SL_trigger_efficiency_v2(SL_DL_event_selection):
 
         passed_cuts = []
 
-<<<<<<< HEAD
         l1electrons = self.l1electrons
         if hasattr(seed, "iso") and not pd.isna(seed.iso):
             if seed.iso == "loose":
@@ -155,120 +154,6 @@ class SL_trigger_efficiency_v2(SL_DL_event_selection):
         final_passed_cuts = op.AND(*passed_cuts)
 
         return final_passed_cuts
-=======
-            if pd.isna(seed.er):
-                L1_electrons_er = self.L1_electrons
-            elif seed.er == 2.131:
-                L1_electrons_er = op.select(self.L1_electrons, lambda e: op.AND(e.eta >= -2.131, e.eta <= 2.13))
-            else:
-                L1_electrons_er = op.select(self.L1_electrons, lambda e: op.abs(e.eta) <= seed.er)
-
-            if seed.iso == "loose":
-                L1_electrons_erIso = op.select(L1_electrons_er, lambda e: op.OR(e.hwIso==2, e.hwIso==3))
-            elif seed.iso == "single":
-                L1_electrons_erIso = op.select(L1_electrons_er, lambda e: op.OR(e.hwIso==1, e.hwIso==3))
-            else:
-                L1_electrons_erIso = L1_electrons_er
-
-            L1_lep = L1_electrons_erIso
-
-        elif lep == "mu":
-            L1_object_names = self.L1_objects_for_Mu
-            L1_muons_hwQual = op.select(self.L1_muons, lambda mu: mu.hwQual >= 12)
-            if pd.isna(seed.er):
-                L1_muons_erhwQual = L1_muons_hwQual
-            else:
-                L1_muons_erhwQual = op.select(L1_muons_hwQual, lambda mu: op.abs(mu.eta) <= seed.er)
-            L1_lep = L1_muons_erhwQual
-
-        if pd.isna(seed.jet_er):
-            L1_jets_er = self.L1_jets
-        else:
-            L1_jets_er = op.select(self.L1_jets, lambda jet: op.abs(jet.eta) <= seed.jet_er)
-
-        def get_cut(L1_object_name, L1_cut):
-            cut=(True)
-            if L1_object_name == "pt": 
-                cut= (op.rng_any(L1_lep, lambda l: l.pt >= L1_cut))
-            elif L1_object_name == "njets": 
-                cut = (op.rng_len(L1_jets_er) >= L1_cut)
-            elif L1_object_name == "jet_pt": 
-                jet_pt_cuts = [L1_jets_er[i].pt >= L1_cut[i] for i in range(seed.njets)]
-                cut = op.AND(*jet_pt_cuts)
-            elif L1_object_name == "HT": 
-                cut = (self.L1_HT.pt >= L1_cut)
-            return cut
-
-        passed_cuts = []
-        for L1_object_name in L1_object_names:
-            L1_cut = getattr(seed, L1_object_name)
-            if isinstance(L1_cut, numbers.Number):
-                if pd.isna(L1_cut): continue
-            passed_cuts.append(get_cut(L1_object_name, L1_cut))
-        final_passed_cut = op.AND(*passed_cuts)
-
-        return final_passed_cut
-
-    def _test_triggers(self, tree, baseSel):
-
-        print("......................... TESTING ONLY .........................")
-        plots = []
-        yields = CutFlowReport("yields", printInLog=True, recursive=False)
-        plots.append(yields)
-        yields.add(baseSel, "baseSel")
-
-        electrons = tree.L1EG
-        muons = tree.L1Mu
-        l1sums = tree.L1EtSum
-        l1HT = op.rng_find(l1sums, lambda l1sum: l1sum.etSumType == 1)
-        l1triggers = tree.L1
-
-        SL_mu = self.SL_selections(baseSel, 'mu', tree)
-        SL_e = self.SL_selections(baseSel, 'e', tree)
-        yields.add(SL_mu, "SL_mu")
-        yields.add(SL_e, "SL_e")
-
-        SL_mu_SingleMu22 = SL_mu.refine("SL_mu_SingleMu22", cut=[op.rng_any(muons, lambda mu: op.AND(mu.pt >= 22, mu.hwQual >= 12))])
-        SL_mu_Mu6_HTT250er = SL_mu.refine("SL_mu_Mu6_HTT250er", cut=[op.AND(op.rng_any(muons, lambda mu: op.AND(mu.pt >= 6, mu.hwQual >= 12)), l1HT.pt >= 250)])
-        SL_mu_L1_SingleMu22 = SL_mu.refine("SL_mu_L1_SingleMu22", cut=[l1triggers.SingleMu22])
-        SL_mu_L1_Mu6_HTT250er = SL_mu.refine("SL_mu_L1_Mu6_HTT250er", cut=[l1triggers.Mu6_HTT250er])
-        
-        yields.add(SL_mu_SingleMu22, "SL_mu_SingleMu22")
-        yields.add(SL_mu_L1_SingleMu22, "SL_mu_L1_SingleMu22")
-        yields.add(SL_mu_Mu6_HTT250er, "SL_mu_Mu6_HTT250er")
-        yields.add(SL_mu_L1_Mu6_HTT250er, "SL_mu_L1_Mu6_HTT250er")
-
-        SL_e_SingleEG28 = SL_e.refine("SL_e_SingleEG28", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 28))])
-        SL_e_L1_SingleEG28 = SL_e.refine("SL_e_L1_SingleEG28", cut=[l1triggers.SingleEG28])
-        SL_e_SingleIsoEG24er2p1 = SL_e.refine("SL_e_SingleIsoEG24er2p1", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==1, e.hwIso==3)))])
-        SL_e_L1_SingleIsoEG24er2p1 = SL_e.refine("SL_e_L1_SingleIsoEG24er2p1", cut=[l1triggers.SingleIsoEG24er2p1])
-
-        SL_e_SingleIsoEG35 = SL_e.refine("SL_e_SingleIsoEG35", cut=[op.rng_any(electrons, lambda e: op.AND(e.pt >= 35, op.OR(e.hwIso==1, e.hwIso==3)))])
-        SL_e_L1_SingleIsoEG35 = SL_e.refine("SL_e_L1_SingleIsoEG35", cut=[l1triggers.SingleIsoEG35])
-        
-        SL_e_LooseIsoEG28er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG28er2p1_HTT100er", cut=[op.AND(op.rng_any(electrons, lambda e: op.AND(e.pt >= 28, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))), l1HT.pt >= 100)])
-        SL_e_L1_LooseIsoEG28er2p1_HTT100er = SL_e.refine("SL_e_L1_LooseIsoEG28er2p1_HTT100er", cut=[l1triggers.LooseIsoEG28er2p1_HTT100er])
-
-        SL_e_LooseIsoEG24er2p1_HTT100er = SL_e.refine("SL_e_LooseIsoEG24er2p1_HTT100er", cut=[op.AND(op.rng_any(electrons, lambda e: op.AND(e.pt >= 24, e.eta >= -2.131, e.eta <= 2.13, op.OR(e.hwIso==2, e.hwIso==3))), l1HT.pt >= 100)])
-        SL_e_L1_LooseIsoEG24er2p1_HTT100er = SL_e.refine("SL_e_L1_LooseIsoEG24er2p1_HTT100er", cut=[l1triggers.LooseIsoEG24er2p1_HTT100er])
-
-
-        yields.add(SL_e_SingleEG28, "SL_e_SingleEG28")
-        yields.add(SL_e_L1_SingleEG28, "SL_e_L1_SingleEG28")
-        yields.add(SL_e_SingleIsoEG24er2p1, "SL_e_SingleIsoEG24er2p1")
-        yields.add(SL_e_L1_SingleIsoEG24er2p1, "SL_e_L1_SingleIsoEG24er2p1")
-        yields.add(SL_e_SingleIsoEG35, "SL_e_SingleIsoEG35")
-        yields.add(SL_e_L1_SingleIsoEG35, "SL_e_L1_SingleIsoEG35")
-        yields.add(SL_e_LooseIsoEG28er2p1_HTT100er, "SL_e_LooseIsoEG28er2p1_HTT100er")
-        yields.add(SL_e_L1_LooseIsoEG28er2p1_HTT100er, "SL_e_L1_LooseIsoEG28er2p1_HTT100er")
-        yields.add(SL_e_LooseIsoEG24er2p1_HTT100er, "SL_e_LooseIsoEG24er2p1_HTT100er")
-        yields.add(SL_e_L1_LooseIsoEG24er2p1_HTT100er, "SL_e_L1_LooseIsoEG24er2p1_HTT100er")
-
-        # Must have at least a plot for definePlots to run
-        plots.append(Plot.make1D("baseSel_muon0_pt", l1HT.pt, baseSel, EqBin(200, 0, 200)))
-
-        return plots
->>>>>>> cfaf76ed1af8df31c61fa8a1505421d09442b024
 
     def SL_trigger_efficiency(self, tree, baseSel):
 
@@ -306,7 +191,6 @@ class SL_trigger_efficiency_v2(SL_DL_event_selection):
                 sel_w_seed = SL_mu.refine(sel_w_seed_name, cut=[final_passed_cuts])
                 all_selections[sel_w_seed_name] = sel_w_seed
                 yields.add(sel_w_seed, sel_w_seed_name)
-<<<<<<< HEAD
 
         if len(self.seeds_EG) > 0:
             e_pt_cut = 10
@@ -326,19 +210,6 @@ class SL_trigger_efficiency_v2(SL_DL_event_selection):
 
             for seed in self.seeds_EG.itertuples():  
                 final_passed_cuts = self.get_EG_seed_passed_cuts(seed, SL_e)
-=======
-                yields.add(sel_w_seed_OR_Mu22, sel_w_seed_OR_Mu22_name)
-                yields.add(sel_w_seed_OR_Mu22_OR_Mu6HTT250er, sel_w_seed_OR_Mu22_OR_Mu6HTT250er_name)
-
-        if len(seeds_EG) > 0:
-            yields.add(SL_e, 'SL_e')
-            yields.add(SL_e.refine('SingleEG28', cut=[self.L1_triggers.SingleEG28]), 'SingleEG28')
-            yields.add(SL_e.refine('SingleIsoEG24er2p1', cut=[self.L1_triggers.SingleIsoEG24er2p1]), 'SingleIsoEG24er2p1')
-            yields.add(SL_e.refine('LooseIsoEG24er2p1_HTT100er', cut=[self.L1_triggers.LooseIsoEG24er2p1_HTT100er]), 'LooseIsoEG24er2p1_HTT100er')
-
-            for seed in seeds_EG.itertuples():  
-                final_passed_cut = self.pass_seed_trigger(seed, SL_e, "e")
->>>>>>> cfaf76ed1af8df31c61fa8a1505421d09442b024
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
                 sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[final_passed_cuts])
                 all_selections[sel_w_seed_name] = sel_w_seed
