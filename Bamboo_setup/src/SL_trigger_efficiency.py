@@ -16,12 +16,12 @@ import pandas as pd
 import math
 import numbers
 
-class SL_trigger_efficiency_v2(SL_DL_event_selection):
+class SL_trigger_efficiency(SL_DL_event_selection):
     def __init__(self, args):
-        super(SL_trigger_efficiency_v2, self).__init__(args)
+        super(SL_trigger_efficiency, self).__init__(args)
 
     def addArgs(self, parser):
-        super(SL_trigger_efficiency_v2, self).addArgs(parser)
+        super(SL_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
         # parser.add_argument("-ept", "--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
         # parser.add_argument("-mupt", "--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
@@ -170,7 +170,7 @@ class SL_trigger_efficiency_v2(SL_DL_event_selection):
         yields.add(mllSel, "baseSel_mllSel")
 
         if len(self.seeds_Mu) > 0:
-            mu_pt_cut = 10
+            mu_pt_cut = 15
             SL_mu_only = mllSel.refine("SL muon only selection", cut=[op.AND(
                 op.rng_len(self.muons) == 1,
                 op.rng_len(self.electrons) == 0,
@@ -193,7 +193,7 @@ class SL_trigger_efficiency_v2(SL_DL_event_selection):
                 yields.add(sel_w_seed, sel_w_seed_name)
 
         if len(self.seeds_EG) > 0:
-            e_pt_cut = 10
+            e_pt_cut = 15
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
                 op.rng_len(self.muons) == 0,
                 op.rng_len(self.electrons) == 1,
@@ -258,7 +258,7 @@ class SL_trigger_efficiency_v2(SL_DL_event_selection):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_trigger_efficiency_v2, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(SL_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         yields_file = os.path.join(self.args.output, 'yields_2017.tex')
         with open(yields_file, 'r') as file: lines = file.readlines()
