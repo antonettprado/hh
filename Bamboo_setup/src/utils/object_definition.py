@@ -1,7 +1,12 @@
 from bamboo import treefunctions as op
 
+<<<<<<< HEAD
 UNIFORM_ELECTRON_PT = True
 UNIFORM_MUON_PT = True
+=======
+UNIFORM_ELECTRON_PT = False
+UNIFORM_MUON_PT = False
+>>>>>>> cfaf76ed1af8df31c61fa8a1505421d09442b024
 ELECTRON_PT = 5
 MUON_PT = 5
 

@@ -158,6 +158,7 @@ seeds:
     
   EG:
     L1_SingleEG28: {pt: 28}
+    L1_SingleIsoEG24er2p1: {iso: 'single', pt: 24, er: 2.131}
     L1_LooseIsoEG24er2p1_HTT100er: {iso: 'loose', pt: 24, er: 2.131, HT: 100}  #Test seeds
 
     # LooseIsoEGer1p2
