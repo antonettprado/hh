@@ -45,17 +45,19 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                                                                                  sampleCfg=sampleCfg,
                                                                                  description=getNanoAODDescription(),
                                                                                  backend=backend)
+
+        self.noSel = noSel
         self.baseSel = noSel.refine('weights', weight=tree.genWeight)
         
         # PV Selection
-        noSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
+        baseSel = baseSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
 
         # MET Filter Selection
-        noSel = noSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
+        baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
         if self.era in ["2017", "2018"]:
-            noSel = noSel.refine('met_filter_2017_2018', cut=[tree.Flag.ecalBadCalibFilterV2])
+            baseSel = baseSel.refine('met_filter_2017_2018', cut=[tree.Flag.ecalBadCalibFilterV2])
         if not self.is_MC:
-            noSel = noSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
+            baseSel = baseSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
 
         # Triggers Paths
         # EGamma
@@ -73,13 +75,13 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         # Gen Weight and Trigger Selection
         if self.is_MC:
             if self.args.noHLT:
-                noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=())
+                baseSel = baseSel.refine('genWeight', weight=tree.genWeight, cut=())
             else:
-                noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
+                baseSel = baseSel.refine('genWeight', weight=tree.genWeight, cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
         else:
             if self.args.noHLT:
-                noSel = noSel.refine('trigger', cut=[])
+                baseSel = baseSel.refine('trigger', cut=[])
             else:
-                noSel = noSel.refine('trigger', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
+                baseSel = baseSel.refine('trigger', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
 
-        return tree, noSel, backend, lumiArgs
+        return tree, baseSel, backend, lumiArgs
