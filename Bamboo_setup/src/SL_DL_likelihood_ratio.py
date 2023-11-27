@@ -228,15 +228,15 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         plots.append(Skim('SL_res_2b_x', branches, selection))
         return plots
 
-    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+    def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
 
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
 
         self.objects = super().object_selection(tree, self.args.mc_truth_b)
-        self.selections = super().event_selection(tree, noSel, self.objects, yields, events='odd')
-        self.selections = super().additional_event_selection(tree, noSel, yields)
+        self.selections = super().event_selection(tree, baseSel, self.objects, yields, events='odd')
+        self.selections = super().additional_event_selection(tree, baseSel, yields)
 
         SL_res_1b = self.selections["SL_res_1b"]
         SL_res_2b = self.selections["SL_res_2b"]

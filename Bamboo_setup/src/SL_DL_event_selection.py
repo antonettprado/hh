@@ -23,11 +23,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)
         electron_ConePt = object_defs.elConePt(tree.Electron, tree.Jet)
-        electrons = op.sort(electrons, lambda el: -electron_ConePt[el.idx])
+        # electrons = op.sort(electrons, lambda el: -electron_ConePt[el.idx])
+        electrons = op.sort(electrons, lambda el: -el.pt)
 
         muons = object_defs.muon_basic_selection(tree.Muon)
         muon_ConePt = object_defs.muConePt(tree.Muon, tree.Jet)
-        muons = op.sort(muons, lambda mu: -muon_ConePt[mu.idx])
+        # muons = op.sort(muons, lambda mu: -muon_ConePt[mu.idx])
+        muons = op.sort(muons, lambda el: -el.pt)
 
         ## TO DO: do we need to clean electrons from muons?
 
@@ -108,7 +110,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         return objects
 
-    def starting_event_selection(self, tree, noSel, yields, events='all'):
+    def starting_event_selection(self, tree, baseSel, yields, events='all'):
 
         # Determine the cut to use
         if events == 'all':
@@ -121,13 +123,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             raise ValueError("events must be 'all', 'odd', or 'even'")
 
         # Gen the base selection from base_selection, refine it with the relevant cut, and add to the yields table
-        baseSel = self.baseSel.refine('genEventSumWeight', cut=cut)        
-        yields.add(baseSel, "Sample Sum of Weights") # This changes the yields in the list, even though we don't return it!
+        noSelweighted = self.noSelweighted.refine('events cut on noSelweighted', cut=cut)        
+        yields.add(noSelweighted, "Sample Sum of Weights") # This changes the yields in the list, even though we don't return it!
 
-        # Refine the working selection (noSel) with the parity cut
-        noSel = noSel.refine(events, cut=cut)
+        # Refine the working selection (baseSel) with the parity cut
+        baseSel = baseSel.refine(events, cut=cut)
 
-        return noSel
+        return baseSel
 
     def event_selection(self, tree, sel, objects, yields, events='all'):
 
@@ -318,15 +320,15 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         return selections
 
-    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+    def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
         
         objects = self.object_selection(tree, self.args.mc_truth_b)
-        selections = self.event_selection(tree, noSel, objects, yields)
+        selections = self.event_selection(tree, baseSel, objects, yields)
         
-        yields.add(noSel, 'Basic Event Selection')
+        yields.add(baseSel, 'Basic Event Selection')
 
         tight_electrons = objects["tight_electrons"]
         tight_muons = objects["tight_muons"]
