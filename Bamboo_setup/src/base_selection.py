@@ -50,7 +50,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         self.noSelweighted = noSel.refine('weights', weight=tree.genWeight)
         
         # PV Selection
-        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
+        baseSel = self.noSelweighted.refine('pv', cut=[tree.PV.npvsGood >= 1])
 
         # MET Filter Selection
         baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
