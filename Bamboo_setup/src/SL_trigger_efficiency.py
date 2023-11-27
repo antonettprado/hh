@@ -23,8 +23,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
     def addArgs(self, parser):
         super(SL_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
-        # parser.add_argument("-ept", "--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
-        # parser.add_argument("-mupt", "--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
+        parser.add_argument("-ept", "--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
+        parser.add_argument("-mupt", "--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
 
@@ -55,11 +55,11 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                                             backend=backend)
 
         self.noSel = noSel
-        # baseSel = noSel.refine('weights', weight=tree.genWeight, cut=tree.genWeight < 10000)
+        self.noSelweighted = noSel.refine('weights', weight=tree.genWeight, cut=tree.genWeight < 10000)
 
         # Base Selection -----------------------------------------------------
         # PV Selection
-        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
+        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])               # Change this once genWeights figured out
 
         # MET Filter Selection
         baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
@@ -140,7 +140,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             l1electrons = op.select(l1electrons, lambda e: e.pt >= seed.pt)
             passed_cuts.append(op.rng_len(l1electrons) > 0)
         if hasattr(seed, "er") and not pd.isna(seed.er):
-            l1electrons = op.select(l1electrons, lambda e: e.eta <= seed.er)
+            if seed.er ==  2.131:
+                l1electrons = op.select(l1electrons, lambda e: op.AND(e.eta >= -2.131, e.eta <= 2.13))
+            else:
+                l1electrons = op.select(l1electrons, lambda e: e.eta <= seed.er)
             passed_cuts.append(op.rng_len(l1electrons) > 0)
         if hasattr(seed, "HT") and not pd.isna(seed.HT):
             passed_cuts.append(self.l1HT.pt >= seed.HT)
@@ -162,61 +165,91 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         plots.append(yields)
         self.set_objects(tree)
         self.set_seeds()
-        all_selections = {}
+        selections_to_plot = {}
 
         yields.add(baseSel, 'baseSel')
 
         mllSel = baseSel.refine("mllSel", cut=[event_defs.mll_selection(self.loose_electrons, self.loose_muons)])
         yields.add(mllSel, "baseSel_mllSel")
 
-        if len(self.seeds_Mu) > 0:
-            mu_pt_cut = 15
+        if not self.seeds_Mu.empty:
+            mu_pt_cut = self.args.muon_pt if self.args.muon_pt is not None else 10
+            print(f"The offline muon pt cut is: {mu_pt_cut}")
             SL_mu_only = mllSel.refine("SL muon only selection", cut=[op.AND(
                 op.rng_len(self.muons) == 1,
                 op.rng_len(self.electrons) == 0,
                 op.rng_len(self.taus) == 0,
-                self.muons[0].pt > mu_pt_cut
-            )])
-            yields.add(SL_mu_only, "SL_mu_only")
-
+                self.muons[0].pt > mu_pt_cut)])
             SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
+            
+            selections_to_plot["SL_mu"] = SL_mu
+
             yields.add(SL_mu, "SL_mu")
-            all_selections["SL_mu"] = SL_mu
+            yields.add(SL_mu.refine("SL_mu_SingleMu22", cut=self.l1triggers.SingleMu22), "SL_mu_SingleMu22")
+            yields.add(SL_mu.refine("SL_mu_Mu6_HTT250er", cut=self.l1triggers.Mu6_HTT250er), "SL_mu_Mu6_HTT250er")
+
+            L1_Mu_flags_dict = {}
+            L1_Mu_flags_dict['Mu22'] = self.l1triggers.SingleMu22
+            L1_Mu_flags_dict['MuMu6HTT250er22'] = self.l1triggers.Mu6_HTT250er
+            L1_Mu_flags_dict['Mu22_OR_Mu6HTT250er'] = op.OR(self.l1triggers.SingleMu22, self.l1triggers.Mu6_HTT250er)
 
             for seed in self.seeds_Mu.itertuples():
                 final_passed_cuts = self.get_Mu_seed_passed_cuts(seed, SL_mu)
+
                 sel_w_seed_name = '_'.join(['SL_mu', seed.Index]) 
                 sel_w_seed = SL_mu.refine(sel_w_seed_name, cut=[final_passed_cuts])
-                all_selections[sel_w_seed_name] = sel_w_seed
+                selections_to_plot[sel_w_seed_name] = sel_w_seed
                 yields.add(sel_w_seed, sel_w_seed_name)
 
-        if len(self.seeds_EG) > 0:
-            e_pt_cut = 15
+                for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
+                    sel_w_seed_OR_flag_name = '_'.join(['SL_mu', seed.Index,'OR',L1_flag_name]) 
+                    sel_w_seed_OR_flag = SL_mu.refine(sel_w_seed_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
+                    # selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
+                    yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
+
+        if not self.seeds_EG.empty:
+            e_pt_cut = self.args.electron_pt if self.args.electron_pt is not None else 10
+            print(f"The offline muon pt cut is: {e_pt_cut}")
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
                 op.rng_len(self.muons) == 0,
                 op.rng_len(self.electrons) == 1,
                 op.rng_len(self.taus) == 0,
-                self.electrons[0].pt > e_pt_cut)
-            ])
-            yields.add(SL_e_only, 'SL_e_only')
-            
+                self.electrons[0].pt > e_pt_cut)])
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
+            
+            selections_to_plot["SL_e"] = SL_e
+
             yields.add(SL_e, "SL_e")
-            all_selections["SL_e"] = SL_e
+            yields.add(SL_e.refine("SL_e_SingleEG36", cut=self.l1triggers.SingleEG36), "SL_e_SingleEG36")
+            yields.add(SL_e.refine("SL_e_SingleIsoEG30", cut=self.l1triggers.SingleIsoEG30), "SL_e_SingleIsoEG30")
+            yields.add(SL_e.refine("SL_e_LooseIsoEG28er2p1_HTT100er", cut=self.l1triggers.LooseIsoEG28er2p1_HTT100er), "SL_e_LooseIsoEG28er2p1_HTT100er")
+
+            L1_EG_flags_dict = {}
+            L1_EG_flags_dict['SingleEG36'] = self.l1triggers.SingleEG36
+            L1_EG_flags_dict['SingleIsoEG30'] = self.l1triggers.SingleIsoEG30
+            L1_EG_flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
+            L1_EG_flags_dict['All3'] = op.OR(self.l1triggers.SingleEG36, self.l1triggers.SingleIsoEG30, self.l1triggers.LooseIsoEG28er2p1_HTT100er)
 
             for seed in self.seeds_EG.itertuples():  
                 final_passed_cuts = self.get_EG_seed_passed_cuts(seed, SL_e)
+
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
                 sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[final_passed_cuts])
-                all_selections[sel_w_seed_name] = sel_w_seed
+                selections_to_plot[sel_w_seed_name] = sel_w_seed
                 yields.add(sel_w_seed, sel_w_seed_name)        
 
-        if len(self.seeds_EG) > 0 or len(self.seeds_Mu) > 0:
-            for sel_name, sel in all_selections.items():
+                for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
+                    sel_w_seed_OR_flag_name = '_'.join(['SL_e', seed.Index,'OR',L1_flag_name]) 
+                    sel_w_seed_OR_flag = SL_e.refine(sel_w_seed_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
+                    # selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
+                    yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
+
+        if selections_to_plot:
+            for sel_name, sel in selections_to_plot.items():
                 if "EG" in sel_name or "SL_e" in sel_name: lep = self.electrons
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.muons
                 plots.extend([
