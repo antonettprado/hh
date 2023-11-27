@@ -150,12 +150,13 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
     if len(tau_sel_clean_index) >= 1:
         is_sl_tau_veto = 1
     if is_sl_tau_veto:
+        is_sl_e = 0
+        is_sl_mu = 0
         is_sl = 0    
     if not is_sl:
         return is_sl, is_sl_e, is_sl_mu
 
     # Check jets
-    is_sl_jet = 0
     is_sl_boosted_jet = 0
     is_sl_resolved_jet = 0
     if len(ak8_btag_sel_clean_index) >= 1: # boosted Hbb case
@@ -180,6 +181,8 @@ def single_lepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hl
                 is_sl_resolved_jet = 1
 
     if not is_sl_boosted_jet and not is_sl_resolved_jet:
+        is_sl_e = 0
+        is_sl_mu = 0
         is_sl = 0 
     return is_sl, is_sl_e, is_sl_mu
 
@@ -238,6 +241,9 @@ def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, el
                         is_dl_emu = 1
 
     if not is_dl_ee and not is_dl_mumu and not is_dl_emu:
+        is_dl_ee = 0
+        is_dl_emu = 0
+        is_dl_mumu = 0
         is_dl = 0    
     if not is_dl:
         return is_dl, is_dl_ee, is_dl_emu, is_dl_mumu
@@ -252,5 +258,8 @@ def dilepton_event_selection(electrons, muons, taus, ak4_jets, ak8_jets, hlt, el
                 is_dl_jet = 1
 
     if not is_dl_jet:
+        is_dl_ee = 0
+        is_dl_emu = 0
+        is_dl_mumu = 0
         is_dl = 0 
     return is_dl, is_dl_ee, is_dl_emu, is_dl_mumu
