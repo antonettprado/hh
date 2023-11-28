@@ -8,8 +8,7 @@ samples:
   bbWW_sl:
     era: "2017"
     group: "HH_bbWW"
-    files: 
-      - /eos/user/a/anunezde/MC_Samples/trigger_test/L1nano_HHbbWW_2b2VLnu2J_Fall17.root
+    db: das:/GluGluToHHTo2B2VLNu2J_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1/NANOAODSIM
     type: mc
     cross-section:  0.00334825583
     generated-events: genEventSumw

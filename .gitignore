@@ -23,3 +23,4 @@ Bamboo_setup/myREADME.md
 Bamboo_setup/Bamboo_setup.code-workspace
 Bamboo_setup/config/analysis_2018_test_eos.yml
 .gitignore
+Bamboo_setup/config/analysis_2017_local.yml
