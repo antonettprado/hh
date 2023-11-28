@@ -1,9 +1,9 @@
 from bamboo import treefunctions as op
 
-UNIFORM_ELECTRON_PT = True
-UNIFORM_MUON_PT = True
-ELECTRON_PT = 5
-MUON_PT = 5
+UNIFORM_ELECTRON_PT = False
+UNIFORM_MUON_PT = False
+ELECTRON_PT = 10
+MUON_PT = 10
 
 def elConePt(electrons, jets):
     return op.map(electrons, lambda lep: op.multiSwitch(
