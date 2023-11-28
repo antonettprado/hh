@@ -23,8 +23,9 @@ class SL_trigger_efficiency(SL_DL_event_selection):
     def addArgs(self, parser):
         super(SL_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
-        parser.add_argument("-ept", "--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
-        parser.add_argument("-mupt", "--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
+        parser.add_argument("--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
+        parser.add_argument("--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
+        parser.add_argument("--no_mvaTTH", action='store_true', help='Dont use lepton mvaTTH related cuts')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
 
@@ -79,7 +80,9 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
         self.l1triggers = tree.L1
 
-        objects = self.object_selection(tree)
+        self.args.mvaTTH = False if self.args.no_mvaTTH else True
+        print(f"Use lepton mvaTTH cuts: {self.args.mvaTTH}")
+        objects = self.object_selection(tree, use_mvaTTH=self.args.mvaTTH)
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]

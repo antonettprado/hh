@@ -18,8 +18,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    def object_selection(self, tree, MC_bjets=False):
-
+    def object_selection(self, tree, MC_bjets=False, use_mvaTTH=True):
+        print(f"In objects election: {use_mvaTTH}")
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)
         electron_ConePt = object_defs.elConePt(tree.Electron, tree.Jet)
@@ -35,13 +35,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Select Loose Electrons
         loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet)
-        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, electron_ConePt, tree.Jet)
-        tight_electrons = object_defs.electron_tight_selection(electrons, electron_ConePt, tree.Jet)
+        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
+        tight_electrons = object_defs.electron_tight_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
 
         # Select Muons
         loose_muons = object_defs.muon_loose_selection(muons, muon_ConePt, tree.Jet)
-        fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet)
-        tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet)
+        fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
+        tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
 
         # Select Taus
         taus = object_defs.tau_selection(tree.Tau)

@@ -1,12 +1,7 @@
 from bamboo import treefunctions as op
 
-<<<<<<< HEAD
 UNIFORM_ELECTRON_PT = True
 UNIFORM_MUON_PT = True
-=======
-UNIFORM_ELECTRON_PT = False
-UNIFORM_MUON_PT = False
->>>>>>> cfaf76ed1af8df31c61fa8a1505421d09442b024
 ELECTRON_PT = 5
 MUON_PT = 5
 
@@ -78,9 +73,10 @@ def electron_loose_selection(electrons, electron_ConePt, jets):
         )
     )
 
-def electron_fakeable_selection(electrons, electron_ConePt, jets):
+def electron_fakeable_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
     pt_cut = ELECTRON_PT if UNIFORM_ELECTRON_PT else 10
     print(f"electron_fakeable_selection: pt cut of {pt_cut}")
+    print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
         # electron_ConePt[el.idx] > pt_cut, ## TO DO: Clean electrons (from muons) for cone-pT?
         el.pt > pt_cut,
@@ -94,15 +90,17 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets):
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
         el.lostHits == 0,
-        op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
-        op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
-        op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))
-        )
-    )
+        op.switch(op.c_bool(use_mvaTTH), op.AND(
+            op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
+            op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
+            op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))),
+            1)
+        ))
 
-def electron_tight_selection(electrons, electron_ConePt, jets):
+def electron_tight_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
     pt_cut = ELECTRON_PT if UNIFORM_ELECTRON_PT else 10
     print(f"electron_tight_selection: pt cut of {pt_cut}")
+    print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
         # electron_ConePt[el.idx] > pt_cut, ## TO DO: Clean electrons (from muons) for cone-pT?
         el.pt > pt_cut,
@@ -118,9 +116,8 @@ def electron_tight_selection(electrons, electron_ConePt, jets):
         el.lostHits == 0,
         el.mvaFall17V2noIso_WPL,
         op.NOT(nearbyBtag(el, jets, 0.2770)),
-        el.mvaTTH > 0.3
-        )
-    )
+        op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
+        ))
 
 def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
@@ -140,9 +137,10 @@ def muon_loose_selection(muons, muon_ConePt, jets):
         )
     )
 
-def muon_fakeable_selection(muons, muon_ConePt, jets):
+def muon_fakeable_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
     pt_cut = MUON_PT if UNIFORM_MUON_PT else 10
     print(f"muon_fakeable_selection: pt cut of {pt_cut}")
+    print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
         # muon_ConePt[mu.idx] > pt_cut,
         mu.pt > pt_cut,
@@ -152,14 +150,16 @@ def muon_fakeable_selection(muons, muon_ConePt, jets):
         mu.sip3d < 8,
         mu.pfRelIso03_all < 0.4,
         mu.looseId,
-        op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
-        op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, 0.2770)), op.NOT(nearbyBtag(mu, jets, 0.7264))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
-        )
-    )
+        op.switch(op.c_bool(use_mvaTTH), op.AND(
+            op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
+            op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, 0.2770)), op.NOT(nearbyBtag(mu, jets, 0.7264)))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
+            1)
+        ))
 
-def muon_tight_selection(muons, muon_ConePt, jets): 
+def muon_tight_selection(muons, muon_ConePt, jets, use_mvaTTH=True): 
     pt_cut = MUON_PT if UNIFORM_MUON_PT else 10
     print(f"muon_tight_selection: pt cut of {pt_cut}")
+    print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
         # muon_ConePt[mu.idx] > pt_cut,
         mu.pt > pt_cut,
@@ -170,9 +170,8 @@ def muon_tight_selection(muons, muon_ConePt, jets):
         mu.pfRelIso03_all < 0.4,
         mu.mediumId,
         op.NOT(nearbyBtag(mu, jets, 0.2770)),
-        mu.mvaTTH > 0.5
-        )
-    )
+        op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
+        ))
 
 def tau_selection(taus):
     return op.select(taus, lambda tau: op.AND(
