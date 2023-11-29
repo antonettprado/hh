@@ -90,11 +90,11 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, use_mvaTTH=Tru
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
         el.lostHits == 0,
-        op.switch(op.c_bool(use_mvaTTH), op.AND(
-            op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
-            op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
-            op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))),
-            1)
+        op.switch(op.c_bool(use_mvaTTH), 
+            op.AND(op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
+                op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
+                op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))),
+            op.AND(el.mvaFall17V2noIso_WPL,op.NOT(nearbyBtag(el, jets, 0.2770))))
         ))
 
 def electron_tight_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
@@ -150,10 +150,10 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
         mu.sip3d < 8,
         mu.pfRelIso03_all < 0.4,
         mu.looseId,
-        op.switch(op.c_bool(use_mvaTTH), op.AND(
-            op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
-            op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, 0.2770)), op.NOT(nearbyBtag(mu, jets, 0.7264)))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
-            1)
+        op.switch(op.c_bool(use_mvaTTH), 
+            op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
+                op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, 0.2770)), op.NOT(nearbyBtag(mu, jets, 0.7264)))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
+            mu.jetRelIso < 0.8)
         ))
 
 def muon_tight_selection(muons, muon_ConePt, jets, use_mvaTTH=True): 
