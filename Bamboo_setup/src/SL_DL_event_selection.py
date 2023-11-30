@@ -23,23 +23,21 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)
         electron_ConePt = object_defs.elConePt(tree.Electron, tree.Jet)
-        # electrons = op.sort(electrons, lambda el: -electron_ConePt[el.idx])
-        electrons = op.sort(electrons, lambda el: -el.pt)
+        electrons = op.sort(electrons, lambda el: op.switch(op.c_bool(use_mvaTTH), -electron_ConePt[el.idx], -el.pt))
 
         muons = object_defs.muon_basic_selection(tree.Muon)
         muon_ConePt = object_defs.muConePt(tree.Muon, tree.Jet)
-        # muons = op.sort(muons, lambda mu: -muon_ConePt[mu.idx])
-        muons = op.sort(muons, lambda el: -el.pt)
+        muons = op.sort(muons, lambda mu: op.switch(op.c_bool(use_mvaTTH), -muon_ConePt[mu.idx], -mu.pt))
 
         ## TO DO: do we need to clean electrons from muons?
 
         # Select Loose Electrons
-        loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet)
+        loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
         fakeable_electrons = object_defs.electron_fakeable_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
         tight_electrons = object_defs.electron_tight_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
 
         # Select Muons
-        loose_muons = object_defs.muon_loose_selection(muons, muon_ConePt, tree.Jet)
+        loose_muons = object_defs.muon_loose_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
         fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
         tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
 
@@ -446,5 +444,5 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         yields.add(selections["SL"]["SL"], "SL")
         yields.add(selections["DL"]["DL"], "DL")
-        
+
         return plots
