@@ -46,11 +46,27 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                                                                                  description=getNanoAODDescription(),
                                                                                  backend=backend)
 
-        self.noSel = noSel
-        self.noSelweighted = noSel.refine('weights', weight=tree.genWeight)
+        # Plots in base that need to be propagated to the Plotters #
+        self.base_plots = []
+
+        # CutFlow report 
+        self.yields = CutFlowReport("yields",printInLog=self.args.PrintYield,recursive=self.args.PrintYield)
+
+        # Adding self.selections to class -----------------------------------
+        self._noSel = noSel
+        self.yields.add(self._noSel, "self._noSel")
+
+        if 'HH' in sampleCfg['group']:
+            noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
+            self.yields.add(noSel, "Veto super-weighted events in HH")
+            # Add neccesary plot for corrected sum of genWeights 
+            self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), self.noSel, EqBin(1,0.,1.), autoSyst=False))
         
+        self.noSel = noSel
+        
+        # Base Selection -----------------------------------------------------
         # PV Selection
-        baseSel = self.noSelweighted.refine('pv', cut=[tree.PV.npvsGood >= 1])
+        baseSel = self.noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
 
         # MET Filter Selection
         baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
@@ -74,14 +90,12 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
 
         # Gen Weight and Trigger Selection
         if self.is_MC:
-            if self.args.noHLT:
-                baseSel = baseSel.refine('genWeight', weight=tree.genWeight, cut=())
-            else:
-                baseSel = baseSel.refine('genWeight', weight=tree.genWeight, cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
+            baseSel = baseSel.refine('genWeight', weight=tree.genWeight)
+            if not self.args.noHLT:
+                baseSel = baseSel.refine('HLT', cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
         else:
-            if self.args.noHLT:
-                baseSel = baseSel.refine('trigger', cut=[])
-            else:
-                baseSel = baseSel.refine('trigger', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
+            if not self.args.noHLT:
+                baseSel = baseSel.refine('HLT', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
+                
 
         return tree, baseSel, backend, lumiArgs
