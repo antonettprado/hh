@@ -26,7 +26,7 @@ plotIt:
     margin-bottom: 0.15
     luminosity-label: '%1$.2f fb^{-1} (13.6 TeV)'
     experiment: CMS
-    extra-label: Run 2 (2018) - Work in progress
+    extra-label: Run 2 (2017) - Work in progress
     error-fill-style: 3154
     error-fill-color: "#ee556270"
     ratio-fit-error-fill-style: 1001
