@@ -61,7 +61,7 @@ def electron_loose_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
     pt_cut = ELECTRON_PT if UNIFORM_ELECTRON_PT else 7
     print(f"electron_loose_selection: pt cut of {pt_cut}")
     return op.select(electrons, lambda el: op.AND(
-        op.switch(op.c_bool(use_mvaTTH, electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut)),
+        op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
@@ -100,7 +100,7 @@ def electron_tight_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
     print(f"electron_tight_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
-        op.switch(op.c_bool(use_mvaTTH, electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut)),
+        op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
