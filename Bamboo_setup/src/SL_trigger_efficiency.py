@@ -27,10 +27,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         parser.add_argument("--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
         parser.add_argument("--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
         parser.add_argument("--no_mvaTTH", action='store_true', help='Dont use lepton mvaTTH related cuts')
-        parser.add_argument("--PrintYield", 
-                            action      = "store_true",
-                            default     = False,
-                            help="Print yield to screen (for debugging)")
+        parser.add_argument("--PrintYield", action="store_true", default=False, help="Print yield to screen (for debugging)")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
 
@@ -68,23 +65,21 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
-        self.yields.add(self._noSel)
+        self.yields.add(self._noSel, "self._noSel")
 
-        self.noSel = self._noSel.refine("Veto bad events", cut=(op.abs(tree.genWeight) < 100)) 
-        self.yields.add(self.noSel)
+        noSel = noSel.refine("Veto bad events", cut=(op.abs(tree.genWeight) < 100)) 
+        self.yields.add(noSel, "Veto bad events")
+        noSel = noSel.refine('genWeight', weight=tree.genWeight)
+        self.yields.add(noSel, "genWeight")
 
-        self.noSelWeighted = self.noSel.refine('genWeight', weight=tree.genWeight)
-        self.yields.add(self.noSelWeighted)
+        self.noSel = noSel
 
-        # Add neccesary plot for corrected sum of genWeights
-        self.base_plots.append(Plot.make1D("generated_sum_corrected_noSel", op.c_float(0.5), self.noSel, EqBin(1,0.,1.), autoSyst=False))
-        self.base_plots.append(Plot.make1D("generated_sum_corrected_noSel_gW", op.c_float(0.5), self.noSel, EqBin(1,0.,1.), weight=tree.genWeight, autoSyst=False))
-        self.base_plots.append(Plot.make1D("generated_sum_corrected_noSelWeighted", op.c_float(0.5), self.noSelWeighted, EqBin(1,0.,1.), autoSyst=False))
-        self.base_plots.append(Plot.make1D("generated_sum_corrected_noSelWeighted_gW", op.c_float(0.5), self.noSelWeighted, EqBin(1,0.,1.), weight=tree.genWeight, autoSyst=False))
+        # Add neccesary plot for corrected sum of genWeights -----------------
+        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), self.noSel, EqBin(1,0.,1.), autoSyst=False))
         
         # Base Selection -----------------------------------------------------
         # PV Selection
-        baseSel = self.noSelWeighted.refine('pv', cut=[tree.PV.npvsGood >= 1])               # Change this once genWeights figured out
+        baseSel = self.noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])               # Change this once genWeights figured out
 
         # MET Filter Selection
         baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
@@ -316,22 +311,24 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         
+        plots = []
+        plots.append(self.yields)
+        plots.extend(self.base_plots)
+
         if self.args.test_only:
             plots = self._test_triggers(tree, baseSel)
         else:
             plots = self.SL_trigger_efficiency(tree, baseSel)
-
-        plots.extend(self.base_plots)
 
         return plots
 
     def readCounters(self, resultsFile) -> Dict[str, float]:
         counters = super(SL_trigger_efficiency, self).readCounters(resultsFile)
         # Corrections to the generated sum "
-        if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected_noSel_gW'):
+        if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
             sample = os.path.basename(resultsFile.GetName())
-            print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected_noSel_gW").GetBinContent(1):.3f}')
-            counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected_noSel_gW').GetBinContent(1)
+            print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected").GetBinContent(1):.3f}')
+            counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
         return counters
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
