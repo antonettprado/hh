@@ -100,8 +100,8 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
 
         return tree, baseSel, backend, lumiArgs
 
-    def readCounters(self, resultsFile) -> Dict[str, float]:
-        counters = super(SL_trigger_efficiency, self).readCounters(resultsFile)
+    def readCounters(self, resultsFile):
+        counters = super(NanoBaseHHbbWW, self).readCounters(resultsFile)
         # Corrections to the generated sum "
         if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
             sample = os.path.basename(resultsFile.GetName())
