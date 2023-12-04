@@ -1,9 +1,9 @@
 from bamboo import treefunctions as op
 
-UNIFORM_ELECTRON_PT = False
-UNIFORM_MUON_PT = False
-ELECTRON_PT = 10
-MUON_PT = 10
+UNIFORM_ELECTRON_PT = True
+UNIFORM_MUON_PT = True
+ELECTRON_PT = 0
+MUON_PT = 0
 
 def elConePt(electrons, jets):
     return op.map(electrons, lambda lep: op.multiSwitch(
@@ -167,11 +167,11 @@ def muon_tight_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
         op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
         ))
 
-def tau_selection(taus):
+def tau_selection(taus, year):
     return op.select(taus, lambda tau: op.AND(
         tau.pt > 20,
         op.abs(tau.eta) < 2.3,
-        # tau.idDeepTau2017v2p1VSjet > 16, # WP_M
+        op.switch(op.c_int(year) == 2018, tau.idDeepTau2017v2p1VSjet > 16, 1), 
         op.OR( ## TO DO: check tau decay modes
             tau.decayMode == 0,
             tau.decayMode == 1,
