@@ -42,7 +42,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
 
         # Select Taus
-        taus = object_defs.tau_selection(tree.Tau)
+        taus = object_defs.tau_selection(tree.Tau, int(self.era))
         taus = op.sort(taus, lambda tau: -tau.pt)
         cleaned_taus = object_defs.tau_cleaning(taus, fakeable_electrons, 0.3)
         cleaned_taus = object_defs.tau_cleaning(cleaned_taus, fakeable_muons, 0.3)
