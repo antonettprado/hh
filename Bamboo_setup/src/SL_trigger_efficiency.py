@@ -60,17 +60,17 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         self.base_plots = []
 
         # CutFlow report 
-        self.yields = CutFlowReport("yields",printInLog=self.args.PrintYield,recursive=self.args.PrintYield)
+        # self.yields = CutFlowReport("yields",printInLog=self.args.PrintYield,recursive=self.args.PrintYield)
 
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
-        self.yields.add(self._noSel, "self._noSel")
+        # self.yields.add(self._noSel, "self._noSel")
 
         noSel = noSel.refine("Veto bad events", cut=(op.abs(tree.genWeight) < 100)) 
-        self.yields.add(noSel, "Veto bad events")
+        # self.yields.add(noSel, "Veto bad events")
         noSel = noSel.refine('genWeight', weight=tree.genWeight)
-        self.yields.add(noSel, "genWeight")
-
+        # self.yields.add(noSel, "genWeight")
+ 
         self.noSel = noSel
 
         # Add neccesary plot for corrected sum of genWeights -----------------
@@ -127,21 +127,21 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         if sel_name == "SL_mu":          
             if self.era == '2017':
-                flags_dict['SL_mu_'+'SingleMu22'] = self.l1triggers.SingleMu22
-                flags_dict['SL_mu_'+'Mu6_HTT240er'] =  self.get_Mu_seed_passed_cuts(pd.Series({'pt': 6, 'HT': 240}), SL_sel)
+                flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
+                flags_dict['Mu6_HTT240er'] =  self.get_Mu_seed_passed_cuts(pd.Series({'pt': 6, 'HT': 240}), SL_sel)
             elif self.era == '2018':
-                flags_dict['SL_mu_'+'SingleMu22'] = self.l1triggers.SingleMu22
-                flags_dict['SL_mu_'+'Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
+                flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
+                flags_dict['Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         elif sel_name == "SL_e":
             if self.era == '2017':
-                flags_dict['SL_e_'+'SingleEG36er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'pt': 36, 'er': 2.523}), SL_sel)
-                flags_dict['SL_e_'+'SingleIsoEG30er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'single', 'pt': 30, 'er': 2.523}), SL_sel)
-                flags_dict['SL_e_'+'LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
+                flags_dict['SingleEG36er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'pt': 36, 'er': 2.523}), SL_sel)
+                flags_dict['SingleIsoEG30er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'single', 'pt': 30, 'er': 2.523}), SL_sel)
+                flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
             elif self.era == '2018':
-                flags_dict['SL_e_'+'SingleEG36er2p5'] = self.l1triggers.SingleEG36er2p5
-                flags_dict['SL_e_'+'SingleIsoEG30er2p5'] = self.l1triggers.SingleIsoEG30er2p5
-                flags_dict['SL_e_'+'LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
+                flags_dict['SingleEG36er2p5'] = self.l1triggers.SingleEG36er2p5
+                flags_dict['SingleIsoEG30er2p5'] = self.l1triggers.SingleIsoEG30er2p5
+                flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         return flags_dict
 
@@ -208,10 +208,14 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=True)
         plots.append(yields)
+        plots.extend(self.base_plots)
+
         self.set_objects(tree)
         self.set_seeds()
         selections_to_plot = {}
 
+        yields.add(self._noSel, '_noSel')
+        yields.add(self.noSel, 'noSel')
         yields.add(baseSel, 'baseSel')
 
         mllSel = baseSel.refine("mllSel", cut=[event_defs.mll_selection(self.loose_electrons, self.loose_muons)])
@@ -236,7 +240,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
             for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
                 if L1_flag_name != 'All':
-                    yields.add(SL_mu.refine(L1_flag_name, cut=L1_flag), L1_flag_name)
+                    yields.add(SL_mu.refine(L1_flag_name, cut=L1_flag), "SL_mu_" + L1_flag_name)
 
             for seed in self.seeds_Mu.itertuples():
                 final_passed_cuts = self.get_Mu_seed_passed_cuts(seed, SL_mu)
@@ -271,7 +275,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
             for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
                 if L1_flag_name != 'All':
-                    yields.add(SL_e.refine(L1_flag_name, cut=L1_flag), L1_flag_name)
+                    yields.add(SL_e.refine(L1_flag_name, cut=L1_flag), "SL_e_" + L1_flag_name)
 
             for seed in self.seeds_EG.itertuples():  
                 final_passed_cuts = self.get_EG_seed_passed_cuts(seed, SL_e)
@@ -308,7 +312,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
+        plots.extend(self.base_plots)
 
+        yields.add(self._noSel, '_noSel')
+        yields.add(self.noSel, 'noSel')
         yields.add(baseSel, 'baseSel')
 
         electrons = tree.Electron
@@ -325,6 +332,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             "event": None,
             "genWeight": None
         }, bigWeights_sel)
+
         plots.append(skim_weights)
 
         return plots
@@ -332,9 +340,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         
         plots = []
-        plots.append(self.yields)
-        plots.extend(self.base_plots)
-
+        
         if self.args.test_only:
             plots = self._test_triggers(tree, baseSel)
         else:
