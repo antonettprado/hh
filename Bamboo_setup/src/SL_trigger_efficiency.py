@@ -30,7 +30,6 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         parser.add_argument("--PrintYield", action="store_true", default=False, help="Print yield to screen (for debugging)")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
-
         def isMC():
             if sampleCfg['type'] == 'data':
                 return False
@@ -122,6 +121,30 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         self.seeds_Mu = pd.DataFrame(seeds['Mu']).T
         self.seeds_EG = pd.DataFrame(seeds['EG']).T
 
+    def get_flags_dict(self, SL_sel, sel_name):
+
+        flags_dict = dict()
+
+        if sel_name == "SL_mu":          
+            if self.era == '2017':
+                flags_dict['SL_mu_'+'SingleMu22'] = self.l1triggers.SingleMu22
+                flags_dict['SL_mu_'+'Mu6_HTT240er'] =  self.get_Mu_seed_passed_cuts(pd.Series({'pt': 6, 'HT': 240}), SL_sel)
+            elif self.era == '2018':
+                flags_dict['SL_mu_'+'SingleMu22'] = self.l1triggers.SingleMu22
+                flags_dict['SL_mu_'+'Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
+            flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
+        elif sel_name == "SL_e":
+            if self.era == '2017':
+                flags_dict['SL_e_'+'SingleEG36er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'pt': 36, 'er': 2.523}), SL_sel)
+                flags_dict['SL_e_'+'SingleIsoEG30er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'single', 'pt': 30, 'er': 2.523}), SL_sel)
+                flags_dict['SL_e_'+'LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
+            elif self.era == '2018':
+                flags_dict['SL_e_'+'SingleEG36er2p5'] = self.l1triggers.SingleEG36er2p5
+                flags_dict['SL_e_'+'SingleIsoEG30er2p5'] = self.l1triggers.SingleIsoEG30er2p5
+                flags_dict['SL_e_'+'LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
+            flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
+        return flags_dict
+
     def get_Mu_seed_passed_cuts(self, seed, sel):
 
         passed_cuts = []
@@ -207,15 +230,13 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
             
             selections_to_plot["SL_mu"] = SL_mu
-
             yields.add(SL_mu, "SL_mu")
-            yields.add(SL_mu.refine("SL_mu_SingleMu22", cut=self.l1triggers.SingleMu22), "SL_mu_SingleMu22")
-            yields.add(SL_mu.refine("SL_mu_Mu6_HTT250er", cut=self.l1triggers.Mu6_HTT250er), "SL_mu_Mu6_HTT250er")
 
-            L1_Mu_flags_dict = {}
-            L1_Mu_flags_dict['Mu22'] = self.l1triggers.SingleMu22
-            L1_Mu_flags_dict['MuMu6HTT250er22'] = self.l1triggers.Mu6_HTT250er
-            L1_Mu_flags_dict['Mu22_OR_Mu6HTT250er'] = op.OR(self.l1triggers.SingleMu22, self.l1triggers.Mu6_HTT250er)
+            L1_Mu_flags_dict = self.get_flags_dict(SL_mu, "SL_mu")
+
+            for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
+                if L1_flag_name != 'All':
+                    yields.add(SL_mu.refine(L1_flag_name, cut=L1_flag), L1_flag_name)
 
             for seed in self.seeds_Mu.itertuples():
                 final_passed_cuts = self.get_Mu_seed_passed_cuts(seed, SL_mu)
@@ -233,7 +254,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         if not self.seeds_EG.empty:
             e_pt_cut = self.args.electron_pt if self.args.electron_pt is not None else 10
-            print(f"The offline muon pt cut is: {e_pt_cut}")
+            print(f"The offline electron pt cut is: {e_pt_cut}")
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
                 op.rng_len(self.muons) == 0,
                 op.rng_len(self.electrons) == 1,
@@ -244,17 +265,13 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
             
             selections_to_plot["SL_e"] = SL_e
-
             yields.add(SL_e, "SL_e")
-            yields.add(SL_e.refine("SL_e_SingleEG36", cut=self.l1triggers.SingleEG36), "SL_e_SingleEG36")
-            yields.add(SL_e.refine("SL_e_SingleIsoEG30", cut=self.l1triggers.SingleIsoEG30), "SL_e_SingleIsoEG30")
-            yields.add(SL_e.refine("SL_e_LooseIsoEG28er2p1_HTT100er", cut=self.l1triggers.LooseIsoEG28er2p1_HTT100er), "SL_e_LooseIsoEG28er2p1_HTT100er")
 
-            L1_EG_flags_dict = {}
-            L1_EG_flags_dict['SingleEG36'] = self.l1triggers.SingleEG36
-            L1_EG_flags_dict['SingleIsoEG30'] = self.l1triggers.SingleIsoEG30
-            L1_EG_flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
-            L1_EG_flags_dict['All3'] = op.OR(self.l1triggers.SingleEG36, self.l1triggers.SingleIsoEG30, self.l1triggers.LooseIsoEG28er2p1_HTT100er)
+            L1_EG_flags_dict = self.get_flags_dict(SL_e, "SL_e")
+
+            for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
+                if L1_flag_name != 'All':
+                    yields.add(SL_e.refine(L1_flag_name, cut=L1_flag), L1_flag_name)
 
             for seed in self.seeds_EG.itertuples():  
                 final_passed_cuts = self.get_EG_seed_passed_cuts(seed, SL_e)
@@ -292,11 +309,14 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
 
+        yields.add(baseSel, 'baseSel')
+
         electrons = tree.Electron
         muons = tree.Muon
 
-        plots.append(Plot.make1D("noSelweighted_nElectrons", op.rng_len(electrons), self.noSelWeighted, EqBin(20, 0, 20), xTitle="nElectrons"))
-        plots.append(Plot.make1D("noSelweighted_nMuons", op.rng_len(muons), self.noSelWeighted, EqBin(20, 0, 20), xTitle="nMuons"))
+        plots.append(Plot.make1D("_noSel_nElectrons", op.rng_len(electrons), self._noSel, EqBin(20, 0, 20), xTitle="nElectrons"))
+        plots.append(Plot.make1D("_noSel_nMuons", op.rng_len(muons), self._noSel, EqBin(20, 0, 20), xTitle="nMuons"))
+        plots.append(Plot.make1D("weights", tree.genWeight, self._noSel, EqBin(40000, -20000, 20000), xTitle="nMuons"))
         plots.append(Plot.make1D("noSel_nElectrons", op.rng_len(electrons), self.noSel, EqBin(20, 0, 20), xTitle="nElectrons"))
         plots.append(Plot.make1D("noSel_nMuons", op.rng_len(muons), self.noSel, EqBin(20, 0, 20), xTitle="nMuons"))
 
@@ -323,7 +343,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         return plots
 
     def readCounters(self, resultsFile) -> Dict[str, float]:
-        counters = super(SL_trigger_efficiency, self).readCounters(resultsFile)
+        counters = super(NanoBaseHHbbWW, self).readCounters(resultsFile)
         # Corrections to the generated sum "
         if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
             sample = os.path.basename(resultsFile.GetName())
@@ -336,11 +356,11 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         super(SL_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         if self.args.test_only:
-            file1 = os.path.join(self.args.output, 'results/bbWW_sl.root')
+            file1 = os.path.join(resultsdir, 'bbWW_sl.root')
             df = ROOT.RDataFrame("skim_weights", file1)
             df.Display({"event", "genWeight"}, 5, 20).Print()
 
-        yields_file = os.path.join(self.args.output, 'yields_2017.tex')
+        yields_file = os.path.join(workdir, 'yields_' + str(self.era) + '.tex')
         with open(yields_file, 'r') as file: lines = file.readlines()
 
         # Extracting relevant info from yields table into table_data
