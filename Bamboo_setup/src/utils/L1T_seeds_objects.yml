@@ -216,6 +216,12 @@ seeds:
     L1_LooseIsoEG12er2p1_HTT150er: {iso: 'loose', pt: 12, er: 2.131, HT: 150}
     L1_LooseIsoEG12er2p1_HTT175er: {iso: 'loose', pt: 12, er: 2.131, HT: 175}
     L1_LooseIsoEG12er2p1_HTT200er: {iso: 'loose', pt: 12, er: 2.131, HT: 200}
+    L1_LooseIsoEG14er2p1_HTT80er: {iso: 'loose', pt: 14, er: 2.131, HT: 80}
+    L1_LooseIsoEG14er2p1_HTT100er: {iso: 'loose', pt: 14, er: 2.131, HT: 100}
+    L1_LooseIsoEG14er2p1_HTT120er: {iso: 'loose', pt: 14, er: 2.131, HT: 120}
+    L1_LooseIsoEG14er2p1_HTT150er: {iso: 'loose', pt: 14, er: 2.131, HT: 150}
+    L1_LooseIsoEG14er2p1_HTT175er: {iso: 'loose', pt: 14, er: 2.131, HT: 175}
+    L1_LooseIsoEG14er2p1_HTT200er: {iso: 'loose', pt: 14, er: 2.131, HT: 200}
     L1_LooseIsoEG16er2p1_HTT80er: {iso: 'loose', pt: 16, er: 2.131, HT: 80}
     L1_LooseIsoEG16er2p1_HTT100er: {iso: 'loose', pt: 16, er: 2.131, HT: 100}
     L1_LooseIsoEG16er2p1_HTT120er: {iso: 'loose', pt: 16, er: 2.131, HT: 120}
@@ -256,6 +262,12 @@ seeds:
     L1_LooseIsoEG12er2p5_HTT150er: {iso: 'loose', pt: 12, er: 2.523, HT: 150}
     L1_LooseIsoEG12er2p5_HTT175er: {iso: 'loose', pt: 12, er: 2.523, HT: 175}
     L1_LooseIsoEG12er2p5_HTT200er: {iso: 'loose', pt: 12, er: 2.523, HT: 200}
+    L1_LooseIsoEG14er2p5_HTT80er: {iso: 'loose', pt: 14, er: 2.523, HT: 80}
+    L1_LooseIsoEG14er2p5_HTT100er: {iso: 'loose', pt: 14, er: 2.523, HT: 100}
+    L1_LooseIsoEG14er2p5_HTT120er: {iso: 'loose', pt: 14, er: 2.523, HT: 120}
+    L1_LooseIsoEG14er2p5_HTT150er: {iso: 'loose', pt: 14, er: 2.523, HT: 150}
+    L1_LooseIsoEG14er2p5_HTT175er: {iso: 'loose', pt: 14, er: 2.523, HT: 175}
+    L1_LooseIsoEG14er2p5_HTT200er: {iso: 'loose', pt: 14, er: 2.523, HT: 200}
     L1_LooseIsoEG16er2p5_HTT80er: {iso: 'loose', pt: 16, er: 2.523, HT: 80}
     L1_LooseIsoEG16er2p5_HTT100er: {iso: 'loose', pt: 16, er: 2.523, HT: 100}
     L1_LooseIsoEG16er2p5_HTT120er: {iso: 'loose', pt: 16, er: 2.523, HT: 120}
