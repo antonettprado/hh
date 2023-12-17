@@ -112,6 +112,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         self.electrons = self.tight_electrons
         self.muons = self.tight_muons
+        self.ht_jets = op.rng_sum(self.cleaned_ak4_jets, lambda jet: jet.pt)
 
     def set_seeds(self):
         filename = Path(__file__).parent / 'utils' / 'L1T_seeds_objects.yml'
@@ -306,7 +307,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 plots.extend([
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(100, -4, 4)),
-                    Plot.make1D(sel_name + "_HT", self.l1HT.pt, sel, EqBin(500, 0, 1000)),
+                    Plot.make1D(sel_name + "_HT", self.ht_jets, sel, EqBin(500, 0, 1000)),
                     Plot.make1D(sel_name + "_njets", op.rng_len(self.l1jets), sel, EqBin(15, 0, 15)),
                     Plot.make1D(sel_name + "_jet0pt", self.l1jets[0].pt, sel, EqBin(200, 0, 200)),
                     Plot.make1D(sel_name + "_jet1pt", self.l1jets[1].pt, sel, EqBin(200, 0, 200))

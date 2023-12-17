@@ -5,7 +5,6 @@ import os, sys, glob
 import argparse
 
 ROOT.gErrorIgnoreLevel = ROOT.kWarning 
-rebin_factor = 2
 ROOT.TH1.SetDefaultSumw2()
 
 def plot_effis(run_dir, seed_list):
@@ -25,8 +24,10 @@ def plot_effis(run_dir, seed_list):
     SL_mu_histo_names = []
     SL_e_histo_names = []
     SL_mu_histo_names.append("SL_mu")
+    SL_mu_histo_names.append("SL_mu_L1_SingleMu22")
     SL_mu_histo_names.append("SL_mu_L1_All")
     SL_e_histo_names.append("SL_e")
+    SL_e_histo_names.append("SL_e_L1_SingleIsoEG30er2p5")
     SL_e_histo_names.append("SL_e_L1_All")
     for seed in seed_list:
         if "SL_mu_L1_" in seed:
@@ -46,6 +47,11 @@ def plot_effis(run_dir, seed_list):
             SL_e_histo_dict[histo_name][var] = file.Get(histo_name + "_" + var)
 
     for var in variables:
+        if var == "HT":
+            rebin_factor = 10
+        else:
+            rebin_factor = 2
+
         canvas_mu = ROOT.TCanvas("c_SL_mu", "c_SL_mu", 800, 600)
         if var == "pt":
             canvas_mu.DrawFrame(0, 0, 200, 1.1, ";pT (GeV);Efficiency")
@@ -55,24 +61,26 @@ def plot_effis(run_dir, seed_list):
             canvas_mu.DrawFrame(0, 0, 1000, 1.1, ";pT (GeV);Efficiency")
         canvas_mu.SetGrid()
         legend_mu = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
-        color_index = 0
+        color_index = 1
         SL_mu_histo_dict["SL_mu"][var].Rebin(rebin_factor)
+        
+        SL_mu_effi_dict = {}
         for histo_name in SL_mu_histo_dict:
             if histo_name == "SL_mu":
                 continue
             SL_mu_histo_dict[histo_name][var].Rebin(rebin_factor)
-            print (var, histo_name, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
-            
-            #effi = ROOT.TEfficiency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var])
-            effi = SL_mu_histo_dict[histo_name][var].Clone(histo_name+"_effi")
-            effi.Divide(SL_mu_histo_dict["SL_mu"][var])
-            effi.SetLineColor(color_index)
-            color_index += 2
-            effi.SetLineWidth(2)
-            effi.Draw("same")
-            legend_mu.AddEntry(effi, histo_name,"l")
-        
-        print (var)
+            if not ROOT.TEfficiency.CheckConsistency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var]):
+                print ("SL_mu", var, seed, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
+                continue
+            SL_mu_effi_dict[histo_name] = ROOT.TEfficiency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var])
+            #SL_mu_effi_dict[histo_name] = SL_mu_histo_dict[histo_name][var].Clone(histo_name+"_effi")
+            #SL_mu_effi_dict[histo_name].Divide(SL_mu_histo_dict["SL_mu"][var])
+            SL_mu_effi_dict[histo_name].SetLineColor(color_index)
+            color_index += 1
+            SL_mu_effi_dict[histo_name].SetLineWidth(2)
+            SL_mu_effi_dict[histo_name].Draw("same")
+            legend_mu.AddEntry(SL_mu_effi_dict[histo_name], histo_name,"l")
+    
         legend_mu.Draw("same")
         canvas_mu.Print("%s/SL_mu_effi_%s.pdf"%(out_dir_path,var), "pdf")
         canvas_mu.Close()
@@ -84,22 +92,27 @@ def plot_effis(run_dir, seed_list):
         elif var == "eta":
             canvas_e.DrawFrame(-3, 0, 3, 1.1, ";pT (GeV);Efficiency")
         elif var == "HT":
-            canvas_e.DrawFrame(0, 0, 1000, 1.1, ";pT (GeV);Efficiency")
+            canvas_e.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
         legend_e = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
+        color_index = 1
         SL_e_histo_dict["SL_e"][var].Rebin(rebin_factor)
+
+        SL_e_effi_dict = {}
         for histo_name in SL_e_histo_dict:
             if histo_name == "SL_e":
                 continue
             SL_e_histo_dict[histo_name][var].Rebin(rebin_factor)
-            print (var, histo_name, SL_e_histo_dict[histo_name][var].GetNbinsX(), SL_e_histo_dict["SL_e"][var].GetNbinsX())
-            #effi = ROOT.TEfficiency(SL_e_histo_dict[histo_name][var], SL_e_histo_dict["SL_e"][var])
-            effi = SL_r_histo_dict[histo_name][var].Clone(histo_name+"_effi")
-            effi.Divide(SL_r_histo_dict["SL_e"][var])
-            effi.SetLineColor(color_index)
-            color_index += 2
-            effi.SetLineWidth(2)
-            effi.Draw("same")
-            legend_e.AddEntry(effi, histo_name,"l")
+            if not ROOT.TEfficiency.CheckConsistency(SL_e_histo_dict[histo_name][var], SL_e_histo_dict["SL_e"][var]):
+                print ("SL_e", var, seed, SL_e_histo_dict[histo_name][var].GetNbinsX(), SL_e_histo_dict["SL_e"][var].GetNbinsX())
+                continue
+            SL_e_effi_dict[histo_name] = ROOT.TEfficiency(SL_e_histo_dict[histo_name][var], SL_e_histo_dict["SL_e"][var])
+            #SL_e_effi_dict[histo_name] = SL_e_histo_dict[histo_name][var].Clone(histo_name+"_effi")
+            #SL_e_effi_dict[histo_name].Divide(SL_e_histo_dict["SL_e"][var])
+            SL_e_effi_dict[histo_name].SetLineColor(color_index)
+            color_index += 1
+            SL_e_effi_dict[histo_name].SetLineWidth(2)
+            SL_e_effi_dict[histo_name].Draw("same")
+            legend_e.AddEntry(SL_e_effi_dict[histo_name], histo_name,"l")
         legend_e.Draw("same")
         canvas_e.Print("%s/SL_e_effi_%s.pdf"%(out_dir_path,var), "pdf")
         canvas_e.Close()
