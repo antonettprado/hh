@@ -241,8 +241,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             L1_Mu_flags_dict = self.get_flags_dict(SL_mu, "SL_mu")
 
             for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
-                if L1_flag_name != 'All':
-                    yields.add(SL_mu.refine(L1_flag_name, cut=L1_flag), "SL_mu_" + L1_flag_name)
+                sel_flag_name = 'SL_mu_L1_' + L1_flag_name
+                sel_flag = SL_mu.refine(sel_flag_name, cut=[L1_flag])
+                selections_to_plot[sel_flag_name] = sel_flag
+                yields.add(sel_flag, sel_flag_name)
 
             for seed in self.seeds_Mu.itertuples():
                 final_passed_cuts = self.get_Mu_seed_passed_cuts(seed, SL_mu)
@@ -255,7 +257,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
                     sel_w_seed_OR_flag_name = '_'.join(['SL_mu', seed.Index,'OR',L1_flag_name]) 
                     sel_w_seed_OR_flag = SL_mu.refine(sel_w_seed_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
-                    # selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
+                    if L1_flag_name == "All":
+                        selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
                     yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
 
         if not self.seeds_EG.empty:
@@ -276,8 +279,10 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             L1_EG_flags_dict = self.get_flags_dict(SL_e, "SL_e")
 
             for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
-                if L1_flag_name != 'All':
-                    yields.add(SL_e.refine(L1_flag_name, cut=L1_flag), "SL_e_" + L1_flag_name)
+                sel_flag_name = 'SL_e_L1_' + L1_flag_name
+                sel_flag = SL_e.refine(sel_flag_name, cut=[L1_flag])
+                selections_to_plot[sel_flag_name] = sel_flag
+                yields.add(sel_flag, sel_flag_name)
 
             for seed in self.seeds_EG.itertuples():  
                 final_passed_cuts = self.get_EG_seed_passed_cuts(seed, SL_e)
@@ -290,7 +295,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
                     sel_w_seed_OR_flag_name = '_'.join(['SL_e', seed.Index,'OR',L1_flag_name]) 
                     sel_w_seed_OR_flag = SL_e.refine(sel_w_seed_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
-                    # selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
+                    if L1_flag_name == "All":
+                        selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
                     yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
 
         if selections_to_plot:
