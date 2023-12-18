@@ -112,7 +112,8 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         self.electrons = self.tight_electrons
         self.muons = self.tight_muons
-        self.ht_jets = op.rng_sum(self.cleaned_ak4_jets, lambda jet: jet.pt)
+        ht_jets_select = op.select(self.cleaned_ak4_jets, lambda jet: jet.pt > 30)
+        self.ht_jets = op.rng_sum(ht_jets_select, lambda jet: jet.pt)
 
     def set_seeds(self):
         filename = Path(__file__).parent / 'utils' / 'L1T_seeds_objects.yml'

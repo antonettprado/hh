@@ -58,7 +58,7 @@ def plot_effis(run_dir, seed_list):
         elif var == "eta":
             canvas_mu.DrawFrame(-3, 0, 3, 1.1, ";pT (GeV);Efficiency")
         elif var == "HT":
-            canvas_mu.DrawFrame(0, 0, 1000, 1.1, ";pT (GeV);Efficiency")
+            canvas_mu.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
         canvas_mu.SetGrid()
         legend_mu = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
         color_index = 1
