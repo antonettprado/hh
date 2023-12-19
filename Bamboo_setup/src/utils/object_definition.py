@@ -168,10 +168,15 @@ def muon_tight_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
         ))
 
 def tau_selection(taus, year):
+    def get_idDeepTau_cut(tau, year):
+            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if year == 2018 else (1)
+            return idDeepTau_cut
+
     return op.select(taus, lambda tau: op.AND(
         tau.pt > 20,
         op.abs(tau.eta) < 2.3,
-        op.switch(op.c_int(year) == 2018, tau.idDeepTau2017v2p1VSjet > 16, 1), 
+        get_idDeepTau_cut(tau, year),
+        # op.switch(op.c_int(year) == 2018, tau.idDeepTau2017v2p1VSjet > 16, 1), 
         op.OR( ## TO DO: check tau decay modes
             tau.decayMode == 0,
             tau.decayMode == 1,
