@@ -123,25 +123,29 @@ class SL_trigger_efficiency(SL_DL_event_selection):
         self.seeds_Mu = pd.DataFrame(seeds['Mu']).T
         self.seeds_EG = pd.DataFrame(seeds['EG']).T
 
-    def get_flags_dict(self, SL_sel, sel_name):
+    def get_flags_dict(self, sel_name):
 
         flags_dict = dict()
 
         if sel_name == "SL_mu":          
             if self.era == '2017':
+                flags_dict['HTT280er'] = self.get_Mu_seed_passed_cuts(pd.Series({'HT': 280}))
                 flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
-                flags_dict['Mu6_HTT240er'] =  self.get_Mu_seed_passed_cuts(pd.Series({'pt': 6, 'HT': 240}), SL_sel)
+                flags_dict['Mu6_HTT240er'] =  self.get_Mu_seed_passed_cuts(pd.Series({'pt': 6, 'HT': 240}))
             elif self.era == '2018':
+                flags_dict['HTT280er'] = self.get_Mu_seed_passed_cuts(pd.Series({'HT': 280}))
                 flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
                 flags_dict['Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         elif sel_name == "SL_e":
             if self.era == '2017':
-                flags_dict['SingleEG36er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'pt': 36, 'er': 2.523}), SL_sel)
-                flags_dict['SingleIsoEG30er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'single', 'pt': 30, 'er': 2.523}), SL_sel)
+                flags_dict['HTT280er'] = self.get_EG_seed_passed_cuts(pd.Series({'HT': 280}))
+                flags_dict['SingleEG36er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'pt': 36, 'er': 2.523}))
+                flags_dict['SingleIsoEG30er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'single', 'pt': 30, 'er': 2.523}))
                 flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
                 flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = self.l1triggers.LooseIsoEG28er2p1_Jet34er2p7_dR_Min0p3
             elif self.era == '2018':
+                flags_dict['HTT280er'] = self.get_EG_seed_passed_cuts(pd.Series({'HT': 280}))
                 flags_dict['SingleEG36er2p5'] = self.l1triggers.SingleEG36er2p5
                 flags_dict['SingleIsoEG30er2p5'] = self.l1triggers.SingleIsoEG30er2p5
                 flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
@@ -149,7 +153,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         return flags_dict
 
-    def get_Mu_seed_passed_cuts(self, seed, sel):
+    def get_Mu_seed_passed_cuts(self, seed):
 
         passed_cuts = []
 
@@ -174,7 +178,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
         return final_passed_cuts
 
-    def get_EG_seed_passed_cuts(self, seed, sel):
+    def get_EG_seed_passed_cuts(self, seed):
 
         passed_cuts = []
 
@@ -240,7 +244,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             selections_to_plot["SL_mu"] = SL_mu
             yields.add(SL_mu, "SL_mu")
 
-            L1_Mu_flags_dict = self.get_flags_dict(SL_mu, "SL_mu")
+            L1_Mu_flags_dict = self.get_flags_dict("SL_mu")
 
             for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
                 sel_flag_name = 'SL_mu_L1_' + L1_flag_name
@@ -249,7 +253,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 yields.add(sel_flag, sel_flag_name)
 
             for seed in self.seeds_Mu.itertuples():
-                final_passed_cuts = self.get_Mu_seed_passed_cuts(seed, SL_mu)
+                final_passed_cuts = self.get_Mu_seed_passed_cuts(seed)
 
                 sel_w_seed_name = '_'.join(['SL_mu', seed.Index]) 
                 sel_w_seed = SL_mu.refine(sel_w_seed_name, cut=[final_passed_cuts])
@@ -278,7 +282,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
             selections_to_plot["SL_e"] = SL_e
             yields.add(SL_e, "SL_e")
 
-            L1_EG_flags_dict = self.get_flags_dict(SL_e, "SL_e")
+            L1_EG_flags_dict = self.get_flags_dict("SL_e")
 
             for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
                 sel_flag_name = 'SL_e_L1_' + L1_flag_name
@@ -287,7 +291,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
                 yields.add(sel_flag, sel_flag_name)
 
             for seed in self.seeds_EG.itertuples():  
-                final_passed_cuts = self.get_EG_seed_passed_cuts(seed, SL_e)
+                final_passed_cuts = self.get_EG_seed_passed_cuts(seed)
 
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
                 sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[final_passed_cuts])
