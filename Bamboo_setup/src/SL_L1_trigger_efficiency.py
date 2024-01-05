@@ -6,7 +6,6 @@ from bamboo.plots import EquidistantBinning as EqBin
 from SL_DL_event_selection import SL_DL_event_selection
 from base_selection import NanoBaseHHbbWW
 import utils.event_definition as event_defs
-import utils.object_definition as object_defs
 from pathlib import Path
 import os
 import ROOT
@@ -24,10 +23,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
     def addArgs(self, parser):
         super(SL_L1_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
-        parser.add_argument("--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
-        parser.add_argument("--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
-        parser.add_argument("--no_mvaTTH", action='store_true', help='Dont use lepton mvaTTH related cuts')
-        parser.add_argument("--PrintYield", action="store_true", default=False, help="Print yield to screen (for debugging)")
+        parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -58,9 +54,6 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
 
         # Plots in base that need to be propagated to the Plotters #
         self.base_plots = []
-
-        # CutFlow report 
-        # self.yields = CutFlowReport("yields",printInLog=self.args.PrintYield,recursive=self.args.PrintYield)
 
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
@@ -98,9 +91,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
         self.l1triggers = tree.L1
 
-        self.args.mvaTTH = False if self.args.no_mvaTTH else True
-        print(f"Use lepton mvaTTH cuts: {self.args.mvaTTH}")
-        objects = self.object_selection(tree, use_mvaTTH=self.args.mvaTTH)
+        objects = self.object_selection(tree, lep_pt_from_L1=self.args.lep_pt)
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]
@@ -116,7 +107,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         self.ht_jets = op.rng_sum(ht_jets_select, lambda jet: jet.pt)
 
     def set_seeds(self):
-        filename = Path(__file__).parent / 'utils' / 'L1T_seeds_objects.yml'
+        filename = Path(__file__).parent / 'input' / 'L1T_seeds_objects.yml'
         with open(filename,'r') as yaml_file:
             yaml_data = yaml.safe_load(yaml_file)
         seeds = yaml_data['seeds']
@@ -230,7 +221,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         yields.add(mllSel, "baseSel_mllSel")
 
         if not self.seeds_Mu.empty:
-            mu_pt_cut = self.args.muon_pt if self.args.muon_pt is not None else 10
+            mu_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 10
             print(f"The offline muon pt cut is: {mu_pt_cut}")
             SL_mu_only = mllSel.refine("SL muon only selection", cut=[op.AND(
                 op.rng_len(self.muons) == 1,
@@ -268,7 +259,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                     yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
 
         if not self.seeds_EG.empty:
-            e_pt_cut = self.args.electron_pt if self.args.electron_pt is not None else 10
+            e_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 10
             print(f"The offline electron pt cut is: {e_pt_cut}")
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
                 op.rng_len(self.muons) == 0,
