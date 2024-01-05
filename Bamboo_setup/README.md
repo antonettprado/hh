@@ -13,7 +13,7 @@ git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
 Execute these each time you start from a clean shell:
 ```bash
 cd
-source /cvmfs/sft.cern.ch/lcg/views/LCG_102/x86_64-centos9-gcc11-opt/setup.sh
+source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
 source bamboodev/bamboovenv/bin/activate
 cd bamboodev/hh/Bamboo_setup
 export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
