@@ -17,12 +17,12 @@ import math
 import numbers
 from typing import Dict
 
-class SL_trigger_efficiency(SL_DL_event_selection):
+class SL_L1_trigger_efficiency(SL_DL_event_selection):
     def __init__(self, args):
-        super(SL_trigger_efficiency, self).__init__(args)
+        super(SL_L1_trigger_efficiency, self).__init__(args)
 
     def addArgs(self, parser):
-        super(SL_trigger_efficiency, self).addArgs(parser)
+        super(SL_L1_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
         parser.add_argument("--electron_pt", type=int, action='store', default=None, help='Offline electron pt cut')
         parser.add_argument("--muon_pt", type=int, action='store', default=None, help='Offline muon pt cut')
@@ -373,7 +373,7 @@ class SL_trigger_efficiency(SL_DL_event_selection):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(SL_L1_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         if self.args.test_only:
             file1 = os.path.join(resultsdir, 'bbWW_sl.root')
