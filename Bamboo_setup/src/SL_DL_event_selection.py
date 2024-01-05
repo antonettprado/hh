@@ -19,7 +19,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
     def object_selection(self, tree, MC_bjets=False, use_mvaTTH=True):
-        print(f"In objects election: {use_mvaTTH}")
+        #print(f"In object selection: {use_mvaTTH}")
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)
         electron_ConePt = object_defs.elConePt(tree.Electron, tree.Jet)

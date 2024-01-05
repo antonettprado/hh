@@ -35,7 +35,7 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
         op.OR(
             noHLT,
             op.AND(
-                not HLT,
+                not noHLT,
                 HLT.Ele32_WPTight_Gsf
                 # op.OR(HLT.Ele32_WPTight_Gsf, HLT.Ele28_eta2p1_WPTight_Gsf_HT150)
                 )
@@ -52,7 +52,7 @@ def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc,
         op.OR(
             noHLT,
             op.AND(
-                not HLT,
+                not noHLT,
                 op.OR(HLT.IsoMu24, HLT.IsoMu27)
                 )
             )
@@ -109,7 +109,7 @@ def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT, 
         op.OR(
             noHLT,
             op.AND(
-                not HLT,
+                not noHLT,
                 op.OR(HLT.Ele32_WPTight_Gsf, HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
                 )
             )
@@ -132,7 +132,7 @@ def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT,
         op.OR(
             noHLT,
             op.AND(
-                not HLT,
+                not noHLT,
                 op.OR(HLT.Ele32_WPTight_Gsf, HLT.IsoMu24, HLT.IsoMu27, HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ)
                 )
             )
@@ -149,7 +149,7 @@ def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, HLT
         op.OR(
             noHLT,
             op.AND(
-                not HLT,
+                not noHLT,
                 op.OR(HLT.IsoMu24, HLT.IsoMu27, HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
                 )
             )
