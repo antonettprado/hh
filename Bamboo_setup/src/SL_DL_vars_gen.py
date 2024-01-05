@@ -4,7 +4,7 @@ from bamboo.plots import Plot, SummedPlot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 
 from bamboo.analysismodules import NanoAODHistoModule
-from utils.constants import *
+from utils.input.constants import *
 
 class SL_DL_vars_gen(NanoAODHistoModule):
 
