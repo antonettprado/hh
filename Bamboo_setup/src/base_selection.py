@@ -51,7 +51,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         self.base_plots = []
 
         # CutFlow report 
-        self.yields = CutFlowReport("yields",printInLog=self.args.PrintYield,recursive=self.args.PrintYield)
+        self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
 
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
