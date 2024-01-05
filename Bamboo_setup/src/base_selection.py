@@ -62,7 +62,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
             self.yields.add(noSel, "Veto super-weighted events in HH")
             # Add neccesary plot for corrected sum of genWeights 
-            self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), self._noSel, EqBin(1,0.,1.), autoSyst=False))
+            self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
         
         self.noSel = noSel
         

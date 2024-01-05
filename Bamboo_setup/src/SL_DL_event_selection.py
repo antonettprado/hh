@@ -121,7 +121,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             raise ValueError("events must be 'all', 'odd', or 'even'")
 
         # Gen the base selection from base_selection, refine it with the relevant cut, and add to the yields table
-        noSelweighted = self.noSelweighted.refine('events cut on noSelweighted', cut=cut)        
+        noSelweighted = self.noSel.refine('events cut on noSelweighted', cut=cut)        
         yields.add(noSelweighted, "Sample Sum of Weights") # This changes the yields in the list, even though we don't return it!
 
         # Refine the working selection (baseSel) with the parity cut
