@@ -2,6 +2,7 @@ from bamboo.analysismodules import NanoAODHistoModule
 from bamboo.treedecorators import NanoAODDescription
 from bamboo.analysisutils import makeMultiPrimaryDatasetTriggerSelection
 from bamboo import treefunctions as op
+from bamboo.plots import Plot, CutFlowReport
 
 from itertools import chain
 
