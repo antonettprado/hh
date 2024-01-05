@@ -4,7 +4,7 @@ from ROOT import TFile, TH1F, TH2F
 from pathlib import Path
 from typing import Union
 import copy
-VARPATH = Path(__file__).parent / 'variables.json'
+VARPATH = Path(__file__).parents[1] / 'input' / 'variables.json'
 CFGPATH = Path(__file__).parents[2] / 'config' / 'analysis_2018.yml'
 
 # Load all variable names into local namespace (for looping)
