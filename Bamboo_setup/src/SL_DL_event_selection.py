@@ -20,7 +20,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
     def object_selection(self, tree, MC_bjets=False, use_mvaTTH=True, lep_pt_from_L1=None):
         
-        if lep_pt_from_L1 is not None: object_defs.is_from_SL_L1_trigger_efficiency(lep_pt_from_L1)
+        if lep_pt_from_L1 is not None: 
+            object_defs.is_from_SL_L1_trigger_efficiency(lep_pt_from_L1)
+            use_mvaTTH = False
 
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron)

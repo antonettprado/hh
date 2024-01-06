@@ -4,14 +4,12 @@ LEPTON_PT = {
     'Uniform': False,
     'e_pt': 7,     # Value for loose selection
     'mu_pt': 5,         # Value for loose selection
-    'use_mvaTTH': True
 }
 
 def is_from_SL_L1_trigger_efficiency(lep_pt_from_L1):
     global LEPTON_PT
     if lep_pt_from_L1 < 15:
         LEPTON_PT['Uniform'] = True
-        LEPTON_PT['use_mvaTTH'] = False
         if lep_pt_from_L1 == 0: 
             LEPTON_PT['e_pt'] = 0
             LEPTON_PT['mu_pt'] = 0 
@@ -75,11 +73,7 @@ def electron_basic_selection(electrons):
     return op.select(electrons, lambda el: el.mvaFall17V2noIso_WPL)
 
 def electron_loose_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
-    if LEPTON_PT['Uniform']:
-        pt_cut = LEPTON_PT['e_pt']
-        use_mvaTTH = LEPTON_PT['use_mvaTTH']
-    else: 
-        pt_cut = 7
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 7
     print(f"electron_loose_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
@@ -95,11 +89,7 @@ def electron_loose_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
     )
 
 def electron_fakeable_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
-    if LEPTON_PT['Uniform']:
-        pt_cut = LEPTON_PT['e_pt']
-        use_mvaTTH = LEPTON_PT['use_mvaTTH']
-    else: 
-        pt_cut = 10
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"electron_fakeable_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
@@ -122,11 +112,7 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, use_mvaTTH=Tru
         ))
 
 def electron_tight_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
-    if LEPTON_PT['Uniform']:
-        pt_cut = LEPTON_PT['e_pt']
-        use_mvaTTH = LEPTON_PT['use_mvaTTH']
-    else: 
-        pt_cut = 10
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"electron_tight_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
@@ -150,11 +136,7 @@ def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
 
 def muon_loose_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
-    if LEPTON_PT['Uniform']:
-        pt_cut = LEPTON_PT['mu_pt']
-        use_mvaTTH = LEPTON_PT['use_mvaTTH']
-    else: 
-        pt_cut = 5
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 5
     print(f"muon_loose_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
@@ -169,11 +151,7 @@ def muon_loose_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
     )
 
 def muon_fakeable_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
-    if LEPTON_PT['Uniform']:
-        pt_cut = LEPTON_PT['mu_pt']
-        use_mvaTTH = LEPTON_PT['use_mvaTTH']
-    else: 
-        pt_cut = 10
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"muon_fakeable_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
@@ -191,11 +169,7 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
         ))
 
 def muon_tight_selection(muons, muon_ConePt, jets, use_mvaTTH=True): 
-    if LEPTON_PT['Uniform']:
-        pt_cut = LEPTON_PT['mu_pt']
-        use_mvaTTH = LEPTON_PT['use_mvaTTH']
-    else: 
-        pt_cut = 10
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"muon_tight_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
