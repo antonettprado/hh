@@ -26,7 +26,7 @@ export X509_USER_PROXY=$(realpath ~/private/x509up)
 # ------------------------------ Trigger -------------------------------
 ## Process NanoAODs with L1 objects: SL_L1_trigger_efficiency
 ```bash
-bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2018_L1.yml -o Z_OUTPUT/L1_sample2018_pt0 --electron_pt 0 --muon_pt 0 --no_mvaTTH
+bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2018_L1.yml -o Z_OUTPUT/L1_sample2018_pt0 --lep_pt 0
 ```
 ### Postprocessing: Plot trigger efficiency s-curves
 ```bash
