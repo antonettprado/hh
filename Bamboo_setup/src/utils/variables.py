@@ -441,7 +441,7 @@ class LikelihoodRatio(Variable):
         if type(names) == str:
             names = [names]
         self.names = sorted(names)
-        self.name = '_x_'.join(self.names) + '_lr'
+        self.name = '_x_'.join(self.names) + '_llr'
         super().__init__(self.name)
         self.vars = { name: Variable1D(name) for name in self.names if name in ALL_VARNAMES_1D}
         self.vars.update({ name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D})
