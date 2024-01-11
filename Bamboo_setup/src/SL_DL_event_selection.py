@@ -19,12 +19,12 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
     def object_selection(self, tree, MC_bjets=False, use_mvaTTH=True, lep_pt_from_L1=None):
-        
+
         if lep_pt_from_L1 is not None: 
             object_defs.is_from_SL_L1_trigger_efficiency(lep_pt_from_L1)
 
         # Basic Electron and Muon Selection
-        electrons = object_defs.electron_basic_selection(tree.Electron)
+        electrons = object_defs.electron_basic_selection(tree.Electron, self.era)
         electron_ConePt = object_defs.elConePt(tree.Electron, tree.Jet)
         electrons = op.sort(electrons, lambda el: op.switch(op.c_bool(use_mvaTTH), -electron_ConePt[el.idx], -el.pt))
 
@@ -35,14 +35,14 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         ## TO DO: do we need to clean electrons from muons?
 
         # Select Loose Electrons
-        loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
-        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
-        tight_electrons = object_defs.electron_tight_selection(electrons, electron_ConePt, tree.Jet, use_mvaTTH)
+        loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet, self.era, use_mvaTTH)
+        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, electron_ConePt, tree.Jet, self.era, use_mvaTTH)
+        tight_electrons = object_defs.electron_tight_selection(electrons, electron_ConePt, tree.Jet, self.era, use_mvaTTH)
 
         # Select Muons
-        loose_muons = object_defs.muon_loose_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
-        fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
-        tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, use_mvaTTH)
+        loose_muons = object_defs.muon_loose_selection(muons, muon_ConePt, tree.Jet, self.era, use_mvaTTH)
+        fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet, self.era, use_mvaTTH)
+        tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, self.era, use_mvaTTH)
 
         # Select Taus
         taus = object_defs.tau_selection(tree.Tau, int(self.era))

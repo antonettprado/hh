@@ -1,9 +1,9 @@
 from bamboo import treefunctions as op
 
 LEPTON_PT = {
-    'Uniform': False,
-    'e_pt': 7,     # Value for loose selection
-    'mu_pt': 5,         # Value for loose selection
+    'Uniform': False
+    # 'e_pt': 7,          # Value for loose selection
+    # 'mu_pt': 5,         # Value for loose selection
 }
 
 def is_from_SL_L1_trigger_efficiency(lep_pt_from_L1):
@@ -19,6 +19,19 @@ def is_from_SL_L1_trigger_efficiency(lep_pt_from_L1):
         elif lep_pt_from_L1 == 10:
             LEPTON_PT['e_pt'] = 10
             LEPTON_PT['mu_pt'] = 10
+
+def get_electron_id(el, year, level):
+    if year == '2018' or year == '2017':
+        if level == 'loose':
+            el_id = el.mvaFall17V2noIso_WPL
+        elif level == 'tight':
+            el_id = el.mvaFall17V2noIso_WP90
+    elif year == '2023':
+        if level == 'loose':
+            el_id = el.mvaNoIso_WP80
+        elif level == 'tight':
+            el_id = el.mvaNoIso_WP90
+    return el_id
 
 def elConePt(electrons, jets):
     return op.map(electrons, lambda lep: op.multiSwitch(
@@ -69,10 +82,10 @@ def calculate_met_quantities(jets, electrons, muons, met_pt):
     met_ld = op.sum(op.product(0.6, met_pt), op.product(0.4, mht))
     return ht_jets, mht, met_ld
        
-def electron_basic_selection(electrons):
-    return op.select(electrons, lambda el: el.mvaFall17V2noIso_WPL)
+def electron_basic_selection(electrons, year):
+    return op.select(electrons, lambda el: get_electron_id(el, year, 'loose'))
 
-def electron_loose_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
+def electron_loose_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=True):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 7
     print(f"electron_loose_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -84,11 +97,11 @@ def electron_loose_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
         el.sip3d < 8,
         el.pfRelIso03_all < 0.4,
         el.lostHits <= 1,
-        el.mvaFall17V2noIso_WPL
+        get_electron_id(el, year, 'loose')
         )
     )
 
-def electron_fakeable_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
+def electron_fakeable_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=True):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"electron_fakeable_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -105,13 +118,13 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, use_mvaTTH=Tru
         el.convVeto == 1,
         el.lostHits == 0,
         op.switch(op.c_bool(use_mvaTTH), 
-            op.AND(op.switch(el.mvaTTH > 0.3, el.mvaFall17V2noIso_WPL, el.mvaFall17V2noIso_WP90),
+            op.AND(op.switch(el.mvaTTH > 0.3, get_electron_id(el, year, 'loose'), get_electron_id(el, year, 'tight')),
                 op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
                 op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))),
-            op.AND(el.mvaFall17V2noIso_WPL,op.NOT(nearbyBtag(el, jets, 0.2770))))
+            op.AND(get_electron_id(el, year, 'loose'),op.NOT(nearbyBtag(el, jets, 0.2770))))
         ))
 
-def electron_tight_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
+def electron_tight_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=True):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"electron_tight_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -127,7 +140,7 @@ def electron_tight_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
         el.lostHits == 0,
-        el.mvaFall17V2noIso_WPL,
+        get_electron_id(el, year, 'loose'),
         op.NOT(nearbyBtag(el, jets, 0.2770)),
         op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
@@ -135,8 +148,8 @@ def electron_tight_selection(electrons, electron_ConePt, jets, use_mvaTTH=True):
 def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
 
-def muon_loose_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 5
+def muon_loose_selection(muons, muon_ConePt, jets, year, use_mvaTTH=True):
+    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 5
     print(f"muon_loose_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
@@ -150,8 +163,8 @@ def muon_loose_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
         )
     )
 
-def muon_fakeable_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
+def muon_fakeable_selection(muons, muon_ConePt, jets, year, use_mvaTTH=True):
+    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"muon_fakeable_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
@@ -168,8 +181,8 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, use_mvaTTH=True):
             op.NOT(nearbyBtag(mu, jets, 0.2770)))
         ))
 
-def muon_tight_selection(muons, muon_ConePt, jets, use_mvaTTH=True): 
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
+def muon_tight_selection(muons, muon_ConePt, jets, year, use_mvaTTH=True): 
+    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
     print(f"muon_tight_selection: pt cut of {pt_cut}")
     print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
