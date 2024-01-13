@@ -128,9 +128,12 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
                 flags_dict['Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
             elif self.era == '2023':
-                flags_dict['HTT280er'] = self.l1triggers.HTT280er
-                flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
-                flags_dict['Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
+                # flags_dict['HTT280er'] = self.l1triggers.HTT280er
+                # flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
+                # flags_dict['Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
+                flags_dict['HTT280er'] = self.get_Mu_seed_passed_cuts(pd.Series({'HT': 280}))
+                flags_dict['SingleMu22'] = self.get_Mu_seed_passed_cuts(pd.Series({'pt': 22}))
+                flags_dict['Mu6_HTT240er'] = self.get_Mu_seed_passed_cuts(pd.Series({'pt': 6, 'HT': 240}))
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         elif sel_name == "SL_e":
             if self.era == '2017':
@@ -146,11 +149,15 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
                 flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = self.l1triggers.LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3
             elif self.era == '2023':
-                flags_dict['HTT280er'] = self.l1triggers.HTT280er
-                flags_dict['SingleEG36er2p5'] = self.l1triggers.SingleEG36er2p5
-                flags_dict['SingleIsoEG30er2p5'] = self.l1triggers.SingleIsoEG30er2p5
-                flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
-                flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = self.l1triggers.LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3
+                # flags_dict['HTT280er'] = self.l1triggers.HTT280er
+                # flags_dict['SingleEG36er2p5'] = self.l1triggers.SingleEG36er2p5
+                # flags_dict['SingleIsoEG30er2p5'] = self.l1triggers.SingleIsoEG30er2p5
+                # flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
+                # flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = self.l1triggers.LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3
+                flags_dict['HTT280er'] = self.get_EG_seed_passed_cuts(pd.Series({'HT': 280}))
+                flags_dict['SingleEG36er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'pt': 36, 'er': 2.523}))
+                flags_dict['SingleIsoEG30er2p5'] = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'single', 'pt': 30, 'er': 2.523}))
+                flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'loose', 'pt': 28, 'er': 2.131, 'HT': 100}))
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         return flags_dict
 
