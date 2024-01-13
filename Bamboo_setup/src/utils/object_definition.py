@@ -140,7 +140,7 @@ def electron_tight_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
         el.lostHits == 0,
-        get_electron_id(el, year, 'tight'),
+        get_electron_id(el, year, 'loose'),
         op.NOT(nearbyBtag(el, jets, 0.2770)),
         op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
