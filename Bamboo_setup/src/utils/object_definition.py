@@ -28,9 +28,9 @@ def get_electron_id(el, year, level):
             el_id = el.mvaFall17V2noIso_WP90
     elif year == '2023':
         if level == 'loose':
-            el_id = el.mvaNoIso_WP80
+            el_id = el.mvaIso_WP90
         elif level == 'tight':
-            el_id = el.mvaNoIso_WP90
+            el_id = el.mvaIso_WP90
     return el_id
 
 def elConePt(electrons, jets):
@@ -199,7 +199,7 @@ def muon_tight_selection(muons, muon_ConePt, jets, year, use_mvaTTH=True):
 
 def tau_selection(taus, year):
     def get_idDeepTau_cut(tau, year):
-            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if year == 2018 else (1)
+            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if year != 2017 else (1)
             return idDeepTau_cut
 
     return op.select(taus, lambda tau: op.AND(
