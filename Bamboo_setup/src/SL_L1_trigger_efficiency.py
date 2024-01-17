@@ -223,7 +223,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
 
         return final_passed_cuts
 
-    def SL_trigger_efficiency(self, tree, baseSel):
+    def SL_L1_trigger_efficiency(self, tree, baseSel):
 
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=True)
@@ -370,7 +370,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         if self.args.test_only:
             plots = self._test_triggers(tree, baseSel)
         else:
-            plots = self.SL_trigger_efficiency(tree, baseSel)
+            plots = self.SL_L1_trigger_efficiency(tree, baseSel)
 
         return plots
 
