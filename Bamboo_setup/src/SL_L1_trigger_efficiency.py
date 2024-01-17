@@ -107,7 +107,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         self.ht_jets = op.rng_sum(ht_jets_select, lambda jet: jet.pt)
 
     def set_seeds(self):
-        filename = Path(__file__).parent / 'input' / 'L1T_seeds_objects.yml'
+        filename = Path(__file__).parent / 'input' / 'L1_seeds_objects.yml'
         with open(filename,'r') as yaml_file:
             yaml_data = yaml.safe_load(yaml_file)
         seeds = yaml_data['seeds']
