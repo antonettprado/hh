@@ -1,0 +1,6 @@
+paths:
+  Mu:
+    HLT_Mu12_IsoVVVL_HT150_PNetBTag0p35: {pt: 12, iso: 'VVVL', HT: 150, btag: 0.35}
+
+  EG:
+    HLT_Ele14_eta2p5_WPTight_Gsf_HT200_PNetBTag0p35: {pt: 14, eta: 2.5, WP: 'tight', gsf: 'yes', HT: 200, btag: 0.35}
