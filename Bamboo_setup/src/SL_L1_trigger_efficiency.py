@@ -101,8 +101,6 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         self.cleaned_ak4_btags = objects["cleaned_ak4_btags"]
         self.cleaned_ak8_btags = objects["cleaned_ak8_btags"]
 
-        self.electrons = self.tight_electrons
-        self.muons = self.tight_muons
         ht_jets_select = op.select(self.cleaned_ak4_jets, lambda jet: jet.pt > 30)
         self.ht_jets = op.rng_sum(ht_jets_select, lambda jet: jet.pt)
 
@@ -245,10 +243,10 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
             mu_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 10
             print(f"The offline muon pt cut is: {mu_pt_cut}")
             SL_mu_only = mllSel.refine("SL muon only selection", cut=[op.AND(
-                op.rng_len(self.muons) == 1,
-                op.rng_len(self.electrons) == 0,
+                op.rng_len(self.tight_muons) == 1,
+                op.rng_len(self.tight_electrons) == 0,
                 op.rng_len(self.taus) == 0,
-                self.muons[0].pt > mu_pt_cut)])
+                self.tight_muons[0].pt > mu_pt_cut)])
             SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
@@ -283,10 +281,10 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
             e_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 10
             print(f"The offline electron pt cut is: {e_pt_cut}")
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
-                op.rng_len(self.muons) == 0,
-                op.rng_len(self.electrons) == 1,
+                op.rng_len(self.tight_muons) == 0,
+                op.rng_len(self.tight_electrons) == 1,
                 op.rng_len(self.taus) == 0,
-                self.electrons[0].pt > e_pt_cut)])
+                self.tight_electrons[0].pt > e_pt_cut)])
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
@@ -319,8 +317,8 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
 
         if selections_to_plot:
             for sel_name, sel in selections_to_plot.items():
-                if "EG" in sel_name or "SL_e" in sel_name: lep = self.electrons
-                elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.muons
+                if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
+                elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
                 plots.extend([
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(100, -4, 4)),
