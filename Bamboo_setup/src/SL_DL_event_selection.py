@@ -18,10 +18,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    def object_selection(self, tree, MC_bjets=False, use_mvaTTH=True, lep_pt_from_L1=None):
+    def object_selection(self, tree, MC_bjets=False, use_mvaTTH=True, lep_pt_from_L1_or_HLT=None):
 
-        if lep_pt_from_L1 is not None: 
-            object_defs.is_from_SL_L1_trigger_efficiency(lep_pt_from_L1)
+        if lep_pt_from_L1_or_HLT is not None: 
+            object_defs.is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT)
 
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron, self.era)

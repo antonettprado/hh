@@ -22,6 +22,8 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
 
     def addArgs(self, parser):
         super(SL_HLT_trigger_efficiency, self).addArgs(parser)
+        parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
+        parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -93,11 +95,12 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
         # HLT-proxy objects (regular offline objects)
         self.electrons = tree.Electron
         self.muons = tree.Muon
-        self.MET_HT = tree.MET
         self.jets = tree.Jet
+        self.HLT_HT_jets = op.select(self.jets, lambda jet: op.AND(jet.pt > 30, op.abs(jet.eta) < 2.5))
+        self.HLT_HT = op.rng_sum(self.HLT_HT_jets, lambda jet: jet.pt)
 
         # Objects for event selection
-        objects = self.object_selection(tree, lep_pt_from_L1=self.args.lep_pt, use_mvaTTH=False)
+        objects = self.object_selection(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]
@@ -107,11 +110,8 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
         self.cleaned_ak4_btags = objects["cleaned_ak4_btags"]
         self.cleaned_ak8_btags = objects["cleaned_ak8_btags"]
 
-        ht_jets_select = op.select(self.cleaned_ak4_jets, lambda jet: jet.pt > 30)
-        self.ht_jets = op.rng_sum(ht_jets_select, lambda jet: jet.pt)
-
     def set_paths(self):
-        filename = Path(__file__).parent / 'input' / 'HLT_paths_objects.yml'
+        filename = Path(__file__).parent / 'input' / 'HLT_paths.yml'
         with open(filename,'r') as yaml_file:
             yaml_data = yaml.safe_load(yaml_file)
         paths = yaml_data['paths']
@@ -140,7 +140,6 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
         passed_cuts = []
 
         muons = self.muons
-        MET_HT = self.MET_HT
         jets = self.jets
         if hasattr(path, "pt") and not pd.isna(path.pt):
             muons = op.select(muons, lambda mu: mu.pt >= path.pt)
@@ -148,15 +147,19 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
         if hasattr(path, "eta") and not pd.isna(path.eta):
             muons = op.select(muons, lambda mu: mu.eta <= path.eta)
             passed_cuts.append(op.rng_len(muons) > 0)
-        if hasattr(path, 'WP') and not pd.isna(path.WP):
-            if path.WP == 'tight':
-                #  *** Some Condition ****
-        if hasattr(path, 'iso') and not pd.isna(path.iso):
-            if path.iso == 'VVVL':
-                #  *** Some Condition ****
+        if hasattr(path, "iso") and not pd.isna(path.iso):
+            muons = op.select(muons, lambda mu: mu.pfRelIso03_all <= path.iso)
+            passed_cuts.append(op.rng_len(muons) > 0)
         if hasattr(path, "HT") and not pd.isna(path.HT):
-            passed_cuts.append(MET_HT.pt >= path.HT)
-            # Condition for jet30's
+            passed_cuts.append(self.HLT_HT > path.HT)
+        if hasattr(path, "btag_type") and not pd.isna(path.btag_type):
+            jets = op.select(jets, lambda jet: op.AND(jet.pt >= 30, jet.eta <= 2.6))
+            if path.btag_type == 'PNet':
+                jets = op.select(jets, lambda jet: jet.btagPNetB > path.btag)
+                passed_cuts.append(op.rng_len(jets) >= 1)
+            elif path.btag_type == 'DeepJet':
+                jets = op.select(jets, lambda jet: jet.btagDeepFlavB > path.btag)
+                passed_cuts.append(op.rng_len(jets) >= 1)
 
         final_passed_cuts = op.AND(*passed_cuts)
 
@@ -167,23 +170,26 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
         passed_cuts = []
 
         electrons = self.electrons
-        MET_HT = self.MET_HT
         jets = self.jets
         if hasattr(path, "pt") and not pd.isna(path.pt):
-            muons = op.select(muons, lambda mu: mu.pt >= path.pt)
-            passed_cuts.append(op.rng_len(muons) > 0)
+            electrons = op.select(electrons, lambda e: e.pt >= path.pt)
+            passed_cuts.append(op.rng_len(electrons) > 0)
         if hasattr(path, "eta") and not pd.isna(path.eta):
-            muons = op.select(muons, lambda mu: mu.eta <= path.eta)
-            passed_cuts.append(op.rng_len(muons) > 0)
+            electrons = op.select(electrons, lambda e: e.eta <= path.eta)
+            passed_cuts.append(op.rng_len(electrons) > 0)
         if hasattr(path, 'WP') and not pd.isna(path.WP):
-            if path.WP == 'tight':
-                #  *** Some Condition ****
-        if hasattr(path, 'iso') and not pd.isna(path.iso):
-            if path.iso == 'VVVL':
-                #  *** Some Condition ****
+            electrons = op.select(electrons, lambda e: e.pfRelIso03_all <= path.WP)
+            passed_cuts.append(op.rng_len(electrons) > 0)
         if hasattr(path, "HT") and not pd.isna(path.HT):
-            passed_cuts.append(MET_HT.pt >= path.HT)
-            # Condition for jet30's
+            passed_cuts.append(self.HLT_HT > path.HT)
+        if hasattr(path, "btag_type") and not pd.isna(path.btag_type):
+            jets = op.select(jets, lambda jet: op.AND(jet.pt >= 30, jet.eta <= 2.6))
+            if path.btag_type == 'PNet':
+                jets = op.select(jets, lambda jet: jet.btagPNetB > path.btag)
+                passed_cuts.append(op.rng_len(jets) >= 1)
+            elif path.btag_type == 'DeepJet':
+                jets = op.select(jets, lambda jet: jet.btagDeepFlavB > path.btag)
+                passed_cuts.append(op.rng_len(jets) >= 1)
 
         final_passed_cuts = op.AND(*passed_cuts)
 
@@ -227,14 +233,14 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
             selections_to_plot["SL_mu"] = SL_mu
             yields.add(SL_mu, "SL_mu")
 
-            # Retrieve Flags ==============================================
-            L1_Mu_flags_dict = self.get_flags_dict("SL_mu")
+            # # Retrieve Flags ==============================================
+            # HLT_Mu_flags_dict = self.get_flags_dict("SL_mu")
 
-            for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
-                sel_flag_name = 'SL_mu_L1_' + L1_flag_name
-                sel_flag = SL_mu.refine(sel_flag_name, cut=[L1_flag])
-                selections_to_plot[sel_flag_name] = sel_flag
-                yields.add(sel_flag, sel_flag_name)
+            # for HLT_flag_name, HLT_flag in HLT_Mu_flags_dict.items():
+            #     sel_flag_name = 'SL_mu_HLT_' + HLT_flag_name
+            #     sel_flag = SL_mu.refine(sel_flag_name, cut=[HLT_flag])
+            #     selections_to_plot[sel_flag_name] = sel_flag
+            #     yields.add(sel_flag, sel_flag_name)
 
             # Loop through every input paths ==============================
             for path in self.paths_Mu.itertuples():
@@ -245,16 +251,16 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
                 selections_to_plot[sel_w_path_name] = sel_w_path
                 yields.add(sel_w_path, sel_w_path_name)
 
-                for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
-                    sel_w_path_OR_flag_name = '_'.join(['SL_mu', path.Index,'OR',L1_flag_name]) 
-                    sel_w_path_OR_flag = SL_mu.refine(sel_w_path_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
-                    if L1_flag_name == "All":
-                        selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
-                    yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
+                # for HLT_flag_name, HLT_flag in HLT_Mu_flags_dict.items():
+                #     sel_w_path_OR_flag_name = '_'.join(['SL_mu', path.Index,'OR',HLT_flag_name]) 
+                #     sel_w_path_OR_flag = SL_mu.refine(sel_w_path_OR_flag_name, cut=[op.OR(final_passed_cuts, HLT_flag)])
+                #     if HLT_flag_name == "All":
+                #         selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
+                #     yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
 
-        # =================================================================
-        # Electron paths dataframe ========================================
-        # =================================================================
+        # # =================================================================
+        # # Electron paths dataframe ========================================
+        # # =================================================================
         if not self.paths_EG.empty:
 
             # Electron selection ==========================================
@@ -272,14 +278,14 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
             selections_to_plot["SL_e"] = SL_e
             yields.add(SL_e, "SL_e")
 
-            # Retrieve Flags ==============================================
-            L1_EG_flags_dict = self.get_flags_dict("SL_e")
+        #     # Retrieve Flags ==============================================
+        #     HLT_EG_flags_dict = self.get_flags_dict("SL_e")
 
-            for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
-                sel_flag_name = 'SL_e_L1_' + L1_flag_name
-                sel_flag = SL_e.refine(sel_flag_name, cut=[L1_flag])
-                selections_to_plot[sel_flag_name] = sel_flag
-                yields.add(sel_flag, sel_flag_name)
+        #     for HLT_flag_name, HLT_flag in HLT_EG_flags_dict.items():
+        #         sel_flag_name = 'SL_e_HLT_' + HLT_flag_name
+        #         sel_flag = SL_e.refine(sel_flag_name, cut=[HLT_flag])
+        #         selections_to_plot[sel_flag_name] = sel_flag
+        #         yields.add(sel_flag, sel_flag_name)
 
             # Loop through every input paths ==============================
             for path in self.paths_EG.itertuples():  
@@ -290,30 +296,29 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
                 selections_to_plot[sel_w_path_name] = sel_w_path
                 yields.add(sel_w_path, sel_w_path_name)        
 
-                for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
-                    sel_w_path_OR_flag_name = '_'.join(['SL_e', path.Index,'OR',L1_flag_name]) 
-                    sel_w_path_OR_flag = SL_e.refine(sel_w_path_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
-                    if L1_flag_name == "All":
-                        selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
-                    yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
+                # for HLT_flag_name, HLT_flag in HLT_EG_flags_dict.items():
+                #     sel_w_path_OR_flag_name = '_'.join(['SL_e', path.Index,'OR',HLT_flag_name]) 
+                #     sel_w_path_OR_flag = SL_e.refine(sel_w_path_OR_flag_name, cut=[op.OR(final_passed_cuts, HLT_flag)])
+                #     if HLT_flag_name == "All":
+                #         selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
+                #     yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
 
-        # =================================================================
-        # Plot selected selections only ===================================
-        # =================================================================
-        if selections_to_plot:
-            for sel_name, sel in selections_to_plot.items():
-                if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
-                elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
-                plots.extend([
-                    Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
-                    Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(100, -4, 4)),
-                    Plot.make1D(sel_name + "_HT", self.ht_jets, sel, EqBin(500, 0, 1000)),
-                    Plot.make1D(sel_name + "_njets", op.rng_len(self.l1jets), sel, EqBin(15, 0, 15)),
-                    Plot.make1D(sel_name + "_jet0pt", self.l1jets[0].pt, sel, EqBin(200, 0, 200)),
-                    Plot.make1D(sel_name + "_jet1pt", self.l1jets[1].pt, sel, EqBin(200, 0, 200))
-                ])
+        # # =================================================================
+        # # Plot selected selections only ===================================
+        # # =================================================================
+        # if selections_to_plot:
+        #     for sel_name, sel in selections_to_plot.items():
+        #         if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
+        #         elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
+        #         plots.extend([
+        #             Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
+        #             Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(100, -4, 4))
+        #         ])
         
         return plots
+
+    def _test_triggers(self, tree, baseSel):
+        print("......................... TESTING ONLY .........................")
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         

@@ -6,17 +6,17 @@ LEPTON_PT = {
     # 'mu_pt': 5,         # Value for loose selection
 }
 
-def is_from_SL_L1_trigger_efficiency(lep_pt_from_L1):
+def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
     global LEPTON_PT
-    if lep_pt_from_L1 < 15:
+    if lep_pt_from_L1_or_HLT < 15:
         LEPTON_PT['Uniform'] = True
-        if lep_pt_from_L1 == 0: 
+        if lep_pt_from_L1_or_HLT == 0: 
             LEPTON_PT['e_pt'] = 0
             LEPTON_PT['mu_pt'] = 0 
-        elif lep_pt_from_L1 == 5:
+        elif lep_pt_from_L1_or_HLT == 5:
             LEPTON_PT['e_pt'] = 5
             LEPTON_PT['mu_pt'] = 5
-        elif lep_pt_from_L1 == 10:
+        elif lep_pt_from_L1_or_HLT == 10:
             LEPTON_PT['e_pt'] = 10
             LEPTON_PT['mu_pt'] = 10
 
