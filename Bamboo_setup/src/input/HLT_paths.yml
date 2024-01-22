@@ -1,7 +1,12 @@
 paths:
   Mu:
-    HLT_Mu12_IsoVVVL_HT150_PNetBTag0p35: {pt: 12, iso: 1.2, HT: 150, btag_type: 'PNet', btag: 0.35}
+    HLT_Mu12_IsoVVVL_PFHT150: {pt: 12, iso: 1.2, HT: 150}
+    HLT_Mu12_IsoVVVL_PFHT150_PNetBTag0p35: {pt: 12, iso: 1.2, HT: 150, btag_type: 'PNet', btag: 0.35}
+    HLT_Mu12_IsoVVVL_PFHT150_PNetBTag0p6: {pt: 12, iso: 1.2, HT: 150, btag_type: 'PNet', btag: 0.6}
+    HLT_Mu12_IsoVVVL_PFHT150_PFBtagDeepJet_0p6: {pt: 12, iso: 1.2, HT: 150, btag_type: 'DeepJet', btag: 0.6}
 
   EG:
+    HLT_Ele14_eta2p5_WPTight_Gsf_HT200: {pt: 14, eta: 2.5, WP: 1.2, HT: 200}
     HLT_Ele14_eta2p5_WPTight_Gsf_HT200_PNetBTag0p35: {pt: 14, eta: 2.5, WP: 1.2, HT: 200, btag_type: 'PNet', btag: 0.35}
-    
+    HLT_Ele14_eta2p5_WPTight_Gsf_HT200_PNetBTag0p6: {pt: 14, eta: 2.5, WP: 1.2, HT: 200, btag_type: 'PNet', btag: 0.6}
+    HLT_Ele14_eta2p5_WPTight_Gsf_HT200_PFBtagDeepJet_0p6: {pt: 14, eta: 2.5, WP: 1.2, HT: 200, btag_type: 'DeepJet', btag: 0.6}
