@@ -131,6 +131,7 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
         elif sel_name == "SL_e":
             flags_dict['Ele32_WPTight_Gsf'] = self.HLTtriggers.Ele32_WPTight_Gsf
             flags_dict['Ele23_Ele12_CaloIdL_TrackIdL_IsoVL'] = self.HLTtriggers.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
+            flags_dict['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         return flags_dict
 
