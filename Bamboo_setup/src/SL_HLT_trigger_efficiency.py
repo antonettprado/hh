@@ -4,6 +4,7 @@ from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from SL_DL_event_selection import SL_DL_event_selection
+from SL_L1_trigger_efficiency import SL_L1_trigger_efficiency
 from base_selection import NanoBaseHHbbWW
 import utils.event_definition as event_defs
 from pathlib import Path
@@ -16,14 +17,13 @@ import math
 import numbers
 from typing import Dict
 
-class SL_HLT_trigger_efficiency(SL_DL_event_selection):
+class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
     def __init__(self, args):
         super(SL_HLT_trigger_efficiency, self).__init__(args)
 
     def addArgs(self, parser):
         super(SL_HLT_trigger_efficiency, self).addArgs(parser)
-        parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
-        parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
+        parser.add_argument("-noL1", "--noL1", action='store_true', dest = "noL1", help='Without using L1 seed')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -130,7 +130,6 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         elif sel_name == "SL_e":
             flags_dict['Ele32_WPTight_Gsf'] = self.HLTtriggers.Ele32_WPTight_Gsf
-            flags_dict['Ele23_Ele12_CaloIdL_TrackIdL_IsoVL'] = self.HLTtriggers.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
             flags_dict['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
             flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
         return flags_dict
@@ -233,6 +232,12 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
             selections_to_plot["SL_mu"] = SL_mu
             yields.add(SL_mu, "SL_mu")
 
+            # Pass L1 seed ================================================
+            if not self.args.noL1:
+                L1_Mu12_HTT150er = self.get_Mu_seed_passed_cuts(pd.Series({'pt': 12, 'HT': 150}))
+                SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=L1_Mu12_HTT150er)
+                SL_mu = SL_mu_L1_Mu12_HTT150er
+
             # Retrieve Flags ==============================================
             HLT_Mu_flags_dict = self.get_flags_dict("SL_mu")
 
@@ -277,6 +282,12 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
             
             selections_to_plot["SL_e"] = SL_e
             yields.add(SL_e, "SL_e")
+
+            # Pass L1 seed ================================================
+            if not self.args.noL1:
+                L1_LooseIsoEG16er2p5_HTT200er = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'loose', 'pt': 16, 'er': 2.523, 'HT': 200}))
+                SL_mu_L1_LooseIsoEG16er2p5_HTT200er = SL_mu.refine('L1_LooseIsoEG16er2p5_HTT200er', cut=L1_LooseIsoEG16er2p5_HTT200er)
+                SL_mu = SL_mu_L1_LooseIsoEG16er2p5_HTT200er
 
             # Retrieve Flags ==============================================
             HLT_EG_flags_dict = self.get_flags_dict("SL_e")
@@ -339,74 +350,3 @@ class SL_HLT_trigger_efficiency(SL_DL_event_selection):
             print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected").GetBinContent(1):.3f}')
             counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
         return counters
-
-    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-
-        super(SL_HLT_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-
-        if self.args.test_only:
-            file1 = os.path.join(resultsdir, 'bbWW_sl.root')
-            df = ROOT.RDataFrame("skim_weights", file1)
-            df.Display({"event", "genWeight"}, 5, 20).Print()
-
-        yields_file = os.path.join(workdir, 'yields_' + str(self.era) + '.tex')
-        with open(yields_file, 'r') as file: lines = file.readlines()
-
-        # Extracting relevant info from yields table into table_data
-        table_data = []
-        for line_number, line in enumerate(lines, 1):
-            if line_number >= 26 and line_number <= (len(lines)-2):
-                line_data = line.strip().split('&')  # Modify this according to table structure
-                sel_name = line_data[0].strip()
-                if "---" in line:
-                    eff = float("nan")
-                    eff_error = float("nan")
-                else:
-                    eff = line_data[1].split(r'\pm')[0]
-                    eff = eff.strip()[1:]
-                    eff_error = line_data[1].split(r'\pm')[1]
-                    eff_error = eff_error.strip()[:-4]
-                table_data.append([sel_name, eff, eff_error])
-
-        # Making pandas dataframe from table
-        df = pd.DataFrame(table_data)
-        df.columns = ['Selection', 'Yield', 'Yield_Error']
-        df = df.set_index('Selection')
-        df.index.names = [None]
-        df['Yield'] = df['Yield'].astype(float)
-        df['Yield_Error'] = df['Yield_Error'].astype(float)
-
-        # Adding efficiency column to pandas df: Effi will depend on type of selection name
-        nom_mu_sel = df.loc['SL_mu', 'Yield'] if 'SL_mu' in df.index else 0
-        nom_e_sel = df.loc['SL_e', 'Yield'] if 'SL_e' in df.index else 0
-        nom_noSel = df.loc['noSel', 'Yield'] if 'noSel' in df.index else 0
-        nom_baseSel = df.loc['baseSel', 'Yield'] if 'baseSel' in df.index else 0
-        nom_genMuonSel = df.loc['genMuonSel', 'Yield'] if 'genMuonSel' in df.index else 0
-        nom_genMuonsFromWSel = df.loc['genMuonsFromWSel', 'Yield'] if 'genMuonsFromWSel' in df.index else 0
-
-        def set_value_based_on_index(index):
-            sel_yield = df.loc[index, 'Yield'] 
-            if 'SL_mu' in index:
-                return sel_yield / nom_mu_sel  # Calculate efficiency based on condition
-            elif 'SL_e' in index:
-                return sel_yield / nom_e_sel  # Calculate efficiency based on condition
-            elif 'noSel' in index:
-                return sel_yield / nom_noSel
-            elif 'baseSel' in index:
-                return sel_yield / nom_baseSel
-            elif 'genMuonSel' in index:
-                return sel_yield / nom_genMuonSel
-            elif 'genMuonsFromWSel' in index:
-                return sel_yield / nom_genMuonsFromWSel
-            else:
-                return None  # Set default value if no condition is met
-
-        # Apply the function to create a new column based on the index
-        df['Efficiency'] = df.index.to_series().apply(set_value_based_on_index)
-
-        # Rounding every value in table to 3 digits
-        df['Efficiency'] = df['Efficiency'].apply(lambda x: round(x, 3) if not pd.isnull(x) else x)
-        
-        # Converting table to csv and Printing
-        df.to_csv(os.path.join(self.args.output, 'Efficiencies.csv'), index=True)
-        print(df)
