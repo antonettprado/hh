@@ -23,7 +23,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
     def addArgs(self, parser):
         super(SL_HLT_trigger_efficiency, self).addArgs(parser)
-        parser.add_argument("-noL1", "--noL1", action='store_true', dest = "noL1", help='Without using L1 seed')
+        parser.add_argument("-emul", "--emulation", action='store_true', dest = "emulation", help='Use emulated paths')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -111,30 +111,47 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         self.cleaned_ak4_btags = objects["cleaned_ak4_btags"]
         self.cleaned_ak8_btags = objects["cleaned_ak8_btags"]
 
-    def set_paths(self):
-        filename = Path(__file__).parent / 'input' / 'HLT_paths.yml'
-        with open(filename,'r') as yaml_file:
-            yaml_data = yaml.safe_load(yaml_file)
-        paths = yaml_data['paths']
-        self.paths_Mu = pd.DataFrame(paths['Mu']).T
-        self.paths_EG = pd.DataFrame(paths['EG']).T
+    def set_HLT_paths(self):
 
-    def get_flags_dict(self, sel_name):
+        if self.args.emulation: 
+            filename = Path(__file__).parent / 'input' / 'HLT_paths_emulated.yml'
+            with open(filename,'r') as yaml_file:
+                yaml_data = yaml.safe_load(yaml_file)
+            paths = yaml_data['paths']
+            self.paths_Mu = pd.DataFrame(paths['Mu']).T
+            self.paths_EG = pd.DataFrame(paths['EG']).T
+        else:   # Default
+            filename = Path(__file__).parent / 'input' / 'HLT_paths.yml'
+            with open(filename,'r') as yaml_file:
+                yaml_data = yaml.safe_load(yaml_file)
+            paths = yaml_data['paths']
+            self.paths_Mu = pd.DataFrame(paths['Mu'], columns=['Item'])
+            self.paths_EG = pd.DataFrame(paths['EG'], columns=['Item'])
 
-        flags_dict = dict()
+            self.paths_Mu.set_index('Item', inplace=True)
+            self.paths_EG.set_index('Item', inplace=True)
+
+            self.paths_Mu['Trigger'] = self.paths_Mu.index.str.replace("HLT_", "")    
+            self.paths_EG['Trigger'] = self.paths_EG.index.str.replace("HLT_", "") 
+            self.failed_paths = []
+
+    def get_reference_flags(self, lepton_sel_name) -> Dict[str, float]:
+
+        ref_flags = dict()
 
         # Only using 2023 HLT paths
-        if sel_name == "SL_mu":      
-            flags_dict['IsoMu24'] = self.HLTtriggers.IsoMu24
-            flags_dict['Mu15_IsoVVVL_PFHT450'] = self.HLTtriggers.Mu15_IsoVVVL_PFHT450
-            flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
-        elif sel_name == "SL_e":
-            flags_dict['Ele32_WPTight_Gsf'] = self.HLTtriggers.Ele32_WPTight_Gsf
-            flags_dict['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
-            flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
-        return flags_dict
+        if lepton_sel_name == "SL_mu":      
+            ref_flags['IsoMu24'] = self.HLTtriggers.IsoMu24
+            ref_flags['Mu15_IsoVVVL_PFHT450'] = self.HLTtriggers.Mu15_IsoVVVL_PFHT450
+            ref_flags['All'] = op.OR(*[flag for name, flag in ref_flags.items()])
+        elif lepton_sel_name == "SL_e":
+            ref_flags['Ele32_WPTight_Gsf'] = self.HLTtriggers.Ele32_WPTight_Gsf
+            ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
+            ref_flags['Ele15_IsoVVVL_PFHT450'] = self.HLTtriggers.Ele15_IsoVVVL_PFHT450
+            ref_flags['All'] = op.OR(*[flag for name, flag in ref_flags.items()])
+        return ref_flags
 
-    def get_Mu_path_passed_cuts(self, path):
+    def get_Mu_path_emulation(self, path):
 
         passed_cuts = []
 
@@ -160,11 +177,11 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 jets = op.select(jets, lambda jet: jet.btagDeepFlavB > path.btag)
                 passed_cuts.append(op.rng_len(jets) >= 1)
 
-        final_passed_cuts = op.AND(*passed_cuts)
+        Mu_path_emulation = op.AND(*passed_cuts)
 
-        return final_passed_cuts
+        return Mu_path_emulation
 
-    def get_EG_path_passed_cuts(self, path):
+    def get_EG_path_emulation(self, path):
 
         passed_cuts = []
 
@@ -190,9 +207,9 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 jets = op.select(jets, lambda jet: jet.btagDeepFlavB > path.btag)
                 passed_cuts.append(op.rng_len(jets) >= 1)
 
-        final_passed_cuts = op.AND(*passed_cuts)
+        EG_path_emulation = op.AND(*passed_cuts)
 
-        return final_passed_cuts
+        return EG_path_emulation
 
     def SL_HLT_trigger_efficiency(self, tree, baseSel):
 
@@ -202,7 +219,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         plots.extend(self.base_plots)
 
         self.set_objects(tree)
-        self.set_paths()
+        self.set_HLT_paths()
         selections_to_plot = {}
 
         yields.add(self._noSel, '_noSel')
@@ -232,33 +249,40 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
             selections_to_plot["SL_mu"] = SL_mu
             yields.add(SL_mu, "SL_mu")
 
-            # Pass L1 seed ================================================
-            if not self.args.noL1:
+            # If emulation, pass L1 seed 
+            if self.args.emulation:
                 L1_Mu12_HTT150er = self.get_Mu_seed_passed_cuts(pd.Series({'pt': 12, 'HT': 150}))
                 SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=L1_Mu12_HTT150er)
                 SL_mu = SL_mu_L1_Mu12_HTT150er
 
-            # Retrieve Flags ==============================================
-            HLT_Mu_flags_dict = self.get_flags_dict("SL_mu")
+            # Retrieve reference flags =====================================
+            HLT_Mu_ref_flags = self.get_reference_flags("SL_mu")
 
-            for HLT_flag_name, HLT_flag in HLT_Mu_flags_dict.items():
+            for HLT_flag_name, HLT_flag in HLT_Mu_ref_flags.items():
                 sel_flag_name = 'SL_mu_HLT_' + HLT_flag_name
                 sel_flag = SL_mu.refine(sel_flag_name, cut=[HLT_flag])
                 selections_to_plot[sel_flag_name] = sel_flag
                 yields.add(sel_flag, sel_flag_name)
 
-            # Loop through every input paths ==============================
+            # Loop through every input path ================================
             for path in self.paths_Mu.itertuples():
-                final_passed_cuts = self.get_Mu_path_passed_cuts(path)
+                if self.args.emulation:
+                    Mu_path = self.get_Mu_path_emulation(path)
+                else:
+                    if hasattr(self.HLTtriggers, path.Trigger):
+                        Mu_path = getattr(self.HLTtriggers, path.Trigger)
+                    else:
+                        self.failed_paths.append(path.Item)
+                        continue
 
                 sel_w_path_name = '_'.join(['SL_mu', path.Index]) 
-                sel_w_path = SL_mu.refine(sel_w_path_name, cut=[final_passed_cuts])
+                sel_w_path = SL_mu.refine(sel_w_path_name, cut=[Mu_path])
                 selections_to_plot[sel_w_path_name] = sel_w_path
                 yields.add(sel_w_path, sel_w_path_name)
 
-                for HLT_flag_name, HLT_flag in HLT_Mu_flags_dict.items():
+                for HLT_flag_name, HLT_flag in HLT_Mu_ref_flags.items():
                     sel_w_path_OR_flag_name = '_'.join(['SL_mu', path.Index,'OR',HLT_flag_name]) 
-                    sel_w_path_OR_flag = SL_mu.refine(sel_w_path_OR_flag_name, cut=[op.OR(final_passed_cuts, HLT_flag)])
+                    sel_w_path_OR_flag = SL_mu.refine(sel_w_path_OR_flag_name, cut=[op.OR(Mu_path, HLT_flag)])
                     if HLT_flag_name == "All":
                         selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
                     yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
@@ -283,33 +307,40 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
             selections_to_plot["SL_e"] = SL_e
             yields.add(SL_e, "SL_e")
 
-            # Pass L1 seed ================================================
-            if not self.args.noL1:
+            # If emulation, pass L1 seed 
+            if self.args.emulation:
                 L1_LooseIsoEG16er2p5_HTT200er = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'loose', 'pt': 16, 'er': 2.523, 'HT': 200}))
                 SL_mu_L1_LooseIsoEG16er2p5_HTT200er = SL_mu.refine('L1_LooseIsoEG16er2p5_HTT200er', cut=L1_LooseIsoEG16er2p5_HTT200er)
                 SL_mu = SL_mu_L1_LooseIsoEG16er2p5_HTT200er
 
-            # Retrieve Flags ==============================================
-            HLT_EG_flags_dict = self.get_flags_dict("SL_e")
+            # Retrieve reference flags =====================================
+            HLT_EG_ref_flags = self.get_reference_flags("SL_e")
 
-            for HLT_flag_name, HLT_flag in HLT_EG_flags_dict.items():
+            for HLT_flag_name, HLT_flag in HLT_EG_ref_flags.items():
                 sel_flag_name = 'SL_e_HLT_' + HLT_flag_name
                 sel_flag = SL_e.refine(sel_flag_name, cut=[HLT_flag])
                 selections_to_plot[sel_flag_name] = sel_flag
                 yields.add(sel_flag, sel_flag_name)
 
-            # Loop through every input paths ==============================
-            for path in self.paths_EG.itertuples():  
-                final_passed_cuts = self.get_EG_path_passed_cuts(path)
+            # Loop through every input path ================================
+            for path in self.paths_EG.itertuples(): 
+                if self.args.emulation:
+                    EG_path = self.get_EG_path_emulation(path)
+                else:
+                    if hasattr(self.HLTtriggers, path.Trigger):
+                        EG_path = getattr(self.HLTtriggers, path.Trigger)
+                    else:
+                        self.failed_paths.append(path.Item)
+                        continue
 
                 sel_w_path_name = '_'.join(['SL_e', path.Index]) 
-                sel_w_path = SL_e.refine(sel_w_path_name, cut=[final_passed_cuts])
+                sel_w_path = SL_e.refine(sel_w_path_name, cut=[EG_path])
                 selections_to_plot[sel_w_path_name] = sel_w_path
                 yields.add(sel_w_path, sel_w_path_name)        
 
-                for HLT_flag_name, HLT_flag in HLT_EG_flags_dict.items():
+                for HLT_flag_name, HLT_flag in HLT_EG_ref_flags.items():
                     sel_w_path_OR_flag_name = '_'.join(['SL_e', path.Index,'OR',HLT_flag_name]) 
-                    sel_w_path_OR_flag = SL_e.refine(sel_w_path_OR_flag_name, cut=[op.OR(final_passed_cuts, HLT_flag)])
+                    sel_w_path_OR_flag = SL_e.refine(sel_w_path_OR_flag_name, cut=[op.OR(EG_path, HLT_flag)])
                     if HLT_flag_name == "All":
                         selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
                     yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
@@ -330,10 +361,15 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
     def _test_triggers(self, tree, baseSel):
         print("......................... TESTING ONLY .........................")
+        self.set_HLT_paths()
+        print(self.paths_Mu)
+        print(self.paths_EG)
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         
         plots = []
+
+        if self.args.emulation: print("====== Running Emulation Version ========")
         
         if self.args.test_only:
             plots = self._test_triggers(tree, baseSel)
