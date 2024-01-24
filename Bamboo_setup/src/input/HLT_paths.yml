@@ -1,0 +1,22 @@
+paths:
+  Mu:
+    - HLT_Mu12_IsoVVVL_PFHT150
+    - HLT_Mu12_IsoVVVL_PFHT130_PNetBTag_0p35
+    - HLT_Mu10_IsoVVVL_PFHT150_PNetBTag_0p35
+    - HLT_Mu12_IsoVVVL_PFHT150_PFBtagDeepJet_0p277
+    - HLT_Mu12_IsoVVVL_PFHT150_PNetBTag_0p35
+    - HLT_Mu14_IsoVVVL_PFHT150_PNetBTag_0p35
+    - HLT_Mu12_IsoVVVL_PFHT150_PNetBTag_0p6
+    - HLT_Mu16_IsoVVVL_PFHT150_PNetBTag_0p35
+    - HLT_Mu12_IsoVVVL_PFHT170_PNetBTag_0p35
+    - HLT_Mu18_IsoVVVL_PFHT150_PNetBTag_0p35
+    - HLT_Mu12_IsoVVVL_PFHT200_PNetBTag_0p35
+    - HLT_Mu12_Iso_PFHT150_PNetBTag_0p35
+  EG:
+    - HLT_Ele14_eta2p5_WPTight_Gsf_HT200
+    - HLT_Ele14_eta2p5_WPTight_Gsf_HT150_PNetBTag_0p35
+    - HLT_Ele14_eta2p5_WPTight_Gsf_HT180_PNetBTag_0p35
+    - HLT_Ele14_eta2p5_WPTight_Gsf_HT200_PFBtagDeepJet_0p277
+    - HLT_Ele14_eta2p5_WPTight_Gsf_HT200_PNetBTag_0p35
+    - HLT_Ele14_eta2p5_WPTight_Gsf_HT220_PNetBTag_0p35
+    - HLT_Ele14_eta2p5_WPTight_Gsf_HT200_PNetBTag_0p6
