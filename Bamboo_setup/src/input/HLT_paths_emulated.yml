@@ -1,7 +1,6 @@
 paths:
   Mu:
     HLT_Mu12_IsoVVVL_PFHT150: {pt: 12, iso: 1.2, HT: 150}
-    HLT_Mu12_IsoVVVL_PFHT150_PNetBTag0p35: {pt: 12, iso: 1.2, HT: 150, btag_type: 'PNet', btag: 0.35}
     HLT_Mu12_IsoVVVL_PFHT130_PNetBTag_0p35: {pt: 12, iso: 1.2, HT: 130, btag_type: 'PNet', btag: 0.35}
     HLT_Mu10_IsoVVVL_PFHT150_PNetBTag_0p35: {pt: 10, iso: 1.2, HT: 150, btag_type: 'PNet', btag: 0.35}
     HLT_Mu12_IsoVVVL_PFHT150_PFBtagDeepJet_0p277: {pt: 12, iso: 1.2, HT: 150, btag_type: 'DeepJet', btag: 0.277}
