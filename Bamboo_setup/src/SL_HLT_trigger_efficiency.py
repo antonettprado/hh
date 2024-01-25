@@ -86,11 +86,12 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
     def set_objects(self, tree):
 
         # L1 Objects
-        self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
-        self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
-        self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
-        self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
-        self.l1triggers = tree.L1
+        if self.args.emulation:     # For now; until L1 info included in rerun MC
+            self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
+            self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
+            self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
+            self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
+            self.l1triggers = tree.L1
 
         # HLT-proxy objects (regular offline objects)
         self.electrons = tree.Electron
@@ -133,7 +134,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
             self.paths_Mu['Trigger'] = self.paths_Mu.index.str.replace("HLT_", "")    
             self.paths_EG['Trigger'] = self.paths_EG.index.str.replace("HLT_", "") 
-            self.failed_paths = []
+            self.failed_paths = pd.DataFrame(columns=['Path'])
 
     def get_reference_flags(self, lepton_sel_name) -> Dict[str, float]:
 
@@ -272,7 +273,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                     if hasattr(self.HLTtriggers, path.Trigger):
                         Mu_path = getattr(self.HLTtriggers, path.Trigger)
                     else:
-                        self.failed_paths.append(path.Item)
+                        self.failed_paths = pd.concat([self.failed_paths, pd.Series([path.Index], name='Path').to_frame()], ignore_index=True)
                         continue
 
                 sel_w_path_name = '_'.join(['SL_mu', path.Index]) 
@@ -330,7 +331,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                     if hasattr(self.HLTtriggers, path.Trigger):
                         EG_path = getattr(self.HLTtriggers, path.Trigger)
                     else:
-                        self.failed_paths.append(path.Item)
+                        self.failed_paths = pd.concat([self.failed_paths, pd.Series([path.Index], name='Path').to_frame()], ignore_index=True)
                         continue
 
                 sel_w_path_name = '_'.join(['SL_e', path.Index]) 
@@ -378,11 +379,9 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
         return plots
 
-    def readCounters(self, resultsFile) -> Dict[str, float]:
-        counters = super(NanoBaseHHbbWW, self).readCounters(resultsFile)
-        # Corrections to the generated sum "
-        if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
-            sample = os.path.basename(resultsFile.GetName())
-            print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected").GetBinContent(1):.3f}')
-            counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
-        return counters
+    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+
+        super(SL_HLT_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        
+        print("\nThe following were the HLT paths not found")
+        print(self.failed_paths)
