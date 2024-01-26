@@ -143,15 +143,13 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         # Only using 2023 HLT paths
         
         ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = self.HLTtriggers.PFHT280_QuadPFJet30_PNet2BTagMean0p55
-
         if lepton_sel_name == "SL_mu":      
             ref_flags['IsoMu24'] = self.HLTtriggers.IsoMu24
             ref_flags['Mu15_IsoVVVL_PFHT450'] = self.HLTtriggers.Mu15_IsoVVVL_PFHT450
         elif lepton_sel_name == "SL_e":
-            ref_flags['Ele32_WPTight_Gsf'] = self.HLTtriggers.Ele32_WPTight_Gsf
+            ref_flags['Ele30_WPTight_Gsf'] = self.HLTtriggers.Ele30_WPTight_Gsf    
             ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
             ref_flags['Ele15_IsoVVVL_PFHT450'] = self.HLTtriggers.Ele15_IsoVVVL_PFHT450
-            ref_flags['Ele30_WPTight_Gsf'] = self.HLTtriggers.Ele30_WPTight_Gsf    
         
         ref_flags['All'] = op.OR(*[flag for name, flag in ref_flags.items()])
 
@@ -388,5 +386,6 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
         super(SL_HLT_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         
-        print("\nThe following were the HLT paths not found")
-        print(self.failed_paths)
+        if not self.args.emulation:
+            print("\nThe following were the HLT paths not found")
+            print(self.failed_paths)
