@@ -37,6 +37,7 @@ seeds:
     L1_Mu12_HTT120er: {pt: 12, HT: 120}
     L1_Mu12_HTT150er: {pt: 12, HT: 150}
     L1_Mu12_HTT200er: {pt: 12, HT: 200}
+    L1_Mu14_HTT150er: {pt: 14, HT: 150}     # <---- Only Mu14 
     L1_Mu15_HTT50er: {pt: 15, HT: 50}
     L1_Mu15_HTT80er: {pt: 15, HT: 80}
     L1_Mu15_HTT100er: {pt: 15, HT: 100}
