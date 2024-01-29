@@ -91,7 +91,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
         self.l1triggers = tree.L1
 
-        objects = self.object_selection(tree, lep_pt_from_L1=self.args.lep_pt, use_mvaTTH=False)
+        objects = self.object_selection(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]
@@ -109,9 +109,14 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         with open(filename,'r') as yaml_file:
             yaml_data = yaml.safe_load(yaml_file)
         seeds = yaml_data['seeds']
-        self.seeds_Mu = pd.DataFrame(seeds['Mu']).T
-        self.seeds_EG = pd.DataFrame(seeds['EG']).T
-
+        if 'Mu' in seeds:
+            self.seeds_Mu = pd.DataFrame(seeds['Mu']).T
+        else:
+            self.seeds_Mu = pd.DataFrame()
+        if 'EG' in seeds:
+            self.seeds_EG = pd.DataFrame(seeds['EG']).T
+        else:
+            self.seeds_EG = pd.DataFrame()
     def get_flags_dict(self, sel_name):
 
         flags_dict = dict()
