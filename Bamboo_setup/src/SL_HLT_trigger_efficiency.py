@@ -239,7 +239,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         if not self.paths_Mu.empty:
 
             # Muon selection ==============================================
-            mu_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 10
+            mu_pt_cut = self.args.lep_pt if self.args.lep_pt is not False else 10
             print(f"The offline muon pt cut is: {mu_pt_cut}")
             SL_mu_only = mllSel.refine("SL muon only selection", cut=[op.AND(
                 op.rng_len(self.tight_muons) == 1,
@@ -297,7 +297,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         if not self.paths_EG.empty:
 
             # Electron selection ==========================================
-            e_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 10
+            e_pt_cut = self.args.lep_pt if self.args.lep_pt is not False else 10
             print(f"The offline electron pt cut is: {e_pt_cut}")
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
                 op.rng_len(self.tight_muons) == 0,
