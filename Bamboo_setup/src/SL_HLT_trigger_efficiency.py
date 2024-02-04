@@ -86,12 +86,13 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
     def set_objects(self, tree):
 
         # L1 Objects
-        if self.args.emulation:     # For now; until L1 info included in rerun MC
-            self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
-            self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
-            self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
-            self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
-            self.l1triggers = tree.L1
+        # if self.args.emulation:     # For now; until L1 info included in rerun MC
+        #     self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
+        #     self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
+        #     self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
+        #     self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
+        
+        self.l1triggers = tree.L1
 
         # HLT-proxy objects (regular offline objects)
         self.electrons = tree.Electron
@@ -142,7 +143,6 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
         # Only using 2023 HLT paths
         
-        ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = self.HLTtriggers.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         if lepton_sel_name == "SL_mu":      
             ref_flags['IsoMu24'] = self.HLTtriggers.IsoMu24
             ref_flags['Mu15_IsoVVVL_PFHT450'] = self.HLTtriggers.Mu15_IsoVVVL_PFHT450
@@ -150,7 +150,8 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
             ref_flags['Ele30_WPTight_Gsf'] = self.HLTtriggers.Ele30_WPTight_Gsf    
             ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
             ref_flags['Ele15_IsoVVVL_PFHT450'] = self.HLTtriggers.Ele15_IsoVVVL_PFHT450
-        
+        ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = self.HLTtriggers.PFHT280_QuadPFJet30_PNet2BTagMean0p55
+
         ref_flags['All'] = op.OR(*[flag for name, flag in ref_flags.items()])
 
         return ref_flags
@@ -198,7 +199,11 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
             electrons = op.select(electrons, lambda e: e.eta <= path.eta)
             passed_cuts.append(op.rng_len(electrons) > 0)
         if hasattr(path, 'WP') and not pd.isna(path.WP):
-            electrons = op.select(electrons, lambda e: e.pfRelIso03_all <= path.WP)
+            if path.WP == 'tight':
+                electrons = op.select(electrons, lambda e: e.mvaIso_WP90)
+                passed_cuts.append(op.rng_len(electrons) > 0)
+        if hasattr(path, "iso") and not pd.isna(path.iso):
+            electrons = op.select(electrons, lambda e: e.pfRelIso03_all <= path.iso)
             passed_cuts.append(op.rng_len(electrons) > 0)
         if hasattr(path, "HT") and not pd.isna(path.HT):
             passed_cuts.append(self.HLT_HT > path.HT)
@@ -255,8 +260,10 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
             # If emulation, pass L1 seed 
             if self.args.emulation:
-                L1_Mu12_HTT150er = self.get_Mu_seed_passed_cuts(pd.Series({'pt': 12, 'HT': 150}))
-                SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=L1_Mu12_HTT150er)
+                # L1_Mu12_HTT150er = self.get_Mu_seed_passed_cuts(pd.Series({'pt': 12, 'HT': 150}))
+                # SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=self.l1triggers.Mu12_HTT150er)
+                SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=self.l1triggers.Mu12_HTT150er)
+                yields.add(SL_mu_L1_Mu12_HTT150er, "SL_mu_L1_Mu12_HTT150er")
                 SL_mu = SL_mu_L1_Mu12_HTT150er
 
             # Retrieve reference flags =====================================
@@ -313,9 +320,11 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
             # If emulation, pass L1 seed 
             if self.args.emulation:
-                L1_LooseIsoEG16er2p5_HTT200er = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'loose', 'pt': 16, 'er': 2.523, 'HT': 200}))
-                SL_mu_L1_LooseIsoEG16er2p5_HTT200er = SL_mu.refine('L1_LooseIsoEG16er2p5_HTT200er', cut=L1_LooseIsoEG16er2p5_HTT200er)
-                SL_mu = SL_mu_L1_LooseIsoEG16er2p5_HTT200er
+                # L1_LooseIsoEG16er2p5_HTT200er = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'loose', 'pt': 16, 'er': 2.523, 'HT': 200}))
+                # SL_e_L1_LooseIsoEG16er2p5_HTT200er = SL_mu.refine('L1_LooseIsoEG16er2p5_HTT200er', cut=L1_LooseIsoEG16er2p5_HTT200er)
+                SL_e_L1_LooseIsoEG16er2p1_HTT200er = SL_mu.refine('L1_LooseIsoEG16er2p1_HTT200er', cut=self.l1triggers.LooseIsoEG16er2p1_HTT200er)
+                yields.add(SL_e_L1_LooseIsoEG16er2p1_HTT200er, "SL_e_L1_LooseIsoEG16er2p1_HTT200er")
+                SL_e = SL_e_L1_LooseIsoEG16er2p1_HTT200er
 
             # Retrieve reference flags =====================================
             HLT_EG_ref_flags = self.get_reference_flags("SL_e")
