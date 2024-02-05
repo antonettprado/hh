@@ -255,16 +255,13 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
             
+            # If emulation, pass L1 seed ==================================
+            if self.args.emulation:
+                SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=self.l1triggers.Mu12_HTT150er)
+                SL_mu = SL_mu_L1_Mu12_HTT150er
+
             selections_to_plot["SL_mu"] = SL_mu
             yields.add(SL_mu, "SL_mu")
-
-            # If emulation, pass L1 seed 
-            if self.args.emulation:
-                # L1_Mu12_HTT150er = self.get_Mu_seed_passed_cuts(pd.Series({'pt': 12, 'HT': 150}))
-                # SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=self.l1triggers.Mu12_HTT150er)
-                SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=self.l1triggers.Mu12_HTT150er)
-                yields.add(SL_mu_L1_Mu12_HTT150er, "SL_mu_L1_Mu12_HTT150er")
-                SL_mu = SL_mu_L1_Mu12_HTT150er
 
             # Retrieve reference flags =====================================
             HLT_Mu_ref_flags = self.get_reference_flags("SL_mu")
@@ -303,7 +300,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         # # =================================================================
         if not self.paths_EG.empty:
 
-            # Electron selection ==========================================
+            # Electron selection ===========================================
             e_pt_cut = self.args.lep_pt if self.args.lep_pt is not False else 10
             print(f"The offline electron pt cut is: {e_pt_cut}")
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
@@ -314,17 +311,14 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
-            
+
+            # If emulation, pass L1 seed ===================================
+            if self.args.emulation:
+                SL_e_L1_LooseIsoEG16er2p1_HTT200er = SL_e.refine('L1_LooseIsoEG16er2p1_HTT200er', cut=self.l1triggers.LooseIsoEG16er2p1_HTT200er)
+                SL_e = SL_e_L1_LooseIsoEG16er2p1_HTT200er
+
             selections_to_plot["SL_e"] = SL_e
             yields.add(SL_e, "SL_e")
-
-            # If emulation, pass L1 seed 
-            if self.args.emulation:
-                # L1_LooseIsoEG16er2p5_HTT200er = self.get_EG_seed_passed_cuts(pd.Series({'iso': 'loose', 'pt': 16, 'er': 2.523, 'HT': 200}))
-                # SL_e_L1_LooseIsoEG16er2p5_HTT200er = SL_mu.refine('L1_LooseIsoEG16er2p5_HTT200er', cut=L1_LooseIsoEG16er2p5_HTT200er)
-                SL_e_L1_LooseIsoEG16er2p1_HTT200er = SL_mu.refine('L1_LooseIsoEG16er2p1_HTT200er', cut=self.l1triggers.LooseIsoEG16er2p1_HTT200er)
-                yields.add(SL_e_L1_LooseIsoEG16er2p1_HTT200er, "SL_e_L1_LooseIsoEG16er2p1_HTT200er")
-                SL_e = SL_e_L1_LooseIsoEG16er2p1_HTT200er
 
             # Retrieve reference flags =====================================
             HLT_EG_ref_flags = self.get_reference_flags("SL_e")
