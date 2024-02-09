@@ -24,6 +24,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
     def addArgs(self, parser):
         super(SL_HLT_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-emul", "--emulation", action='store_true', dest = "emulation", help='Use emulated paths')
+        parser.add_argument("-HLTonly", "--HLT_effi_only", action='store_true', dest = "HLT_effi_only", help='Calculate HLT efficiency only (instead of total L1+HLT)')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -255,17 +256,17 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
             
-            # If emulation, pass L1 seed ==================================
-            if self.args.emulation:
+            # If want pure HLT efficiency, pass L1 seed =====================
+            if self.args.HLT_effi_only:
                 SL_mu_L1_Mu12_HTT150er = SL_mu.refine('L1_Mu12_HTT150er', cut=self.l1triggers.Mu12_HTT150er)
-                SL_mu = SL_mu_L1_Mu12_HTT150er
-
-            selections_to_plot["SL_mu"] = SL_mu
-            yields.add(SL_mu, "SL_mu")
+                yields.add(SL_mu_L1_Mu12_HTT150er, "SL_mu")
+                selections_to_plot["SL_mu"] = SL_mu
+            else:
+                yields.add(SL_mu, "SL_mu")
+                selections_to_plot["SL_mu"] = SL_mu
 
             # Retrieve reference flags =====================================
             HLT_Mu_ref_flags = self.get_reference_flags("SL_mu")
-
             for HLT_flag_name, HLT_flag in HLT_Mu_ref_flags.items():
                 sel_flag_name = 'SL_mu_HLT_' + HLT_flag_name
                 sel_flag = SL_mu.refine(sel_flag_name, cut=[HLT_flag])
@@ -312,17 +313,17 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
 
-            # If emulation, pass L1 seed ===================================
-            if self.args.emulation:
+            # If want pure HLT efficiency, pass L1 seed =====================
+            if self.args.HLT_effi_only:
                 SL_e_L1_LooseIsoEG16er2p1_HTT200er = SL_e.refine('L1_LooseIsoEG16er2p1_HTT200er', cut=self.l1triggers.LooseIsoEG16er2p1_HTT200er)
-                SL_e = SL_e_L1_LooseIsoEG16er2p1_HTT200er
-
-            selections_to_plot["SL_e"] = SL_e
-            yields.add(SL_e, "SL_e")
+                yields.add(SL_e_L1_LooseIsoEG16er2p1_HTT200er, "SL_e")
+                selections_to_plot["SL_e"] = SL_e
+            else:
+                yields.add(SL_e, "SL_e")
+                selections_to_plot["SL_e"] = SL_e
 
             # Retrieve reference flags =====================================
             HLT_EG_ref_flags = self.get_reference_flags("SL_e")
-
             for HLT_flag_name, HLT_flag in HLT_EG_ref_flags.items():
                 sel_flag_name = 'SL_e_HLT_' + HLT_flag_name
                 sel_flag = SL_e.refine(sel_flag_name, cut=[HLT_flag])
