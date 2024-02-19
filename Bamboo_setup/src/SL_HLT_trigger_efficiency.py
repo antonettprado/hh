@@ -138,7 +138,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
             self.paths_EG['Trigger'] = self.paths_EG.index.str.replace("HLT_", "") 
             self.failed_paths = pd.DataFrame(columns=['Path'])
 
-    def get_reference_flags(self, lepton_sel_name) -> Dict[str, float]:
+    def get_reference_flags(self, lepton_sel_name) -> Dict[str, bool]:
 
         ref_flags = dict()
 
