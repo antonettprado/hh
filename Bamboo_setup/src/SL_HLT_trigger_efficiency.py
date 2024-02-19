@@ -368,10 +368,44 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         return plots
 
     def _test_triggers(self, tree, baseSel):
+
         print("......................... TESTING ONLY .........................")
+        plots = []
+        yields = CutFlowReport("yields", printInLog=True, recursive=True)
+        plots.append(yields)
+        plots.extend(self.base_plots)
+
+        self.set_objects(tree)
         self.set_HLT_paths()
-        print(self.paths_Mu)
-        print(self.paths_EG)
+
+        mllSel = baseSel.refine("mllSel", cut=[event_defs.mll_selection(self.loose_electrons, self.loose_muons)])
+        yields.add(mllSel, "baseSel_mllSel")
+
+        # Muon selection ==============================================
+        mu_pt_cut = self.args.lep_pt if self.args.lep_pt is not False else 10
+        print(f"The offline muon pt cut is: {mu_pt_cut}")
+        SL_mu_only = mllSel.refine("SL muon only selection", cut=[op.AND(
+            op.rng_len(self.tight_muons) == 1,
+            op.rng_len(self.tight_electrons) == 0,
+            op.rng_len(self.taus) == 0,
+            self.tight_muons[0].pt > mu_pt_cut)])
+        SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
+            event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
+            event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
+
+        path_name = 'Mu12_TrkIsoVVL_PFHT150_PNetBTag_0p35'
+        Mu_path = getattr(self.HLTtriggers, path_name)
+        sel_name = 'SL_mu_'  + 'HLT_' + path_name
+        sel_w_path = SL_mu.refine(sel_name, cut=[Mu_path])
+        yields.add(sel_w_path, sel_name)
+       
+        from bamboo.plots import Skim
+
+        branches = {}
+        branches.update({"event": None})
+        plots.append(Skim('trig_events', branches, sel_w_path))
+
+        return plots
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         
@@ -388,8 +422,11 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_HLT_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        
-        if not self.args.emulation:
-            print("\nThe following were the HLT paths not found")
-            print(self.failed_paths)
+        if self.args.test_only:
+            super(NanoAODHistoModule, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        else:
+            super(SL_HLT_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+            
+            if not self.args.emulation:
+                print("\nThe following were the HLT paths not found")
+                print(self.failed_paths)
