@@ -24,6 +24,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         super(SL_L1_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-to", "--test_only", action='store_true', dest = "test_only", help='Using _test_triggers function only')
         parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
+        parser.add_argument("-emul_L1", "--emul_L1", action='store_true', dest = "emul_L1", help='Use emulated L1 seeds')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -85,10 +86,11 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
 
     def set_objects(self, tree):
 
-        self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
-        self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
-        self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
-        self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
+        if self.args.emul_L1:
+            self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
+            self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
+            self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
+            self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
         self.l1triggers = tree.L1
 
         objects = self.object_selection(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
@@ -181,9 +183,9 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
             jet_pt_cuts = [l1jets[i].pt >= seed.jet_pt[i] for i in range(seed.njets)]
             passed_cuts.append(op.AND(*jet_pt_cuts))
 
-        final_passed_cuts = op.AND(*passed_cuts)
+        Mu_seed_emulation = op.AND(*passed_cuts)
 
-        return final_passed_cuts
+        return Mu_seed_emulation
 
     def get_EG_seed_emulation(self, seed):
 
@@ -214,9 +216,9 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
             jet_pt_cuts = [l1jets[i].pt >= seed.jet_pt[i] for i in range(seed.njets)]
             passed_cuts.append(op.AND(*jet_pt_cuts))
 
-        final_passed_cuts = op.AND(*passed_cuts)
+        EG_seed_emulation = op.AND(*passed_cuts)
 
-        return final_passed_cuts
+        return EG_seed_emulation
 
     def SL_L1_trigger_efficiency(self, tree, baseSel):
 
@@ -259,16 +261,23 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 yields.add(sel_flag, sel_flag_name)
 
             for seed in self.seeds_Mu.itertuples():
-                final_passed_cuts = self.get_Mu_seed_emulation(seed)
+                if self.args.emul_L1:
+                    Mu_trigger = self.get_Mu_seed_emulation(seed)
+                else:
+                    l1_name = seed.Index.replace('L1_', '')
+                    if hasattr(self.l1triggers, l1_name):
+                        Mu_trigger = getattr(self.l1triggers, l1_name)
+                    else:
+                        continue
 
                 sel_w_seed_name = '_'.join(['SL_mu', seed.Index]) 
-                sel_w_seed = SL_mu.refine(sel_w_seed_name, cut=[final_passed_cuts])
+                sel_w_seed = SL_mu.refine(sel_w_seed_name, cut=[Mu_trigger])
                 selections_to_plot[sel_w_seed_name] = sel_w_seed
                 yields.add(sel_w_seed, sel_w_seed_name)
 
                 for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
                     sel_w_seed_OR_flag_name = '_'.join(['SL_mu', seed.Index,'OR',L1_flag_name]) 
-                    sel_w_seed_OR_flag = SL_mu.refine(sel_w_seed_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
+                    sel_w_seed_OR_flag = SL_mu.refine(sel_w_seed_OR_flag_name, cut=[op.OR(Mu_trigger, L1_flag)])
                     if L1_flag_name == "All":
                         selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
                     yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
@@ -295,17 +304,24 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 selections_to_plot[sel_flag_name] = sel_flag
                 yields.add(sel_flag, sel_flag_name)
 
-            for seed in self.seeds_EG.itertuples():  
-                final_passed_cuts = self.get_EG_seed_emulation(seed)
+            for seed in self.seeds_EG.itertuples(): 
+                if self.args.emul_L1:
+                    EG_trigger = self.get_EG_seed_emulation(seed)
+                else:
+                    l1_name = seed.Index.replace('L1_', '')
+                    if hasattr(self.l1triggers, l1_name):
+                        EG_trigger = getattr(self.l1triggers, l1_name)
+                    else:
+                        continue
 
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
-                sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[final_passed_cuts])
+                sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[EG_trigger])
                 selections_to_plot[sel_w_seed_name] = sel_w_seed
                 yields.add(sel_w_seed, sel_w_seed_name)        
 
                 for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
                     sel_w_seed_OR_flag_name = '_'.join(['SL_e', seed.Index,'OR',L1_flag_name]) 
-                    sel_w_seed_OR_flag = SL_e.refine(sel_w_seed_OR_flag_name, cut=[op.OR(final_passed_cuts, L1_flag)])
+                    sel_w_seed_OR_flag = SL_e.refine(sel_w_seed_OR_flag_name, cut=[op.OR(EG_trigger, L1_flag)])
                     if L1_flag_name == "All":
                         selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
                     yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
@@ -317,10 +333,10 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 plots.extend([
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(100, -4, 4)),
-                    Plot.make1D(sel_name + "_HT", self.ht_jets, sel, EqBin(500, 0, 1000)),
-                    Plot.make1D(sel_name + "_njets", op.rng_len(self.l1jets), sel, EqBin(15, 0, 15)),
-                    Plot.make1D(sel_name + "_jet0pt", self.l1jets[0].pt, sel, EqBin(200, 0, 200)),
-                    Plot.make1D(sel_name + "_jet1pt", self.l1jets[1].pt, sel, EqBin(200, 0, 200))
+                    Plot.make1D(sel_name + "_HT_jets", self.ht_jets, sel, EqBin(500, 0, 1000))
+                    # Plot.make1D(sel_name + "_njets", op.rng_len(self.l1jets), sel, EqBin(15, 0, 15))
+                    # Plot.make1D(sel_name + "_jet0pt", self.l1jets[0].pt, sel, EqBin(200, 0, 200)),
+                    # Plot.make1D(sel_name + "_jet1pt", self.l1jets[1].pt, sel, EqBin(200, 0, 200))
                 ])
         
         return plots

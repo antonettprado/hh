@@ -25,6 +25,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         super(SL_HLT_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-emul", "--emulation", action='store_true', dest = "emulation", help='Use emulated paths')
         parser.add_argument("-HLTonly", "--HLT_effi_only", action='store_true', dest = "HLT_effi_only", help='Calculate HLT efficiency only (instead of total L1+HLT)')
+        parser.add_argument("-jet_sel", "--jet_selection", action='store', dest="jet_selection")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -361,8 +362,9 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
                 plots.extend([
-                    Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
-                    Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(100, -4, 4))
+                    Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(20, 0, 200)),
+                    Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(200, -4, 4)),
+                    Plot.make1D(sel_name + "_HLT_HT", self.HLT_HT, sel, EqBin(500, 0, 1000))
                 ])
         
         return plots
