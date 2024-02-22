@@ -25,7 +25,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         super(SL_HLT_trigger_efficiency, self).addArgs(parser)
         parser.add_argument("-emul", "--emulation", action='store_true', dest = "emulation", help='Use emulated paths')
         parser.add_argument("-HLTonly", "--HLT_effi_only", action='store_true', dest = "HLT_effi_only", help='Calculate HLT efficiency only (instead of total L1+HLT)')
-        parser.add_argument("-jet_sel", "--jet_selection", action='store', dest="jet_selection")
+        parser.add_argument("-jet_sel", "--jet_sel", action="store", dest="jet_selection", default=False, help="Choose one of the following: 3j1b, 3j2b, 4j1b or 4j2b")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():
@@ -240,6 +240,20 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         mllSel = baseSel.refine("mllSel", cut=[event_defs.mll_selection(self.loose_electrons, self.loose_muons)])
         yields.add(mllSel, "baseSel_mllSel")
 
+        if self.args.jet_selection is not False:
+            print('custom jet selection!')
+            print(self.args.jet_selection)
+            sl_res_jet_selection_custom = {
+                '3j1b': event_defs.sl_resolved_3j_1b_selection,
+                '3j2b': event_defs.sl_resolved_3j_2b_selection,
+                '4j1b': event_defs.sl_resolved_4j_1b_selection,
+                '4j2b': event_defs.sl_resolved_4j_2b_selection
+            }
+            sl_res_jet_selection = sl_res_jet_selection_custom.get(self.args.jet_selection)
+        else:
+            print('default jet selection!')
+            sl_res_jet_selection = event_defs.sl_resolved_jet_selection
+            
         # =================================================================
         # Muon paths dataframe ============================================
         # =================================================================
@@ -254,7 +268,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 op.rng_len(self.taus) == 0,
                 self.tight_muons[0].pt > mu_pt_cut)])
             SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
-                event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
+                sl_res_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
             
             # If want pure HLT efficiency, pass L1 seed =====================
@@ -311,7 +325,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 op.rng_len(self.taus) == 0,
                 self.tight_electrons[0].pt > e_pt_cut)])
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
-                event_defs.sl_resolved_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
+                sl_res_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags),
                 event_defs.sl_boosted_jet_selection(self.cleaned_ak4_jets, self.cleaned_ak4_btags, self.cleaned_ak8_btags))])
 
             # If want pure HLT efficiency, pass L1 seed =====================
