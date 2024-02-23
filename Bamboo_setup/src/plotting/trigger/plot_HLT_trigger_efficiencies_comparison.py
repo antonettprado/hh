@@ -21,7 +21,6 @@ def plot_effis(run_dir, path_list):
     SL_mu_histo_dict = {}
     SL_e_histo_dict = {}
     variables = ["pt", "eta", "HLT_HT"]
-    # variables = ["pt"]
     SL_mu_histo_names = []
     SL_e_histo_names = []
     SL_mu_histo_names.append("SL_mu")
@@ -65,26 +64,26 @@ def plot_effis(run_dir, path_list):
         color_index = 1
         SL_mu_histo_dict["SL_mu"][var].Rebin(rebin_factor)
         
-        # SL_mu_effi_dict = {}
-        # for histo_name in SL_mu_histo_dict:
-        #     if histo_name == "SL_mu":
-        #         continue
-        #     SL_mu_histo_dict[histo_name][var].Rebin(rebin_factor)
-        #     if not ROOT.TEfficiency.CheckConsistency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var]):
-        #         print ("SL_mu", var, path, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
-        #         continue
-        #     SL_mu_effi_dict[histo_name] = ROOT.TEfficiency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var])
-        #     #SL_mu_effi_dict[histo_name] = SL_mu_histo_dict[histo_name][var].Clone(histo_name+"_effi")
-        #     #SL_mu_effi_dict[histo_name].Divide(SL_mu_histo_dict["SL_mu"][var])
-        #     SL_mu_effi_dict[histo_name].SetLineColor(color_index)
-        #     color_index += 1
-        #     SL_mu_effi_dict[histo_name].SetLineWidth(2)
-        #     SL_mu_effi_dict[histo_name].Draw("same")
-        #     legend_mu.AddEntry(SL_mu_effi_dict[histo_name], histo_name,"l")
+        SL_mu_effi_dict = {}
+        for histo_name in SL_mu_histo_dict:
+            if histo_name == "SL_mu":
+                continue
+            SL_mu_histo_dict[histo_name][var].Rebin(rebin_factor)
+            if not ROOT.TEfficiency.CheckConsistency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var]):
+                print ("SL_mu", var, path, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
+                continue
+            SL_mu_effi_dict[histo_name] = ROOT.TEfficiency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var])
+            #SL_mu_effi_dict[histo_name] = SL_mu_histo_dict[histo_name][var].Clone(histo_name+"_effi")
+            #SL_mu_effi_dict[histo_name].Divide(SL_mu_histo_dict["SL_mu"][var])
+            SL_mu_effi_dict[histo_name].SetLineColor(color_index)
+            color_index += 1
+            SL_mu_effi_dict[histo_name].SetLineWidth(2)
+            SL_mu_effi_dict[histo_name].Draw("same")
+            legend_mu.AddEntry(SL_mu_effi_dict[histo_name], histo_name,"l")
     
-        # legend_mu.Draw("same")
-        # canvas_mu.Print("%s/SL_mu_effi_%s.pdf"%(out_dir_path,var), "pdf")
-        # canvas_mu.Close()
+        legend_mu.Draw("same")
+        canvas_mu.Print("%s/SL_mu_effi_%s.pdf"%(out_dir_path,var), "pdf")
+        canvas_mu.Close()
 
         canvas_e = ROOT.TCanvas("c_SL_e", "c_SL_e", 800, 600)
         canvas_e.SetGrid()
