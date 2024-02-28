@@ -687,6 +687,18 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         return vars3D
 
+    def get_skims(self, vars: 'list[Variable]', plots):
+        for selection_name, selection in self.selections.items():
+            keys = [sub_var.ref for var in vars for sub_var in var if sub_var.subcat == selection_name]
+            values = [sub_var.ref for var in vars for sub_var in var if sub_var.subcat == selection_name]
+            branches = dict(zip(keys, values))
+            branches.update({"event":None})
+            # branches.update({"Electron_pt":None})
+            # branches_from_input_tree = ["event", "Electron_pt"]
+            # branches.update({branch: None for branch in branches_from_input_tree})
+            plots.append(Skim(selection_name, branches, selection))
+        return plots
+
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
@@ -732,6 +744,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         yields.add(self.selections['DL_res_1b'], 'DL_res_1b')
         yields.add(self.selections['DL_res_2b'], 'DL_res_2b')
         yields.add(self.selections['DL_boost'], 'DL_boost')
+
+        # plots = self.get_skims(reco_vars + reco_2D_vars, plots)
 
         return plots
 
@@ -814,51 +828,51 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        print("------------------ Calculating Likelihood Ratios --------------------")
+        # print("------------------ Calculating Likelihood Ratios --------------------")
         
-        ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
-        ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
-        results_path = Path(self.args.output) / 'results' # Constructs "output_path/results" using the forward slash operator
-        SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
-        BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
-        INTERPOLATION_SCALE_FACTOR_1D = 9
-        INTERPOLATION_SCALE_FACTOR_2D = 3
-        INTERPOLATION_SCALE_FACTOR_3D = 3
+        # ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
+        # ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
+        # results_path = Path(self.args.output) / 'results' # Constructs "output_path/results" using the forward slash operator
+        # SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
+        # BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
+        # INTERPOLATION_SCALE_FACTOR_1D = 9
+        # INTERPOLATION_SCALE_FACTOR_2D = 3
+        # INTERPOLATION_SCALE_FACTOR_3D = 3
 
-        all_reco_vars_1D = self.get_all_reco_variables()
-        all_reco_vars_2D = self.get_all_reco_2D_variables()
-        all_reco_vars_3D = self.get_all_reco_3D_variables()
-        all_reco_vars = all_reco_vars_1D + all_reco_vars_2D + all_reco_vars_3D
+        # all_reco_vars_1D = self.get_all_reco_variables()
+        # all_reco_vars_2D = self.get_all_reco_2D_variables()
+        # all_reco_vars_3D = self.get_all_reco_3D_variables()
+        # all_reco_vars = all_reco_vars_1D + all_reco_vars_2D + all_reco_vars_3D
 
-        all_bjets_vars_1D = self.get_bjets_vars()
-        all_bjets_vars_2D = self.get_bjets_2D_vars()
-        all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
+        # all_bjets_vars_1D = self.get_bjets_vars()
+        # all_bjets_vars_2D = self.get_bjets_2D_vars()
+        # all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
 
-        all_corrections = []
-        for var in all_bjets_vars:
-            print(var.name)
-            for subcat_var in var:
-                print('\t', subcat_var.ref)
-                signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
-                backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
+        # all_corrections = []
+        # for var in all_bjets_vars:
+        #     print(var.name)
+        #     for subcat_var in var:
+        #         print('\t', subcat_var.ref)
+        #         signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
+        #         backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
                 
-                ratio_hist = signal_total_hist.Clone()
-                ratio_hist.Divide(backg_total_hist)
+        #         ratio_hist = signal_total_hist.Clone()
+        #         ratio_hist.Divide(backg_total_hist)
 
-                if isinstance(var, Variable1D):
-                    bh_hist = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
-                elif isinstance(var, Variable2D):
-                    bh_hist = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-                elif isinstance(var, Variable3D):
-                    bh_hist = self.interpolate_3D_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
+        #         if isinstance(var, Variable1D):
+        #             bh_hist = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+        #         elif isinstance(var, Variable2D):
+        #             bh_hist = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+        #         elif isinstance(var, Variable3D):
+        #             bh_hist = self.interpolate_3D_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
                 
-                corr = correctionlib.convert.from_histogram(bh_hist)
-                corr.name = subcat_var.ref + '_llr'
-                corr.description = f'llr for {subcat_var.ref}'
-                corr.data.flow = 'clamp'
-                all_corrections.append(corr)
+        #         corr = correctionlib.convert.from_histogram(bh_hist)
+        #         corr.name = subcat_var.ref + '_llr'
+        #         corr.description = f'llr for {subcat_var.ref}'
+        #         corr.data.flow = 'clamp'
+        #         all_corrections.append(corr)
 
-        cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(results_path, "corrections_llr.json")
-        with open(output_llr_file, "w") as outfile:
-            outfile.write(cset.json(exclude_unset=False))
+        # cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
+        # output_llr_file = os.path.join(results_path, "corrections_llr.json")
+        # with open(output_llr_file, "w") as outfile:
+        #     outfile.write(cset.json(exclude_unset=False))

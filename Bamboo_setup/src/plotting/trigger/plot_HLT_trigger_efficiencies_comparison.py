@@ -73,8 +73,8 @@ def plot_effis(run_dir, path_list):
                 print ("SL_mu", var, path, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
                 continue
             SL_mu_effi_dict[histo_name] = ROOT.TEfficiency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var])
-            #SL_mu_effi_dict[histo_name] = SL_mu_histo_dict[histo_name][var].Clone(histo_name+"_effi")
-            #SL_mu_effi_dict[histo_name].Divide(SL_mu_histo_dict["SL_mu"][var])
+            SL_mu_effi_dict[histo_name] = SL_mu_histo_dict[histo_name][var].Clone(histo_name+"_effi")
+            SL_mu_effi_dict[histo_name].Divide(SL_mu_histo_dict["SL_mu"][var])
             SL_mu_effi_dict[histo_name].SetLineColor(color_index)
             color_index += 1
             SL_mu_effi_dict[histo_name].SetLineWidth(2)
