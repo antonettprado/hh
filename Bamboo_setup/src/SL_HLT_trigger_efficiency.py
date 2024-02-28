@@ -3,6 +3,7 @@ from bamboo.treedecorators import NanoAODDescription
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.plots import VariableBinning
 from SL_DL_event_selection import SL_DL_event_selection
 from SL_L1_trigger_efficiency import SL_L1_trigger_efficiency
 from base_selection import NanoBaseHHbbWW
@@ -150,7 +151,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
             ref_flags['Mu15_IsoVVVL_PFHT450'] = self.HLTtriggers.Mu15_IsoVVVL_PFHT450
         elif lepton_sel_name == "SL_e":
             ref_flags['Ele30_WPTight_Gsf'] = self.HLTtriggers.Ele30_WPTight_Gsf    
-            ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
+            # ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = self.HLTtriggers.Ele28_eta2p1_WPTight_Gsf_HT150
             ref_flags['Ele15_IsoVVVL_PFHT450'] = self.HLTtriggers.Ele15_IsoVVVL_PFHT450
         ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = self.HLTtriggers.PFHT280_QuadPFJet30_PNet2BTagMean0p55
 
@@ -376,7 +377,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
                 plots.extend([
-                    Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(20, 0, 200)),
+                    Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,5,10,15,20,25,30,35,40,45,50,60,70,80,90,100,120,140,160,180,200])),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(200, -4, 4)),
                     Plot.make1D(sel_name + "_HLT_HT", self.HLT_HT, sel, EqBin(500, 0, 1000))
                 ])
