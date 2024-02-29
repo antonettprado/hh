@@ -32,7 +32,10 @@ bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2018_L1.yml -o Z_OU
 ```bash
 python3 src/plotting/trigger/plot_trigger_efficiencies.py
 ```
-
+### To run all HLT efficiency points at once:
+```bash 
+bash run_all_trigger_effi_pts.sh
+```
 # ------------------------------ Analysis -------------------------------
 ## Process NANOAODs: SL_DL_event_selection 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
