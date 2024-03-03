@@ -49,7 +49,7 @@ def plot_effis(run_dir, path_list):
     for var in variables:
         if var == "HT":
             rebin_factor = 10
-        else:
+        elif var == "eta":
             rebin_factor = 4
 
         canvas_mu = ROOT.TCanvas("c_SL_mu", "c_SL_mu", 800, 600)
