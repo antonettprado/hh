@@ -115,6 +115,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         self.cleaned_ak4_jets = objects["cleaned_ak4_jets"]
         self.cleaned_ak4_btags = objects["cleaned_ak4_btags"]
         self.cleaned_ak8_btags = objects["cleaned_ak8_btags"]
+        self.HT = op.rng_sum(self.cleaned_ak4_jets, lambda jet: jet.pt)
 
     def set_HLT_paths(self):
 
@@ -379,7 +380,9 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 plots.extend([
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,5,10,15,20,25,30,35,40,45,50,60,70,80,90,100,120,140,160,180,200])),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(200, -4, 4)),
-                    Plot.make1D(sel_name + "_HLT_HT", self.HLT_HT, sel, EqBin(500, 0, 1000))
+                    Plot.make1D(sel_name + "_HT", self.HT, sel, EqBin(500, 0, 1000)),
+                    Plot.make1D(sel_name + "_npv", tree.PV.npvs, sel, EqBin(70, 0, 70)),
+                    Plot.make1D(sel_name + "_npv_good", tree.PV.npvsGood, sel, EqBin(70, 0, 70))
                 ])
         
         return plots
