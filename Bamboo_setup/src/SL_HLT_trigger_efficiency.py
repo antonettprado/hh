@@ -379,10 +379,10 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
                 plots.extend([
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,2,4,6,8,10,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,125,150,200])),
-                    Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(200, -4, 4)),
-                    Plot.make1D(sel_name + "_HT", self.HT, sel, EqBin(500, 0, 1000)),
-                    Plot.make1D(sel_name + "_npv", tree.PV.npvs, sel, EqBin(70, 0, 70)),
-                    Plot.make1D(sel_name + "_npv_good", tree.PV.npvsGood, sel, EqBin(70, 0, 70))
+                    Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(50, -4, 4)),
+                    Plot.make1D(sel_name + "_HT", self.HT, sel, EqBin(50, 0, 1000)),
+                    Plot.make1D(sel_name + "_npv", tree.PV.npvs, sel, EqBin(100, 0, 100)),
+                    Plot.make1D(sel_name + "_npv_good", tree.PV.npvsGood, sel, EqBin(100, 0, 100))
                 ])
         
         return plots

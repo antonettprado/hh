@@ -48,10 +48,10 @@ def plot_effis(run_dir, path_list):
 
     for var in variables:
         rebin_factor = 1
-        if var == "HT":
-            rebin_factor = 10
-        elif var == "eta":
-            rebin_factor = 4
+        #if var == "HT":
+        #    rebin_factor = 10
+        #elif var == "eta":
+        #    rebin_factor = 4
 
         canvas_mu = ROOT.TCanvas("c_SL_mu", "c_SL_mu", 800, 600)
         if var == "pt":
@@ -61,9 +61,9 @@ def plot_effis(run_dir, path_list):
         elif var == "HT":
             canvas_mu.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
         elif var == "npv":
-            canvas_mu.DrawFrame(0, 0, 70, 1.1, ";Nr. of Primary Vertices;Efficiency")
+            canvas_mu.DrawFrame(0, 0, 100, 1.1, ";Nr. of Primary Vertices;Efficiency")
         elif var == "npv_good":
-            canvas_mu.DrawFrame(0, 0, 70, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
+            canvas_mu.DrawFrame(0, 0, 100, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
         canvas_mu.SetGrid()
         legend_mu = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
         color_index = 1
@@ -75,7 +75,7 @@ def plot_effis(run_dir, path_list):
                 continue
             SL_mu_histo_dict[histo_name][var].Rebin(rebin_factor)
             if not ROOT.TEfficiency.CheckConsistency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var]):
-                print ("SL_mu", var, path, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
+                print ("SL_mu", var, histo_name, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
                 continue
             SL_mu_effi_dict[histo_name] = ROOT.TEfficiency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var])
             SL_mu_effi_dict[histo_name] = SL_mu_histo_dict[histo_name][var].Clone(histo_name+"_effi")
@@ -99,9 +99,9 @@ def plot_effis(run_dir, path_list):
         elif var == "HT":
             canvas_e.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
         elif var == "npv":
-            canvas_e.DrawFrame(0, 0, 70, 1.1, ";Nr. of Primary Vertices;Efficiency")
+            canvas_e.DrawFrame(0, 0, 100, 1.1, ";Nr. of Primary Vertices;Efficiency")
         elif var == "npv_good":
-            canvas_e.DrawFrame(0, 0, 70, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
+            canvas_e.DrawFrame(0, 0, 100, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
         legend_e = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
         color_index = 1
         SL_e_histo_dict["SL_e"][var].Rebin(rebin_factor)
@@ -112,7 +112,7 @@ def plot_effis(run_dir, path_list):
                 continue
             SL_e_histo_dict[histo_name][var].Rebin(rebin_factor)
             if not ROOT.TEfficiency.CheckConsistency(SL_e_histo_dict[histo_name][var], SL_e_histo_dict["SL_e"][var]):
-                print ("SL_e", var, path, SL_e_histo_dict[histo_name][var].GetNbinsX(), SL_e_histo_dict["SL_e"][var].GetNbinsX())
+                print ("SL_e", var, histo_name, SL_e_histo_dict[histo_name][var].GetNbinsX(), SL_e_histo_dict["SL_e"][var].GetNbinsX())
                 continue
             SL_e_effi_dict[histo_name] = ROOT.TEfficiency(SL_e_histo_dict[histo_name][var], SL_e_histo_dict["SL_e"][var])
             #SL_e_effi_dict[histo_name] = SL_e_histo_dict[histo_name][var].Clone(histo_name+"_effi")
