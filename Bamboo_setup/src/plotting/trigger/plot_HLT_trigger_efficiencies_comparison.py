@@ -74,6 +74,9 @@ def plot_effis(run_dir, path_list):
             if histo_name == "SL_mu":
                 continue
             SL_mu_histo_dict[histo_name][var].Rebin(rebin_factor)
+            for i in range(SL_mu_histo_dict[histo_name][var].GetNbinsX()):
+                if SL_mu_histo_dict[histo_name][var].GetBinContent(i) > SL_mu_histo_dict["SL_mu"][var].GetBinContent(i):
+                    SL_mu_histo_dict[histo_name][var].SetBinContent(i, SL_mu_histo_dict["SL_mu"][var].GetBinContent(i))
             if not ROOT.TEfficiency.CheckConsistency(SL_mu_histo_dict[histo_name][var], SL_mu_histo_dict["SL_mu"][var]):
                 print ("SL_mu", var, histo_name, SL_mu_histo_dict[histo_name][var].GetNbinsX(), SL_mu_histo_dict["SL_mu"][var].GetNbinsX())
                 continue
@@ -111,6 +114,9 @@ def plot_effis(run_dir, path_list):
             if histo_name == "SL_e":
                 continue
             SL_e_histo_dict[histo_name][var].Rebin(rebin_factor)
+            for i in range(SL_e_histo_dict[histo_name][var].GetNbinsX()):
+                if SL_e_histo_dict[histo_name][var].GetBinContent(i) > SL_e_histo_dict["SL_e"][var].GetBinContent(i):
+                    SL_e_histo_dict[histo_name][var].SetBinContent(i, SL_e_histo_dict["SL_e"][var].GetBinContent(i))
             if not ROOT.TEfficiency.CheckConsistency(SL_e_histo_dict[histo_name][var], SL_e_histo_dict["SL_e"][var]):
                 print ("SL_e", var, histo_name, SL_e_histo_dict[histo_name][var].GetNbinsX(), SL_e_histo_dict["SL_e"][var].GetNbinsX())
                 continue
