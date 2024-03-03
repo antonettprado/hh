@@ -55,9 +55,9 @@ def plot_effis(run_dir, path_list):
 
         canvas_mu = ROOT.TCanvas("c_SL_mu", "c_SL_mu", 800, 600)
         if var == "pt":
-            canvas_mu.DrawFrame(0, 0, 200, 1.1, ";pT (GeV);Efficiency")
+            canvas_mu.DrawFrame(0, 0, 200, 1.1, ";Muon pT (GeV);Efficiency")
         elif var == "eta":
-            canvas_mu.DrawFrame(-3, 0, 3, 1.1, ";pT (GeV);Efficiency")
+            canvas_mu.DrawFrame(-3, 0, 3, 1.1, ";Muon #eta;Efficiency")
         elif var == "HT":
             canvas_mu.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
         elif var == "npv":
@@ -96,9 +96,9 @@ def plot_effis(run_dir, path_list):
         canvas_e = ROOT.TCanvas("c_SL_e", "c_SL_e", 800, 600)
         canvas_e.SetGrid()
         if var == "pt":
-            canvas_e.DrawFrame(0, 0, 200, 1.1, ";pT (GeV);Efficiency")
+            canvas_e.DrawFrame(0, 0, 200, 1.1, ";Electron pT (GeV);Efficiency")
         elif var == "eta":
-            canvas_e.DrawFrame(-3, 0, 3, 1.1, ";pT (GeV);Efficiency")
+            canvas_e.DrawFrame(-3, 0, 3, 1.1, ";Electron #eta;Efficiency")
         elif var == "HT":
             canvas_e.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
         elif var == "npv":
