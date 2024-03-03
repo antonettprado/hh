@@ -20,7 +20,7 @@ def plot_effis(run_dir, path_list):
 
     SL_mu_histo_dict = {}
     SL_e_histo_dict = {}
-    variables = ["pt", "eta", "HLT_HT"]
+    variables = ["pt", "eta", "HT", "npv", "npv_good"]
     SL_mu_histo_names = []
     SL_e_histo_names = []
     SL_mu_histo_names.append("SL_mu")
@@ -47,7 +47,7 @@ def plot_effis(run_dir, path_list):
             SL_e_histo_dict[histo_name][var] = file.Get(histo_name + "_" + var)
 
     for var in variables:
-        if var == "HLT_HT":
+        if var == "HT":
             rebin_factor = 10
         else:
             rebin_factor = 4
@@ -57,8 +57,12 @@ def plot_effis(run_dir, path_list):
             canvas_mu.DrawFrame(0, 0, 200, 1.1, ";pT (GeV);Efficiency")
         elif var == "eta":
             canvas_mu.DrawFrame(-3, 0, 3, 1.1, ";pT (GeV);Efficiency")
-        elif var == "HLT_HT":
+        elif var == "HT":
             canvas_mu.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
+        elif var == "npv":
+            canvas_mu.DrawFrame(0, 0, 70, 1.1, ";Nr. of Primary Vertices;Efficiency")
+        elif var == "npv_good":
+            canvas_mu.DrawFrame(0, 0, 70, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
         canvas_mu.SetGrid()
         legend_mu = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
         color_index = 1
@@ -91,8 +95,12 @@ def plot_effis(run_dir, path_list):
             canvas_e.DrawFrame(0, 0, 200, 1.1, ";pT (GeV);Efficiency")
         elif var == "eta":
             canvas_e.DrawFrame(-3, 0, 3, 1.1, ";pT (GeV);Efficiency")
-        elif var == "HLT_HT":
+        elif var == "HT":
             canvas_e.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
+        elif var == "npv":
+            canvas_e.DrawFrame(0, 0, 70, 1.1, ";Nr. of Primary Vertices;Efficiency")
+        elif var == "npv_good":
+            canvas_e.DrawFrame(0, 0, 70, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
         legend_e = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
         color_index = 1
         SL_e_histo_dict["SL_e"][var].Rebin(rebin_factor)
