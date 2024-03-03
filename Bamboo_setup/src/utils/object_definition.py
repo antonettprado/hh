@@ -27,7 +27,7 @@ def get_electron_id(el, year, level):
             el_id = el.mvaFall17V2noIso_WPL
         elif level == 'tight':
             el_id = el.mvaFall17V2noIso_WP90
-    elif year == '2023':
+    elif year == '2023' or year == '2024':
         if level == 'loose':
             el_id = el.mvaIso_WP90
         elif level == 'tight':
