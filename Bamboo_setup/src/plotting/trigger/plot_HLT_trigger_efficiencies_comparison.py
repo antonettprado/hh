@@ -47,6 +47,7 @@ def plot_effis(run_dir, path_list):
             SL_e_histo_dict[histo_name][var] = file.Get(histo_name + "_" + var)
 
     for var in variables:
+        rebin_factor = 1
         if var == "HT":
             rebin_factor = 10
         elif var == "eta":
