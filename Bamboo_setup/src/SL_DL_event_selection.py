@@ -161,7 +161,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Single Electron
         SL_e_only = mllSel.refine("SL electron only selection", cut=[
-            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT)])
+            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
         SL_e_resolved_1b = SL_e_only.refine("SL electron resolved 1b jet selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_e_resolved_2b = SL_e_only.refine("SL electron resolved 2b jets selection", cut=[
@@ -176,7 +176,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Single Muon
         SL_mu_only = mllSel.refine("SL muon only selection", cut=[
-            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT)])
+            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
         SL_mu_resolved_1b = SL_mu_only.refine("SL muon resolved 1b jet selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_mu_resolved_2b = SL_mu_only.refine("SL muon resolved 2b jets selection", cut=[
@@ -191,8 +191,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Single Lepton
         SL_only = mllSel.refine("SL lepton only selection", cut=[op.OR(
-            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT),
-            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT))])
+            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT),
+            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT))])
         SL_res_1b = SL_only.refine("SL resolved 1b jet selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_res_2b = SL_only.refine("SL resolved 2b jets selection", cut=[
@@ -207,7 +207,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Double Electron
         DL_ee_only = mllSel.refine("DL ee only selection", cut=[
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT)])
+            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
         DL_ee_resolved_1b = DL_ee_only.refine("DL ee resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_ee_resolved_2b = DL_ee_only.refine("DL ee resolved 2b jets selection", cut=[
@@ -222,7 +222,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Electron Muon
         DL_emu_only = mllSel.refine("DL emu only selection", cut=[
-            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT)])
+            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
         DL_emu_resolved_1b = DL_emu_only.refine("DL emu resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_emu_resolved_2b = DL_emu_only.refine("DL emu resolved 2b jets selection", cut=[
@@ -237,7 +237,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Double Muon
         DL_mumu_only = mllSel.refine("DL mumu only selection", cut=[
-            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT)])
+            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
         DL_mumu_resolved_1b = DL_mumu_only.refine("DL mumu resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_mumu_resolved_2b = DL_mumu_only.refine("DL mumu resolved 2b jets selection", cut=[
@@ -252,9 +252,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Dilepton 
         DL_only = mllSel.refine("DL only selection", cut=[op.OR(
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT),
-            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT),
-            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, tree.HLT, self.args.noHLT))])
+            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT),
+            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT),
+            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT))])
         DL_res_1b = DL_only.refine("DL resolved 1b jet selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_res_2b = DL_only.refine("DL resolved 2b jets selection", cut=[
