@@ -78,7 +78,7 @@ def sl_mu_trigger_selection(is_mc, year, HLT):
             HLT.IsoMu24,
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
             HLT.Mu15_IsoVVVL_PFHT450,
-            HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
+            # HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
 
@@ -160,7 +160,7 @@ def dl_emu_trigger_selection(is_mc, year, HLT):
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
             HLT.Mu15_IsoVVVL_PFHT450,
             HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ,
-            HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
+            # HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
@@ -172,7 +172,7 @@ def dl_mumu_trigger_selection(is_mc, year, HLT):
             HLT.IsoTkMu22,
             HLT.IsoMu22_eta2p1,
             HLT.IsoTkMu22_eta2p1,
-            HLT Mu17_TrkIsoVVL_Mu8_TrkIsoVVL,
+            HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL,
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ,
             HLT.Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL,
             HLT.Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ

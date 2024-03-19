@@ -47,10 +47,11 @@ def plot_effis(run_dir, seed_list):
             SL_e_histo_dict[histo_name][var] = file.Get(histo_name + "_" + var)
 
     for var in variables:
-        if var == "HT_jets":
-            rebin_factor = 10
-        else:
-            rebin_factor = 2
+        rebin_factor = 1
+        # if var == "HT_jets":
+        #     rebin_factor = 10
+        # else:
+        #     rebin_factor = 2
 
         canvas_mu = ROOT.TCanvas("c_SL_mu", "c_SL_mu", 800, 600)
         if var == "pt":

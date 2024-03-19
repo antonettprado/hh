@@ -3,6 +3,7 @@ from bamboo.treedecorators import NanoAODDescription
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.plots import VariableBinning
 from SL_DL_event_selection import SL_DL_event_selection
 from base_selection import NanoBaseHHbbWW
 import utils.event_definition as event_defs
@@ -133,7 +134,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 flags_dict['HTT280er'] = self.get_Mu_seed_emulation(pd.Series({'HT': 280}))
                 flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
                 flags_dict['Mu6_HTT240er'] = self.l1triggers.Mu6_HTT240er
-            elif self.era == '2023':
+            elif self.era in ['2023', '2024']:
                 # Using l1 flags
                 flags_dict['HTT280er'] = self.l1triggers.HTT280er
                 flags_dict['SingleMu22'] = self.l1triggers.SingleMu22
@@ -152,7 +153,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 flags_dict['SingleIsoEG30er2p5'] = self.l1triggers.SingleIsoEG30er2p5
                 flags_dict['LooseIsoEG28er2p1_HTT100er'] = self.l1triggers.LooseIsoEG28er2p1_HTT100er
                 flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = self.l1triggers.LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3
-            elif self.era == '2023':
+            elif self.era in ['2023', '2024']:
                 # Using l1 flags
                 flags_dict['HTT280er'] = self.l1triggers.HTT280er
                 flags_dict['SingleEG36er2p5'] = self.l1triggers.SingleEG36er2p5
@@ -331,9 +332,9 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
                 if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
                 plots.extend([
-                    Plot.make1D(sel_name + "_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
-                    Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(100, -4, 4)),
-                    Plot.make1D(sel_name + "_HT_jets", self.ht_jets, sel, EqBin(500, 0, 1000))
+                    Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,2,4,6,8,10,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,125,150,200])),
+                    Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(50, -4, 4)),
+                    Plot.make1D(sel_name + "_HT_jets", self.ht_jets, sel, VariableBinning([0,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,600,700,800,1000]))
                     # Plot.make1D(sel_name + "_njets", op.rng_len(self.l1jets), sel, EqBin(15, 0, 15))
                     # Plot.make1D(sel_name + "_jet0pt", self.l1jets[0].pt, sel, EqBin(200, 0, 200)),
                     # Plot.make1D(sel_name + "_jet1pt", self.l1jets[1].pt, sel, EqBin(200, 0, 200))
