@@ -207,7 +207,6 @@ def tau_selection(taus, year):
         tau.pt > 20,
         op.abs(tau.eta) < 2.3,
         get_idDeepTau_cut(tau, year),
-        # op.switch(op.c_int(year) == 2018, tau.idDeepTau2017v2p1VSjet > 16, 1), 
         op.OR( ## TO DO: check tau decay modes
             tau.decayMode == 0,
             tau.decayMode == 1,
