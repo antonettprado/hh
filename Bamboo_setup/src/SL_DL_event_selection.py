@@ -18,7 +18,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    def object_selection(self, tree, MC_bjets=False, use_mvaTTH=True, lep_pt_from_L1_or_HLT=None):
+    def object_selection(self, tree, MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=None):
 
         if lep_pt_from_L1_or_HLT is not None: 
             object_defs.is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT)
@@ -326,7 +326,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
         
-        objects = self.object_selection(tree, self.args.mc_truth_b, use_mvaTTH=False)   #<========= mvaTTH set to FALSE
+        objects = self.object_selection(tree, self.args.mc_truth_b, use_mvaTTH=False) 
         selections = self.event_selection(tree, baseSel, objects, yields)
         
         yields.add(baseSel, 'Basic Event Selection')
