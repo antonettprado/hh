@@ -4,6 +4,7 @@ from bamboo import treefunctions as op
 
 import utils.object_definition as object_defs
 import utils.event_definition as event_defs
+import utils.scale_factors_weights as sf_weights
 from utils import variables
 from utils.variables import Variable1D, Variable2D
 
@@ -60,7 +61,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         if MC_bjets is True:
             cleaned_ak4_btags = object_defs.ak4_true_bjet_selection(cleaned_ak4_jets)
         else:
-            cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets)
+            cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets, self.era)
 
         # Select AK8 Jets
         ak8_jets = object_defs.ak8_jet_selection(tree.FatJet, tree.SubJet)
@@ -69,7 +70,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         cleaned_ak8_jets = object_defs.ak8_jet_cleaning(cleaned_ak8_jets, fakeable_muons, 0.8)
 
         # Select AK8 b-tags
-        cleaned_ak8_btags = object_defs.ak8_btag_selection(cleaned_ak8_jets, tree.SubJet)
+        cleaned_ak8_btags = object_defs.ak8_btag_selection(cleaned_ak8_jets, tree.SubJet, self.era)
 
         # Subjets for AK8 jets
         ak8_subjets = tree.SubJet
@@ -137,7 +138,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         sel = self.starting_event_selection(tree, sel, yields, events)
 
         # Retrieve objects
-        #objects = self.object_selection(tree)
         electron_ConePt = objects["electron_ConePt"]
         muon_ConePt = objects["muon_ConePt"]
         loose_electrons = objects["loose_electrons"]
@@ -158,6 +158,18 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # mll Selection
         mllSel = sel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
+
+        # Apply Common Weights
+        mllSel = sf_weights.apply_common_SF(tree, mllSel, self.is_MC, self.era, self.sample)
+
+        # Apply B-tag Weights
+        if event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
+            mllSel = sf_weights.apply_ak4btag_SF(mllSel, cleaned_ak4_jets, self.is_MC, self.era, self.sample)
+        elif event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
+            mllSel = mllSel # TO DO: B-tagging SFs for AK8 Jets
+
+        # Apply Lepton SFs
+        
 
         # Single Electron
         SL_e_only = mllSel.refine("SL electron only selection", cut=[

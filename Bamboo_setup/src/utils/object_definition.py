@@ -21,13 +21,13 @@ def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
                 LEPTON_PT['e_pt'] = 10
                 LEPTON_PT['mu_pt'] = 10
 
-def get_electron_id(el, year, level):
-    if year == '2018' or year == '2017':
+def get_electron_id(el, era, level):
+    if "2018" in era or "2017" in era:
         if level == 'loose':
             el_id = el.mvaFall17V2noIso_WPL
         elif level == 'tight':
             el_id = el.mvaFall17V2noIso_WP90
-    elif year == '2023' or year == '2024':
+    elif "2022" in era or "2023" in era or "2024" in era:
         if level == 'loose':
             el_id = el.mvaIso_WP90
         elif level == 'tight':
@@ -52,11 +52,23 @@ def muConePt(muons, jets):
         )
     )
 
-def nearbyBtag(el, jets, btag_WP):
+def nearbyBtag(lep, jets, era, btag_WP):
+    btag_WP_cut = 0
+    if "2016" in era or "2017" in era or "2018" in era: # DeepJet
+        if btag_WP == "M":
+            btag_WP_cut = 0.2770
+        elif btag_WP == "T":
+            btag_WP_cut = 0.7264
+    else: # PNet
+        if btag_WP == "M":
+            btag_WP_cut = 0.2450
+        elif btag_WP == "T":
+            btag_WP_cut = 0.6734
+
     return op.rng_any(
         jets, lambda j: op.AND(
-            op.deltaR(el.p4, j.p4) < 0.4,
-            j.btagDeepFlavB > btag_WP
+            op.deltaR(lep.p4, j.p4) < 0.4,
+            op.switch("2016" in era or "2017" in era or "2018" in era, j.btagDeepFlavB > btag_WP_cut, j.btagPNetB > btag_WP_cut)
         )            
     )
 
@@ -83,10 +95,10 @@ def calculate_met_quantities(jets, electrons, muons, met_pt):
     met_ld = op.sum(op.product(0.6, met_pt), op.product(0.4, mht))
     return ht_jets, mht, met_ld
        
-def electron_basic_selection(electrons, year):
-    return op.select(electrons, lambda el: get_electron_id(el, year, 'loose'))
+def electron_basic_selection(electrons, era):
+    return op.select(electrons, lambda el: get_electron_id(el, era, 'loose'))
 
-def electron_loose_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=False):
+def electron_loose_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 7
     #print(f"electron_loose_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -98,11 +110,11 @@ def electron_loose_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=
         el.sip3d < 8,
         el.pfRelIso03_all < 0.4,
         el.lostHits <= 1,
-        get_electron_id(el, year, 'loose')
+        get_electron_id(el, era, 'loose')
         )
     )
 
-def electron_fakeable_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=False):
+def electron_fakeable_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     #print(f"electron_fakeable_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -119,13 +131,13 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, year, use_mvaT
         el.convVeto == 1,
         el.lostHits == 0,
         op.switch(op.c_bool(use_mvaTTH), 
-            op.AND(op.switch(el.mvaTTH > 0.3, get_electron_id(el, year, 'loose'), get_electron_id(el, year, 'tight')),
+            op.AND(op.switch(el.mvaTTH > 0.3, get_electron_id(el, era, 'loose'), get_electron_id(el, era, 'tight')),
                 op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
-                op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, 0.2770)), op.NOT(nearbyBtag(el, jets, 0.7264)))),
-            op.AND(get_electron_id(el, year, 'loose'),op.NOT(nearbyBtag(el, jets, 0.2770))))
+                op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, era, "M")), op.NOT(nearbyBtag(el, jets, era, "T")))),
+            op.AND(get_electron_id(el, era, 'loose'),op.NOT(nearbyBtag(el, jets, era, "M"))))
         ))
 
-def electron_tight_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=False):
+def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     #print(f"electron_tight_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -141,15 +153,15 @@ def electron_tight_selection(electrons, electron_ConePt, jets, year, use_mvaTTH=
         el.eInvMinusPInv > -0.04,
         el.convVeto == 1,
         el.lostHits == 0,
-        get_electron_id(el, year, 'loose'),
-        op.NOT(nearbyBtag(el, jets, 0.2770)),
+        get_electron_id(el, era, 'loose'),
+        op.NOT(nearbyBtag(el, jets, era, "M")),
         op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
 
 def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
 
-def muon_loose_selection(muons, muon_ConePt, jets, year, use_mvaTTH=False):
+def muon_loose_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
     pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 5
     #print(f"muon_loose_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -164,7 +176,7 @@ def muon_loose_selection(muons, muon_ConePt, jets, year, use_mvaTTH=False):
         )
     )
 
-def muon_fakeable_selection(muons, muon_ConePt, jets, year, use_mvaTTH=False):
+def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
     pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
     #print(f"muon_fakeable_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -178,11 +190,11 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, year, use_mvaTTH=False):
         mu.looseId,
         op.switch(op.c_bool(use_mvaTTH), 
             op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
-                op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, 0.2770)), op.NOT(nearbyBtag(mu, jets, 0.7264)))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
-            op.NOT(nearbyBtag(mu, jets, 0.2770)))
+                op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
+            op.NOT(nearbyBtag(mu, jets, era, "M")))
         ))
 
-def muon_tight_selection(muons, muon_ConePt, jets, year, use_mvaTTH=False): 
+def muon_tight_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False): 
     pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
     #print(f"muon_tight_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
@@ -194,19 +206,19 @@ def muon_tight_selection(muons, muon_ConePt, jets, year, use_mvaTTH=False):
         mu.sip3d < 8,
         mu.pfRelIso03_all < 0.4,
         mu.mediumId,
-        op.NOT(nearbyBtag(mu, jets, 0.2770)),
+        op.NOT(nearbyBtag(mu, jets, era, "M")),
         op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
         ))
 
-def tau_selection(taus, year):
-    def get_idDeepTau_cut(tau, year):
-            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if year != 2017 else (1)
+def tau_selection(taus, era):
+    def get_idDeepTau_cut(tau, era):
+            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if era != 2017 else (1)
             return idDeepTau_cut
 
     return op.select(taus, lambda tau: op.AND(
         tau.pt > 20,
         op.abs(tau.eta) < 2.3,
-        get_idDeepTau_cut(tau, year),
+        get_idDeepTau_cut(tau, era),
         op.OR( ## TO DO: check tau decay modes
             tau.decayMode == 0,
             tau.decayMode == 1,
@@ -267,8 +279,11 @@ def ak4_vbf_jet_cleaning(vbf_jets, jets, btags, deltar_cut, type):
         )
     )
 
-def ak4_btag_selection(jets):
-    return op.select(jets, lambda jet: jet.btagDeepFlavB > 0.2770) # WP_M
+def ak4_btag_selection(jets, era):
+    if  "2016" in era or "2017" in era or "2018" in era:
+        return op.select(jets, lambda jet: jet.btagDeepFlavB > 0.2770) # DeepJet WP_M
+    else:
+        return op.select(jets, lambda jet: jet.btagPNetB > 0.2450) # PNet WP_M
 
 def ak4_true_bjet_selection(jets):
     return op.select(jets, lambda jet: jet.hadronFlavour == 5)
@@ -295,9 +310,12 @@ def ak8_jet_cleaning(fatjets, leptons, deltar_cut=0.8):
         )
     )
 
-def ak8_btag_selection(fatjets, subjets):
-    return op.select(fatjets, lambda jet: op.OR(
-        find_subjets(jet, subjets)[0].btagDeepB > 0.2770, # WP_M
-        op.AND(find_subjets(jet, subjets)[1].pt > 30, find_subjets(jet, subjets)[1].btagDeepB > 0.2770) # WP_M
+def ak8_btag_selection(fatjets, subjets, era):
+    if  "2016" in era or "2017" in era or "2018" in era:
+        return op.select(fatjets, lambda jet: op.OR(
+            find_subjets(jet, subjets)[0].btagDeepB > 0.2770, # DeepJet WP_M
+            op.AND(find_subjets(jet, subjets)[1].pt > 30, find_subjets(jet, subjets)[1].btagDeepB > 0.2770) # DeepJet WP_M
+            )
         )
-    )
+    else:
+        return op.select(fatjets, lambda jet: jet.particleNetWithMass_HbbvsQCD > 0.2450) # PNet WP_M

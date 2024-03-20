@@ -24,6 +24,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             else:
                 raise RuntimeError(f"The type '{sampleCfg['type']}' of {sample} dataset not understood.")
 
+        self.sample = sample
         self.era = sampleCfg['era'] 
         self.is_MC = isMC()
         self.triggersPerPrimaryDataset = {}

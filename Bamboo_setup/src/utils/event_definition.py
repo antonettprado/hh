@@ -26,19 +26,19 @@ def mll_selection(electrons, muons):
         )
     )
 
-def sl_e_trigger_selection(is_mc, year, HLT):
-    if year == '2016':
+def sl_e_trigger_selection(is_mc, era, HLT):
+    if "2016" in era:
         return op.OR(
             HLT.Ele25_eta2p1_WPTight_Gsf,
             HLT.Ele32_WPTight_Gsf,
             HLT.Ele27_eta2p1_WPLoose_Gsf
         )
-    elif year in ['2017', '2018']:
+    elif "2017" in era or "2018" in era:
         return op.OR(
             HLT.Ele32_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150
         )
-    elif year in ['2022', '2023']:
+    elif "2022" in era or "2023" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
@@ -46,7 +46,7 @@ def sl_e_trigger_selection(is_mc, year, HLT):
             HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
-    elif year in ['2024']:
+    elif era in "2024":
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53, # new trigger
@@ -54,26 +54,26 @@ def sl_e_trigger_selection(is_mc, year, HLT):
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
 
-def sl_mu_trigger_selection(is_mc, year, HLT):
-    if year == '2016':
+def sl_mu_trigger_selection(is_mc, era, HLT):
+    if "2016" in era:
         return op.OR(
             HLT.IsoMu22,
             HLT.IsoTkMu22,
             HLT.IsoMu22_eta2p1,
             HLT.IsoTkMu22_eta2p1
         )
-    elif year in ['2017', '2018']:
+    elif "2017" in era or "2018" in era:
         return op.OR(
             HLT.IsoMu24
         )
-    elif year in ['2022', '2023']:
+    elif "2022" in era or "2023" in era:
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu15_IsoVVVL_PFHT450,
             HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
-    elif year in ['2024']:
+    elif era in "2024":
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
@@ -82,28 +82,28 @@ def sl_mu_trigger_selection(is_mc, year, HLT):
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
 
-def dl_ee_trigger_selection(is_mc, year, HLT):
-    if year == '2016':
+def dl_ee_trigger_selection(is_mc, era, HLT):
+    if "2016" in era:
         return op.OR(
             HLT.Ele25_eta2p1_WPTight_Gsf,
             HLT.Ele32_WPTight_Gsf,
             HLT.Ele27_eta2p1_WPLoose_Gsf,
             HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
         )
-    elif year in ['2017', '2018']:
+    elif "2017" in era or "2018" in era:
         return op.OR(
             HLT.Ele32_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
             HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
         )
-    elif year in ['2022', '2023']:
+    elif "2022" in era or "2023" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
             HLT.Ele15_IsoVVVL_PFHT450,
             HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
         )
-    elif year in ['2024']:
+    elif era in "2024":
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53, # new trigger
@@ -111,8 +111,8 @@ def dl_ee_trigger_selection(is_mc, year, HLT):
             HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
         )
     
-def dl_emu_trigger_selection(is_mc, year, HLT):
-    if year == '2016':
+def dl_emu_trigger_selection(is_mc, era, HLT):
+    if "2016" in era:
         return op.OR(
             HLT.Ele25_eta2p1_WPTight_Gsf,
             HLT.Ele32_WPTight_Gsf,
@@ -129,7 +129,7 @@ def dl_emu_trigger_selection(is_mc, year, HLT):
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
 
         )
-    elif year in ['2017', '2018']:
+    elif "2017" in era or "2018" in era:
         return op.OR(
             HLT.Ele32_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
@@ -139,7 +139,7 @@ def dl_emu_trigger_selection(is_mc, year, HLT):
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
-    elif year in ['2022', '2023']:
+    elif "2022" in era or "2023" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
@@ -151,7 +151,7 @@ def dl_emu_trigger_selection(is_mc, year, HLT):
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
-    elif year in ['2024']:
+    elif era in "2024":
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53, # new trigger
@@ -165,8 +165,8 @@ def dl_emu_trigger_selection(is_mc, year, HLT):
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
 
-def dl_mumu_trigger_selection(is_mc, year, HLT):
-    if year == '2016':
+def dl_mumu_trigger_selection(is_mc, era, HLT):
+    if "2016" in era:
         return op.OR(
             HLT.IsoMu22,
             HLT.IsoTkMu22,
@@ -177,24 +177,24 @@ def dl_mumu_trigger_selection(is_mc, year, HLT):
             HLT.Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL,
             HLT.Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ
         )
-    elif year == '2017':
+    elif "2017" in era:
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8,
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
         )
-    elif year == '2018':
+    elif "2018" in era:
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
         )
-    elif year in ['2022', '2023']:
+    elif "2022" in era or "2023" in era:
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu15_IsoVVVL_PFHT450,
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
         )
-    elif year in ['2024']:
+    elif era in "2024":
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
@@ -202,9 +202,9 @@ def dl_mumu_trigger_selection(is_mc, year, HLT):
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
         )
 
-def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, year, HLT, noHLT=False, use_mvaTTH=False):
+def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     electron_pt_cut = 32
-    if year in ['2024']:
+    if era in "2024":
         lepton_pt_cut = 15
     return (op.AND(
         op.rng_len(electrons) == 1, 
@@ -215,15 +215,15 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
             noHLT,
             op.AND(
                 not noHLT,
-                sl_e_trigger_selection(is_mc, year, HLT)
+                sl_e_trigger_selection(is_mc, era, HLT)
                 )
             )
         )
     )
 
-def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, year, HLT, noHLT=False, use_mvaTTH=False):
+def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     muon_pt_cut = 25
-    if year in ['2024']:
+    if era in "2024":
         muon_pt_cut = 15
     return (op.AND(
         op.rng_len(muons) == 1, 
@@ -234,7 +234,7 @@ def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc,
             noHLT,
             op.AND(
                 not noHLT,
-                sl_mu_trigger_selection(is_mc, year, HLT)
+                sl_mu_trigger_selection(is_mc, era, HLT)
                 )
             )
         )
@@ -312,7 +312,7 @@ def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
         )
     )
 
-def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, year, HLT, noHLT=False, use_mvaTTH=False):
+def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     return (op.AND(
         op.rng_len(electrons) == 2,
         op.rng_len(muons) == 0,
@@ -323,13 +323,13 @@ def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, year,
             noHLT,
             op.AND(
                 not noHLT,
-                dl_ee_trigger_selection(is_mc, year, HLT)
+                dl_ee_trigger_selection(is_mc, era, HLT)
                 )
             )
         )
     )
 
-def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, year, HLT, noHLT=False, use_mvaTTH=False):
+def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     return (op.AND(
         op.rng_len(electrons) == 1,
         op.rng_len(muons) == 1,
@@ -346,13 +346,13 @@ def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, year
             noHLT,
             op.AND(
                 not noHLT,
-                dl_emu_trigger_selection(is_mc, year, HLT)
+                dl_emu_trigger_selection(is_mc, era, HLT)
                 )
             )
         )
     )
 
-def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, year, HLT, noHLT=False, use_mvaTTH=False):
+def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     return (op.AND(
         op.rng_len(muons) == 2,
         op.rng_len(electrons) == 0,
@@ -363,7 +363,7 @@ def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, yea
             noHLT,
             op.AND(
                 not noHLT,
-                dl_mumu_trigger_selection(is_mc, year, HLT)
+                dl_mumu_trigger_selection(is_mc, era, HLT)
                 )
             )
         )
