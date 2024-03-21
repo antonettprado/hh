@@ -1,11 +1,47 @@
 from bamboo.analysismodules import NanoAODHistoModule
-from bamboo.treedecorators import NanoAODDescription
-from bamboo.analysisutils import makeMultiPrimaryDatasetTriggerSelection
+from bamboo.treedecorators import NanoAODDescription, nanoFatJetCalc, CalcCollectionsGroups
+from bamboo.analysisutils import makeMultiPrimaryDatasetTriggerSelection, configureJets, configureType1MET
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
-
 from itertools import chain
+
+JECTagDatabase = {
+    "2022": {
+        "MC": "Summer22_22Sep2023_V2_MC",
+        "C": "Summer22_22Sep2023_RunCD_V2_DATA",
+        "D": "Summer22_22Sep2023_RunCD_V2_DATA"},
+    "2022EE": {
+        "MC": "Summer22EE_22Sep2023_V2_MC",
+        "E": "Summer22EE_22Sep2023_RunE_V2_DATA",
+        "F": "Summer22EE_22Sep2023_RunF_V2_DATA",
+        "G": "Summer22EE_22Sep2023_RunG_V2_DATA"},
+}
+
+JERTagDatabase = {
+    "2022": "Summer22EEPrompt22_JRV1_MC",
+    "2022EE": "Summer22EEPrompt22_JRV1_MC",
+}
+
+jsonPathBase = "/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/"
+
+JEC_JSONFiles = {
+    "2022": {
+        "AK4": jsonPathBase + "JME/2022_Summer22/jet_jerc.json.gz",
+        "AK8": jsonPathBase + "JME/2022_Summer22/fatJet_jerc.json.gz"},
+    "2022EE": {
+        "AK4": jsonPathBase + "JME/2022_Summer22EE/jet_jerc.json.gz",
+        "AK8": jsonPathBase + "JME/2022_Summer22EE/fatJet_jerc.json.gz"},
+}
+
+def getRunEra(sample):
+    """Return run era (A/B/...) for data sample"""
+    result = re.search(r'Run20..([A-Z]?)', sample)
+    if result is None:
+        return "MC"
+    else:
+        return result.group(1)
+
 
 class NanoBaseHHbbWW(NanoAODHistoModule):
     def __init__(self, args):
@@ -37,8 +73,9 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             except AttributeError:
                 print("Couldn't find branch tree.HLT.%s, will omit it!" % HLT)
 
+        '''
         def getNanoAODDescription():
-            groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_"]
+            groups = ["PV_", "Flag_", "HLT_", "PuppiMET_", "GenPart_"]
             collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet", "nGenJet", "nGenJetAK8", "nSubGenJetAK8"]
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
@@ -48,6 +85,51 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                                                                                  sampleCfg=sampleCfg,
                                                                                  description=getNanoAODDescription(),
                                                                                  backend=backend)
+        '''
+
+        metName = "PuppiMET"
+        nanoJetMETCalc_both = CalcCollectionsGroups(
+            Jet=("pt", "mass"), changes={metName: (f"{metName}T1", f"{metName}T1Smear")},
+            **{metName: ("pt", "phi")})
+        nanoJetMETCalc_data = CalcCollectionsGroups(
+            Jet=("pt", "mass"), changes={metName: (f"{metName}T1",)},
+            **{metName: ("pt", "phi")})
+        systVars = (([nanoFatJetCalc])
+                    + [nanoJetMETCalc_both if self.is_MC else nanoJetMETCalc_data])
+        
+        tree, noSel, backend, lumiArgs = super(NanoBaseHHbbWW, self).prepareTree(tree, 
+                                                                                 sample=sample, 
+                                                                                 sampleCfg=sampleCfg,
+                                                                                 description=NanoAODDescription.get(
+                                                                                     "v12", year=self.era[:4], isMC=self.is_MC, systVariations=systVars),
+                                                                                 backend=backend)
+
+        # JEC/JER
+        runEra = getRunEra(sample)
+        jecTag = JECTagDatabase[self.era]["MC" if self.is_MC else runEra]
+        smearTag = JERTagDatabase[self.era] if self.is_MC else None
+
+        cmJMEArgs = {
+            "jsonFile": JEC_JSONFiles[self.era]["AK4"],
+            "jec": jecTag,
+            "smear": smearTag,
+            # "splitJER": True,
+            "jesUncertaintySources": (["Total"] if self.is_MC else None),
+            "isMC": self.is_MC,
+            "backend": backend
+        }
+        configureJets(tree._Jet, jetType="AK4PFPuppi", **cmJMEArgs)
+        metName = "PuppiMET"
+        configureType1MET(
+            getattr(tree, f"_{metName}T1"),
+            enableSystematics=(
+                (lambda v: not v.startswith("jer")) if self.is_MC else None),
+            **cmJMEArgs)
+        cmJMEArgs.update({"jsonFile": JEC_JSONFiles[self.era]["AK8"], })
+        cmJMEArgs.update({"jetAlgoSubjet": "AK4PFPuppi", })
+        cmJMEArgs.update({"jecSubjet": jecTag, })
+        cmJMEArgs.update({"jsonFileSubjet": JEC_JSONFiles[self.era]["AK4"], })
+        configureJets(tree._FatJet, jetType="AK8PFPuppi", **cmJMEArgs)
 
         # Plots in base that need to be propagated to the Plotters #
         self.base_plots = []

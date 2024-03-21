@@ -86,9 +86,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         cleaned_ak4_vbf_nonresonant_jets = object_defs.ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "nonresonant")
 
         # MET and MHT
-        met = tree.MET
-        met_pt = tree.MET.pt
-        met_phi = tree.MET.phi
+        met = tree.PuppiMET
+        met_pt = tree.PuppiMET.pt
+        met_phi = tree.PuppiMET.phi
         ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met_pt)
 
         objects = {}
@@ -333,8 +333,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         selections["DL"]["DL_resolved"] = DL_resolved
         selections["DL"]["DL_boost"] = DL_boost
         selections["DL"]["DL"] = DL
-
-
 
         return selections
 
