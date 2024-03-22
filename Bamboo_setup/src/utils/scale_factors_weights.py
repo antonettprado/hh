@@ -41,7 +41,7 @@ def apply_common_SF(tree, sel, is_MC, era, sample):
     # PU Weight
     pileupWeight = op.c_float(1.)
     if is_MC:
-        pileupWeight = sf.makePileupWeight(puWeightsTuple[era], tree.Pileup_nTrueInt, systName="pileup", sel=sel)
+        pileupWeight = makePileupWeight(puWeightsTuple[era], tree.Pileup_nTrueInt, systName="pileup", sel=sel)
     sel = sel.refine('puWeight', weight=pileupWeight)
 
     # Top pT Reweighting
