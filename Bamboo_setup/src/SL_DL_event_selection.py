@@ -112,7 +112,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         return objects
 
-    def starting_event_selection(self, tree, baseSel, yields, events='all'):
+    def starting_event_selection(self, tree, baseSel, yields, events='all', ):
 
         # Determine the cut to use
         if events == 'all':
@@ -133,7 +133,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         return baseSel
 
-    def event_selection(self, tree, sel, objects, yields, events='all'):
+    def event_selection(self, tree, sel, objects, yields, use_mvaTTH=False, events='all'):
 
         sel = self.starting_event_selection(tree, sel, yields, events)
 
@@ -178,7 +178,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         
         # Single Electron
         SL_e_only = mllSel.refine("SL_electron_only_selection", cut=[
-            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
+            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)])
         SL_e_resolved_1b = SL_e_only.refine("SL_electron_resolved_1b_jet_selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_e_resolved_2b = SL_e_only.refine("SL_electron_resolved_2b_jets_selection", cut=[
@@ -193,7 +193,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Single Muon
         SL_mu_only = mllSel.refine("SL_muon_only_selection", cut=[
-            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
+            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)])
         SL_mu_resolved_1b = SL_mu_only.refine("SL_muon_resolved_1b_jet_selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_mu_resolved_2b = SL_mu_only.refine("SL_muon_resolved_2b_jets_selection", cut=[
@@ -208,8 +208,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Single Lepton
         SL_only = mllSel.refine("SL_lepton_only_selection", cut=[op.OR(
-            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT),
-            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT))])
+            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH))])
         SL_res_1b = SL_only.refine("SL_resolved_1b_jet_selection", cut=[
             event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_res_2b = SL_only.refine("SL_resolved_2b_jets_selection", cut=[
@@ -224,7 +224,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Double Electron
         DL_ee_only = mllSel.refine("DL_ee_only_selection", cut=[
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
+            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)])
         DL_ee_resolved_1b = DL_ee_only.refine("DL_ee_resolved_1b_jet_selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_ee_resolved_2b = DL_ee_only.refine("DL_ee_resolved_2b_jets_selection", cut=[
@@ -239,7 +239,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Electron Muon
         DL_emu_only = mllSel.refine("DL_emu_only_selection", cut=[
-            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
+            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)])
         DL_emu_resolved_1b = DL_emu_only.refine("DL_emu_resolved_1b_jet_selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_emu_resolved_2b = DL_emu_only.refine("DL_emu_resolved_2b_jets_selection", cut=[
@@ -254,7 +254,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Double Muon
         DL_mumu_only = mllSel.refine("DL_mumu_only_selection", cut=[
-            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
+            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)])
         DL_mumu_resolved_1b = DL_mumu_only.refine("DL_mumu_resolved_1b_jet_selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_mumu_resolved_2b = DL_mumu_only.refine("DL_mumu_resolved_2b_jets_selection", cut=[
@@ -269,9 +269,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Dilepton 
         DL_only = mllSel.refine("DL_only_selection", cut=[op.OR(
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT),
-            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT),
-            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT))])
+            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH))])
         DL_res_1b = DL_only.refine("DL_resolved_1b_jet_selection", cut=[
             event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_res_2b = DL_only.refine("DL_resolved_2b_jets_selection", cut=[
@@ -344,7 +344,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(yields)
         
         objects = self.object_selection(tree, self.args.mc_truth_b, use_mvaTTH=False) 
-        selections = self.event_selection(tree, baseSel, objects, yields)
+        selections = self.event_selection(tree, baseSel, objects, yields, use_mvaTTH=False)
         
         yields.add(baseSel, 'Basic Event Selection')
 

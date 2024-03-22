@@ -68,7 +68,7 @@ def nearbyBtag(lep, jets, era, btag_WP):
     return op.rng_any(
         jets, lambda j: op.AND(
             op.deltaR(lep.p4, j.p4) < 0.4,
-            op.switch("2016" in era or "2017" in era or "2018" in era, j.btagDeepFlavB > btag_WP_cut, j.btagPNetB > btag_WP_cut)
+            op.switch(op.c_bool("2016" in era or "2017" in era or "2018" in era), j.btagDeepFlavB > btag_WP_cut, j.btagPNetB > btag_WP_cut)
         )            
     )
 

@@ -46,7 +46,7 @@ def sl_e_trigger_selection(is_mc, era, HLT):
             HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
-    elif era in "2024":
+    elif "2024" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53, # new trigger
@@ -73,7 +73,7 @@ def sl_mu_trigger_selection(is_mc, era, HLT):
             HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
-    elif era in "2024":
+    elif "2024" in era:
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
@@ -103,7 +103,7 @@ def dl_ee_trigger_selection(is_mc, era, HLT):
             HLT.Ele15_IsoVVVL_PFHT450,
             HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL
         )
-    elif era in "2024":
+    elif "2024" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53, # new trigger
@@ -151,7 +151,7 @@ def dl_emu_trigger_selection(is_mc, era, HLT):
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
-    elif era in "2024":
+    elif "2024" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53, # new trigger
@@ -194,7 +194,7 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
             HLT.Mu15_IsoVVVL_PFHT450,
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
         )
-    elif era in "2024":
+    elif "2024" in era:
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
@@ -204,7 +204,7 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
 
 def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     electron_pt_cut = 32
-    if era in "2024":
+    if "2024" in era:
         lepton_pt_cut = 15
     return (op.AND(
         op.rng_len(electrons) == 1, 
@@ -223,7 +223,7 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
 
 def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     muon_pt_cut = 25
-    if era in "2024":
+    if "2024" in era:
         muon_pt_cut = 15
     return (op.AND(
         op.rng_len(muons) == 1, 
