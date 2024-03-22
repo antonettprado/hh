@@ -5,6 +5,7 @@ from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 from itertools import chain
+import re
 
 JECTagDatabase = {
     "2022": {
@@ -73,9 +74,8 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             except AttributeError:
                 print("Couldn't find branch tree.HLT.%s, will omit it!" % HLT)
 
-        '''
         def getNanoAODDescription():
-            groups = ["PV_", "Flag_", "HLT_", "PuppiMET_", "GenPart_"]
+            groups = ["PV_", "Flag_", "HLT_", "MET_", "PuppiMET_", "GenPart_"]
             collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet", "nGenJet", "nGenJetAK8", "nSubGenJetAK8"]
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
@@ -85,8 +85,8 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                                                                                  sampleCfg=sampleCfg,
                                                                                  description=getNanoAODDescription(),
                                                                                  backend=backend)
-        '''
 
+        '''
         metName = "PuppiMET"
         nanoJetMETCalc_both = CalcCollectionsGroups(
             Jet=("pt", "mass"), changes={metName: (f"{metName}T1", f"{metName}T1Smear")},
@@ -103,7 +103,9 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                                                                                  description=NanoAODDescription.get(
                                                                                      "v12", year=self.era[:4], isMC=self.is_MC, systVariations=systVars),
                                                                                  backend=backend)
+        '''
 
+        '''
         # JEC/JER
         runEra = getRunEra(sample)
         jecTag = JECTagDatabase[self.era]["MC" if self.is_MC else runEra]
@@ -130,6 +132,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         cmJMEArgs.update({"jecSubjet": jecTag, })
         cmJMEArgs.update({"jsonFileSubjet": JEC_JSONFiles[self.era]["AK4"], })
         configureJets(tree._FatJet, jetType="AK8PFPuppi", **cmJMEArgs)
+        '''
 
         # Plots in base that need to be propagated to the Plotters #
         self.base_plots = []

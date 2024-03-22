@@ -159,6 +159,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # mll Selection
         mllSel = sel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
 
+        '''
         # Apply Common Weights
         mllSel, pileupWeight, top_pt_weight = sf_weights.apply_common_SF(tree, mllSel, self.is_MC, self.era, self.sample)
 
@@ -173,7 +174,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Apply Electron SFs
         mllSel, electron_sf = sf_weights.apply_ele_SF(sel, tight_electrons, self.is_MC, self.era, self.sample)
-
+        '''
+        
         # Single Electron
         SL_e_only = mllSel.refine("SL_electron_only_selection", cut=[
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT)])
