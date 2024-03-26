@@ -356,7 +356,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             "nAK8_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"])),
             "met_pt": objects["met"].pt,
             "met_phi": objects["met"].phi
-            # "mll": -9999
+            # "mll": -9999,
+            # "pileupWeight": -9999, 
+            # "top_pt_weight": -9999,
+            # "btvWeight": -9999,
         }
 
         for gen_sel_name, gen_sel_dict in selections.items():
