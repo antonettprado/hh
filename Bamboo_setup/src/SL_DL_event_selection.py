@@ -45,6 +45,12 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet, self.era, use_mvaTTH)
         tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, self.era, use_mvaTTH)
 
+        # tight_leptons = op.construct("ROOT::VecOps::Concatenate<ROOT::VecOps::RVec<float>, ROOT::VecOps::RVec<float>>",(tight_electrons, tight_muons))
+        # print(f"type(tight_electrons)={type(tight_electrons)}")
+        # print(f"type(tight_muons)={type(tight_muons)}")
+        # print(f"type(tight_leptons)={type(tight_leptons)}")
+        # tight_leptons = op.sort(tight_leptons, lambda l: -l.pt)
+
         # Select Taus
         taus = object_defs.tau_selection(tree.Tau, int(self.era))
         taus = op.sort(taus, lambda tau: -tau.pt)
@@ -87,16 +93,16 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # MET and MHT
         met = tree.PuppiMET
-        met_pt = tree.PuppiMET.pt
-        met_phi = tree.PuppiMET.phi
-        ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met_pt)
+        ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met.pt)
 
         objects = {}
         objects["electron_ConePt"] =  electron_ConePt
         objects["muon_ConePt"] =  muon_ConePt
         objects["loose_electrons"] = loose_electrons
+        objects["fakeable_electrons"] = fakeable_electrons
         objects["tight_electrons"] = tight_electrons
         objects["loose_muons"] = loose_muons
+        objects["fakeable_muons"] = fakeable_muons
         objects["tight_muons"] = tight_muons
         objects["cleaned_taus"] = cleaned_taus
         objects["cleaned_ak4_jets"] = cleaned_ak4_jets
@@ -104,8 +110,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         objects["cleaned_ak8_btags"] = cleaned_ak8_btags
         objects["ak8_subjets"] = ak8_subjets
         objects["met"] = met
-        objects["met_pt"] = met_pt
-        objects["met_phi"] = met_phi
         objects["ht_jets"] = ht_jets
         objects["mht"] = mht 
         objects["met_ld"] = met_ld
@@ -150,8 +154,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         cleaned_ak8_btags = objects["cleaned_ak8_btags"]
         ak8_subjets = objects["ak8_subjets"]
         met = objects["met"]
-        met_pt = objects["met_pt"]
-        met_phi = objects["met_phi"]
         ht_jets = objects["ht_jets"]
         mht = objects["mht"] 
         met_ld = objects["met_ld"]
@@ -338,6 +340,105 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         return selections
 
+    def get_skims(self, plots, objects, selections, tree):
+
+        from bamboo.plots import Skim
+        base_tree = {
+            "event": None,
+            "nLooseElectron": op.static_cast("UInt_t", op.rng_len(objects["loose_electrons"])),
+            "nFakeElectron": op.static_cast("UInt_t", op.rng_len(objects["fakeable_electrons"])),
+            "nTightElectron": op.static_cast("UInt_t", op.rng_len(objects["tight_electrons"])), 
+            "nLooseMuon": op.static_cast("UInt_t", op.rng_len(objects["loose_muons"])),
+            "nFakeMuon": op.static_cast("UInt_t", op.rng_len(objects["fakeable_muons"])), 
+            "nTightMuon": op.static_cast("UInt_t", op.rng_len(objects["tight_muons"])),
+            "nAK4": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"])),
+            "nAK4_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_btags"])),
+            "nAK8_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"])),
+            "met_pt": objects["met"].pt,
+            "met_phi": objects["met"].phi
+            # "mll": -9999
+        }
+
+        for gen_sel_name, gen_sel_dict in selections.items():
+
+            if gen_sel_name in ["SL_e", "SL_mu", "DL_ee", "DL_emu", "DL_mumu"]:
+                for sel_name, sel in gen_sel_dict.items():            
+                    skim_tree = {}
+                    custom_tree = {}
+                    if sel_name == gen_sel_name:
+                        leptons = {}
+                        if "SL" in sel_name:
+                            if sel_name == "SL_e":
+                                lepton0 = objects["tight_electrons"][0]
+                            elif sel_name == "SL_mu":
+                                lepton0 = objects["tight_electrons"][0]
+                            leptons['TightLepton0'] = lepton0
+                        elif "DL" in sel_name:
+                            if sel_name == "DL_ee":
+                                lepton0 = objects["tight_electrons"][0]
+                                lepton1 = objects["tight_electrons"][1]
+                            elif sel_name == "DL_mumu":
+                                lepton0 = objects["tight_muons"][0]
+                                lepton1 = objects["tight_muons"][1]
+                            elif sel_name == "DL_emu":
+                                electron0 = objects["tight_electrons"][0]
+                                muon0 = objects["tight_muons"][0]
+                                lepton0 = electron0 if electron0.pt >= muon0.pt else muon0
+                                lepton1 = muon0 if electron0.pt >= muon0.pt else electron0
+                            leptons['TightLepton0'] = lepton0
+                            leptons['TightLepton1'] = lepton1
+
+                        for lep_name, lep in leptons.items():
+                            custom_tree.update({
+                                '_'.join([lep_name,'pt']): lep.pt,
+                                '_'.join([lep_name,'eta']): lep.eta,
+                                '_'.join([lep_name,'pdgId']): lep.pdgId,
+                                '_'.join([lep_name,'relIso']): lep.pfRelIso03_all,
+                            })
+
+                        skim_tree.update(**base_tree, **custom_tree)
+                        plots.append(Skim(sel_name, skim_tree, sel))
+
+            if gen_sel_name in ["SL", "DL"]:   
+                for sel_name, sel in gen_sel_dict.items():
+                    skim_tree = {}
+                    custom_tree = {}
+                    if "res" in sel_name or "boost" in sel_name:
+                        jets = {}
+                        if "SL_res" in sel_name:
+                            jets["AK4_0"] = objects["cleaned_ak4_jets"][0]
+                            jets["AK4_1"] = objects["cleaned_ak4_jets"][1]
+                            jets["AK4_2"] = objects["cleaned_ak4_jets"][2]
+                            jets["AK4_btag0"] = objects["cleaned_ak4_btags"][0]
+                            if sel_name == "SL_res_2b":
+                                jets["AK4_btag1"] = objects["cleaned_ak4_btags"][1]
+
+                        elif "SL_boost" == sel_name:
+                            jets["AK8_btag0"] = objects["cleaned_ak8_btags"][0]
+                            jets["AK4_0"] = objects["cleaned_ak4_jets"][0]
+
+                        elif "DL_res" in sel_name:
+                            jets["AK4_0"] = objects["cleaned_ak4_jets"][0]
+                            jets["AK4_btag0"] = objects["cleaned_ak4_btags"][0]
+                            if sel_name == "DL_res_2b":
+                                jets["AK4_1"] = objects["cleaned_ak4_jets"][1]
+                                jets["AK4_btag1"] = objects["cleaned_ak4_btags"][1]
+
+                        elif  "DL_boost" == sel_name:
+                            jets["AK8_btag0"] = objects["cleaned_ak8_btags"][0]
+
+                        for jet_name, jet in jets.items():
+                            custom_tree.update({
+                                '_'.join([jet_name,'pt']): jet.pt,
+                                '_'.join([jet_name,'eta']): jet.eta})
+                            if "AK4" in jet_name:
+                                custom_tree.update({'_'.join([jet_name,'btagPNetB']): jet.btagPNetB})
+
+                        skim_tree.update(**base_tree, **custom_tree)
+                        plots.append(Skim(sel_name, skim_tree, sel))
+        
+        return plots
+
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
@@ -348,6 +449,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         
         yields.add(baseSel, 'Basic Event Selection')
 
+        fakeable_electrons = objects["fakeable_electrons"]
         tight_electrons = objects["tight_electrons"]
         tight_muons = objects["tight_muons"]
         cleaned_ak4_jets = objects["cleaned_ak4_jets"]
@@ -355,8 +457,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         cleaned_ak8_btags = objects["cleaned_ak8_btags"]
         ak8_subjets = objects["ak8_subjets"]
         met = objects["met"]
-        met_pt = objects["met_pt"]
-        met_phi = objects["met_phi"]
         ht_jets = objects["ht_jets"]
         mht = objects["mht"] 
         met_ld = objects["met_ld"]
@@ -439,30 +539,17 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 Plot.make1D(sel[0] + "_AK4_btag_pt_0", cleaned_ak4_btags[0].pt, sel[1], EqBin(250, 0, 500), title="", xTitle="Leading AK4 b-tagged jet pT (GeV)"),
                 Plot.make1D(sel[0] + "_AK4_btag_pt_1", cleaned_ak4_btags[1].pt, sel[1], EqBin(250, 0, 500), title="", xTitle="Subleading AK4 b-tagged jet pT (GeV)"),
                 Plot.make1D(sel[0] + "_AK8_pt_0", cleaned_ak8_btags[0].pt, sel[1], EqBin(500, 0, 1000), title="", xTitle="Leading AK8 b-tagged jet pT (GeV)"),
-                Plot.make1D(sel[0] + "_MET_pt", met_pt, sel[1], EqBin(250, 0, 500), title="", xTitle="MET pT (GeV)"),
+                Plot.make1D(sel[0] + "_MET_pt", met.pt, sel[1], EqBin(250, 0, 500), title="", xTitle="MET pT (GeV)"),
                 Plot.make1D(sel[0] + "_HT", ht_jets, sel[1], EqBin(500, 0, 1000), title="", xTitle="HT (GeV)")
             ])
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
-        yields.add(selections["SL_e"]["SL_e"], 'Single Electron')
-        yields.add(selections["SL_mu"]["SL_mu"], 'Single Muon')
-        yields.add(selections["DL_ee"]["DL_ee"], 'Double Electron')
-        yields.add(selections["DL_mumu"]["DL_mumu"], 'Double Muon')
-        yields.add(selections["DL_emu"]["DL_emu"], 'Electron & Muon')
+        for gen_sel_name, gen_sel_dict in selections.items():
+            for sel_name, sel in gen_sel_dict.items():
+                yields.add(selections[gen_sel_name][sel_name], sel_name)
 
-        yields.add(selections["SL"]["SL_resolved"], "SL resolved")
-        yields.add(selections["SL"]["SL_res_1b"], "SL resolved 1b")
-        yields.add(selections["SL"]["SL_res_2b"], "SL resolved 2b")
-        yields.add(selections["SL"]["SL_boost"], "SL boosted")
-
-        yields.add(selections["DL"]["DL_resolved"], "DL resolved")
-        yields.add(selections["DL"]["DL_res_1b"], "DL resolved 1b")
-        yields.add(selections["DL"]["DL_res_2b"], "DL resolved 2b")
-        yields.add(selections["DL"]["DL_boost"], "DL boosted")
-
-        yields.add(selections["SL"]["SL"], "SL")
-        yields.add(selections["DL"]["DL"], "DL")
+        plots = self.get_skims(plots, objects, selections, tree)
 
         return plots
