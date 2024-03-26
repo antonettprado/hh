@@ -340,9 +340,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         return selections
 
-    def get_skims(self, plots, objects, selections, tree):
+    def get_skims(self, plots, objects, selections, tree) -> 'dict[str, dict]':
 
-        from bamboo.plots import Skim
+        skims_dict = {}
+
         base_tree = {
             "event": None,
             "nLooseElectron": op.static_cast("UInt_t", op.rng_len(objects["loose_electrons"])),
@@ -360,13 +361,18 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             # "pileupWeight": -9999, 
             # "top_pt_weight": -9999,
             # "btvWeight": -9999,
+            # "muonID_sf": -9999,
+            # "muonIso_sf": -9999,
+            # "electronID_sf": -9999,
+            # "electronIso_sf": -9999,
+            # "Trigger_sf": -9999,
         }
 
         for gen_sel_name, gen_sel_dict in selections.items():
 
             if gen_sel_name in ["SL_e", "SL_mu", "DL_ee", "DL_emu", "DL_mumu"]:
                 for sel_name, sel in gen_sel_dict.items():            
-                    skim_tree = {}
+                    sel_skim = {}
                     custom_tree = {}
                     if sel_name == gen_sel_name:
                         leptons = {}
@@ -399,12 +405,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                                 '_'.join([lep_name,'relIso']): lep.pfRelIso03_all,
                             })
 
-                        skim_tree.update(**base_tree, **custom_tree)
-                        plots.append(Skim(sel_name, skim_tree, sel))
+                        sel_skim.update(**base_tree, **custom_tree)
+                        skims_dict[sel_name] = sel_skim
+                        # plots.append(Skim(sel_name, sel_skim, sel))
 
             if gen_sel_name in ["SL", "DL"]:   
                 for sel_name, sel in gen_sel_dict.items():
-                    skim_tree = {}
+                    sel_skim = {}
                     custom_tree = {}
                     if "res" in sel_name or "boost" in sel_name:
                         jets = {}
@@ -437,10 +444,11 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                             if "AK4" in jet_name:
                                 custom_tree.update({'_'.join([jet_name,'btagPNetB']): jet.btagPNetB})
 
-                        skim_tree.update(**base_tree, **custom_tree)
-                        plots.append(Skim(sel_name, skim_tree, sel))
+                        sel_skim.update(**base_tree, **custom_tree)
+                        skims_dict[sel_name] = sel_skim
+                        # plots.append(Skim(sel_name, sel_skim, sel))
         
-        return plots
+        return skims_dict
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -553,6 +561,12 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             for sel_name, sel in gen_sel_dict.items():
                 yields.add(selections[gen_sel_name][sel_name], sel_name)
 
-        plots = self.get_skims(plots, objects, selections, tree)
-
+        from bamboo.plots import Skim
+        skims_dict = self.get_skims(plots, objects, selections, tree)
+        for gen_sel_name, gen_sel_dict in selections.items():
+                for sel_name, sel in gen_sel_dict.items(): 
+                    for sel_skim_name, sel_skim in skims_dict.items():
+                        if sel_skim_name == sel_name:
+                            print(f"{gen_sel_name}: {sel_name}")
+                            plots.append(Skim(sel_name, sel_skim, sel))
         return plots
