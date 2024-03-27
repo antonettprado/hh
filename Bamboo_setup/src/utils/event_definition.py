@@ -38,7 +38,14 @@ def sl_e_trigger_selection(is_mc, era, HLT):
             HLT.Ele32_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150
         )
-    elif "2022" in era or "2023" in era:
+    elif "2022" in era:
+        return op.OR(
+            HLT.Ele30_WPTight_Gsf,
+            HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
+            HLT.Ele15_IsoVVVL_PFHT450,
+            HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65 
+        )
+    elif "2023" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
@@ -66,7 +73,13 @@ def sl_mu_trigger_selection(is_mc, era, HLT):
         return op.OR(
             HLT.IsoMu24
         )
-    elif "2022" in era or "2023" in era:
+    elif "2022" in era:
+        return op.OR(
+            HLT.IsoMu24,
+            HLT.Mu15_IsoVVVL_PFHT450,
+            HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65 
+        )
+    elif "2023" in era:
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu15_IsoVVVL_PFHT450,
@@ -78,7 +91,6 @@ def sl_mu_trigger_selection(is_mc, era, HLT):
             HLT.IsoMu24,
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
             HLT.Mu15_IsoVVVL_PFHT450,
-            # HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
 
@@ -135,7 +147,7 @@ def dl_emu_trigger_selection(is_mc, era, HLT):
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
             HLT.IsoMu24,
             HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ,
-            HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
+            # HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
@@ -147,7 +159,7 @@ def dl_emu_trigger_selection(is_mc, era, HLT):
             HLT.IsoMu24,
             HLT.Mu15_IsoVVVL_PFHT450,
             HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ,
-            HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
+            # HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
