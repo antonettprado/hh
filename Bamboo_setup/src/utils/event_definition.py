@@ -147,7 +147,7 @@ def dl_emu_trigger_selection(is_mc, era, HLT):
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
             HLT.IsoMu24,
             HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ,
-            HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
+            # HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
@@ -159,7 +159,7 @@ def dl_emu_trigger_selection(is_mc, era, HLT):
             HLT.IsoMu24,
             HLT.Mu15_IsoVVVL_PFHT450,
             HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ,
-            HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
+            # HLT.Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ, # check for >= 2018
             HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ # check for >= 2018
         )
