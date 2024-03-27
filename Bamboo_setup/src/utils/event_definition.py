@@ -43,7 +43,7 @@ def sl_e_trigger_selection(is_mc, era, HLT):
             HLT.Ele30_WPTight_Gsf,
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
             HLT.Ele15_IsoVVVL_PFHT450,
-            HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
+            HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
     elif "2024" in era:
@@ -70,7 +70,7 @@ def sl_mu_trigger_selection(is_mc, era, HLT):
         return op.OR(
             HLT.IsoMu24,
             HLT.Mu15_IsoVVVL_PFHT450,
-            HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
+            HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
     elif "2024" in era:
@@ -78,7 +78,7 @@ def sl_mu_trigger_selection(is_mc, era, HLT):
             HLT.IsoMu24,
             HLT.Mu12_IsoVVL_PFHT150_PNetBTag_0p53, # new trigger
             HLT.Mu15_IsoVVVL_PFHT450,
-            # HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
+            # HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65, # removed in later part of 2023
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
 
