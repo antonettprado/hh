@@ -24,11 +24,16 @@ def plot_effis(run_dir, path_list):
     SL_mu_histo_names = []
     SL_e_histo_names = []
     SL_mu_histo_names.append("SL_mu")
-    SL_mu_histo_names.append("SL_mu_HLT_IsoMu24")
+    SL_mu_histo_names.append("SL_mu_HLT_IsoMu24") 
     SL_mu_histo_names.append("SL_mu_HLT_All")
+    SL_mu_histo_names.append("SL_mu_HLT_Mu15_IsoVVVL_PFHT450")
+    SL_mu_histo_names.append("SL_mu_HLT_PFHT280_QuadPFJet30_PNet2BTagMean0p55")
     SL_e_histo_names.append("SL_e")
     SL_e_histo_names.append("SL_e_HLT_Ele30_WPTight_Gsf")
     SL_e_histo_names.append("SL_e_HLT_All")
+    SL_e_histo_names.append("SL_e_HLT_Ele15_IsoVVVL_PFHT450")
+    SL_e_histo_names.append("SL_e_HLT_PFHT280_QuadPFJet30_PNet2BTagMean0p55")
+    
     for path in path_list:
         if "SL_mu_HLT_Mu" in path:
             SL_mu_histo_names.append(path)
@@ -66,6 +71,7 @@ def plot_effis(run_dir, path_list):
             canvas_mu.DrawFrame(0, 0, 100, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
         canvas_mu.SetGrid()
         legend_mu = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
+        legend_mu.SetTextSize(0.013)
         color_index = 1
         SL_mu_histo_dict["SL_mu"][var].Rebin(rebin_factor)
         
@@ -106,6 +112,7 @@ def plot_effis(run_dir, path_list):
         elif var == "npv_good":
             canvas_e.DrawFrame(0, 0, 100, 1.1, ";Nr. of Good Primary Vertices;Efficiency")
         legend_e = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
+        legend_e.SetTextSize(0.013)
         color_index = 1
         SL_e_histo_dict["SL_e"][var].Rebin(rebin_factor)
 
