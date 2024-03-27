@@ -53,22 +53,27 @@ def muConePt(muons, jets):
     )
 
 def nearbyBtag(lep, jets, era, btag_WP):
+
     btag_WP_cut = 0
-    if "2016" in era or "2017" in era or "2018" in era: # DeepJet
-        if btag_WP == "M":
-            btag_WP_cut = 0.2770
-        elif btag_WP == "T":
-            btag_WP_cut = 0.7264
-    else: # PNet
-        if btag_WP == "M":
-            btag_WP_cut = 0.2450
-        elif btag_WP == "T":
-            btag_WP_cut = 0.6734
+    def get_btag_pass(jet):
+        if era in ["2016", "2017", "2018"]: # DeepJet
+            if btag_WP == "M":
+                btag_WP_cut = 0.2770
+            elif btag_WP == "T":
+                btag_WP_cut = 0.7264
+            condition = jet.btagDeepFlavB > btag_WP_cut
+        else: # PNet
+            if btag_WP == "M":
+                btag_WP_cut = 0.2450
+            elif btag_WP == "T":
+                btag_WP_cut = 0.6734
+            condition = jet.btagPNetB > btag_WP_cut
+        return condition
 
     return op.rng_any(
         jets, lambda j: op.AND(
             op.deltaR(lep.p4, j.p4) < 0.4,
-            op.switch(op.c_bool("2016" in era or "2017" in era or "2018" in era), j.btagDeepFlavB > btag_WP_cut, j.btagPNetB > btag_WP_cut)
+            get_btag_pass(j)
         )            
     )
 
