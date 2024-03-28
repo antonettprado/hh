@@ -45,12 +45,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet, self.era, use_mvaTTH)
         tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, self.era, use_mvaTTH)
 
-        # tight_leptons = op.construct("ROOT::VecOps::Concatenate<ROOT::VecOps::RVec<float>, ROOT::VecOps::RVec<float>>",(tight_electrons, tight_muons))
-        # print(f"type(tight_electrons)={type(tight_electrons)}")
-        # print(f"type(tight_muons)={type(tight_muons)}")
-        # print(f"type(tight_leptons)={type(tight_leptons)}")
-        # tight_leptons = op.sort(tight_leptons, lambda l: -l.pt)
-
         # Select Taus
         taus = object_defs.tau_selection(tree.Tau, int(self.era))
         taus = op.sort(taus, lambda tau: -tau.pt)
@@ -286,63 +280,149 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
-        selections = {}
+        all_selections = {}
 
-        selections["SL_e"] = {}
-        selections["SL_mu"] = {} 
-        selections["SL"] = {} 
-        selections["DL_ee"] = {}
-        selections["DL_emu"] = {}
-        selections["DL_mumu"] = {}
-        selections["DL"] = {}
+        all_selections["SL_e"] = {}
+        all_selections["SL_mu"] = {} 
+        all_selections["SL"] = {} 
+        all_selections["DL_ee"] = {}
+        all_selections["DL_emu"] = {}
+        all_selections["DL_mumu"] = {}
+        all_selections["DL"] = {}
 
-        selections["SL_e"]["SL_e_resolved_1b"] = SL_e_resolved_1b
-        selections["SL_e"]["SL_e_resolved_2b"] = SL_e_resolved_2b
-        selections["SL_e"]["SL_e_resolved"] = SL_e_resolved
-        selections["SL_e"]["SL_e_boosted"] = SL_e_boosted
-        selections["SL_e"]["SL_e"] = SL_e
+        all_selections["SL_e"]["SL_e_resolved_1b"] = SL_e_resolved_1b
+        all_selections["SL_e"]["SL_e_resolved_2b"] = SL_e_resolved_2b
+        all_selections["SL_e"]["SL_e_resolved"] = SL_e_resolved
+        all_selections["SL_e"]["SL_e_boosted"] = SL_e_boosted
+        all_selections["SL_e"]["SL_e"] = SL_e
 
-        selections["SL_mu"]["SL_mu_resolved_1b"] = SL_mu_resolved_1b
-        selections["SL_mu"]["SL_mu_resolved_2b"] = SL_mu_resolved_2b
-        selections["SL_mu"]["SL_mu_resolved"] = SL_mu_resolved
-        selections["SL_mu"]["SL_mu_boosted"] = SL_mu_boosted
-        selections["SL_mu"]["SL_mu"] = SL_mu
+        all_selections["SL_mu"]["SL_mu_resolved_1b"] = SL_mu_resolved_1b
+        all_selections["SL_mu"]["SL_mu_resolved_2b"] = SL_mu_resolved_2b
+        all_selections["SL_mu"]["SL_mu_resolved"] = SL_mu_resolved
+        all_selections["SL_mu"]["SL_mu_boosted"] = SL_mu_boosted
+        all_selections["SL_mu"]["SL_mu"] = SL_mu
 
-        selections["SL"]["SL_res_1b"] = SL_res_1b
-        selections["SL"]["SL_res_2b"] = SL_res_2b
-        selections["SL"]["SL_resolved"] = SL_resolved
-        selections["SL"]["SL_boost"] = SL_boost
-        selections["SL"]["SL"] = SL
+        all_selections["SL"]["SL_res_1b"] = SL_res_1b
+        all_selections["SL"]["SL_res_2b"] = SL_res_2b
+        all_selections["SL"]["SL_resolved"] = SL_resolved
+        all_selections["SL"]["SL_boost"] = SL_boost
+        all_selections["SL"]["SL"] = SL
 
-        selections["DL_ee"]["DL_ee_resolved_1b"] = DL_ee_resolved_1b
-        selections["DL_ee"]["DL_ee_resolved_2b"] = DL_ee_resolved_2b
-        selections["DL_ee"]["DL_ee_resolved"] = DL_ee_resolved
-        selections["DL_ee"]["DL_ee_boosted"] = DL_ee_boosted
-        selections["DL_ee"]["DL_ee"] = DL_ee
+        all_selections["DL_ee"]["DL_ee_resolved_1b"] = DL_ee_resolved_1b
+        all_selections["DL_ee"]["DL_ee_resolved_2b"] = DL_ee_resolved_2b
+        all_selections["DL_ee"]["DL_ee_resolved"] = DL_ee_resolved
+        all_selections["DL_ee"]["DL_ee_boosted"] = DL_ee_boosted
+        all_selections["DL_ee"]["DL_ee"] = DL_ee
 
-        selections["DL_emu"]["DL_emu_resolved_1b"] = DL_emu_resolved_1b
-        selections["DL_emu"]["DL_emu_resolved_2b"] = DL_emu_resolved_2b
-        selections["DL_emu"]["DL_emu_resolved"] = DL_emu_resolved
-        selections["DL_emu"]["DL_emu_boosted"] = DL_emu_boosted
-        selections["DL_emu"]["DL_emu"] = DL_emu
+        all_selections["DL_emu"]["DL_emu_resolved_1b"] = DL_emu_resolved_1b
+        all_selections["DL_emu"]["DL_emu_resolved_2b"] = DL_emu_resolved_2b
+        all_selections["DL_emu"]["DL_emu_resolved"] = DL_emu_resolved
+        all_selections["DL_emu"]["DL_emu_boosted"] = DL_emu_boosted
+        all_selections["DL_emu"]["DL_emu"] = DL_emu
 
-        selections["DL_mumu"]["DL_mumu_resolved_1b"] = DL_mumu_resolved_1b
-        selections["DL_mumu"]["DL_mumu_resolved_2b"] = DL_mumu_resolved_2b
-        selections["DL_mumu"]["DL_mumu_resolved"] = DL_mumu_resolved
-        selections["DL_mumu"]["DL_mumu_boosted"] = DL_mumu_boosted
-        selections["DL_mumu"]["DL_mumu"] = DL_mumu
+        all_selections["DL_mumu"]["DL_mumu_resolved_1b"] = DL_mumu_resolved_1b
+        all_selections["DL_mumu"]["DL_mumu_resolved_2b"] = DL_mumu_resolved_2b
+        all_selections["DL_mumu"]["DL_mumu_resolved"] = DL_mumu_resolved
+        all_selections["DL_mumu"]["DL_mumu_boosted"] = DL_mumu_boosted
+        all_selections["DL_mumu"]["DL_mumu"] = DL_mumu
 
-        selections["DL"]["DL_res_1b"] = DL_res_1b
-        selections["DL"]["DL_res_2b"] = DL_res_2b
-        selections["DL"]["DL_resolved"] = DL_resolved
-        selections["DL"]["DL_boost"] = DL_boost
-        selections["DL"]["DL"] = DL
+        all_selections["DL"]["DL_res_1b"] = DL_res_1b
+        all_selections["DL"]["DL_res_2b"] = DL_res_2b
+        all_selections["DL"]["DL_resolved"] = DL_resolved
+        all_selections["DL"]["DL_boost"] = DL_boost
+        all_selections["DL"]["DL"] = DL
 
-        return selections
+        return all_selections
 
-    def get_skims(self, plots, objects, selections) -> 'dict[str, dict]':
+    def set_category_groups(self, all_selections):
 
-        skims_dict = {}
+        lepton_sel_names = ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu"]
+        self.lepton_selections = {}
+        for name in lepton_sel_names:
+            self.lepton_selections.update({name: all_selections[name][name]})
+        
+        jet_sel_names = ["SL_res_1b", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
+        self.jet_selections = {}
+        for name in jet_sel_names:
+            SL_or_DL = "SL" if "SL" in name else "DL"
+            self.jet_selections.update({name: all_selections[SL_or_DL][name]})
+    
+    def get_lepton_list(self, supercat, objects) :
+        lepton_list = []
+        electrons = objects["tight_electrons"]
+        muons = objects["tight_electrons"]
+
+        if supercat == "SL":
+            if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
+                lepton0 = electrons[0]  
+            elif op.rng_len(electrons)==0 and op.rng_len(muons)==1:
+                lepton0 = muons[0]
+            lepton_list = [lepton0]
+        elif supercat == "DL":
+            if op.rng_len(electrons)==2 and op.rng_len(muons)==0:
+                lepton0 = electrons[0]
+                lepton1 = electrons[0]
+            elif op.rng_len(electrons)==0 and op.rng_len(muons)==2:
+                lepton0 = muons[0]
+                lepton1 = muons[0]
+            elif op.rng_len(electrons)==1 and op.rng_len(muons)==1:
+                lepton0 = electrons[0] if electrons[0].pt >= muons[0].pt else muons[0]
+                lepton1 = muons[0] if electrons[0].pt >= muons[0].pt else electrons[0]
+            lepton_list = [lepton0, lepton1]
+    
+        return lepton_list
+        
+    # Returns dictionary[selection_name, dict['object_name',object]]]
+    def get_lep_subcats_dict(self, objects) -> 'dict[str, dict[]]': 
+
+        lep_list = lambda supercat: self.get_lepton_list(supercat, objects)
+        lep_subcats_dict = {
+            "SL_e": {"lepton0": lep_list("SL")[0]},
+            "SL_mu": {"lepton0": lep_list("SL")[0]},
+            "DL_ee": {"lepton0": lep_list("DL")[0], "lepton1": lep_list("DL")[1]},
+            "DL_mumu": {"lepton0": lep_list("DL")[0], "lepton1": lep_list("DL")[1]},
+            "DL_emu": {"lepton0": lep_list("DL")[0], "lepton1": lep_list("DL")[1]}
+        }
+
+        return lep_subcats_dict
+
+    # Returns dictionary[selection_name, dict['object_name',object]]]
+    def get_jet_subcats_dict(self, objects) -> 'dict[str, dict[]]':
+
+        jet_subcats_dict = {
+            "SL_res_1b": {
+                "AK4_0": objects["cleaned_ak4_jets"][0],
+                "AK4_1": objects["cleaned_ak4_jets"][1],
+                "AK4_2": objects["cleaned_ak4_jets"][2],
+                "AK4_btag0": objects["cleaned_ak4_btags"][0]},
+            "SL_res_2b": {
+                "AK4_0": objects["cleaned_ak4_jets"][0],
+                "AK4_1": objects["cleaned_ak4_jets"][1],
+                "AK4_2": objects["cleaned_ak4_jets"][2],
+                "AK4_btag0": objects["cleaned_ak4_btags"][0],
+                "AK4_btag1": objects["cleaned_ak4_btags"][1]},
+            "SL_boost": {
+                "AK8_btag0": objects["cleaned_ak8_btags"][0],
+                "AK4_0": objects["cleaned_ak4_jets"][0]},
+            "DL_res_1b": {
+                "AK4_0": objects["cleaned_ak4_jets"][0],
+                "AK4_btag0": objects["cleaned_ak4_btags"][0]},
+            "DL_res_2b": {
+                "AK4_0": objects["cleaned_ak4_jets"][0],
+                "AK4_1": objects["cleaned_ak4_jets"][1],
+                "AK4_btag0": objects["cleaned_ak4_btags"][0],
+                "AK4_btag1": objects["cleaned_ak4_btags"][1]},
+            "DL_boost": {
+                "AK8_btag0": objects["cleaned_ak8_btags"][0]}
+        }
+
+        return jet_subcats_dict
+
+    # Returns list[list[sel_name, sel_skim[], selection]]
+    def get_skims_args_list(self, plots, objects) -> 'list[list[str, dict[], object]':
+
+        def get_jet_btag(jet):
+            return jet.btagDeepFlavB if self.era in ["2016","2017", "2018"] else jet.btagPNetB
 
         base_tree = {
             "event": None,
@@ -368,87 +448,33 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             # "Trigger_sf": -9999,
         }
 
-        for gen_sel_name, gen_sel_dict in selections.items():
+        skims_args_list = []
 
-            if gen_sel_name in ["SL_e", "SL_mu", "DL_ee", "DL_emu", "DL_mumu"]:
-                for sel_name, sel in gen_sel_dict.items():            
-                    sel_skim = {}
-                    custom_tree = {}
-                    if sel_name == gen_sel_name:
-                        leptons = {}
-                        if "SL" in sel_name:
-                            if sel_name == "SL_e":
-                                lepton0 = objects["tight_electrons"][0]
-                            elif sel_name == "SL_mu":
-                                lepton0 = objects["tight_electrons"][0]
-                            leptons['TightLepton0'] = lepton0
-                        elif "DL" in sel_name:
-                            if sel_name == "DL_ee":
-                                lepton0 = objects["tight_electrons"][0]
-                                lepton1 = objects["tight_electrons"][1]
-                            elif sel_name == "DL_mumu":
-                                lepton0 = objects["tight_muons"][0]
-                                lepton1 = objects["tight_muons"][1]
-                            elif sel_name == "DL_emu":
-                                electron0 = objects["tight_electrons"][0]
-                                muon0 = objects["tight_muons"][0]
-                                lepton0 = electron0 if electron0.pt >= muon0.pt else muon0
-                                lepton1 = muon0 if electron0.pt >= muon0.pt else electron0
-                            leptons['TightLepton0'] = lepton0
-                            leptons['TightLepton1'] = lepton1
-
-                        for lep_name, lep in leptons.items():
-                            custom_tree.update({
-                                '_'.join([lep_name,'pt']): lep.pt,
-                                '_'.join([lep_name,'eta']): lep.eta,
-                                '_'.join([lep_name,'pdgId']): lep.pdgId,
-                                '_'.join([lep_name,'relIso']): lep.pfRelIso03_all,
-                            })
-
-                        sel_skim.update(**base_tree, **custom_tree)
-                        skims_dict[sel_name] = sel_skim
-                        # plots.append(Skim(sel_name, sel_skim, sel))
-
-            if gen_sel_name in ["SL", "DL"]:   
-                for sel_name, sel in gen_sel_dict.items():
-                    sel_skim = {}
-                    custom_tree = {}
-                    if "res" in sel_name or "boost" in sel_name:
-                        jets = {}
-                        if "SL_res" in sel_name:
-                            jets["AK4_0"] = objects["cleaned_ak4_jets"][0]
-                            jets["AK4_1"] = objects["cleaned_ak4_jets"][1]
-                            jets["AK4_2"] = objects["cleaned_ak4_jets"][2]
-                            jets["AK4_btag0"] = objects["cleaned_ak4_btags"][0]
-                            if sel_name == "SL_res_2b":
-                                jets["AK4_btag1"] = objects["cleaned_ak4_btags"][1]
-
-                        elif "SL_boost" == sel_name:
-                            jets["AK8_btag0"] = objects["cleaned_ak8_btags"][0]
-                            jets["AK4_0"] = objects["cleaned_ak4_jets"][0]
-
-                        elif "DL_res" in sel_name:
-                            jets["AK4_0"] = objects["cleaned_ak4_jets"][0]
-                            jets["AK4_btag0"] = objects["cleaned_ak4_btags"][0]
-                            if sel_name == "DL_res_2b":
-                                jets["AK4_1"] = objects["cleaned_ak4_jets"][1]
-                                jets["AK4_btag1"] = objects["cleaned_ak4_btags"][1]
-
-                        elif  "DL_boost" == sel_name:
-                            jets["AK8_btag0"] = objects["cleaned_ak8_btags"][0]
-
-                        for jet_name, jet in jets.items():
-                            custom_tree.update({
-                                '_'.join([jet_name,'pt']): jet.pt,
-                                '_'.join([jet_name,'eta']): jet.eta})
-                            if "AK4" in jet_name:
-                                custom_tree.update({'_'.join([jet_name,'btagPNetB']): jet.btagPNetB})
-
-                        sel_skim.update(**base_tree, **custom_tree)
-                        skims_dict[sel_name] = sel_skim
-                        # plots.append(Skim(sel_name, sel_skim, sel))
+        lepton_subcats_dict = self.get_lep_subcats_dict(objects)
+        for sel_name, subcats_dict in lepton_subcats_dict.items():
+            sel_skim, custom_tree = {}, {}
+            for lep_name, lep in subcats_dict.items():
+                custom_tree.update({
+                    '_'.join([lep_name,'pt']): lep.pt,
+                    '_'.join([lep_name,'eta']): lep.eta,
+                    '_'.join([lep_name,'pdgId']): lep.pdgId,
+                    '_'.join([lep_name,'relIso']): lep.pfRelIso03_all})
+            sel_skim.update(**base_tree, **custom_tree)
+            skims_args_list.append([sel_name, sel_skim, self.lepton_selections[sel_name]])
         
-        return skims_dict
+        jet_subcats_dict = self.get_jet_subcats_dict(objects)
+        for sel_name, subcats_dict in jet_subcats_dict.items():
+            sel_skim, custom_tree = {}, {}
+            for jet_name, jet in subcats_dict.items():
+                custom_tree.update({
+                    '_'.join([jet_name,'pt']): jet.pt,
+                    '_'.join([jet_name,'eta']): jet.eta})
+                if "AK4" in jet_name:
+                    sel_skim.update({'_'.join([jet_name,'btag']): get_jet_btag(jet)})
+            sel_skim.update(**base_tree, **custom_tree)
+            skims_args_list.append([sel_name, sel_skim, self.jet_selections[sel_name]])
+
+        return skims_args_list
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -456,111 +482,54 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(yields)
         
         objects = self.object_selection(tree, self.args.mc_truth_b, use_mvaTTH=False) 
-        selections = self.event_selection(tree, baseSel, objects, yields, use_mvaTTH=False)
+        all_selections = self.event_selection(tree, baseSel, objects, yields, use_mvaTTH=False)
         
-        yields.add(baseSel, 'Basic Event Selection')
+        self.set_category_groups(all_selections)
 
-        fakeable_electrons = objects["fakeable_electrons"]
-        tight_electrons = objects["tight_electrons"]
-        tight_muons = objects["tight_muons"]
-        cleaned_ak4_jets = objects["cleaned_ak4_jets"]
-        cleaned_ak4_btags = objects["cleaned_ak4_btags"]
-        cleaned_ak8_btags = objects["cleaned_ak8_btags"]
-        ak8_subjets = objects["ak8_subjets"]
+        # ===============================================================================
+        # ================= Yields, Skims and Plots =====================================
+        # ===============================================================================
+
+        # Adding Yields for ALL selections --------------------
+        yields.add(baseSel, 'Basic Event Selection')
+        for gen_sel_name, gen_sel_dict in all_selections.items():
+            for sel_name, sel in gen_sel_dict.items():
+                yields.add(sel, sel_name)
+
+        # Adding Skims ----------------------------------------
+        from bamboo.plots import Skim
+        skims_args_list = self.get_skims_args_list(plots, objects)
+        for skims_args in skims_args_list:
+            plots.append(Skim(skims_args[0], skims_args[1], skims_args[2]))
+
+        # Adding plots -----------------------------------------
         met = objects["met"]
         ht_jets = objects["ht_jets"]
-        mht = objects["mht"] 
-        met_ld = objects["met_ld"]
 
-        # ===============================================================================
-        # ================================== Plots ======================================
-        # ===============================================================================
+        # Plots for ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu"]
+        lepton_subcats_dict = self.get_lep_subcats_dict(objects)
+        for sel_name, objects_dict in lepton_subcats_dict.items():
+            sel = self.lepton_selections[sel_name]
+            plots.extend([
+                Plot.make1D('_'.join([sel_name, 'MET', 'pt']), met.pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
+                Plot.make1D('_'.join([sel_name, 'HT']), ht_jets, sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
+            for obj_name, obj in objects_dict.items():
+                plots.extend([
+                    Plot.make1D('_'.join([sel_name, obj_name, 'pt']), obj.pt, sel, EqBin(250, 0, 250), xTitle=obj_name+" pT (GeV)"),
+                    Plot.make1D('_'.join([sel_name, obj_name, 'eta']), obj.eta, sel, EqBin(100, -3, 3), xTitle=obj_name+" eta"),
+                    Plot.make1D('_'.join([sel_name, obj_name, 'dxy']), obj.dxy, sel, EqBin(100, -0.05, 0.05), xTitle=obj_name+" dxy (cm)"),
+                    Plot.make1D('_'.join([sel_name, obj_name, 'dz']), obj.dz, sel, EqBin(1000, -0.1, 0.1), xTitle=obj_name+" dz (cm)"),
+                    Plot.make1D('_'.join([sel_name, obj_name, 'sip3d']), obj.sip3d, sel, EqBin(100, 0, 8), xTitle=obj_name+" sip3d"),
+                    Plot.make2D('_'.join([sel_name, obj_name, 'pT', 'vs', 'eta']), (obj.eta, obj.pt), sel, (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle=obj_name+" #eta", yTitle=obj_name+" pT (GeV)")])
 
-        # plots.extend([
-        #     Plot.make1D("SL_e_pt", tight_electrons[0].pt, selections["SL_e"]["SL_e"], EqBin(250, 0, 250), title="", xTitle="Electron pT (GeV)"),
-        #     Plot.make1D("SL_e_eta", tight_electrons[0].eta, selections["SL_e"]["SL_e"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
-        #     Plot.make1D("SL_e_dxy", tight_electrons[0].dxy, selections["SL_e"]["SL_e"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
-        #     Plot.make1D("SL_e_dz", tight_electrons[0].dz, selections["SL_e"]["SL_e"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
-        #     Plot.make1D("SL_e_sip3d", tight_electrons[0].sip3d, selections["SL_e"]["SL_e"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
-        #     Plot.make2D("SL_e_pT_vs_eta", (tight_electrons[0].eta, tight_electrons[0].pt), selections["SL_e"]["SL_e"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Electron #eta', yTitle='Electron pT (GeV)'),
+        # Plots for ["SL_res_1b", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
+        jet_subcats_dict = self.get_jet_subcats_dict(objects)
+        for sel_name, objects_dict in jet_subcats_dict.items():
+            sel = self.jet_selections[sel_name]
+            plots.extend([
+                Plot.make1D('_'.join([sel_name, 'MET', 'pt']), met.pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
+                Plot.make1D('_'.join([sel_name, 'HT']), ht_jets, sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
+            for obj_name, obj in objects_dict.items():
+                plots.append(Plot.make1D('_'.join([sel_name, obj_name, 'pt']), obj.pt, sel, EqBin(300, 0, 600), xTitle=obj_name+" pT (GeV)"))
 
-        #     Plot.make1D("SL_mu_pt", tight_muons[0].pt, selections["SL_mu"]["SL_mu"], EqBin(250, 0, 250), title="", xTitle="Muon pT (GeV)"),
-        #     Plot.make1D("SL_mu_eta", tight_muons[0].eta, selections["SL_mu"]["SL_mu"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
-        #     Plot.make1D("SL_mu_dxy", tight_muons[0].dxy, selections["SL_mu"]["SL_mu"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
-        #     Plot.make1D("SL_mu_dz", tight_muons[0].dz, selections["SL_mu"]["SL_mu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
-        #     Plot.make1D("SL_mu_sip3d", tight_muons[0].sip3d, selections["SL_mu"]["SL_mu"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
-        #     Plot.make2D("SL_mu_pT_vs_eta", (tight_muons[0].eta, tight_muons[0].pt), selections["SL_mu"]["SL_mu"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Muon #eta', yTitle='Muon pT (GeV)'),
-
-        #     Plot.make1D("DL_ee_leading_pt", tight_electrons[0].pt, selections["DL_ee"]["DL_ee"], EqBin(250, 0, 250), title="", xTitle="Leading electron pT (GeV)"),
-        #     Plot.make1D("DL_ee_leading_eta", tight_electrons[0].eta, selections["DL_ee"]["DL_ee"], EqBin(100, -3, 3), title= "", xTitle="Leading electron eta"),
-        #     Plot.make1D("DL_ee_leading_dxy", tight_electrons[0].dxy, selections["DL_ee"]["DL_ee"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading electron dxy (cm)"),
-        #     Plot.make1D("DL_ee_leading_dz", tight_electrons[0].dz, selections["DL_ee"]["DL_ee"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading electron dz (cm)"),
-        #     Plot.make1D("DL_ee_leading_sip3d", tight_electrons[0].sip3d, selections["DL_ee"]["DL_ee"], EqBin(100, 0, 8), title="", xTitle="Leading electron sip3d"),
-        #     Plot.make2D("DL_ee_leading_pT_vs_eta", (tight_electrons[0].eta, tight_electrons[0].pt), selections["DL_ee"]["DL_ee"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Leading electron #eta', yTitle='Leading electron pT (GeV)'),
-
-        #     Plot.make1D("DL_ee_subleading_pt", tight_electrons[1].pt, selections["DL_ee"]["DL_ee"], EqBin(250, 0, 250), title="", xTitle="Subleading electron pT (GeV)"),
-        #     Plot.make1D("DL_ee_subleading_eta", tight_electrons[1].eta, selections["DL_ee"]["DL_ee"], EqBin(100, -3, 3), title= "", xTitle="Subleading electron eta"),
-        #     Plot.make1D("DL_ee_subleading_dxy", tight_electrons[1].dxy, selections["DL_ee"]["DL_ee"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading electron dxy (cm)"),
-        #     Plot.make1D("DL_ee_subleading_dz", tight_electrons[1].dz, selections["DL_ee"]["DL_ee"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading electron dz (cm)"),
-        #     Plot.make1D("DL_ee_subleading_sip3d", tight_electrons[1].sip3d, selections["DL_ee"]["DL_ee"], EqBin(100, 0, 8), title="", xTitle="Subleading electron sip3d"),
-        #     Plot.make2D("DL_ee_subleading_pT_vs_eta", (tight_electrons[1].eta, tight_electrons[1].pt), selections["DL_ee"]["DL_ee"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Subleading electron #eta', yTitle='Subleading electron pT (GeV)'),
-
-        #     Plot.make1D("DL_emu_electron_pt", tight_electrons[0].pt, selections["DL_emu"]["DL_emu"], EqBin(250, 0, 250), title="", xTitle="Electron pT (GeV)"),
-        #     Plot.make1D("DL_emu_electron_eta", tight_electrons[0].eta, selections["DL_emu"]["DL_emu"], EqBin(100, -3, 3), title= "", xTitle="Electron eta"),
-        #     Plot.make1D("DL_emu_electron_dxy", tight_electrons[0].dxy, selections["DL_emu"]["DL_emu"], EqBin(100, -0.05, 0.05), title="", xTitle="Electron dxy (cm)"),
-        #     Plot.make1D("DL_emu_electron_dz", tight_electrons[0].dz, selections["DL_emu"]["DL_emu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Electron dz (cm)"),
-        #     Plot.make1D("DL_emu_electron_sip3d", tight_electrons[0].sip3d, selections["DL_emu"]["DL_emu"], EqBin(100, 0, 8), title="", xTitle="Electron sip3d"),
-        #     Plot.make2D("DL_emu_electron_pT_vs_eta", (tight_electrons[0].eta, tight_electrons[0].pt), selections["DL_emu"]["DL_emu"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Electron #eta', yTitle='Electron pT (GeV)'),
-
-        #     Plot.make1D("DL_emu_muon_pt", tight_muons[0].pt, selections["DL_emu"]["DL_emu"], EqBin(250, 0, 250), title="", xTitle="Muon pT (GeV)"),
-        #     Plot.make1D("DL_emu_muon_eta", tight_muons[0].eta, selections["DL_emu"]["DL_emu"], EqBin(100, -3, 3), title= "", xTitle="Muon eta"),
-        #     Plot.make1D("DL_emu_muon_dxy", tight_muons[0].dxy, selections["DL_emu"]["DL_emu"], EqBin(100, -0.05, 0.05), title="", xTitle="Muon dxy (cm)"),
-        #     Plot.make1D("DL_emu_muon_dz", tight_muons[0].dz, selections["DL_emu"]["DL_emu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Muon dz (cm)"),
-        #     Plot.make1D("DL_emu_muon_sip3d", tight_muons[0].sip3d, selections["DL_emu"]["DL_emu"], EqBin(100, 0, 8), title="", xTitle="Muon sip3d"),
-        #     Plot.make2D("DL_emu_muon_pT_vs_eta", (tight_muons[0].eta, tight_muons[0].pt), selections["DL_emu"]["DL_emu"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Muon #eta', yTitle='Muon pT (GeV)'),
-
-        #     Plot.make1D("DL_mumu_leading_pt", tight_muons[0].pt, selections["DL_mumu"]["DL_mumu"], EqBin(250, 0, 250), title="", xTitle="Leading muon pT (GeV)"),
-        #     Plot.make1D("DL_mumu_leading_eta", tight_muons[0].eta, selections["DL_mumu"]["DL_mumu"], EqBin(100, -3, 3), title= "", xTitle="Leading muon eta"),
-        #     Plot.make1D("DL_mumu_leading_dxy", tight_muons[0].dxy, selections["DL_mumu"]["DL_mumu"], EqBin(100, -0.05, 0.05), title="", xTitle="Leading muon dxy (cm)"),
-        #     Plot.make1D("DL_mumu_leading_dz", tight_muons[0].dz, selections["DL_mumu"]["DL_mumu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Leading muon dz (cm)"),
-        #     Plot.make1D("DL_mumu_leading_sip3d", tight_muons[0].sip3d, selections["DL_mumu"]["DL_mumu"], EqBin(100, 0, 8), title="", xTitle="Leading muon sip3d"),
-        #     Plot.make2D("DL_mumu_leading_pT_vs_eta", (tight_muons[0].eta, tight_muons[0].pt), selections["DL_mumu"]["DL_mumu"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Leading muon #eta', yTitle='Leading muon pT (GeV)'),
-
-        #     Plot.make1D("DL_mumu_subleading_pt", tight_muons[1].pt, selections["DL_mumu"]["DL_mumu"], EqBin(250, 0, 250), title="", xTitle="Subleading muon pT (GeV)"),
-        #     Plot.make1D("DL_mumu_subleading_eta", tight_muons[1].eta, selections["DL_mumu"]["DL_mumu"], EqBin(100, -3, 3), title= "", xTitle="Subleading muon eta"),
-        #     Plot.make1D("DL_mumu_subleading_dxy", tight_muons[1].dxy, selections["DL_mumu"]["DL_mumu"], EqBin(100, -0.05, 0.05), title="", xTitle="Subleading muon dxy (cm)"),
-        #     Plot.make1D("DL_mumu_subleading_dz", tight_muons[1].dz, selections["DL_mumu"]["DL_mumu"], EqBin(1000, -0.1, 0.1), title="", xTitle="Subleading muon dz (cm)"),
-        #     Plot.make1D("DL_mumu_subleading_sip3d", tight_muons[1].sip3d, selections["DL_mumu"]["DL_mumu"], EqBin(100, 0, 8), title="", xTitle="Subleading muon sip3d"),
-        #     Plot.make2D("DL_mumu_subleading_pT_vs_eta", (tight_muons[0].eta, tight_muons[0].pt), selections["DL_mumu"]["DL_mumu"], (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle='Leading muon #eta', yTitle='Leading muon pT (GeV)'),
-        # ])
-
-        for gen_sel_name, gen_sel_dict in selections.items():
-            for sel_name, sel in gen_sel_dict.items(): 
-                if sel_name == gen_sel_name:
-                    plots.extend([
-                        Plot.make1D(sel_name + "_AK4_0_pt", cleaned_ak4_jets[0].pt, sel, EqBin(300, 0, 600), title="", xTitle="Leading AK4 jet pT (GeV)"),
-                        Plot.make1D(sel_name + "_AK4_1_pt", cleaned_ak4_jets[1].pt, sel, EqBin(300, 0, 600), title="", xTitle="Subleading AK4 jet pT (GeV)"),
-                        Plot.make1D(sel_name + "_AK4_btag_0_pt", cleaned_ak4_btags[0].pt, sel, EqBin(250, 0, 500), title="", xTitle="Leading AK4 b-tagged jet pT (GeV)"),
-                        Plot.make1D(sel_name + "_AK4_btag_1_pt", cleaned_ak4_btags[1].pt, sel, EqBin(250, 0, 500), title="", xTitle="Subleading AK4 b-tagged jet pT (GeV)"),
-                        Plot.make1D(sel_name + "_AK8_0_pt", cleaned_ak8_btags[0].pt, sel, EqBin(500, 0, 1000), title="", xTitle="Leading AK8 b-tagged jet pT (GeV)"),
-                        Plot.make1D(sel_name + "_MET_pt", met.pt, sel, EqBin(250, 0, 500), title="", xTitle="MET pT (GeV)"),
-                        Plot.make1D(sel_name + "_HT", ht_jets, sel, EqBin(500, 0, 1000), title="", xTitle="HT (GeV)")
-                    ])
-
-        # ===============================================================================
-        # ============================= Cutflow Report ==================================
-        # ===============================================================================
-        for gen_sel_name, gen_sel_dict in selections.items():
-            for sel_name, sel in gen_sel_dict.items():
-                yields.add(selections[gen_sel_name][sel_name], sel_name)
-
-        from bamboo.plots import Skim
-        skims_dict = self.get_skims(plots, objects, selections)
-
-        for gen_sel_name, gen_sel_dict in selections.items():
-                for sel_name, sel in gen_sel_dict.items(): 
-                    for sel_skim_name, sel_skim in skims_dict.items():
-                        if sel_skim_name == sel_name:
-                            print(f"{gen_sel_name}: {sel_name}")
-                            plots.append(Skim(sel_name, sel_skim, sel))
         return plots
