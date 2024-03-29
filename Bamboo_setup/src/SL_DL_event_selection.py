@@ -19,8 +19,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
 
-    def object_selection(self, tree, MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=None):
+    def set_objects(self, tree, MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=None):
 
+        self.tree = tree
         if lep_pt_from_L1_or_HLT is not None: 
             object_defs.is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT)
 
@@ -89,53 +90,52 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         met = tree.PuppiMET
         ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met.pt)
 
-        objects = {}
-        objects["electron_ConePt"] =  electron_ConePt
-        objects["muon_ConePt"] =  muon_ConePt
-        objects["loose_electrons"] = loose_electrons
-        objects["fakeable_electrons"] = fakeable_electrons
-        objects["tight_electrons"] = tight_electrons
-        objects["loose_muons"] = loose_muons
-        objects["fakeable_muons"] = fakeable_muons
-        objects["tight_muons"] = tight_muons
-        objects["cleaned_taus"] = cleaned_taus
-        objects["cleaned_ak4_jets"] = cleaned_ak4_jets
-        objects["cleaned_ak4_btags"] = cleaned_ak4_btags
-        objects["cleaned_ak8_btags"] = cleaned_ak8_btags
-        objects["ak8_subjets"] = ak8_subjets
-        objects["met"] = met
-        objects["ht_jets"] = ht_jets
-        objects["mht"] = mht 
-        objects["met_ld"] = met_ld
+        self.objects = {
+            "electron_ConePt": electron_ConePt,
+            "muon_ConePt": muon_ConePt,
+            "loose_electrons": loose_electrons,
+            "fakeable_electrons": fakeable_electrons,
+            "tight_electrons": tight_electrons,
+            "loose_muons": loose_muons,
+            "fakeable_muons": fakeable_muons,
+            "tight_muons": tight_muons,
+            "cleaned_taus": cleaned_taus,
+            "cleaned_ak4_jets": cleaned_ak4_jets,
+            "cleaned_ak4_btags": cleaned_ak4_btags,
+            "cleaned_ak8_btags": cleaned_ak8_btags,
+            "ak8_subjets": ak8_subjets,
+            "met": met,
+            "ht_jets": ht_jets,
+            "mht": mht,
+            "met_ld": met_ld}
 
-        return objects
+    def set_event_selections(self, tree, sel, yields, use_mvaTTH=False, events='all'):
 
-    def starting_event_selection(self, tree, baseSel, yields, events='all', ):
+        def starting_selection(tree, sel, yields, events):
 
-        # Determine the cut to use
-        if events == 'all':
-            cut = ()
-        elif events == 'even':
-            cut = (tree.event % 2 == 0)
-        elif events == 'odd':
-            cut = (tree.event % 2 == 1)
-        else:
-            raise ValueError("events must be 'all', 'odd', or 'even'")
+            # Determine the cut to use
+            if events == 'all':
+                cut = ()
+            elif events == 'even':
+                cut = (tree.event % 2 == 0)
+            elif events == 'odd':
+                cut = (tree.event % 2 == 1)
+            else:
+                raise ValueError("events must be 'all', 'odd', or 'even'")
 
-        # Gen the base selection from base_selection, refine it with the relevant cut, and add to the yields table
-        noSel = self.noSel.refine('genEventSumWeight', cut=cut)        
-        yields.add(noSel, "Sample Sum of Weights") # This changes the yields in the list, even though we don't return it!
+            # Gen the base selection from base_selection, refine it with the relevant cut, and add to the yields table
+            noSel = self.noSel.refine('genEventSumWeight', cut=cut)        
+            yields.add(noSel, "Sample Sum of Weights") # This changes the yields in the list, even though we don't return it!
 
-        # Refine the working selection (baseSel) with the parity cut
-        baseSel = baseSel.refine(events, cut=cut)
+            # Refine the working selection (baseSel) with the parity cut
+            baseSel = sel.refine(events, cut=cut)
 
-        return baseSel
+            return baseSel
 
-    def event_selection(self, tree, sel, objects, yields, use_mvaTTH=False, events='all'):
-
-        sel = self.starting_event_selection(tree, sel, yields, events)
+        baseSel = starting_selection(tree, sel, yields, events)
 
         # Retrieve objects
+        objects = self.objects
         electron_ConePt = objects["electron_ConePt"]
         muon_ConePt = objects["muon_ConePt"]
         loose_electrons = objects["loose_electrons"]
@@ -280,78 +280,73 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
 
-        all_selections = {}
+        self.all_selections = {
+            "SL_e": {
+                "SL_e_resolved_1b": SL_e_resolved_1b,
+                "SL_e_resolved_2b": SL_e_resolved_2b,
+                "SL_e_resolved": SL_e_resolved,
+                "SL_e_boosted": SL_e_boosted,
+                "SL_e": SL_e},
+            "SL_mu": {
+                "SL_mu_resolved_1b": SL_mu_resolved_1b,
+                "SL_mu_resolved_2b": SL_mu_resolved_2b,
+                "SL_mu_resolved": SL_mu_resolved,
+                "SL_mu_boosted": SL_mu_boosted,
+                "SL_mu": SL_mu},
+            "SL": {
+                "SL_res_1b": SL_res_1b,
+                "SL_res_2b": SL_res_2b,
+                "SL_resolved": SL_resolved,
+                "SL_boost": SL_boost,
+                "SL": SL},
+            "DL_ee": {
+                "DL_ee_resolved_1b": DL_ee_resolved_1b,
+                "DL_ee_resolved_2b": DL_ee_resolved_2b,
+                "DL_ee_resolved": DL_ee_resolved,
+                "DL_ee_boosted": DL_ee_boosted,
+                "DL_ee": DL_ee},
+            "DL_emu": {
+                "DL_emu_resolved_1b": DL_emu_resolved_1b,
+                "DL_emu_resolved_2b": DL_emu_resolved_2b,
+                "DL_emu_resolved": DL_emu_resolved,
+                "DL_emu_boosted": DL_emu_boosted,
+                "DL_emu": DL_emu},
+            "DL_mumu": {
+                "DL_mumu_resolved_1b": DL_mumu_resolved_1b,
+                "DL_mumu_resolved_2b": DL_mumu_resolved_2b,
+                "DL_mumu_resolved": DL_mumu_resolved,
+                "DL_mumu_boosted": DL_mumu_boosted,
+                "DL_mumu": DL_mumu},
+            "DL": {
+                "DL_res_1b": DL_res_1b,
+                "DL_res_2b": DL_res_2b,
+                "DL_resolved": DL_resolved,
+                "DL_boost": DL_boost,
+                "DL": DL}}
 
-        all_selections["SL_e"] = {}
-        all_selections["SL_mu"] = {} 
-        all_selections["SL"] = {} 
-        all_selections["DL_ee"] = {}
-        all_selections["DL_emu"] = {}
-        all_selections["DL_mumu"] = {}
-        all_selections["DL"] = {}
+    def set_category_groups(self):
 
-        all_selections["SL_e"]["SL_e_resolved_1b"] = SL_e_resolved_1b
-        all_selections["SL_e"]["SL_e_resolved_2b"] = SL_e_resolved_2b
-        all_selections["SL_e"]["SL_e_resolved"] = SL_e_resolved
-        all_selections["SL_e"]["SL_e_boosted"] = SL_e_boosted
-        all_selections["SL_e"]["SL_e"] = SL_e
+        supercat_names = ["SL", "DL"]
+        self.supercat_selections = {
+            "SL": self.all_selections["SL"]["SL"],
+            "DL": self.all_selections["SL"]["SL"]}
 
-        all_selections["SL_mu"]["SL_mu_resolved_1b"] = SL_mu_resolved_1b
-        all_selections["SL_mu"]["SL_mu_resolved_2b"] = SL_mu_resolved_2b
-        all_selections["SL_mu"]["SL_mu_resolved"] = SL_mu_resolved
-        all_selections["SL_mu"]["SL_mu_boosted"] = SL_mu_boosted
-        all_selections["SL_mu"]["SL_mu"] = SL_mu
-
-        all_selections["SL"]["SL_res_1b"] = SL_res_1b
-        all_selections["SL"]["SL_res_2b"] = SL_res_2b
-        all_selections["SL"]["SL_resolved"] = SL_resolved
-        all_selections["SL"]["SL_boost"] = SL_boost
-        all_selections["SL"]["SL"] = SL
-
-        all_selections["DL_ee"]["DL_ee_resolved_1b"] = DL_ee_resolved_1b
-        all_selections["DL_ee"]["DL_ee_resolved_2b"] = DL_ee_resolved_2b
-        all_selections["DL_ee"]["DL_ee_resolved"] = DL_ee_resolved
-        all_selections["DL_ee"]["DL_ee_boosted"] = DL_ee_boosted
-        all_selections["DL_ee"]["DL_ee"] = DL_ee
-
-        all_selections["DL_emu"]["DL_emu_resolved_1b"] = DL_emu_resolved_1b
-        all_selections["DL_emu"]["DL_emu_resolved_2b"] = DL_emu_resolved_2b
-        all_selections["DL_emu"]["DL_emu_resolved"] = DL_emu_resolved
-        all_selections["DL_emu"]["DL_emu_boosted"] = DL_emu_boosted
-        all_selections["DL_emu"]["DL_emu"] = DL_emu
-
-        all_selections["DL_mumu"]["DL_mumu_resolved_1b"] = DL_mumu_resolved_1b
-        all_selections["DL_mumu"]["DL_mumu_resolved_2b"] = DL_mumu_resolved_2b
-        all_selections["DL_mumu"]["DL_mumu_resolved"] = DL_mumu_resolved
-        all_selections["DL_mumu"]["DL_mumu_boosted"] = DL_mumu_boosted
-        all_selections["DL_mumu"]["DL_mumu"] = DL_mumu
-
-        all_selections["DL"]["DL_res_1b"] = DL_res_1b
-        all_selections["DL"]["DL_res_2b"] = DL_res_2b
-        all_selections["DL"]["DL_resolved"] = DL_resolved
-        all_selections["DL"]["DL_boost"] = DL_boost
-        all_selections["DL"]["DL"] = DL
-
-        return all_selections
-
-    def set_category_groups(self, all_selections):
-
-        lepton_sel_names = ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu"]
-        self.lepton_selections = {}
-        for name in lepton_sel_names:
-            self.lepton_selections.update({name: all_selections[name][name]})
+        lep_subcat_names = ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu"]
+        self.lep_subcats = {}
+        for name in lep_subcat_names:
+            self.lep_subcats.update({name: self.all_selections[name][name]})
         
-        jet_sel_names = ["SL_res_1b", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
-        self.jet_selections = {}
-        for name in jet_sel_names:
+        jet_subcat_names = ["SL_res_1b", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
+        self.jet_subcats = {}
+        for name in jet_subcat_names:
             SL_or_DL = "SL" if "SL" in name else "DL"
-            self.jet_selections.update({name: all_selections[SL_or_DL][name]})
+            self.jet_subcats.update({name: self.all_selections[SL_or_DL][name]})
     
-    def get_lepton_list(self, supercat, objects) :
-        lepton_list = []
-        electrons = objects["tight_electrons"]
-        muons = objects["tight_electrons"]
+    def get_supercat_leptons(self, supercat) -> 'list[object]':
 
+        lepton_list = []
+        electrons = self.objects["tight_electrons"]
+        muons = self.objects["tight_electrons"]
         if supercat == "SL":
             if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
                 lepton0 = electrons[0]  
@@ -373,9 +368,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         return lepton_list
         
     # Returns dictionary[selection_name, dict['object_name',object]]]
-    def get_lep_subcats_dict(self, objects) -> 'dict[str, dict[]]': 
+    def get_lep_subcats_dict(self) -> 'dict[str, dict[]]': 
 
-        lep_list = lambda supercat: self.get_lepton_list(supercat, objects)
+        lep_list = self.get_supercat_leptons
         lep_subcats_dict = {
             "SL_e": {"lepton0": lep_list("SL")[0]},
             "SL_mu": {"lepton0": lep_list("SL")[0]},
@@ -387,8 +382,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         return lep_subcats_dict
 
     # Returns dictionary[selection_name, dict['object_name',object]]]
-    def get_jet_subcats_dict(self, objects) -> 'dict[str, dict[]]':
-
+    def get_jet_subcats_dict(self) -> 'dict[str, dict[]]':
+        
+        objects = self.objects
         jet_subcats_dict = {
             "SL_res_1b": {
                 "AK4_0": objects["cleaned_ak4_jets"][0],
@@ -419,11 +415,12 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         return jet_subcats_dict
 
     # Returns list[list[sel_name, sel_skim[], selection]]
-    def get_skims_args_list(self, plots, objects) -> 'list[list[str, dict[], object]':
+    def get_skims_args_list(self) -> 'list[list[str, dict[], object]':
 
         def get_jet_btag(jet):
             return jet.btagDeepFlavB if self.era in ["2016","2017", "2018"] else jet.btagPNetB
 
+        objects = self.objects
         base_tree = {
             "event": None,
             "nLooseElectron": op.static_cast("UInt_t", op.rng_len(objects["loose_electrons"])),
@@ -450,7 +447,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         skims_args_list = []
 
-        lepton_subcats_dict = self.get_lep_subcats_dict(objects)
+        lepton_subcats_dict = self.get_lep_subcats_dict()
         for sel_name, subcats_dict in lepton_subcats_dict.items():
             sel_skim, custom_tree = {}, {}
             for lep_name, lep in subcats_dict.items():
@@ -460,9 +457,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                     '_'.join([lep_name,'pdgId']): lep.pdgId,
                     '_'.join([lep_name,'relIso']): lep.pfRelIso03_all})
             sel_skim.update(**base_tree, **custom_tree)
-            skims_args_list.append([sel_name, sel_skim, self.lepton_selections[sel_name]])
+            skims_args_list.append([sel_name, sel_skim, self.lep_subcats[sel_name]])
         
-        jet_subcats_dict = self.get_jet_subcats_dict(objects)
+        jet_subcats_dict = self.get_jet_subcats_dict()
         for sel_name, subcats_dict in jet_subcats_dict.items():
             sel_skim, custom_tree = {}, {}
             for jet_name, jet in subcats_dict.items():
@@ -472,7 +469,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 if "AK4" in jet_name:
                     sel_skim.update({'_'.join([jet_name,'btag']): get_jet_btag(jet)})
             sel_skim.update(**base_tree, **custom_tree)
-            skims_args_list.append([sel_name, sel_skim, self.jet_selections[sel_name]])
+            skims_args_list.append([sel_name, sel_skim, self.jet_subcats[sel_name]])
 
         return skims_args_list
 
@@ -481,10 +478,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
         
-        objects = self.object_selection(tree, self.args.mc_truth_b, use_mvaTTH=False) 
-        all_selections = self.event_selection(tree, baseSel, objects, yields, use_mvaTTH=False)
-        
-        self.set_category_groups(all_selections)
+        self.set_objects(tree, self.args.mc_truth_b, use_mvaTTH=False) 
+        self.set_event_selections(tree, baseSel, yields, use_mvaTTH=False)
+        self.set_category_groups()
 
         # ===============================================================================
         # ================= Yields, Skims and Plots =====================================
@@ -492,24 +488,24 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Adding Yields for ALL selections --------------------
         yields.add(baseSel, 'Basic Event Selection')
-        for gen_sel_name, gen_sel_dict in all_selections.items():
+        for gen_sel_name, gen_sel_dict in self.all_selections.items():
             for sel_name, sel in gen_sel_dict.items():
                 yields.add(sel, sel_name)
 
         # Adding Skims ----------------------------------------
         from bamboo.plots import Skim
-        skims_args_list = self.get_skims_args_list(plots, objects)
+        skims_args_list = self.get_skims_args_list()
         for skims_args in skims_args_list:
             plots.append(Skim(skims_args[0], skims_args[1], skims_args[2]))
 
         # Adding plots -----------------------------------------
-        met = objects["met"]
-        ht_jets = objects["ht_jets"]
+        met = self.objects["met"]
+        ht_jets = self.objects["ht_jets"]
 
         # Plots for ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu"]
-        lepton_subcats_dict = self.get_lep_subcats_dict(objects)
+        lepton_subcats_dict = self.get_lep_subcats_dict()
         for sel_name, objects_dict in lepton_subcats_dict.items():
-            sel = self.lepton_selections[sel_name]
+            sel = self.lep_subcats[sel_name]
             plots.extend([
                 Plot.make1D('_'.join([sel_name, 'MET', 'pt']), met.pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
                 Plot.make1D('_'.join([sel_name, 'HT']), ht_jets, sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
@@ -523,9 +519,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                     Plot.make2D('_'.join([sel_name, obj_name, 'pT', 'vs', 'eta']), (obj.eta, obj.pt), sel, (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle=obj_name+" #eta", yTitle=obj_name+" pT (GeV)")])
 
         # Plots for ["SL_res_1b", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
-        jet_subcats_dict = self.get_jet_subcats_dict(objects)
+        jet_subcats_dict = self.get_jet_subcats_dict()
         for sel_name, objects_dict in jet_subcats_dict.items():
-            sel = self.jet_selections[sel_name]
+            sel = self.jet_subcats[sel_name]
             plots.extend([
                 Plot.make1D('_'.join([sel_name, 'MET', 'pt']), met.pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
                 Plot.make1D('_'.join([sel_name, 'HT']), ht_jets, sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
