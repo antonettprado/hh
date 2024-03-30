@@ -1,4 +1,4 @@
-from bamboo.plots import Plot, CutFlowReport
+from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo import treefunctions as op
 
@@ -493,7 +493,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 yields.add(sel, sel_name)
 
         # Adding Skims ----------------------------------------
-        from bamboo.plots import Skim
         skims_args_list = self.get_skims_args_list()
         for skims_args in skims_args_list:
             plots.append(Skim(skims_args[0], skims_args[1], skims_args[2]))

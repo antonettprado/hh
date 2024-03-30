@@ -4,6 +4,30 @@
 
 Install bamboo analysis framework with the instructions here: https://bamboo-hep.readthedocs.io/en/latest/install.html#fresh-install
 
+Make some minor updates to bamboo to be able to save output of jobs to eos area through HT condor - modify the lines in bamboo/bamboo/batch_htcondor.py:
+
+From
+```bash
+result = subprocess.check_output(["condor_submit", cmdFile]).decode()
+```
+
+to
+```bash
+result = subprocess.check_output(["condor_submit", "-spool", cmdFile]).decode()
+```
+
+and from
+```bash
+elapsed, suspended = subprocess.check_output(chCmdArgs).decode().strip().split()
+```
+to
+```bash
+elapsed, suspended = 0, 0
+condor_history_output = subprocess.check_output(chCmdArgs).decode().strip().split()
+if len(condor_history_output) != 0:
+    elapsed, suspended = condor_history_output
+```
+
 Then clone this repository in the parent directory containing the bamboo installation:
 
 ```bash
