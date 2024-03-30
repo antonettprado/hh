@@ -28,6 +28,11 @@ if len(condor_history_output) != 0:
     elapsed, suspended = condor_history_output
 ```
 
+And then resinstall bamboo using:
+```bash
+pip install ./bamboo
+```
+
 Then clone this repository in the parent directory containing the bamboo installation:
 
 ```bash
@@ -47,19 +52,6 @@ cp $(voms-proxy-info -p) ~/private/x509up
 export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
-# ------------------------------ Trigger -------------------------------
-## Process NanoAODs with L1 objects: SL_L1_trigger_efficiency
-```bash
-bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2018_L1.yml -o Z_OUTPUT/L1_sample2018_pt0 --lep_pt 0
-```
-### Postprocessing: Plot trigger efficiency s-curves
-```bash
-python3 src/plotting/trigger/plot_trigger_efficiencies.py
-```
-### To run all HLT efficiency points at once:
-```bash 
-bash run_all_trigger_effi_pts.sh
-```
 # ------------------------------ Analysis -------------------------------
 ## Process NANOAODs: SL_DL_event_selection 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
@@ -108,4 +100,14 @@ python3 src/plotting/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LR -l r
 ### Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection 
 ```bash
 python3 src/utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR --lr
+```
+
+# ------------------------------ Trigger -------------------------------
+## Process NanoAODs with L1 objects: SL_L1_trigger_efficiency
+```bash
+bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2018_L1.yml -o Z_OUTPUT/L1_sample2018_pt0 --lep_pt 0
+```
+### Postprocessing: Plot trigger efficiency s-curves
+```bash
+python3 src/plotting/trigger/plot_trigger_efficiencies.py
 ```
