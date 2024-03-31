@@ -91,7 +91,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met.pt)
 
         self.objects = {
-            "event": tree.event,
+            "event_nr": tree.event,
             "electron_ConePt": electron_ConePt,
             "muon_ConePt": muon_ConePt,
             "loose_electrons": loose_electrons,
@@ -533,7 +533,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         objects = self.objects
         base_tree = {
-            "event": objects["event"],
+            "event_nr": objects["event_nr"],
             "is_sl_e": objects["is_sl_e"],
             "is_sl_mu": objects["is_sl_mu"],
             "is_dl_ee": objects["is_dl_ee"],
