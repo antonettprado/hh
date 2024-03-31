@@ -18,6 +18,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
     def addArgs(self, parser):
         super(SL_DL_event_selection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
+        parser.add_argument("-s", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
 
     def set_objects(self, tree, MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=None):
 
@@ -701,9 +702,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 yields.add(sel, sel_name)
 
         # Adding Skims ----------------------------------------
-        skims_args_list = self.get_skims_args_list()
-        for skims_args in skims_args_list:
-            plots.append(Skim(skims_args[0], skims_args[1], skims_args[2]))
+        if self.args.skim:
+            skims_args_list = self.get_skims_args_list()
+            for skims_args in skims_args_list:
+                plots.append(Skim(skims_args[0], skims_args[1], skims_args[2]))
 
         # Adding plots -----------------------------------------
         met = self.objects["met"]
