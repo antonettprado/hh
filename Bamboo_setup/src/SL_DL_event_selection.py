@@ -178,7 +178,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # Apply Trigger SFs
         trigger_sf = -9999
 
-        self.objects["genWeight"] = tree.genWeight
+        self.objects["gen_Weight"] = tree.genWeight
         self.objects["pileupWeight"] = pileupWeight
         self.objects["top_pt_weight"] = top_pt_weight
         self.objects["btvWeight"] = btvWeight
@@ -553,7 +553,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             "nAK8_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"])),
             "met_pt": objects["met"].pt,
             "met_phi": objects["met"].phi,
-            "genWeight": objects["genWeight"], 
+            "gen_Weight": objects["gen_Weight"], 
             "pileupWeight": objects["pileupWeight"], 
             "top_pt_weight": objects["top_pt_weight"],
             "btvWeight": objects["btvWeight"],
