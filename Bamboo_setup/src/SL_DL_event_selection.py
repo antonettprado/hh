@@ -628,7 +628,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             sel_skim["ak8jet0_btag"] = -9999
             sel_skim["ak8jet0_msoftdrop"] = -9999
 
-        skims_args_list.append(["Total", sel_skim, self.all_selections["Total"]])
+        skims_args_list.append(["Total", sel_skim, self.all_selections["Total"]["Total"]])
 
         '''
         lepton_subcats_dict = self.get_lep_subcats_dict()
