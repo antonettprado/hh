@@ -91,6 +91,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         ht_jets, mht, met_ld = object_defs.calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met.pt)
 
         self.objects = {
+            "event": tree.event,
             "electron_ConePt": electron_ConePt,
             "muon_ConePt": muon_ConePt,
             "loose_electrons": loose_electrons,
@@ -155,23 +156,48 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # mll Selection
         mllSel = sel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
 
-        '''
         # Apply Common Weights
-        mllSel, pileupWeight, top_pt_weight = sf_weights.apply_common_SF(tree, mllSel, self.is_MC, self.era, self.sample)
+        pileupWeight, top_pt_weight = -9999, -9999
+        #mllSel, pileupWeight, top_pt_weight = sf_weights.apply_common_SF(tree, mllSel, self.is_MC, self.era, self.sample)
 
         # Apply B-tag Weights
-        if event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
-            mllSel, btvWeight = sf_weights.apply_ak4btag_SF(mllSel, cleaned_ak4_jets, self.is_MC, self.era, self.sample)
-        elif event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
-            mllSel, btvWeight = mllSel, op.c_float(1.) # TO DO: B-tagging SFs for AK8 Jets
+        btvWeight = -9999
+        #if event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
+        #    mllSel, btvWeight = sf_weights.apply_ak4btag_SF(mllSel, cleaned_ak4_jets, self.is_MC, self.era, self.sample)
+        #elif event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
+        #    mllSel, btvWeight = mllSel, op.c_float(1.) # TO DO: B-tagging SFs for AK8 Jets
 
         # Apply Muon SFs
-        mllSel, muon_sf = sf_weights.apply_mu_SF(sel, tight_muons, self.is_MC, self.era, self.sample)
+        muon_sf = -9999
+        #mllSel, muon_sf = sf_weights.apply_mu_SF(sel, tight_muons, self.is_MC, self.era, self.sample)
 
         # Apply Electron SFs
-        mllSel, electron_sf = sf_weights.apply_ele_SF(sel, tight_electrons, self.is_MC, self.era, self.sample)
-        '''
+        electron_sf = -9999
+        #mllSel, electron_sf = sf_weights.apply_ele_SF(sel, tight_electrons, self.is_MC, self.era, self.sample)
         
+        # Apply Trigger SFs
+        trigger_sf = -9999
+
+        self.objects["genWeight"] = tree.genWeight
+        self.objects["pileupWeight"] = pileupWeight
+        self.objects["top_pt_weight"] = top_pt_weight
+        self.objects["btvWeight"] = btvWeight
+        self.objects["muon_sf"] = muon_sf
+        self.objects["electron_sf"] = electron_sf
+        self.objects["trigger_sf"] = trigger_sf
+
+        # Event Selection Flags
+        is_sl_e = 0
+        is_sl_mu = 0
+        is_dl_ee = 0
+        is_dl_emu = 0
+        is_dl_mumu = 0
+        is_res_1b = 0
+        is_res_2b = 0
+        is_boosted = 0
+        is_sl = 0
+        is_dl = 0
+
         # Single Electron
         SL_e_only = mllSel.refine("SL_electron_only_selection", cut=[
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)])
@@ -186,6 +212,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         SL_e = SL_e_only.refine("SL_electron_selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        is_sl_e = op.switch(op.AND(
+            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ), 
+            1, 
+            0
+        )
 
         # Single Muon
         SL_mu_only = mllSel.refine("SL_muon_only_selection", cut=[
@@ -201,6 +234,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         SL_mu = SL_mu_only.refine("SL_muon_selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        is_sl_mu = op.switch(op.AND(
+            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ), 
+            1, 
+            0
+        )
 
         # Single Lepton
         SL_only = mllSel.refine("SL_lepton_only_selection", cut=[op.OR(
@@ -212,11 +252,15 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_resolved = SL_only.refine("SL_resolved_jets_selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_boost = SL_only.refine("SL_boosted_jets_selection", cut=[
+        SL_boosted = SL_only.refine("SL_boosted_jets_selection", cut=[
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL = SL_only.refine("SL_selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        is_sl = op.switch(op.OR(op.c_bool(is_sl_e == 1), op.c_bool(is_sl_mu == 1)),
+            1, 
+            0                    
+        )
 
         # Double Electron
         DL_ee_only = mllSel.refine("DL_ee_only_selection", cut=[
@@ -232,6 +276,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         DL_ee = DL_ee_only.refine("DL_ee_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        is_dl_ee = op.switch(op.AND(
+            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            op.OR(event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ), 
+            1, 
+            0
+        )
 
         # Electron Muon
         DL_emu_only = mllSel.refine("DL_emu_only_selection", cut=[
@@ -247,6 +298,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         DL_emu = DL_emu_only.refine("DL_emu_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        is_dl_emu = op.switch(op.AND(
+            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            op.OR(event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ), 
+            1, 
+            0
+        )
 
         # Double Muon
         DL_mumu_only = mllSel.refine("DL_mumu_only_selection", cut=[
@@ -262,6 +320,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         DL_mumu = DL_mumu_only.refine("DL_mumu_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        is_dl_mumu = op.switch(op.AND(
+            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
+            op.OR(event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ), 
+            1, 
+            0
+        )
 
         # Dilepton 
         DL_only = mllSel.refine("DL_only_selection", cut=[op.OR(
@@ -274,12 +339,49 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL_resolved = DL_only.refine("DL_resolved_jets_selection", cut=[
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        DL_boost = DL_only.refine("DL_boosted_jets_selection", cut=[
+        DL_boosted = DL_only.refine("DL_boosted_jets_selection", cut=[
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         DL = DL_only.refine("DL_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        is_dl = op.switch(op.OR(op.c_bool(is_dl_ee == 1), op.c_bool(is_dl_emu == 1), op.c_bool(is_dl_mumu == 1)),
+            1, 
+            0                    
+        )
 
+        # Overall Selection
+        Total_Sel = mllSel.refine("Total_selection", cut=[op.OR(op.c_bool(is_sl == 1), op.c_bool(is_dl == 1))])
+        is_res_1b = op.switch(op.OR(
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_dl == 1)), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
+            ),
+            1,
+            0
+        )
+        is_res_2b = op.switch(op.OR(
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_dl == 1)), event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
+            ),
+            1,
+            0
+        )
+        is_boosted = op.switch(op.OR(
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_dl == 1)), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
+            ),
+            1,
+            0
+        )
+
+        self.objects["is_sl_e"] = is_sl_e
+        self.objects["is_sl_mu"] = is_sl_mu
+        self.objects["is_dl_ee"] = is_dl_ee 
+        self.objects["is_dl_emu"] = is_dl_emu
+        self.objects["is_dl_mumu"] = is_dl_mumu
+        self.objects["is_res_1b"] = is_res_1b
+        self.objects["is_res_2b"] = is_res_2b
+        self.objects["is_boosted"] = is_boosted
+    
         self.all_selections = {
             "SL_e": {
                 "SL_e_resolved_1b": SL_e_resolved_1b,
@@ -297,7 +399,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 "SL_res_1b": SL_res_1b,
                 "SL_res_2b": SL_res_2b,
                 "SL_resolved": SL_resolved,
-                "SL_boost": SL_boost,
+                "SL_boosted": SL_boosted,
                 "SL": SL},
             "DL_ee": {
                 "DL_ee_resolved_1b": DL_ee_resolved_1b,
@@ -321,8 +423,11 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 "DL_res_1b": DL_res_1b,
                 "DL_res_2b": DL_res_2b,
                 "DL_resolved": DL_resolved,
-                "DL_boost": DL_boost,
-                "DL": DL}}
+                "DL_boosted": DL_boosted,
+                "DL": DL},
+            "Total": {
+                "Total": Total_Sel}
+        }
 
     def set_category_groups(self):
 
@@ -336,7 +441,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         for name in lep_subcat_names:
             self.lep_subcats.update({name: self.all_selections[name][name]})
         
-        jet_subcat_names = ["SL_res_1b", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
+        jet_subcat_names = ["SL_res_1b", "SL_res_2b", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         self.jet_subcats = {}
         for name in jet_subcat_names:
             SL_or_DL = "SL" if "SL" in name else "DL"
@@ -397,7 +502,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 "AK4_2": objects["cleaned_ak4_jets"][2],
                 "AK4_btag0": objects["cleaned_ak4_btags"][0],
                 "AK4_btag1": objects["cleaned_ak4_btags"][1]},
-            "SL_boost": {
+            "SL_boosted": {
                 "AK8_btag0": objects["cleaned_ak8_btags"][0],
                 "AK4_0": objects["cleaned_ak4_jets"][0]},
             "DL_res_1b": {
@@ -408,7 +513,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 "AK4_1": objects["cleaned_ak4_jets"][1],
                 "AK4_btag0": objects["cleaned_ak4_btags"][0],
                 "AK4_btag1": objects["cleaned_ak4_btags"][1]},
-            "DL_boost": {
+            "DL_boosted": {
                 "AK8_btag0": objects["cleaned_ak8_btags"][0]}
         }
 
@@ -417,36 +522,115 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
     # Returns list[list[sel_name, sel_skim[], selection]]
     def get_skims_args_list(self) -> 'list[list[str, dict[], object]':
 
-        def get_jet_btag(jet):
-            return jet.btagDeepFlavB if self.era in ["2016","2017", "2018"] else jet.btagPNetB
+        def get_jet_btag(jet, type):
+            if type == "ak4":
+                return jet.btagDeepFlavB if self.era in ["2016","2017", "2018"] else jet.btagPNetB
+            elif type == "ak8":
+                if self.era in ["2016","2017", "2018"]:
+                    return -9999
+                else:
+                    return jet.particleNetWithMass_HbbvsQCD
 
         objects = self.objects
         base_tree = {
-            "event": None,
+            "event": objects["event"],
+            "is_sl_e": objects["is_sl_e"],
+            "is_sl_mu": objects["is_sl_mu"],
+            "is_dl_ee": objects["is_dl_ee"],
+            "is_dl_emu": objects["is_dl_emu"],
+            "is_dl_mumu": objects["is_dl_mumu"],
             "nLooseElectron": op.static_cast("UInt_t", op.rng_len(objects["loose_electrons"])),
             "nFakeElectron": op.static_cast("UInt_t", op.rng_len(objects["fakeable_electrons"])),
             "nTightElectron": op.static_cast("UInt_t", op.rng_len(objects["tight_electrons"])), 
             "nLooseMuon": op.static_cast("UInt_t", op.rng_len(objects["loose_muons"])),
             "nFakeMuon": op.static_cast("UInt_t", op.rng_len(objects["fakeable_muons"])), 
             "nTightMuon": op.static_cast("UInt_t", op.rng_len(objects["tight_muons"])),
+            "is_res_1b": objects["is_res_1b"],
+            "is_res_2b": objects["is_res_2b"],
+            "is_boosted": objects["is_boosted"],
             "nAK4": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"])),
             "nAK4_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_btags"])),
             "nAK8_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"])),
             "met_pt": objects["met"].pt,
-            "met_phi": objects["met"].phi
-            # "mll": -9999,
-            # "pileupWeight": -9999, 
-            # "top_pt_weight": -9999,
-            # "btvWeight": -9999,
-            # "muonID_sf": -9999,
-            # "muonIso_sf": -9999,
-            # "electronID_sf": -9999,
-            # "electronIso_sf": -9999,
-            # "Trigger_sf": -9999,
+            "met_phi": objects["met"].phi,
+            "genWeight": objects["genWeight"], 
+            "pileupWeight": objects["pileupWeight"], 
+            "top_pt_weight": objects["top_pt_weight"],
+            "btvWeight": objects["btvWeight"],
+            "muon_sf": objects["muon_sf"],
+            "electron_sf": objects["electron_sf"],
+            "trigger_sf": objects["trigger_sf"]
         }
 
         skims_args_list = []
+        sel_skim = base_tree
+        lepton0 = None
+        lepton1 = None
+        if objects["is_sl_e"] == 1:
+            lepton0 = objects["tight_electrons"][0]
+        elif objects["is_sl_mu"] == 1:
+            lepton0 = objects["tight_muons"][0]
+        elif objects["is_dl_ee"] == 1:
+            lepton0 = objects["tight_electrons"][0]
+            lepton1 = objects["tight_electrons"][0]
+        elif objects["is_dl_emu"] == 1:
+            lepton0 = objects["tight_electrons"][0] if objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt else objects["tight_muons"][0]
+            lepton1 = objects["tight_muons"][0] if objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt else objects["tight_electrons"][0]
+        elif objects["is_dl_mumu"] == 1:
+            lepton0 = objects["tight_muons"][0]
+            lepton1 = objects["tight_muons"][1]
+        sel_skim["lepton0_pt"] = lepton0.pt
+        sel_skim["lepton0_eta"] = lepton0.eta
+        sel_skim["lepton0_phi"] = lepton0.phi
+        sel_skim["lepton0_relIso"] = lepton0.pfRelIso03_all
+        sel_skim["lepton0_pdgId"] = lepton0.pdgId
+        if lepton1 is not None:
+            sel_skim["lepton1_pt"] = lepton1.pt
+            sel_skim["lepton1_eta"] = lepton1.eta
+            sel_skim["lepton1_phi"] = lepton1.phi
+            sel_skim["lepton1_relIso"] = lepton1.pfRelIso03_all
+            sel_skim["lepton1_pdgId"] = lepton1.pdgId
+        else:
+            sel_skim["lepton1_pt"] = -9999
+            sel_skim["lepton1_eta"] = -9999
+            sel_skim["lepton1_phi"] = -9999
+            sel_skim["lepton1_relIso"] = -9999
+            sel_skim["lepton1_pdgId"] = -9999
+        sel_skim["ak4jet0_pt"] = -9999
+        sel_skim["ak4jet0_eta"] = -9999
+        sel_skim["ak4jet0_btag"] = -9999
+        sel_skim["ak4jet1_pt"] = -9999
+        sel_skim["ak4jet1_eta"] = -9999
+        sel_skim["ak4jet1_btag"] = -9999
+        sel_skim["ak4jet2_pt"] = -9999
+        sel_skim["ak4jet2_eta"] = -9999
+        sel_skim["ak4jet2_btag"] = -9999
+        if op.rng_len(objects["cleaned_ak4_jets"]) >= 1:
+            sel_skim["ak4jet0_pt"] = objects["cleaned_ak4_jets"][0].pt
+            sel_skim["ak4jet0_eta"] = objects["cleaned_ak4_jets"][0].eta
+            sel_skim["ak4jet0_btag"] = get_jet_btag(objects["cleaned_ak4_jets"][0], "ak4")
+        if op.rng_len(objects["cleaned_ak4_jets"]) >= 2:
+            sel_skim["ak4jet1_pt"] = objects["cleaned_ak4_jets"][1].pt
+            sel_skim["ak4jet1_eta"] = objects["cleaned_ak4_jets"][1].eta
+            sel_skim["ak4jet1_btag"] = get_jet_btag(objects["cleaned_ak4_jets"][1], "ak4")
+        if op.rng_len(objects["cleaned_ak4_jets"]) >= 3:
+            sel_skim["ak4jet2_pt"] = objects["cleaned_ak4_jets"][2].pt
+            sel_skim["ak4jet2_eta"] = objects["cleaned_ak4_jets"][2].eta
+            sel_skim["ak4jet2_btag"] = get_jet_btag(objects["cleaned_ak4_jets"][2], "ak4")
+        if op.rng_len(objects["cleaned_ak8_btags"]) != 0:
+            sel_skim["ak8jet0_pt"] = objects["cleaned_ak8_btags"][0].pt
+            sel_skim["ak8jet0_eta"] = objects["cleaned_ak8_btags"][0].eta
+            sel_skim["ak8jet0_btag"] = get_jet_btag(objects["cleaned_ak8_btags"][0], "ak8")
+            sel_skim["ak8jet0_msoftdrop"] = objects["cleaned_ak8_btags"][0].msoftdrop
+        else:
+            sel_skim["ak8jet0_pt"] = -9999
+            sel_skim["ak8jet0_eta"] = -9999
+            sel_skim["ak8jet0_btag"] = -9999
+            sel_skim["ak8jet0_msoftdrop"] = -9999
 
+        skims_args_list.append(["Total", sel_skim, self.all_selections["Total"]])
+
+        '''
         lepton_subcats_dict = self.get_lep_subcats_dict()
         for sel_name, subcats_dict in lepton_subcats_dict.items():
             sel_skim, custom_tree = {}, {}
@@ -467,10 +651,11 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                     '_'.join([jet_name,'pt']): jet.pt,
                     '_'.join([jet_name,'eta']): jet.eta})
                 if "AK4" in jet_name:
-                    sel_skim.update({'_'.join([jet_name,'btag']): get_jet_btag(jet)})
+                    sel_skim.update({'_'.join([jet_name,'btag']): get_jet_btag(jet, "ak4")})
             sel_skim.update(**base_tree, **custom_tree)
             skims_args_list.append([sel_name, sel_skim, self.jet_subcats[sel_name]])
-
+        '''
+            
         return skims_args_list
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
@@ -512,12 +697,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 plots.extend([
                     Plot.make1D('_'.join([sel_name, obj_name, 'pt']), obj.pt, sel, EqBin(250, 0, 250), xTitle=obj_name+" pT (GeV)"),
                     Plot.make1D('_'.join([sel_name, obj_name, 'eta']), obj.eta, sel, EqBin(100, -3, 3), xTitle=obj_name+" eta"),
-                    Plot.make1D('_'.join([sel_name, obj_name, 'dxy']), obj.dxy, sel, EqBin(100, -0.05, 0.05), xTitle=obj_name+" dxy (cm)"),
-                    Plot.make1D('_'.join([sel_name, obj_name, 'dz']), obj.dz, sel, EqBin(1000, -0.1, 0.1), xTitle=obj_name+" dz (cm)"),
                     Plot.make1D('_'.join([sel_name, obj_name, 'sip3d']), obj.sip3d, sel, EqBin(100, 0, 8), xTitle=obj_name+" sip3d"),
                     Plot.make2D('_'.join([sel_name, obj_name, 'pT', 'vs', 'eta']), (obj.eta, obj.pt), sel, (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle=obj_name+" #eta", yTitle=obj_name+" pT (GeV)")])
 
-        # Plots for ["SL_res_1b", "SL_res_2b", "SL_boost", "DL_res_1b", "DL_res_2b", "DL_boost"]
+        # Plots for ["SL_res_1b", "SL_res_2b", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         jet_subcats_dict = self.get_jet_subcats_dict()
         for sel_name, objects_dict in jet_subcats_dict.items():
             sel = self.jet_subcats[sel_name]

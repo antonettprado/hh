@@ -240,12 +240,12 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
         SL_res_1b = self.selections["SL_res_1b"]
         SL_res_2b = self.selections["SL_res_2b"]
-        SL_boost = self.selections["SL_boost"]
+        SL_boosted = self.selections["SL_boosted"]
         SL_res_1b_x = self.selections["SL_res_1b_x"]
         SL_res_2b_x = self.selections["SL_res_2b_x"]
         DL_res_1b = self.selections["DL_res_1b"] 
         DL_res_2b = self.selections["DL_res_2b"]
-        DL_boost = self.selections["DL_boost"]
+        DL_boosted = self.selections["DL_boosted"]
 
         # ===============================================================================
         # ================================== Plots ======================================
