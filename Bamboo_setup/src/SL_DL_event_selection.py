@@ -351,7 +351,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         )
 
         # Overall Selection
-        #Total_Sel = mllSel.refine("Total_selection", cut=[op.OR(op.c_bool(is_sl == 1), op.c_bool(is_dl == 1))])
+        Total_Sel = mllSel.refine("Total_selection", cut=[op.OR(op.c_bool(is_sl == 1), op.c_bool(is_dl == 1))])
+        '''
         Total_Sel = mllSel.refine("Total_selection", cut=[op.OR(
             op.AND(
                 op.OR(
@@ -375,23 +376,24 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 )
             )
         )])
+        '''
         is_res_1b = op.switch(op.OR(
             op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
-            op.AND(op.c_bool(is_dl == 1)), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
+            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
             ),
             1,
             0
         )
         is_res_2b = op.switch(op.OR(
             op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
-            op.AND(op.c_bool(is_dl == 1)), event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
+            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
             ),
             1,
             0
         )
         is_boosted = op.switch(op.OR(
             op.AND(op.c_bool(is_sl == 1), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
-            op.AND(op.c_bool(is_dl == 1)), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
+            op.AND(op.c_bool(is_dl == 1), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
             ),
             1,
             0
@@ -475,7 +477,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         lepton_list = []
         electrons = self.objects["tight_electrons"]
-        muons = self.objects["tight_electrons"]
+        muons = self.objects["tight_muons"]
         if supercat == "SL":
             if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
                 lepton0 = electrons[0]  
