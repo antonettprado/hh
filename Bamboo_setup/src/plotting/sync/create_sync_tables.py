@@ -7,8 +7,8 @@ def read_ntuple(filename):
         key_names_i = []
         key_names_alias = {}
         for key in skim.keys():
-            key_names_i.append(key+"_i")
-            key_names_alias[key+"_i"] = key
+            key_names_i.append(key)
+            key_names_alias[key] = key
         events = skim.arrays(
             key_names_i,
             aliases = key_names_alias
