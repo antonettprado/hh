@@ -31,6 +31,7 @@ if __name__ == "__main__":
     outfile = open(sample+"_sync_table.root", "w")
     outfile.write("event_nr,is_sl_e,is_sl_mu,is_dl_ee,is_dl_emu,is_dl_mumu,nLooseElectron,nFakeElectron,nTightElectron,nLooseMuon,nFakeMuon,nTightMuon,is_res_1b,is_res_2b,is_boosted,nAK4,nAK4_btag,nAK8_btag,lepton0_pt,lepton0_eta,lepton0_phi,lepton0_relIso,lepton0_pdgId,lepton1_pt,lepton1_eta,lepton1_phi,lepton1_relIso,lepton1_pdgId,ak4jet0_pt,ak4jet0_eta,ak4jet0_btag,ak4jet1_pt,ak4jet1_eta,ak4jet1_btag,ak4jet2_pt,ak4jet2_eta,ak4jet2_btag,ak8jet0_pt,ak8jet0_eta,ak8jet0_btag,ak8jet0_msoftdrop,met_pt,met_phi,gen_Weight,pileupWeight,top_pt_weight,btvWeight,muon_sf,electron_sf,trigger_sf\n")
 
+    prev_frac_done = 0
     for (ievent, event) in enumerate(events):
         frac_done = (ievent+1)/n_events
         if (frac_done - prev_frac_done) >= 0.05:
