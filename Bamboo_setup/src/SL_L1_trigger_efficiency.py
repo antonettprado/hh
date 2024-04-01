@@ -41,7 +41,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
 
         def getNanoAODDescription():
             # groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
-            groups = ["PV_", "Flag_", "HLT_", "MET_", "L1_"]
+            groups = ["PV_", "Flag_", "HLT_", "PuppiMET_", "MET_", "L1_"]
             collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet",
                 "nL1Mu", "nL1EG", "nL1Tau", "nL1Jet", "nL1EtSum",
                 "nGenPart", "nGenJet", "nGenJetAK8"]
@@ -85,16 +85,16 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
 
         return tree, baseSel, backend, lumiArgs
 
-    def set_objects(self, tree):
+    def set_objects_for_L1(self, tree):
 
-        if self.args.emul_L1:
-            self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
-            self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
-            self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
-            self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
+        self.l1electrons = op.sort(tree.L1EG, lambda lep: -lep.pt)
+        self.l1muons = op.sort(tree.L1Mu, lambda lep: -lep.pt)
+        self.l1jets = op.sort(tree.L1Jet, lambda jet: -jet.pt)
+        self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
         self.l1triggers = tree.L1
 
-        objects = self.object_selection(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
+        self.set_objects(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
+        objects = self.objects
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]
@@ -228,7 +228,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         plots.append(yields)
         plots.extend(self.base_plots)
 
-        self.set_objects(tree)
+        self.set_objects_for_L1(tree)
         self.set_L1_seeds()
         selections_to_plot = {}
 

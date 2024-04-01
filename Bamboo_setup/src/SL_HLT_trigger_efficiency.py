@@ -42,7 +42,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
         def getNanoAODDescription():
             # groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
-            groups = ["PV_", "Flag_", "HLT_", "MET_", "L1_"]
+            groups = ["PV_", "Flag_", "HLT_", "PuppiMET_", "MET_", "L1_"]
             collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet",
                 "nL1Mu", "nL1EG", "nL1Tau", "nL1Jet", "nL1EtSum",
                 "nGenPart", "nGenJet", "nGenJetAK8"]
@@ -86,7 +86,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
         return tree, baseSel, backend, lumiArgs
 
-    def set_objects(self, tree):
+    def set_objects_for_HLT(self, tree):
 
         # L1 Objects
         # if self.args.emulation:     # For now; until L1 info included in rerun MC
@@ -106,7 +106,8 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         self.HLTtriggers = tree.HLT
 
         # Objects for event selection
-        objects = self.object_selection(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
+        self.set_objects(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
+        objects = self.objects
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]
@@ -231,7 +232,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         plots.append(yields)
         plots.extend(self.base_plots)
 
-        self.set_objects(tree)
+        self.set_objects_for_HLT(tree)
         self.set_HLT_paths()
         selections_to_plot = {}
 
@@ -395,7 +396,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
         plots.append(yields)
         plots.extend(self.base_plots)
 
-        self.set_objects(tree)
+        self.set_objects_for_HLT(tree)
         self.set_HLT_paths()
 
         mllSel = baseSel.refine("mllSel", cut=[event_defs.mll_selection(self.loose_electrons, self.loose_muons)])

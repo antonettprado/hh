@@ -471,18 +471,18 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             SL_or_DL = "SL" if "SL" in name else "DL"
             self.jet_subcats.update({name: self.all_selections[SL_or_DL][name]})
     
-    def get_supercat_leptons(self, supercat) -> 'list[object]':
+    def get_cat_leptons(self, cat) -> 'dict[str, object]':
 
-        lepton_list = []
+        leptons = {}
         electrons = self.objects["tight_electrons"]
         muons = self.objects["tight_muons"]
-        if supercat == "SL":
+        if "SL" in cat:
             if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
                 lepton0 = electrons[0]  
             elif op.rng_len(electrons)==0 and op.rng_len(muons)==1:
                 lepton0 = muons[0]
-            lepton_list = [lepton0]
-        elif supercat == "DL":
+            leptons["lepton0"] = lepton0
+        elif "DL" in cat:
             if op.rng_len(electrons)==2 and op.rng_len(muons)==0:
                 lepton0 = electrons[0]
                 lepton1 = electrons[0]
@@ -492,57 +492,11 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             elif op.rng_len(electrons)==1 and op.rng_len(muons)==1:
                 lepton0 = electrons[0] if electrons[0].pt >= muons[0].pt else muons[0]
                 lepton1 = muons[0] if electrons[0].pt >= muons[0].pt else electrons[0]
-            lepton_list = [lepton0, lepton1]
+            leptons["lepton0"] = lepton0
+            leptons["lepton1"] = lepton1
     
-        return lepton_list
+        return leptons
         
-    # Returns dictionary[selection_name, dict['object_name',object]]]
-    def get_lep_subcats_dict(self) -> 'dict[str, dict[]]': 
-
-        lep_list = self.get_supercat_leptons
-        lep_subcats_dict = {
-            "SL_e": {"lepton0": lep_list("SL")[0]},
-            "SL_mu": {"lepton0": lep_list("SL")[0]},
-            "DL_ee": {"lepton0": lep_list("DL")[0], "lepton1": lep_list("DL")[1]},
-            "DL_mumu": {"lepton0": lep_list("DL")[0], "lepton1": lep_list("DL")[1]},
-            "DL_emu": {"lepton0": lep_list("DL")[0], "lepton1": lep_list("DL")[1]}
-        }
-
-        return lep_subcats_dict
-
-    # Returns dictionary[selection_name, dict['object_name',object]]]
-    def get_jet_subcats_dict(self) -> 'dict[str, dict[]]':
-        
-        objects = self.objects
-        jet_subcats_dict = {
-            "SL_res_1b": {
-                "AK4_0": objects["cleaned_ak4_jets"][0],
-                "AK4_1": objects["cleaned_ak4_jets"][1],
-                "AK4_2": objects["cleaned_ak4_jets"][2],
-                "AK4_btag0": objects["cleaned_ak4_btags"][0]},
-            "SL_res_2b": {
-                "AK4_0": objects["cleaned_ak4_jets"][0],
-                "AK4_1": objects["cleaned_ak4_jets"][1],
-                "AK4_2": objects["cleaned_ak4_jets"][2],
-                "AK4_btag0": objects["cleaned_ak4_btags"][0],
-                "AK4_btag1": objects["cleaned_ak4_btags"][1]},
-            "SL_boosted": {
-                "AK8_btag0": objects["cleaned_ak8_btags"][0],
-                "AK4_0": objects["cleaned_ak4_jets"][0]},
-            "DL_res_1b": {
-                "AK4_0": objects["cleaned_ak4_jets"][0],
-                "AK4_btag0": objects["cleaned_ak4_btags"][0]},
-            "DL_res_2b": {
-                "AK4_0": objects["cleaned_ak4_jets"][0],
-                "AK4_1": objects["cleaned_ak4_jets"][1],
-                "AK4_btag0": objects["cleaned_ak4_btags"][0],
-                "AK4_btag1": objects["cleaned_ak4_btags"][1]},
-            "DL_boosted": {
-                "AK8_btag0": objects["cleaned_ak8_btags"][0]}
-        }
-
-        return jet_subcats_dict
-
     # Returns list[list[sel_name, sel_skim[], selection]]
     def get_skims_args_list(self) -> 'list[list[str, dict[], object]':
 
@@ -708,31 +662,28 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 plots.append(Skim(skims_args[0], skims_args[1], skims_args[2]))
 
         # Adding plots -----------------------------------------
-        met = self.objects["met"]
-        ht_jets = self.objects["ht_jets"]
-
-        # Plots for ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu"]
-        lepton_subcats_dict = self.get_lep_subcats_dict()
-        for sel_name, objects_dict in lepton_subcats_dict.items():
-            sel = self.lep_subcats[sel_name]
-            plots.extend([
-                Plot.make1D('_'.join([sel_name, 'MET', 'pt']), met.pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
-                Plot.make1D('_'.join([sel_name, 'HT']), ht_jets, sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
-            for obj_name, obj in objects_dict.items():
+        jets = {
+                "AK4_0": self.objects["cleaned_ak4_jets"][0], 
+                "AK4_1": self.objects["cleaned_ak4_jets"][1],
+                "AK4_btag_0": self.objects["cleaned_ak4_btags"][0], 
+                "AK4_btag_1": self.objects["cleaned_ak4_btags"][1], 
+                "AK8_btag_0": self.objects["cleaned_ak8_btags"][0]}
+        selections_dict = {**self.lep_subcats, **self.supercat_selections}
+        for sel_name, sel in selections_dict.items():
+            # Plots for leptons in the selection
+            leptons = self.get_cat_leptons(sel_name)
+            for lep_name, lep in leptons.items():
                 plots.extend([
-                    Plot.make1D('_'.join([sel_name, obj_name, 'pt']), obj.pt, sel, EqBin(250, 0, 250), xTitle=obj_name+" pT (GeV)"),
-                    Plot.make1D('_'.join([sel_name, obj_name, 'eta']), obj.eta, sel, EqBin(100, -3, 3), xTitle=obj_name+" eta"),
-                    Plot.make1D('_'.join([sel_name, obj_name, 'sip3d']), obj.sip3d, sel, EqBin(100, 0, 8), xTitle=obj_name+" sip3d"),
-                    Plot.make2D('_'.join([sel_name, obj_name, 'pT', 'vs', 'eta']), (obj.eta, obj.pt), sel, (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle=obj_name+" #eta", yTitle=obj_name+" pT (GeV)")])
-
-        # Plots for ["SL_res_1b", "SL_res_2b", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
-        jet_subcats_dict = self.get_jet_subcats_dict()
-        for sel_name, objects_dict in jet_subcats_dict.items():
-            sel = self.jet_subcats[sel_name]
+                    Plot.make1D('_'.join([sel_name, lep_name, 'pt']), lep.pt, sel, EqBin(250, 0, 250), xTitle="pT (GeV)"),
+                    Plot.make1D('_'.join([sel_name, lep_name, 'eta']), lep.eta, sel, EqBin(100, -3, 3), xTitle="eta"),
+                    Plot.make1D('_'.join([sel_name, lep_name, 'sip3d']), lep.sip3d, sel, EqBin(100, 0, 8), xTitle="sip3d"),
+                    Plot.make2D('_'.join([sel_name, lep_name, 'pT', 'vs', 'eta']), (lep.eta, lep.pt), sel, (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle="#eta", yTitle="pT (GeV)")])
+            # Plots for jets
+            for jet_name, jet in jets.items():
+                plots.extend([Plot.make1D('_'.join([sel_name, jet_name, 'pt']), jet.pt, sel, EqBin(250, 0, 250), xTitle="pT (GeV)")])
+            # Plot for MET and HT
             plots.extend([
-                Plot.make1D('_'.join([sel_name, 'MET', 'pt']), met.pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
-                Plot.make1D('_'.join([sel_name, 'HT']), ht_jets, sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
-            for obj_name, obj in objects_dict.items():
-                plots.append(Plot.make1D('_'.join([sel_name, obj_name, 'pt']), obj.pt, sel, EqBin(300, 0, 600), xTitle=obj_name+" pT (GeV)"))
+                Plot.make1D('_'.join([sel_name, 'MET', 'pt']), self.objects["met"].pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
+                Plot.make1D('_'.join([sel_name, 'HT']), self.objects["ht_jets"], sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
 
         return plots
