@@ -546,15 +546,19 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         lepton1 = None
         if objects["is_sl_e"] == 1:
             lepton0 = objects["tight_electrons"][0]
-        elif objects["is_sl_mu"] == 1:
+        if objects["is_sl_mu"] == 1:
             lepton0 = objects["tight_muons"][0]
-        elif objects["is_dl_ee"] == 1:
+        if objects["is_dl_ee"] == 1:
             lepton0 = objects["tight_electrons"][0]
             lepton1 = objects["tight_electrons"][0]
-        elif objects["is_dl_emu"] == 1:
-            lepton0 = objects["tight_electrons"][0] if objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt else objects["tight_muons"][0]
-            lepton1 = objects["tight_muons"][0] if objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt else objects["tight_electrons"][0]
-        elif objects["is_dl_mumu"] == 1:
+        if objects["is_dl_emu"] == 1:
+            if objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt:
+                lepton0 = objects["tight_electrons"][0]
+                lepton1 = objects["tight_muons"][0]
+            if objects["tight_muons"][0].pt > objects["tight_electrons"][0].pt:
+                lepton0 = objects["tight_muons"][0]
+                lepton1 = objects["tight_electrons"][0]
+        if objects["is_dl_mumu"] == 1:
             lepton0 = objects["tight_muons"][0]
             lepton1 = objects["tight_muons"][1]
         sel_skim["lepton0_pt"] = lepton0.pt
@@ -562,18 +566,17 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         sel_skim["lepton0_phi"] = lepton0.phi
         sel_skim["lepton0_relIso"] = lepton0.pfRelIso03_all
         sel_skim["lepton0_pdgId"] = lepton0.pdgId
+        sel_skim["lepton1_pt"] = op.c_int(-9999)
+        sel_skim["lepton1_eta"] = op.c_int(-9999)
+        sel_skim["lepton1_phi"] = op.c_int(-9999)
+        sel_skim["lepton1_relIso"] = op.c_int(-9999)
+        sel_skim["lepton1_pdgId"] = op.c_int(-9999)
         if lepton1 is not None:
             sel_skim["lepton1_pt"] = lepton1.pt
             sel_skim["lepton1_eta"] = lepton1.eta
             sel_skim["lepton1_phi"] = lepton1.phi
             sel_skim["lepton1_relIso"] = lepton1.pfRelIso03_all
             sel_skim["lepton1_pdgId"] = lepton1.pdgId
-        else:
-            sel_skim["lepton1_pt"] = op.c_int(-9999)
-            sel_skim["lepton1_eta"] = op.c_int(-9999)
-            sel_skim["lepton1_phi"] = op.c_int(-9999)
-            sel_skim["lepton1_relIso"] = op.c_int(-9999)
-            sel_skim["lepton1_pdgId"] = op.c_int(-9999)
         sel_skim["ak4jet0_pt"] = op.c_int(-9999)
         sel_skim["ak4jet0_eta"] = op.c_int(-9999)
         sel_skim["ak4jet0_btag"] = op.c_int(-9999)
@@ -583,6 +586,10 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         sel_skim["ak4jet2_pt"] = op.c_int(-9999)
         sel_skim["ak4jet2_eta"] = op.c_int(-9999)
         sel_skim["ak4jet2_btag"] = op.c_int(-9999)
+        sel_skim["ak8jet0_pt"] = op.c_int(-9999)
+        sel_skim["ak8jet0_eta"] = op.c_int(-9999)
+        sel_skim["ak8jet0_btag"] = op.c_int(-9999)
+        sel_skim["ak8jet0_msoftdrop"] = op.c_int(-9999)
         if op.rng_len(objects["cleaned_ak4_jets"]) >= 1:
             sel_skim["ak4jet0_pt"] = objects["cleaned_ak4_jets"][0].pt
             sel_skim["ak4jet0_eta"] = objects["cleaned_ak4_jets"][0].eta
@@ -600,11 +607,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             sel_skim["ak8jet0_eta"] = objects["cleaned_ak8_btags"][0].eta
             sel_skim["ak8jet0_btag"] = get_jet_btag(objects["cleaned_ak8_btags"][0], "ak8")
             sel_skim["ak8jet0_msoftdrop"] = objects["cleaned_ak8_btags"][0].msoftdrop
-        else:
-            sel_skim["ak8jet0_pt"] = op.c_int(-9999)
-            sel_skim["ak8jet0_eta"] = op.c_int(-9999)
-            sel_skim["ak8jet0_btag"] = op.c_int(-9999)
-            sel_skim["ak8jet0_msoftdrop"] = op.c_int(-9999)
 
         skims_args_list.append(["Total", sel_skim, self.all_selections["Total"]["Total"]])
 
