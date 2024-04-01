@@ -352,31 +352,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         # Overall Selection
         Total_Sel = mllSel.refine("Total_selection", cut=[op.OR(op.c_bool(is_sl == 1), op.c_bool(is_dl == 1))])
-        '''
-        Total_Sel = mllSel.refine("Total_selection", cut=[op.OR(
-            op.AND(
-                op.OR(
-                    event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
-                    event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)
-                ),
-                op.OR(
-                    event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
-                    event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
-                )
-            ),
-            op.AND(
-                op.OR(
-                    event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
-                    event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
-                    event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH)
-                ),
-                op.OR(
-                    event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
-                    event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
-                )
-            )
-        )])
-        '''
         is_res_1b = op.switch(op.OR(
             op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
             op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
