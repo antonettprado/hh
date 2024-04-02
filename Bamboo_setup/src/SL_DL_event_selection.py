@@ -158,26 +158,26 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         mllSel = sel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
 
         # Apply Common Weights
-        pileupWeight, top_pt_weight = op.c_float(-9999), op.c_float(-9999)
+        pileupWeight, top_pt_weight = op.c_float(-9999.0000), op.c_float(-9999.0000)
         #mllSel, pileupWeight, top_pt_weight = sf_weights.apply_common_SF(tree, mllSel, self.is_MC, self.era, self.sample)
 
         # Apply B-tag Weights
-        btvWeight = op.c_float(-9999)
+        btvWeight = op.c_float(-9999.0000)
         #if event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
         #    mllSel, btvWeight = sf_weights.apply_ak4btag_SF(mllSel, cleaned_ak4_jets, self.is_MC, self.era, self.sample)
         #elif event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags) or event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags):
         #    mllSel, btvWeight = mllSel, op.c_float(1.) # TO DO: B-tagging SFs for AK8 Jets
 
         # Apply Muon SFs
-        muon_sf = op.c_float(-9999)
+        muon_sf = op.c_float(-9999.0000)
         #mllSel, muon_sf = sf_weights.apply_mu_SF(sel, tight_muons, self.is_MC, self.era, self.sample)
 
         # Apply Electron SFs
-        electron_sf = op.c_float(-9999)
+        electron_sf = op.c_float(-9999.0000)
         #mllSel, electron_sf = sf_weights.apply_ele_SF(sel, tight_electrons, self.is_MC, self.era, self.sample)
         
         # Apply Trigger SFs
-        trigger_sf = op.c_float(-9999)
+        trigger_sf = op.c_float(-9999.0000)
 
         self.objects["gen_Weight"] = tree.genWeight
         self.objects["pileupWeight"] = pileupWeight
