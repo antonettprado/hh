@@ -581,7 +581,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             (objects["is_dl_emu"] == 1, op.switch(
                 objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt, objects["tight_electrons"][0].pdgId, objects["tight_muons"][0].pdgId) 
             ),
-            op.c_float(-9999)
+            op.c_int(-9999)
         )
         sel_skim["lepton1_pt"] = op.multiSwitch(
             (objects["is_dl_ee"] == 1, objects["tight_electrons"][1].pt),
@@ -621,7 +621,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             (objects["is_dl_emu"] == 1, op.switch(
                 objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt, objects["tight_muons"][0].pdgId, objects["tight_electrons"][0].pdgId) 
             ),
-            op.c_float(-9999)
+            op.c_int(-9999)
         )
 
         sel_skim["ak4jet0_pt"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 1, objects["cleaned_ak4_jets"][0].pt, op.c_float(-9999))
