@@ -542,71 +542,57 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         skims_args_list = []
         sel_skim = base_tree
-        lepton0 = None
-        lepton1 = None
-        if objects["is_sl_e"] == 1:
-            lepton0 = objects["tight_electrons"][0]
-        if objects["is_sl_mu"] == 1:
-            lepton0 = objects["tight_muons"][0]
-        if objects["is_dl_ee"] == 1:
-            lepton0 = objects["tight_electrons"][0]
-            lepton1 = objects["tight_electrons"][0]
-        if objects["is_dl_emu"] == 1:
-            if objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt:
-                lepton0 = objects["tight_electrons"][0]
-                lepton1 = objects["tight_muons"][0]
-            if objects["tight_muons"][0].pt > objects["tight_electrons"][0].pt:
-                lepton0 = objects["tight_muons"][0]
-                lepton1 = objects["tight_electrons"][0]
-        if objects["is_dl_mumu"] == 1:
-            lepton0 = objects["tight_muons"][0]
-            lepton1 = objects["tight_muons"][1]
-        sel_skim["lepton0_pt"] = lepton0.pt
-        sel_skim["lepton0_eta"] = lepton0.eta
-        sel_skim["lepton0_phi"] = lepton0.phi
-        sel_skim["lepton0_relIso"] = lepton0.pfRelIso03_all
-        sel_skim["lepton0_pdgId"] = lepton0.pdgId
-        sel_skim["lepton1_pt"] = op.c_int(-9999)
-        sel_skim["lepton1_eta"] = op.c_int(-9999)
-        sel_skim["lepton1_phi"] = op.c_int(-9999)
-        sel_skim["lepton1_relIso"] = op.c_int(-9999)
-        sel_skim["lepton1_pdgId"] = op.c_int(-9999)
-        if lepton1 is not None:
-            sel_skim["lepton1_pt"] = lepton1.pt
-            sel_skim["lepton1_eta"] = lepton1.eta
-            sel_skim["lepton1_phi"] = lepton1.phi
-            sel_skim["lepton1_relIso"] = lepton1.pfRelIso03_all
-            sel_skim["lepton1_pdgId"] = lepton1.pdgId
-        sel_skim["ak4jet0_pt"] = op.c_int(-9999)
-        sel_skim["ak4jet0_eta"] = op.c_int(-9999)
-        sel_skim["ak4jet0_btag"] = op.c_int(-9999)
-        sel_skim["ak4jet1_pt"] = op.c_int(-9999)
-        sel_skim["ak4jet1_eta"] = op.c_int(-9999)
-        sel_skim["ak4jet1_btag"] = op.c_int(-9999)
-        sel_skim["ak4jet2_pt"] = op.c_int(-9999)
-        sel_skim["ak4jet2_eta"] = op.c_int(-9999)
-        sel_skim["ak4jet2_btag"] = op.c_int(-9999)
-        sel_skim["ak8jet0_pt"] = op.c_int(-9999)
-        sel_skim["ak8jet0_eta"] = op.c_int(-9999)
-        sel_skim["ak8jet0_btag"] = op.c_int(-9999)
-        sel_skim["ak8jet0_msoftdrop"] = op.c_int(-9999)
-        if op.rng_len(objects["cleaned_ak4_jets"]) >= 1:
-            sel_skim["ak4jet0_pt"] = objects["cleaned_ak4_jets"][0].pt
-            sel_skim["ak4jet0_eta"] = objects["cleaned_ak4_jets"][0].eta
-            sel_skim["ak4jet0_btag"] = get_jet_btag(objects["cleaned_ak4_jets"][0], "ak4")
-        if op.rng_len(objects["cleaned_ak4_jets"]) >= 2:
-            sel_skim["ak4jet1_pt"] = objects["cleaned_ak4_jets"][1].pt
-            sel_skim["ak4jet1_eta"] = objects["cleaned_ak4_jets"][1].eta
-            sel_skim["ak4jet1_btag"] = get_jet_btag(objects["cleaned_ak4_jets"][1], "ak4")
-        if op.rng_len(objects["cleaned_ak4_jets"]) >= 3:
-            sel_skim["ak4jet2_pt"] = objects["cleaned_ak4_jets"][2].pt
-            sel_skim["ak4jet2_eta"] = objects["cleaned_ak4_jets"][2].eta
-            sel_skim["ak4jet2_btag"] = get_jet_btag(objects["cleaned_ak4_jets"][2], "ak4")
-        if op.rng_len(objects["cleaned_ak8_btags"]) != 0:
-            sel_skim["ak8jet0_pt"] = objects["cleaned_ak8_btags"][0].pt
-            sel_skim["ak8jet0_eta"] = objects["cleaned_ak8_btags"][0].eta
-            sel_skim["ak8jet0_btag"] = get_jet_btag(objects["cleaned_ak8_btags"][0], "ak8")
-            sel_skim["ak8jet0_msoftdrop"] = objects["cleaned_ak8_btags"][0].msoftdrop
+
+        lepton0_vars = op.multiSwitch(
+            (op.OR(objects["is_sl_e"] == 1, objects["is_dl_ee"] == 1), [objects["tight_electrons"][0].pt, objects["tight_electrons"][0].eta, objects["tight_electrons"][0].phi, objects["tight_electrons"][0].pfRelIso03_all, objects["tight_electrons"][0].pdgId]),
+            (op.OR(objects["is_sl_mu"] == 1, objects["is_dl_mumu"] == 1), [objects["tight_muons"][0].pt, objects["tight_muons"][0].eta, objects["tight_muons"][0].phi, objects["tight_muons"][0].pfRelIso03_all, objects["tight_muons"][0].pdgId]),
+            (objects["is_dl_emu"] == 1, op.switch(
+                objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt, 
+                [objects["tight_electrons"][0].pt, objects["tight_electrons"][0].eta, objects["tight_electrons"][0].phi, objects["tight_electrons"][0].pfRelIso03_all, objects["tight_electrons"][0].pdgId],
+                [objects["tight_muons"][0].pt, objects["tight_muons"][0].eta, objects["tight_muons"][0].phi, objects["tight_muons"][0].pfRelIso03_all, objects["tight_muons"][0].pdgId]
+                ) 
+            ),
+            [op.c_int(-9999), op.c_int(-9999), op.c_int(-9999), op.c_int(-9999), op.c_int(-9999)]
+        )
+        lepton1_vars = op.multiSwitch(
+            (objects["is_dl_ee"] == 1, [objects["tight_electrons"][1].pt, objects["tight_electrons"][1].eta, objects["tight_electrons"][1].phi, objects["tight_electrons"][1].pfRelIso03_all, objects["tight_electrons"][1].pdgId]),
+            (objects["is_dl_mumu"] == 1, [objects["tight_muons"][1].pt, objects["tight_muons"][1].eta, objects["tight_muons"][1].phi, objects["tight_muons"][1].pfRelIso03_all, objects["tight_muons"][1].pdgId]),
+            (objects["is_dl_emu"] == 1, op.switch(
+                objects["tight_electrons"][0].pt >= objects["tight_muons"][0].pt, 
+                [objects["tight_muons"][0].pt, objects["tight_muons"][0].eta, objects["tight_muons"][0].phi, objects["tight_muons"][0].pfRelIso03_all, objects["tight_muons"][0].pdgId],
+                [objects["tight_electrons"][0].pt, objects["tight_electrons"][0].eta, objects["tight_electrons"][0].phi, objects["tight_electrons"][0].pfRelIso03_all, objects["tight_electrons"][0].pdgId]
+                ) 
+            ),
+            [op.c_int(-9999), op.c_int(-9999), op.c_int(-9999), op.c_int(-9999), op.c_int(-9999)]
+        )
+        sel_skim["lepton0_pt"] = lepton0_vars[0]
+        sel_skim["lepton0_eta"] = lepton0_vars[1]
+        sel_skim["lepton0_phi"] = lepton0_vars[2]
+        sel_skim["lepton0_relIso"] = lepton0_vars[3]
+        sel_skim["lepton0_pdgId"] = lepton0_vars[4]
+        sel_skim["lepton1_pt"] = lepton1_vars[0]
+        sel_skim["lepton1_eta"] = lepton1_vars[1]
+        sel_skim["lepton1_phi"] = lepton1_vars[2]
+        sel_skim["lepton1_relIso"] = lepton1_vars[3]
+        sel_skim["lepton1_pdgId"] = lepton1_vars[4]
+        
+        ak4jet0_vars = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 1, [objects["cleaned_ak4_jets"][0].pt, objects["cleaned_ak4_jets"][0].eta, get_jet_btag(objects["cleaned_ak4_jets"][0], "ak4")], [op.c_int(-9999), op.c_int(-9999), op.c_int(-9999)])
+        ak4jet1_vars = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 2, [objects["cleaned_ak4_jets"][1].pt, objects["cleaned_ak4_jets"][1].eta, get_jet_btag(objects["cleaned_ak4_jets"][1], "ak4")], [op.c_int(-9999), op.c_int(-9999), op.c_int(-9999)])
+        ak4jet2_vars = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 3, [objects["cleaned_ak4_jets"][2].pt, objects["cleaned_ak4_jets"][2].eta, get_jet_btag(objects["cleaned_ak4_jets"][2], "ak4")], [op.c_int(-9999), op.c_int(-9999), op.c_int(-9999)])
+        ak8jet0_vars = op.switch(op.rng_len(objects["cleaned_ak8_btags"]) >= 1, [objects["cleaned_ak8_btags"][0].pt, objects["cleaned_ak8_btags"][0].eta, get_jet_btag(objects["cleaned_ak8_btags"][0], "ak8"), objects["cleaned_ak8_btags"][0].msoftdrop], [op.c_int(-9999), op.c_int(-9999), op.c_int(-9999), op.c_int(-9999)])
+        sel_skim["ak4jet0_pt"] = ak4jet0_vars[0]
+        sel_skim["ak4jet0_eta"] = ak4jet0_vars[1]
+        sel_skim["ak4jet0_btag"] = ak4jet0_vars[2]
+        sel_skim["ak4jet1_pt"] = ak4jet1_vars[0]
+        sel_skim["ak4jet1_eta"] = ak4jet1_vars[1]
+        sel_skim["ak4jet1_btag"] = ak4jet1_vars[2]
+        sel_skim["ak4jet2_pt"] = ak4jet2_vars[0]
+        sel_skim["ak4jet2_eta"] = ak4jet2_vars[1]
+        sel_skim["ak4jet2_btag"] = ak4jet2_vars[2]
+        sel_skim["ak8jet0_pt"] = ak8jet0_vars[0]
+        sel_skim["ak8jet0_eta"] = ak8jet0_vars[1]
+        sel_skim["ak8jet0_btag"] = ak8jet0_vars[2]
+        sel_skim["ak8jet0_msoftdrop"] = ak8jet0_vars[3]
 
         skims_args_list.append(["Total", sel_skim, self.all_selections["Total"]["Total"]])
 
