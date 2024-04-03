@@ -602,18 +602,23 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             all_pT.populate(data, selections)
             return all_pT
 
-        def _get_leptons():
+        def _get_leptons_p4():
             electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
-            if op.rng_len(electrons) == 0 and op.rng_len(muons) == 1:
-                return muons[0], muons[0]
-            elif op.rng_len(electrons) == 0 and op.rng_len(muons) == 2:
-                return muons[0], muons[1]
-            elif op.rng_len(muons) == 0 and op.rng_len(electrons) == 1:
-                return electrons[0], electrons[0]
-            elif op.rng_len(muons) == 0 and op.rng_len(electrons) == 2:
-                return electrons[0], electrons[1]
-            else: # op.rng_len(muons) == 1 and op.rng_len(electrons) == 1
-                return muons[0], electrons[0] 
+            lep0_p4 = op.multiSwitch(
+                (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 1), muons[0].p4),
+                (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 2), muons[0].p4),
+                (op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0), electrons[0].p4),
+                (op.AND(op.rng_len(electrons) == 2, op.rng_len(muons) == 0), electrons[0].p4),
+                muons[0].p4
+            )
+            lep1_p4 = op.multiSwitch(
+                (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 1), muons[0].p4),
+                (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 2), muons[1].p4),
+                (op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0), electrons[0].p4),
+                (op.AND(op.rng_len(electrons) == 2, op.rng_len(muons) == 0), electrons[1].p4),
+                electrons[0].p4
+            )
+            return lep0_p4, lep1_p4
 
         def get_WW_mInv() -> Variable1D:
             WW_mInv = Variable1D('WW_mInv')
@@ -623,10 +628,10 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             met = self.objects['met']
             jj_W = _get_jj_W()
             j0, j1 = jj_W[0], jj_W[1]
-            lep0, lep1 = _get_leptons()
+            lep0_p4, lep1_p4 = _get_leptons_p4()
             # print(type(j0), type(j1), type(lep0), type(lep1), type(met))
-            sl_data = (j0.p4 + j1.p4 + lep0.p4 + met.p4).M()
-            dl_data = (lep0.p4 + lep1.p4 + met.p4).M()
+            sl_data = (j0.p4 + j1.p4 + lep0_p4 + met.p4).M()
+            dl_data = (lep0_p4 + lep1_p4 + met.p4).M()
             data = { 'SL_res_2b_x':sl_data, 'DL_res_2b':dl_data }
             WW_mInv.populate(data, selections)
             return WW_mInv
