@@ -641,7 +641,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         vars = get_bjet_vars() + get_top_vars() + get_total_vars() + get_misc_vars() + [get_sl_lep_pT(), get_all_pT(), get_WW_mInv()]
         return vars
     
-    def get_bjets_2D_vars() -> 'list[Variable2D]':
+    def get_bjets_2D_vars(self) -> 'list[Variable2D]':
         bjets_vars= self.bjet_vars
         bjets_vars_lookup = { var.name: var for var in bjets_vars }
         vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
