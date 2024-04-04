@@ -2,7 +2,7 @@
 ############## Cut based selections on SL_res_2b_x objects ONLY ###############
 ############## from SL_DL_vars_reco                             ###############
 ###############################################################################
-# 7/14/23 added support for other datasets (SL_boost, DL_res_2b_x, DL_boost)
+# 7/14/23 added support for other datasets (SL_boosted, DL_res_2b_x, DL_boosted)
 
 import ROOT
 import os

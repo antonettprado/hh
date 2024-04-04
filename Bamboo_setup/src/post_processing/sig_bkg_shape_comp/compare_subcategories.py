@@ -1,6 +1,6 @@
 ###############################################################################
 ###### Compares signal (all signal samples) vs backg (all backg samples) ######
-###### per subcategories (SL_res1b, DL_res1b, ...., SL_boost, DL_boost)  ######
+###### per subcategories (SL_res1b, DL_res1b, ...., SL_boosted, DL_boosted)  ######
 ###############################################################################
 
 import ROOT

@@ -67,7 +67,7 @@ bambooRun -m src/SL_DL_vars_gen.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_Va
 
 ### Postprocessing: Plot Signal vs Background Comparisons 
 ```bash
-python3 src/plotting/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsGen -l gen
+python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsGen -l gen
 ```
 
 ## Process NANOAODs: SL_DL_vars_reco
@@ -78,12 +78,12 @@ bambooRun -m src/SL_DL_vars_reco.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_V
 
 ### Postprocessing: Plot Signal vs Background Comparisons 
 ```bash
-python3 src/plotting/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco -l reco
+python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco -l reco
 ```
 
 ### Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection 
 ```bash
-python3 utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco
+python3 post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco
 ```
 
 ## Process NANOAODs: SL_DL_likelihood_ratios
@@ -94,12 +94,12 @@ bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir 
 
 ### Postprocessing: Compare LR signal vs background 
 ```bash
-python3 src/plotting/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LR -l reco
+python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LR -l reco
 ```
 
 ### Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection 
 ```bash
-python3 src/utils/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR --lr
+python3 src/post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR --lr
 ```
 
 # ------------------------------ Trigger -------------------------------
@@ -109,5 +109,5 @@ bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2018_L1.yml -o Z_OU
 ```
 ### Postprocessing: Plot trigger efficiency s-curves
 ```bash
-python3 src/plotting/trigger/plot_trigger_efficiencies.py
+python3 src/post_processing/trigger/plot_trigger_efficiencies.py
 ```

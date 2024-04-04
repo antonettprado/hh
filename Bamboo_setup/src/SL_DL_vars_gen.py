@@ -59,11 +59,11 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
         SL_res_1b = SL.refine("SL resolved 1b jet selection", cut=[op.AND(op.rng_len(bJets) == 1, op.rng_len(bJetAK8s) == 0)])
         SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) >= 2, op.rng_len(bJetAK8s) == 0)])
-        SL_boost = SL.refine("SL boosted jet selection", cut=[ op.rng_len(bJetAK8s)>= 1])
+        SL_boosted = SL.refine("SL boosted jet selection", cut=[ op.rng_len(bJetAK8s)>= 1])
 
         DL_res_1b = DL.refine("DL resolved 1b jet selection", cut=[op.AND(op.rng_len(bJets) == 1, op.rng_len(bJetAK8s) == 0)])
         DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) >= 2, op.rng_len(bJetAK8s) == 0)])
-        DL_boost = DL.refine("DL boosted jet selection", cut=[op.rng_len(bJetAK8s)>= 1])
+        DL_boosted = DL.refine("DL boosteded jet selection", cut=[op.rng_len(bJetAK8s)>= 1])
 
         # Include extra selection of >=2 nonbjets for resolved selections only
         SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(sorted_nonbJets)>=2])
@@ -111,16 +111,16 @@ class SL_DL_vars_gen(NanoAODHistoModule):
                     sel = SL_res_2b
                 elif sel_string == "SL_res_2b_x":
                     sel = SL_res_2b_x
-                elif sel_string == "SL_boost":
-                    sel = SL_boost
+                elif sel_string == "SL_boosted":
+                    sel = SL_boosted
                     
             elif "DL" in sel_string:
                 if sel_string == "DL_res_1b":
                     sel = DL_res_1b
                 elif sel_string == "DL_res_2b":
                     sel = DL_res_2b
-                elif sel_string == "DL_boost":
-                    sel = DL_boost
+                elif sel_string == "DL_boosted":
+                    sel = DL_boosted
 
             elif "noSel" in sel_string:
                 sel = noSel
@@ -251,7 +251,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
                 bjets_vars["bjets_dR"] = bjets_dR
                 bjets_vars["bjets_mbb"] = bjets_mbb
 
-            elif "boost" in sel_string:
+            elif "boosted" in sel_string:
                 fatjet = sorted_bjets[0]
                 bjets_mbb = fatjet.mass
 
@@ -361,9 +361,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             return total_vars
 
         SL_res_2b_x_bjets = get_bjets_vars(sorted_bJets, "SL_res_2b_x")
-        get_bjets_vars(sorted_bJetAK8s, "SL_boost")
+        get_bjets_vars(sorted_bJetAK8s, "SL_boosted")
         get_bjets_vars(sorted_bJets, "DL_res_2b")
-        get_bjets_vars(sorted_bJetAK8s, "DL_boost")
+        get_bjets_vars(sorted_bJetAK8s, "DL_boosted")
 
         SL_res_2b_x_top_vars = get_top_vars(bJets, sorted_nonbJets, genElectrons, genMuons, MET, 'SL_res_2b_x')
 
@@ -379,10 +379,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_res_1b_x')
         get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_res_2b')
         get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_res_2b_x')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_boost')
+        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_boosted')
         get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'DL_res_1b')
         get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'DL_res_2b')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'DL_boost')
+        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'DL_boosted')
 
         # ================================================================
         # ================================================================
@@ -393,12 +393,12 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         selections["DL"] = {}
         selections["SL"]["SL_res_1b"] = SL_res_1b
         selections["SL"]["SL_res_2b"] = SL_res_2b
-        selections["SL"]["SL_boost"] = SL_boost
+        selections["SL"]["SL_boosted"] = SL_boosted
         selections["SL"]["SL_res_1b_x"] = SL_res_1b_x
         selections["SL"]["SL_res_2b_x"] = SL_res_2b_x
         selections["DL"]["DL_res_1b"] = DL_res_1b
         selections["DL"]["DL_res_2b"] = DL_res_2b
-        selections["DL"]["DL_boost"] = DL_boost
+        selections["DL"]["DL_boosted"] = DL_boosted
 
         return hists_1D, hists_2D, selections
 
@@ -412,12 +412,12 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         
         SL_res_1b = selections["SL"]["SL_res_1b"]
         SL_res_2b = selections["SL"]["SL_res_2b"]
-        SL_boost = selections["SL"]["SL_boost"]
+        SL_boosted = selections["SL"]["SL_boosted"]
         SL_res_1b_x = selections["SL"]["SL_res_1b_x"]
         SL_res_2b_x = selections["SL"]["SL_res_2b_x"]
         DL_res_1b = selections["DL"]["DL_res_1b"] 
         DL_res_2b = selections["DL"]["DL_res_2b"]
-        DL_boost = selections["DL"]["DL_boost"]
+        DL_boosted = selections["DL"]["DL_boosted"]
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -436,10 +436,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         yields.add(SL_res_1b_x, 'SL_res_1b_x')
         yields.add(SL_res_2b, 'SL_res_2b')
         yields.add(SL_res_2b_x, 'SL_res_2b_x')
-        yields.add(SL_boost, 'SL_boost')
+        yields.add(SL_boosted, 'SL_boosted')
         yields.add(DL_res_1b, 'DL_res_1b')
         yields.add(DL_res_2b, 'DL_res_2b')
-        yields.add(DL_boost, 'DL_boost')
+        yields.add(DL_boosted, 'DL_boosted')
 
         return plots
 
