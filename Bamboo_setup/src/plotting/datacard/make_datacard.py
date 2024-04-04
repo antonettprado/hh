@@ -27,21 +27,20 @@ if __name__ == "__main__":
     # Reading from yaml files
     with open(args.config_filename,'r') as config_yaml_file:
         config_yaml_data = yaml.safe_load(config_yaml_file) 
+    era_data = config_yaml_data["eras"]
+    for e in era_data:
+        era = e
+        lumi = era_data[e]["luminosity"] # in pb^-1
 
     with open(args.cat_disc_filename,'r') as yaml_file:
         cat_disc_yaml_data = yaml.safe_load(yaml_file)
     
-    process_list = []
-    process_index_list = []
+    # Reading all histograms
     process_data = cat_disc_yaml_data["Processes"]
     for process in process_data:
-        if process != "data":
-            process_list.append(process)
-            process_index_list.append(process_data[process]["index"])
         process_samples = process_data[process]["samples"]
+        
 
-    # Reading all histograms
-    
 
 
 
