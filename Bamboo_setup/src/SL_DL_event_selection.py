@@ -1,4 +1,4 @@
-from bamboo.plots import Plot, CutFlowReport, Skim
+from bamboo.plots import Plot, SummedPlot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo import treefunctions as op
 
@@ -299,6 +299,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         DL_emu = DL_emu_only.refine("DL_emu_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
+        DL_emu_e0 = DL_emu.refine("DL_emu_e0_selection", cut=[tight_electrons[0].pt>tight_muons[0].pt])
+        DL_emu_mu0 = DL_emu.refine("DL_emu_mu0_selection", cut=[tight_muons[0].pt>tight_electrons[0].pt])
         is_dl_emu = op.switch(op.AND(
             event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, self.is_MC, self.era, tree.HLT, self.args.noHLT, use_mvaTTH),
             op.OR(event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
@@ -437,6 +439,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 "DL_emu_resolved": DL_emu_resolved,
                 "DL_emu_boosted": DL_emu_boosted,
                 "DL_emu": DL_emu},
+            "DL_emu_e0": {"DL_emu_e0": DL_emu_e0},
+            "DL_emu_mu0": {"DL_emu_mu0": DL_emu_mu0},
             "DL_mumu": {
                 "DL_mumu_resolved_1b": DL_mumu_resolved_1b,
                 "DL_mumu_resolved_2b": DL_mumu_resolved_2b,
@@ -460,7 +464,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             "SL": self.all_selections["SL"]["SL"],
             "DL": self.all_selections["SL"]["SL"]}
 
-        lep_subcat_names = ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu"]
+        lep_subcat_names = ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu_e0", "DL_emu_mu0"]
         self.lep_subcats = {}
         for name in lep_subcat_names:
             self.lep_subcats.update({name: self.all_selections[name][name]})
@@ -473,30 +477,28 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
     
     def get_cat_leptons(self, cat) -> 'dict[str, object]':
 
+        electrons, muons = self.objects["tight_electrons"], self.objects["tight_muons"]
         leptons = {}
-        electrons = self.objects["tight_electrons"]
-        muons = self.objects["tight_muons"]
-        if "SL" in cat:
-            if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
-                lepton0 = electrons[0]  
-            elif op.rng_len(electrons)==0 and op.rng_len(muons)==1:
-                lepton0 = muons[0]
-            leptons["lepton0"] = lepton0
-        elif "DL" in cat:
-            if op.rng_len(electrons)==2 and op.rng_len(muons)==0:
-                lepton0 = electrons[0]
-                lepton1 = electrons[0]
-            elif op.rng_len(electrons)==0 and op.rng_len(muons)==2:
-                lepton0 = muons[0]
-                lepton1 = muons[0]
-            elif op.rng_len(electrons)==1 and op.rng_len(muons)==1:
-                lepton0 = electrons[0] if electrons[0].pt >= muons[0].pt else muons[0]
-                lepton1 = muons[0] if electrons[0].pt >= muons[0].pt else electrons[0]
-            leptons["lepton0"] = lepton0
-            leptons["lepton1"] = lepton1
-    
+
+        if cat == "SL_e":
+            leptons["lepton0"] = electrons[0]  
+        elif cat == "SL_mu":
+            leptons["lepton0"] = muons[0]  
+        elif cat == "DL_ee":
+            leptons["lepton0"] = electrons[0]
+            leptons["lepton1"] = electrons[1]
+        elif cat == "DL_mumu":
+            leptons["lepton0"] = muons[0]
+            leptons["lepton1"] = muons[1]
+        elif cat == "DL_emu_e0":
+            leptons["lepton0"] = electrons[0]
+            leptons["lepton1"] = muons[0]
+        elif cat == "DL_emu_mu0":
+            leptons["lepton0"] = muons[0]
+            leptons["lepton1"] = electrons[0]
+
         return leptons
-        
+
     # Returns list[list[sel_name, sel_skim[], selection]]
     def get_skims_args_list(self) -> 'list[list[str, dict[], object]':
 
@@ -639,32 +641,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         sel_skim["ak8jet0_msoftdrop"] = op.switch(op.rng_len(objects["cleaned_ak8_btags"]) >= 1, objects["cleaned_ak8_btags"][0].msoftdrop, op.c_float(-9999))
 
         skims_args_list.append(["Total", sel_skim, self.all_selections["Total"]["Total"]])
-
-        '''
-        lepton_subcats_dict = self.get_lep_subcats_dict()
-        for sel_name, subcats_dict in lepton_subcats_dict.items():
-            sel_skim, custom_tree = {}, {}
-            for lep_name, lep in subcats_dict.items():
-                custom_tree.update({
-                    '_'.join([lep_name,'pt']): lep.pt,
-                    '_'.join([lep_name,'eta']): lep.eta,
-                    '_'.join([lep_name,'pdgId']): lep.pdgId,
-                    '_'.join([lep_name,'relIso']): lep.pfRelIso03_all})
-            sel_skim.update(**base_tree, **custom_tree)
-            skims_args_list.append([sel_name, sel_skim, self.lep_subcats[sel_name]])
-        
-        jet_subcats_dict = self.get_jet_subcats_dict()
-        for sel_name, subcats_dict in jet_subcats_dict.items():
-            sel_skim, custom_tree = {}, {}
-            for jet_name, jet in subcats_dict.items():
-                custom_tree.update({
-                    '_'.join([jet_name,'pt']): jet.pt,
-                    '_'.join([jet_name,'eta']): jet.eta})
-                if "AK4" in jet_name:
-                    sel_skim.update({'_'.join([jet_name,'btag']): get_jet_btag(jet, "ak4")})
-            sel_skim.update(**base_tree, **custom_tree)
-            skims_args_list.append([sel_name, sel_skim, self.jet_subcats[sel_name]])
-        '''
             
         return skims_args_list
 
@@ -700,16 +676,29 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 "AK4_btag_0": self.objects["cleaned_ak4_btags"][0], 
                 "AK4_btag_1": self.objects["cleaned_ak4_btags"][1], 
                 "AK8_btag_0": self.objects["cleaned_ak8_btags"][0]}
+
+        def get_lepton_plots(lep, lep_name, sel, sel_name):
+            lepton_plots = {
+                "pt": Plot.make1D('_'.join([sel_name, lep_name, 'pt']), lep.pt, sel, EqBin(250, 0, 250), xTitle="pT (GeV)"),
+                "eta": Plot.make1D('_'.join([sel_name, lep_name, 'eta']), lep.eta, sel, EqBin(100, -3, 3), xTitle="eta"),
+                "pdgId": Plot.make1D('_'.join([sel_name, lep_name, 'pdgId']), lep.pdgId, sel, EqBin(40, -20, 20), xTitle="pdgId"),
+                "sip3d": Plot.make1D('_'.join([sel_name, lep_name, 'sip3d']), lep.sip3d, sel, EqBin(100, 0, 8), xTitle="sip3d"),
+                "pt_vs_eta": Plot.make2D('_'.join([sel_name, lep_name, 'pT', 'vs', 'eta']), (lep.eta, lep.pt), sel, (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle="#eta", yTitle="pT (GeV)")}
+            return lepton_plots
+
         selections_dict = {**self.lep_subcats, **self.supercat_selections}
+        DL_emu_e0_plots = {}
+        DL_emu_mu0_plots = {}
         for sel_name, sel in selections_dict.items():
             # Plots for leptons in the selection
             leptons = self.get_cat_leptons(sel_name)
             for lep_name, lep in leptons.items():
-                plots.extend([
-                    Plot.make1D('_'.join([sel_name, lep_name, 'pt']), lep.pt, sel, EqBin(250, 0, 250), xTitle="pT (GeV)"),
-                    Plot.make1D('_'.join([sel_name, lep_name, 'eta']), lep.eta, sel, EqBin(100, -3, 3), xTitle="eta"),
-                    Plot.make1D('_'.join([sel_name, lep_name, 'sip3d']), lep.sip3d, sel, EqBin(100, 0, 8), xTitle="sip3d"),
-                    Plot.make2D('_'.join([sel_name, lep_name, 'pT', 'vs', 'eta']), (lep.eta, lep.pt), sel, (EqBin(100, -3, 3), EqBin(250, 0, 250)), title='', xTitle="#eta", yTitle="pT (GeV)")])
+                if "DL_emu_e0" == sel_name:
+                    DL_emu_e0_plots.update({lep_name: get_lepton_plots(lep, lep_name, sel, sel_name)})
+                elif "DL_emu_mu0" == sel_name:
+                    DL_emu_mu0_plots.update({lep_name: get_lepton_plots(lep, lep_name, sel, sel_name)})
+                else:
+                    plots.extend(list(get_lepton_plots(lep, lep_name, sel, sel_name).values()))
             # Plots for jets
             for jet_name, jet in jets.items():
                 plots.extend([Plot.make1D('_'.join([sel_name, jet_name, 'pt']), jet.pt, sel, EqBin(250, 0, 250), xTitle="pT (GeV)")])
@@ -717,5 +706,14 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             plots.extend([
                 Plot.make1D('_'.join([sel_name, 'MET', 'pt']), self.objects["met"].pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
                 Plot.make1D('_'.join([sel_name, 'HT']), self.objects["ht_jets"], sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
+
+        for plot_tag in ["pt", "eta", "pdgId", "sip3d", "pt_vs_eta"]:
+            for lep_name in ["lepton0", "lepton1"]:
+                e0_plot = DL_emu_e0_plots[lep_name][plot_tag]
+                mu0_plot = DL_emu_mu0_plots[lep_name][plot_tag]
+                plots.append(e0_plot)
+                plots.append(mu0_plot)
+                name = '_'.join(["DL_emu", lep_name, plot_tag])
+                plots.append(SummedPlot(name, [e0_plot, mu0_plot]))
 
         return plots
