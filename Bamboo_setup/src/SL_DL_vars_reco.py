@@ -733,14 +733,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
         plots.extend(hists_3D)
 
-        # reco_vars = self.bjet_vars
-        # hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
-        # plots.extend(hists_1D)
-
-        # reco_2D_vars = self.get_bjets_2D_vars()
-        # hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
-        # plots.extend(hists_2D)
-
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
