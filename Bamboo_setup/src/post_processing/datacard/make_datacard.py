@@ -51,10 +51,10 @@ if __name__ == "__main__":
         process_data[process]["shapes"] = {}
         for channel in cat_disc_yaml_data["Channels"]:
             process_data[process]["shapes"]["channel"] = {}
-            discriminant_list = cat_disc_yaml_data[channel]
+            discriminant_list = cat_disc_yaml_data["Channels"][channel]
             for discriminant in discriminant_list:
-                process_data[process]["shapes"]["channel"]["discriminant"] = {}
-                process_data[process]["shapes"]["channel"]["discriminant"]["sample_histogram"] = []
+                process_data[process]["shapes"][channel][discriminant] = {}
+                process_data[process]["shapes"][channel][discriminant]["sample_histogram"] = []
 
         for sample in process_samples:
             input_root_filename = input_dir + "/" + sample + ".root"
@@ -63,22 +63,22 @@ if __name__ == "__main__":
             if process != "data":
                 xs = config_yaml_data["samples"][sample]["cross-section"]
             for channel in cat_disc_yaml_data["Channels"]:
-                discriminant_list = cat_disc_yaml_data[channel]
+                discriminant_list = cat_disc_yaml_data["Channels"][channel]
                 for discriminant in discriminant_list:
-                    process_data[process]["shapes"]["channel"]["discriminant"]["sample_histogram"].append(input_root_file.Get("%s_%s"%(channel,discriminant)))
+                    process_data[process]["shapes"][channel][discriminant]["sample_histogram"].append(input_root_file.Get("%s_%s"%(channel,discriminant)))
                     weight = 1.0
                     if process != "data":
                         weight = (xs * lumi)/(input_root_file.Get("yields_genEventSumWeight").GetBinContent(1))
-                    process_data[process]["shapes"]["channel"]["discriminant"]["sample_histogram"][-1].Scale(weight)
+                    process_data[process]["shapes"][channel][discriminant]["sample_histogram"][-1].Scale(weight)
             input_root_file.Close()
 
         for channel in cat_disc_yaml_data["Channels"]:
             discriminant_list = cat_disc_yaml_data[channel]
             for discriminant in discriminant_list:
-                process_data[process]["shapes"]["channel"]["discriminant"]["total_histogram"] = process_data[process]["shapes"]["channel"]["discriminant"]["sample_histogram"][0].Clone("%s__%s"%(channel, process))
-                for i in range(1,len(process_data[process]["shapes"]["channel"]["discriminant"]["sample_histogram"])):
-                    process_data[process]["shapes"]["channel"]["discriminant"]["total_histogram"].Add(process_data[process]["shapes"]["channel"]["discriminant"]["sample_histogram"][1])
-                process_data[process]["shapes"]["channel"]["discriminant"]["rate"] = process_data[process]["shapes"]["channel"]["discriminant"]["total_histogram"].Integral()
+                process_data[process]["shapes"][channel][discriminant]["total_histogram"] = process_data[process]["shapes"][channel][discriminant]["sample_histogram"][0].Clone("%s__%s"%(channel, process))
+                for i in range(1,len(process_data[process]["shapes"][channel][discriminant]["sample_histogram"])):
+                    process_data[process]["shapes"][channel][discriminant]["total_histogram"].Add(process_data[process]["shapes"][channel][discriminant]["sample_histogram"][1])
+                process_data[process]["shapes"][channel][discriminant]["rate"] = process_data[process]["shapes"][channel][discriminant]["total_histogram"].Integral()
 
     # Creating datacard for each channel
     for channel in cat_disc_yaml_data["Channels"]:
@@ -89,7 +89,7 @@ if __name__ == "__main__":
         except FileExistsError:
             os.rmdir(output_dir_sel_cat)
             os.makedirs(output_dir_sel_cat) 
-        discriminant_list = cat_disc_yaml_data[channel]
+        discriminant_list = cat_disc_yaml_data["Channels"][channel]
 
         for discriminant in discriminant_list:
             print ("    Discriminant: %s"%discriminant)
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
             output_root_file = ROOT.TFile(shapes_filename, "recreate")
             for process in process_data:
-                process_data[process]["shapes"]["channel"]["discriminant"]["total_histogram"].Write()
+                process_data[process]["shapes"][channel][discriminant]["total_histogram"].Write()
             output_root_file.Close()
 
             datacard_file = open(datacard_filename, "w")
@@ -121,7 +121,7 @@ if __name__ == "__main__":
             datacard_file.write("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
             datacard_file.write("\n")
             datacard_file.write("bin          %s\n"%channel)
-            datacard_file.write("observation  %.4f\n"%process_data["data"]["shapes"]["channel"]["discriminant"]["rate"])
+            datacard_file.write("observation  %.4f\n"%process_data["data"]["shapes"][channel][discriminant]["rate"])
             datacard_file.write("\n")
             datacard_file.write("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
             datacard_file.write("\n")
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                 channel_line += "%s    "%channel
                 process_name_line += "%s    "%process
                 process_index_line += "%s    "%process_data[process]["index"]
-                rate_line += "%.4f    "%process_data[process]["shapes"]["channel"]["discriminant"]["rate"]
+                rate_line += "%.4f    "%process_data[process]["shapes"][channel][discriminant]["rate"]
             datacard_file.write("%s\n"%channel_line)
             datacard_file.write("%s\n"%process_name_line)
             datacard_file.write("%s\n"%process_index_line)
