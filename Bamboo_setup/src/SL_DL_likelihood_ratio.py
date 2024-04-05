@@ -238,14 +238,21 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         self.selections = super().event_selection(tree, baseSel, self.objects, yields, events='odd')
         self.selections = super().additional_event_selection(tree, baseSel, yields)
 
-        SL_res_1b = self.selections["SL_res_1b"]
-        SL_res_2b = self.selections["SL_res_2b"]
-        SL_boosted = self.selections["SL_boosted"]
-        SL_res_1b_x = self.selections["SL_res_1b_x"]
-        SL_res_2b_x = self.selections["SL_res_2b_x"]
-        DL_res_1b = self.selections["DL_res_1b"] 
-        DL_res_2b = self.selections["DL_res_2b"]
-        DL_boosted = self.selections["DL_boosted"]
+        super().set_objects(tree, self.args.mc_truth_b)
+        super().set_event_selections(tree, baseSel, yields, events='odd')
+        super().set_category_groups()
+
+        super().set_extra_objects()
+        super().set_extra_event_selections()
+
+        SL_res_1b = self.jet_subcats["SL_res_1b"]
+        SL_res_2b = self.jet_subcats["SL_res_2b"]
+        SL_boosted = self.jet_subcats["SL_boosted"]
+        SL_res_1b_x = self.jet_subcats["SL_res_1b_x"]
+        SL_res_2b_x = self.jet_subcats["SL_res_2b_x"]
+        DL_res_1b = self.jet_subcats["DL_res_1b"] 
+        DL_res_2b = self.jet_subcats["DL_res_2b"]
+        DL_boosted = self.jet_subcats["DL_boosted"]
 
         # ===============================================================================
         # ================================== Plots ======================================
