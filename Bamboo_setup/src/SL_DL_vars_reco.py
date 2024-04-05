@@ -310,7 +310,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         potential_blnu_pts = op.map(non_hadronic_top_bjets, lambda b2: (b2.p4 + lep_p4 + MET.p4).Pt())
         blnu_bjet_max_pt_index = op.rng_max_element_index(potential_blnu_pts, lambda blnu_pt: blnu_pt)
         blnu_bjet = non_hadronic_top_bjets[blnu_bjet_max_pt_index]
-        return lep, MET, blnu_bjet
+        return lep_p4, MET, blnu_bjet
 
     def get_trijet_mInv(self) -> Variable1D:
         trijet_mInv = Variable1D('trijet_mInv')
@@ -351,8 +351,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         subcat_names = blnu_mT.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        l, nu, bjet = self._get_blnu_data()
-        data = (l.p4 + nu.p4 + bjet.p4).Mt()
+        l_p4, nu, bjet = self._get_blnu_data()
+        data = (l_p4 + nu.p4 + bjet.p4).Mt()
         data = { 'SL_res_2b_x': data }
         blnu_mT.populate(data, selections)
         return blnu_mT 
@@ -362,8 +362,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         subcat_names = blnu_pT.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        l, nu, bjet = self._get_blnu_data()
-        data = (l.p4 + nu.p4 + bjet.p4).Pt()
+        l_p4, nu, bjet = self._get_blnu_data()
+        data = (l_p4 + nu.p4 + bjet.p4).Pt()
         data = { 'SL_res_2b_x': data }
         blnu_pT.populate(data, selections)
         return blnu_pT 
