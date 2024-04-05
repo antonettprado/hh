@@ -90,6 +90,8 @@ if __name__ == "__main__":
             process_data["asimov"]["shapes"][channel][discriminant] = {}
             process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"] = None
             for process in process_data:
+                if process in ["data", "asimov"]:
+                    continue
                 if process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"] is None:
                     process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"] = process_data[process]["shapes"][channel][discriminant]["total_histogram"].Clone("%s__asimov"%channel)
                 else:
@@ -133,9 +135,9 @@ if __name__ == "__main__":
             datacard_file.write("\n")
             datacard_file.write("bin          %s\n"%channel)
             if args.asimov_only:
-                datacard_file.write("observation  %.4f\n"%process_data["data"]["shapes"][channel][discriminant]["rate"])
-            else:
                 datacard_file.write("observation  %.4f\n"%process_data["asimov"]["shapes"][channel][discriminant]["rate"])
+            else:
+                datacard_file.write("observation  %.4f\n"%process_data["data"]["shapes"][channel][discriminant]["rate"])
             datacard_file.write("\n")
             datacard_file.write("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
             datacard_file.write("\n")
