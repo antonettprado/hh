@@ -7,8 +7,9 @@ Processes:
     samples: [TTbar_sl, TTbar_dl]
 
 Channels:
-  SL_res_2b_x:
+  SL_res_2b_x: [
     bjets_mbb_llr
+  ]
 
 
 
