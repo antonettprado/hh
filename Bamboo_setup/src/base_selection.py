@@ -150,7 +150,11 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             # Add neccesary plot for corrected sum of genWeights 
             self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
         
-        self.noSel = noSel
+        # Gen Weight
+        if self.is_MC:
+            self.noSel = noSel.refine('genWeight', weight=tree.genWeight)
+        else:
+            self.noSel = noSel
         
         # Base Selection -----------------------------------------------------
         # PV Selection
@@ -176,9 +180,8 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         # DoubleMuon
         addHLTPath('DoubleMuon', 'Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8')
 
-        # Gen Weight and Trigger Selection
+        # Trigger Selection
         if self.is_MC:
-            baseSel = baseSel.refine('genWeight', weight=tree.genWeight)
             if not self.args.noHLT:
                 baseSel = baseSel.refine('HLT', cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
         else:
