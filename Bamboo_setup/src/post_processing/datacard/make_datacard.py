@@ -17,10 +17,10 @@ if __name__ == "__main__":
     input_dir = args.input_dir + "/results"
     output_dir = args.input_dir + "/datacards"
     try:
-        os.makedirs(output_dir) 
+        os.system("mkdir %s"%output_dir)
     except FileExistsError:
-        os.rmdir(output_dir)
-        os.makedirs(output_dir) 
+        os.system("rm -rf %s"%output_dir)
+        os.system("mkdir %s"%output_dir)
     print ("Using config: %s"%args.config_filename)
     print ("Creating datacards for results in: %s"%input_dir)
     print ("Datacards stored in: %s\n"%output_dir)
@@ -103,20 +103,20 @@ if __name__ == "__main__":
         print ("  Channel: %s"%channel)
         output_dir_sel_cat = output_dir + "/" + channel
         try:
-            os.makedirs(output_dir_sel_cat) 
+            os.system("mkdir %s"%output_dir_sel_cat)
         except FileExistsError:
-            os.rmdir(output_dir_sel_cat)
-            os.makedirs(output_dir_sel_cat) 
+            os.system("rm -rf %s"%output_dir_sel_cat)
+            os.system("mkdir %s"%output_dir_sel_cat)
         discriminant_list = cat_disc_yaml_data["Channels"][channel]
 
         for discriminant in discriminant_list:
             print ("    Discriminant: %s"%discriminant)
             output_dir_sel_cat_disc = output_dir_sel_cat + "/" + discriminant
             try:
-                os.makedirs(output_dir_sel_cat_disc) 
+                os.system("mkdir %s"%output_dir_sel_cat_disc)
             except FileExistsError:
-                os.rmdir(output_dir_sel_cat_disc)
-                os.makedirs(output_dir_sel_cat_disc) 
+                os.system("rm -rf %s"%output_dir_sel_cat_disc)
+                os.system("mkdir %s"%output_dir_sel_cat_disc)
             datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_datacard.txt"
             shapes_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_shapes.root"
 
