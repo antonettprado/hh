@@ -15,12 +15,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     input_dir = args.input_dir + "/results"
-    output_dir = "datacards"
-    try:
-        os.system("mkdir %s"%output_dir)
-    except FileExistsError:
-        os.system("rm -rf %s"%output_dir)
-        os.system("mkdir %s"%output_dir)
+    output_dir = args.input_dir + "/datacards"
+    if os.path.exists(output_dir):
+        os.system("rm -rf %s"%os.path.abspath(output_dir))
+    os.system("mkdir %s"%os.path.abspath(output_dir))
     print ("Using config: %s"%args.config_filename)
     print ("Creating datacards for results in: %s"%input_dir)
     print ("Datacards stored in: %s\n"%output_dir)
@@ -102,21 +100,13 @@ if __name__ == "__main__":
     for channel in cat_disc_yaml_data["Channels"]:
         print ("  Channel: %s"%channel)
         output_dir_sel_cat = output_dir + "/" + channel
-        try:
-            os.system("mkdir %s"%output_dir_sel_cat)
-        except FileExistsError:
-            os.system("rm -rf %s"%output_dir_sel_cat)
-            os.system("mkdir %s"%output_dir_sel_cat)
+        os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat))
         discriminant_list = cat_disc_yaml_data["Channels"][channel]
 
         for discriminant in discriminant_list:
             print ("    Discriminant: %s"%discriminant)
             output_dir_sel_cat_disc = output_dir_sel_cat + "/" + discriminant
-            try:
-                os.system("mkdir %s"%output_dir_sel_cat_disc)
-            except FileExistsError:
-                os.system("rm -rf %s"%output_dir_sel_cat_disc)
-                os.system("mkdir %s"%output_dir_sel_cat_disc)
+            os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat_disc))
             datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_datacard.txt"
             shapes_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_shapes.root"
 
@@ -154,6 +144,8 @@ if __name__ == "__main__":
             process_index_line = "process    "
             rate_line = "rate    "
             for process in process_data:
+                if process in ["asimov", "data"]:
+                    continue
                 channel_line += "%s    "%channel
                 process_name_line += "%s    "%process
                 process_index_line += "%s    "%process_data[process]["index"]
