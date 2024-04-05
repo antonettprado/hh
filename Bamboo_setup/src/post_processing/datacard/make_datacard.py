@@ -15,7 +15,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     input_dir = args.input_dir + "/results"
-    output_dir = args.input_dir + "/datacards"
+    output_dir = "datacards"
     try:
         os.system("mkdir %s"%output_dir)
     except FileExistsError:
