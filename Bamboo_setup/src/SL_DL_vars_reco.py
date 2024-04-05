@@ -305,7 +305,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         lep_p4 = op.multiSwitch(
             (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].p4),
             (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].p4),
-            op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float>>",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
+            op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
         )
         potential_blnu_pts = op.map(non_hadronic_top_bjets, lambda b2: (b2.p4 + lep_p4 + MET.p4).Pt())
         blnu_bjet_max_pt_index = op.rng_max_element_index(potential_blnu_pts, lambda blnu_pt: blnu_pt)
