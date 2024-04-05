@@ -7,9 +7,8 @@ from utils import variables
 from utils.variables import Variable1D, Variable2D, Variable3D
 from pathlib import Path
 import os
-import correctionlib.convert
+import correctionlib.schemav2 as cs
 import ROOT
-import boost_histogram as bh
 import numpy as np
 import scipy.interpolate
 
@@ -750,82 +749,51 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         return plots
 
-    def _get_interpolated_axis_data(self, root_axis, scale_factor):
-        bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
-        hbw = (bin_centers[1] - bin_centers[0]) / 2
-        bin_edges = np.append(bin_centers - hbw, bin_centers[-1] + hbw)
-        interp_bin_edges = np.linspace(bin_edges[0], bin_edges[-1], num=len(bin_centers) * scale_factor + 1)
-        interp_bin_centers = (interp_bin_edges[:-1] + interp_bin_edges[1:]) / 2
-        interp_seed_data = np.pad(bin_centers, 1, constant_values=(bin_edges[0], bin_edges[-1]))
-        return interp_seed_data, interp_bin_centers
+    def _get_interpolated_axis_data(root_axis, scale_factor):
+            bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
+            hbw = (bin_centers[1] - bin_centers[0]) / 2
+            bin_edges = np.append(bin_centers - hbw, bin_centers[-1] + hbw)
+            interp_bin_edges = np.linspace(bin_edges[0], bin_edges[-1], num=len(bin_centers) * scale_factor + 1)
+            interp_bin_centers = (interp_bin_edges[:-1] + interp_bin_edges[1:]) / 2
+            interp_seed_data = np.pad(bin_centers, 1, constant_values=(bin_edges[0], bin_edges[-1]))
+            return interp_seed_data, interp_bin_centers, interp_bin_edges
     
-    def interpolate_1d_root_histogram(self, root_hist, scale_factor):
-        bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
-        x_seed_data, interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-        y_seed_data = np.pad(bin_contents, 1, 'edge')
-
-        interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
-
-        boost_hist = bh.Histogram(
-            bh.axis.Regular(len(interp_bin_centers), x_seed_data[0], x_seed_data[-1]), 
-            storage=bh.storage.Weight()
-        )
-
-        for bin_center, bin_content in zip(interp_bin_centers, interp_bin_contents):
-            boost_hist.fill(bin_center, weight=bin_content)
-
-        return boost_hist
-
-    def interpolate_2d_root_histogram(self, root_hist, scale_factor):
+    def interpolate_1d_root_histogram(root_hist, scale_factor):
+            bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
+            x_seed_data, interp_bin_centers, interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+            y_seed_data = np.pad(bin_contents, 1, 'edge')
+    
+            interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
+    
+            return interp_bin_edges, interp_bin_contents
+    
+    def interpolate_2d_root_histogram(root_hist, scale_factor):
         bin_contents = np.log([[root_hist.GetBinContent(xbin, ybin) for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
-        x_seed_data, x_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-        y_seed_data, y_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
+        x_seed_data, x_interp_bin_centers, x_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+        y_seed_data, y_interp_bin_centers, y_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
         z_seed_data = np.pad(bin_contents, 1, 'edge')
-
+    
         interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, indexing='ij')).reshape(2,-1).T
-
-        interpolated_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data], z_seed_data, interpolated_bin_centers, method='linear')
-        interpolated_bin_contents = interpolated_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers)))
-
-        boost_hist = bh.Histogram(
-            bh.axis.Regular(len(x_interp_bin_centers), x_seed_data[0], x_seed_data[-1]),
-            bh.axis.Regular(len(y_interp_bin_centers), y_seed_data[0], y_seed_data[-1]),
-            storage=bh.storage.Weight()
-        )
-
-        # Fill the Boost Histogram with interpolated bin contents
-        for i, x_bin in enumerate(x_interp_bin_centers):
-            for j, y_bin in enumerate(y_interp_bin_centers):
-                boost_hist.fill(x_bin, y_bin, weight=interpolated_bin_contents[i,j])
-
-        return boost_hist
-
-    def interpolate_3D_root_histogram(self, root_hist, scale_factor):
+    
+        interp_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data], z_seed_data, interpolated_bin_centers, method='linear')
+        interp_bin_contents = interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers))).flatten()
+    
+        return [x_interp_bin_edges, y_interp_bin_edges], interp_bin_contents
+    
+    def interpolate_3D_root_histogram(root_hist, scale_factor):
         bin_contents = np.log([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
-        x_seed_data, x_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-        y_seed_data, y_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
-        z_seed_data, z_interp_bin_centers = self._get_interpolated_axis_data(root_hist.GetZaxis(), scale_factor)
+        x_seed_data, x_interp_bin_centers, x_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+        y_seed_data, y_interp_bin_centers, y_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
+        z_seed_data, z_interp_bin_centers, z_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetZaxis(), scale_factor)
         a_seed_data = np.pad(bin_contents, 1, 'edge')
-
+    
         interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, z_interp_bin_centers, indexing='ij')).reshape(3,-1).T
+    
+        interp_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data, z_seed_data], a_seed_data, interpolated_bin_centers, method='linear')
+        interp_bin_contents = np.flatten(interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers)))).flatten()
+    
+        return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
 
-        interpolated_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data, z_seed_data], a_seed_data, interpolated_bin_centers, method='linear')
-        interpolated_bin_contents = interpolated_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers)))
-
-        boost_hist = bh.Histogram(
-            bh.axis.Regular(len(x_interp_bin_centers), x_seed_data[0], x_seed_data[-1]),
-            bh.axis.Regular(len(y_interp_bin_centers), y_seed_data[0], y_seed_data[-1]),
-            bh.axis.Regular(len(z_interp_bin_centers), z_seed_data[0], z_seed_data[-1]),
-            storage=bh.storage.Weight()
-        )
-
-        # Fill the Boost Histogram with interpolated bin contents
-        for i, x_bin in enumerate(x_interp_bin_centers):
-            for j, y_bin in enumerate(y_interp_bin_centers):
-                for k, z_bin in enumerate(z_interp_bin_centers):
-                    boost_hist.fill(x_bin, y_bin, z_bin, weight=interpolated_bin_contents[i,j,k])
-
-        return boost_hist
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
@@ -839,6 +807,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         INTERPOLATION_SCALE_FACTOR_1D = 9
         INTERPOLATION_SCALE_FACTOR_2D = 3
         INTERPOLATION_SCALE_FACTOR_3D = 3
+        DECIMAL_PLACES = 3
 
         all_reco_vars_1D = self.get_all_reco_variables()
         all_reco_vars_2D = self.get_all_reco_2D_variables()
@@ -861,19 +830,50 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 ratio_hist.Divide(backg_total_hist)
 
                 if isinstance(var, Variable1D):
-                    bh_hist = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+                    bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+                    inputs = [cs.Variable(name="xaxis", type="real", description="")]
+                    data = cs.Binning(
+                        nodetype="binning",
+                        input="xaxis",
+                        edges=np.round(bin_edges, DECIMAL_PLACES),
+                        content=np.round(bin_contents, DECIMAL_PLACES),
+                        flow="clamp",
+                    )
                 elif isinstance(var, Variable2D):
-                    bh_hist = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                    bin_edges, bin_contents = interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                    inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                              cs.Variable(name="yaxis", type="real", description="")]
+                    data = cs.MultiBinning(
+                        nodetype="multibinning",
+                        inputs=["xaxis","yaxis"],
+                        edges=np.round(bin_edges, DECIMAL_PLACES),
+                        content=np.round(bin_contents, DECIMAL_PLACES),
+                        flow="clamp",
+                    )
                 elif isinstance(var, Variable3D):
-                    bh_hist = self.interpolate_3D_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
-                
-                corr = correctionlib.convert.from_histogram(bh_hist)
-                corr.name = subcat_var.ref + '_llr'
-                corr.description = f'llr for {subcat_var.ref}'
-                corr.data.flow = 'clamp'
+                    bin_edges, bin_contents = interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                    inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                              cs.Variable(name="yaxis", type="real", description=""),
+                              cs.Variable(name="zaxis", type="real", description="")]
+                    data = cs.MultiBinning(
+                        nodetype="multibinning",
+                        inputs=["xaxis","yaxis"],
+                        edges=np.round(bin_edges, DECIMAL_PLACES),
+                        content=np.round(bin_contents, DECIMAL_PLACES),
+                        flow="clamp",
+                    )
+
+                corr = cs.Correction(
+                    name="test", #subcat_var.ref + '_llr',
+                    # description = f'llr for {subcat_var.ref}'
+                    version=0,
+                    inputs=inputs,
+                    output=cs.Variable(name="", type="real", description=""),
+                    data=data
+                )
                 all_corrections.append(corr)
 
         cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(results_path, "corrections_llr.json")
+        output_llr_file = os.path.join(results_path, "corrections_llr_test.json")
         with open(output_llr_file, "w") as outfile:
             outfile.write(cset.json(exclude_unset=False))
