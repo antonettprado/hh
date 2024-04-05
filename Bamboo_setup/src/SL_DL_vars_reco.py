@@ -819,7 +819,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
 
         all_corrections = []
-        for var in all_bjets_vars:
+        for var in all_reco_vars_1D:
             print(var.name)
             for subcat_var in var:
                 print('\t', subcat_var.ref)
@@ -864,7 +864,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                     )
 
                 corr = cs.Correction(
-                    name="test", #subcat_var.ref + '_llr',
+                    name=subcat_var.ref + '_llr',
                     # description = f'llr for {subcat_var.ref}'
                     version=0,
                     inputs=inputs,
@@ -874,6 +874,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 all_corrections.append(corr)
 
         cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(results_path, "corrections_llr_test.json")
+        output_llr_file = os.path.join(results_path, "corrections_llr.json")
         with open(output_llr_file, "w") as outfile:
             outfile.write(cset.json(exclude_unset=False))
