@@ -161,7 +161,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return lrs_for_vars_custom_combos
 
     def get_lrs_for_bjets_vars_1D(self) -> 'list[LikelihoodRatio]':
-        bjets_vars_1D = self.get_bjets_vars()
+        bjets_vars_1D = super().get_bjet_vars()
         lrs_for_bjets_vars_1D = []
         for var in bjets_vars_1D:
             lr = LikelihoodRatio(var.name)
@@ -176,7 +176,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return lrs_for_bjets_vars_1D
 
     def get_lrs_for_bjets_vars_2D(self) -> 'list[LikelihoodRatio]':
-        bjets_vars_2D = self.get_bjets_2D_vars()     
+        bjets_vars_2D = super().get_bjets_2D_vars()     
         lrs_for_bjets_vars_2D = []   
         for var in bjets_vars_2D:
             lr = LikelihoodRatio(var.name)
@@ -195,7 +195,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def get_lrs_for_bjets_vars_custom_combos(self) -> 'list[LikelihoodRatio]':
         # -----------------------------------------------------------------
         vars_custom_combos = []
-        bjets_vars_1D_names = [var.name for var in self.get_bjets_vars() if all(substring not in var.name for substring in ['abs', 'bfatjet'])]
+        bjets_vars_1D_names = [var.name for var in super().get_bjet_vars() if all(substring not in var.name for substring in ['abs', 'bfatjet'])]
         print(bjets_vars_1D_names)
         vars_custom_combos.extend(combinations(bjets_vars_1D_names, 3))
         vars_custom_combos.extend(combinations(bjets_vars_1D_names, 4))
@@ -233,7 +233,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
-        
+
         super().set_objects(tree, self.args.mc_truth_b)
         super().set_event_selections(tree, baseSel, yields, events='odd')
         super().set_category_groups()
