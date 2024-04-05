@@ -764,7 +764,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             y_seed_data = np.pad(bin_contents, 1, 'edge')
     
             interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
-    
+            print(type(interp_bin_edges), type(interp_bin_contents))
+            print(f"interp_bin_edges: {interp_bin_edges}")
+            print(f"interp_bin_content: {interp_bin_contents}")
             return interp_bin_edges, interp_bin_contents
     
     def interpolate_2d_root_histogram(self, root_hist, scale_factor):
@@ -873,7 +875,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 )
                 all_corrections.append(corr)
 
-        cset = correctionlib.schemav2.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
+        cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
         output_llr_file = os.path.join(results_path, "corrections_llr_test.json")
         with open(output_llr_file, "w") as outfile:
             outfile.write(cset.json(exclude_unset=False))
