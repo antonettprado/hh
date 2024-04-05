@@ -124,9 +124,10 @@ python3 src/post_processing/datacard/make_datacards.py -i Z_OUTPUT/TOTAL_VarsRec
 # ------------------------------ Set up Higgs Combine for Fitting -------------------------------
 ## Setup of Higgs Combine for fitting
 
+Must use lxplus7 for now
+
 ```bash
 cd
-cmssw-el7
 cmsrel CMSSW_11_3_4
 cd CMSSW_11_3_4/src
 cmsenv
@@ -138,9 +139,10 @@ scramv1 b clean; scramv1 b
 cd ../../
 
 git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
+cd CombineHarvester
 git checkout v2.0.0
 scram b
-cd CombineHarvester/CombineTools/
+cd CombineTools/
 
 git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
 ```
