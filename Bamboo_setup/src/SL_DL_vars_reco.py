@@ -764,9 +764,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             y_seed_data = np.pad(bin_contents, 1, 'edge')
     
             interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
-            print(type(interp_bin_edges), type(interp_bin_contents))
-            print(f"interp_bin_edges: {interp_bin_edges}")
-            print(f"interp_bin_content: {interp_bin_contents}")
+
             return interp_bin_edges, interp_bin_contents
     
     def interpolate_2d_root_histogram(self, root_hist, scale_factor):
@@ -837,8 +835,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                     data = cs.Binning(
                         nodetype="binning",
                         input="xaxis",
-                        edges=np.round(bin_edges, DECIMAL_PLACES),
-                        content=np.round(bin_contents, DECIMAL_PLACES),
+                        edges=list(np.round(bin_edges, DECIMAL_PLACES)),
+                        content=list(np.round(bin_contents, DECIMAL_PLACES)),
                         flow="clamp",
                     )
                 elif isinstance(var, Variable2D):
@@ -848,8 +846,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                     data = cs.MultiBinning(
                         nodetype="multibinning",
                         inputs=["xaxis","yaxis"],
-                        edges=np.round(bin_edges, DECIMAL_PLACES),
-                        content=np.round(bin_contents, DECIMAL_PLACES),
+                        edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
+                        content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
                         flow="clamp",
                     )
                 elif isinstance(var, Variable3D):
@@ -860,8 +858,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                     data = cs.MultiBinning(
                         nodetype="multibinning",
                         inputs=["xaxis","yaxis"],
-                        edges=np.round(bin_edges, DECIMAL_PLACES),
-                        content=np.round(bin_contents, DECIMAL_PLACES),
+                        edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
+                        content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
                         flow="clamp",
                     )
 
