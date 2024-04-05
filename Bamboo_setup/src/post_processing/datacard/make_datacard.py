@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--config_filename", action="store", dest="config_filename", help="config_filename = config yml filename")
     parser.add_argument("-f", "--cat_disc_filename", action="store", dest="cat_disc_filename", help="cat_disc_filename = filename for yml file containing categories and discriminants")
     parser.add_argument("-r", "--rate_only", action="store_true", dest="rate_only", help="rate_only = to make datacards for rate only")
+    parser.add_argument("-a", "--asimov_only", action="store_true", dest="asimov_only", help="asimov_only = to make datacards for asimov only")
     args = parser.parse_args()
 
     input_dir = args.input_dir + "/results"
@@ -70,6 +71,7 @@ if __name__ == "__main__":
                     if process != "data":
                         weight = (xs * lumi)/(input_root_file.Get("yields_genEventSumWeight").GetBinContent(1))
                     process_data[process]["shapes"][channel][discriminant]["sample_histogram"][-1].Scale(weight)
+                    process_data[process]["shapes"][channel][discriminant]["sample_histogram"][-1].SetDirectory(0)
             input_root_file.Close()
 
         for channel in cat_disc_yaml_data["Channels"]:
@@ -80,6 +82,22 @@ if __name__ == "__main__":
                     process_data[process]["shapes"][channel][discriminant]["total_histogram"].Add(process_data[process]["shapes"][channel][discriminant]["sample_histogram"][1])
                 process_data[process]["shapes"][channel][discriminant]["rate"] = process_data[process]["shapes"][channel][discriminant]["total_histogram"].Integral()
 
+    # Creating Asimov histogram
+    process_data["asimov"] = {}
+    process_data["asimov"]["shapes"] = {}
+    for channel in cat_disc_yaml_data["Channels"]:
+        process_data["asimov"]["shapes"][channel] = {}
+        discriminant_list = cat_disc_yaml_data["Channels"][channel]
+        for discriminant in discriminant_list:
+            process_data["asimov"]["shapes"][channel][discriminant] = {}
+            process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"] = None
+            for process in process_data:
+                if process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"] is None:
+                    process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"] = process_data[process]["shapes"][channel][discriminant]["total_histogram"].Clone("%s__asimov"%channel)
+                else:
+                    process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"].Add(process_data[process]["shapes"][channel][discriminant]["total_histogram"])
+            process_data["asimov"]["shapes"][channel][discriminant]["rate"] = process_data["asimov"]["shapes"][channel][discriminant]["total_histogram"].Integral()
+            
     # Creating datacard for each channel
     for channel in cat_disc_yaml_data["Channels"]:
         print ("  Channel: %s"%channel)
@@ -116,12 +134,18 @@ if __name__ == "__main__":
             if not args.rate_only:
                 datacard_file.write("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
                 datacard_file.write("shapes  *  *  %s  $CHANNEL__$PROCESS  $CHANNEL__$PROCESS__$SYSTEMATIC\n"%(shapes_filename))
-                datacard_file.write("shapes data_obs  *  %s  $CHANNEL__data\n"%(shapes_filename))
+                if args.asimov_only:
+                    datacard_file.write("shapes data_obs  *  %s  $CHANNEL__asimov\n"%(shapes_filename))
+                else:
+                    datacard_file.write("shapes data_obs  *  %s  $CHANNEL__data\n"%(shapes_filename))
                 datacard_file.write("\n")
             datacard_file.write("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
             datacard_file.write("\n")
             datacard_file.write("bin          %s\n"%channel)
-            datacard_file.write("observation  %.4f\n"%process_data["data"]["shapes"][channel][discriminant]["rate"])
+            if args.asimov_only:
+                datacard_file.write("observation  %.4f\n"%process_data["data"]["shapes"][channel][discriminant]["rate"])
+            else:
+                datacard_file.write("observation  %.4f\n"%process_data["asimov"]["shapes"][channel][discriminant]["rate"])
             datacard_file.write("\n")
             datacard_file.write("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
             datacard_file.write("\n")
