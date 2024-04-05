@@ -8,7 +8,7 @@ Processes:
 
 Channels:
   SL_res_2b_x:
-    bjets_mbb
+    bjets_mbb_llr
 
 
 
