@@ -50,7 +50,7 @@ if __name__ == "__main__":
         process_samples = process_data[process]["samples"]
         process_data[process]["shapes"] = {}
         for channel in cat_disc_yaml_data["Channels"]:
-            process_data[process]["shapes"]["channel"] = {}
+            process_data[process]["shapes"][channel] = {}
             discriminant_list = cat_disc_yaml_data["Channels"][channel]
             for discriminant in discriminant_list:
                 process_data[process]["shapes"][channel][discriminant] = {}
