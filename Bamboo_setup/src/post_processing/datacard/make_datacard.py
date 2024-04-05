@@ -73,7 +73,7 @@ if __name__ == "__main__":
             input_root_file.Close()
 
         for channel in cat_disc_yaml_data["Channels"]:
-            discriminant_list = cat_disc_yaml_data[channel]
+            discriminant_list = cat_disc_yaml_data["Channels"][channel]
             for discriminant in discriminant_list:
                 process_data[process]["shapes"][channel][discriminant]["total_histogram"] = process_data[process]["shapes"][channel][discriminant]["sample_histogram"][0].Clone("%s__%s"%(channel, process))
                 for i in range(1,len(process_data[process]["shapes"][channel][discriminant]["sample_histogram"])):
