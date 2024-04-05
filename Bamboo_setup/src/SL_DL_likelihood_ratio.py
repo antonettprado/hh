@@ -161,7 +161,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return lrs_for_vars_custom_combos
 
     def get_lrs_for_bjets_vars_1D(self) -> 'list[LikelihoodRatio]':
-        bjets_vars_1D = self.get_bjet_vars()
+        self.bjet_vars = self.get_bjet_vars()
+        bjets_vars_1D = self.bjet_vars
         lrs_for_bjets_vars_1D = []
         for var in bjets_vars_1D:
             lr = LikelihoodRatio(var.name)
