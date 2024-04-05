@@ -12,6 +12,9 @@ import ROOT
 import numpy as np
 import scipy.interpolate
 
+ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
+ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
+
 class SL_DL_vars_reco(SL_DL_event_selection):
 
     def __init__(self, args):
@@ -798,12 +801,12 @@ class SL_DL_vars_reco(SL_DL_event_selection):
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         print("------------------ Calculating Likelihood Ratios --------------------")
-        
-        ALL_SIGNAL_SAMPLES = ['bbWW_sl.root']
-        ALL_BACKG_SAMPLES = ['TTbar_sl.root']
-        results_path = Path(self.args.output) / 'results' # Constructs "output_path/results" using the forward slash operator
-        SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
-        BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
+
+        files_in_resultsdir = os.listdir(resultsdir)
+        PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
+        PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
+        SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
+        BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
         INTERPOLATION_SCALE_FACTOR_1D = 9
         INTERPOLATION_SCALE_FACTOR_2D = 3
         INTERPOLATION_SCALE_FACTOR_3D = 3
@@ -874,6 +877,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                 all_corrections.append(corr)
 
         cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(results_path, "corrections_llr.json")
+        output_llr_file = os.path.join(resultsdir, "corrections_llr.json")
         with open(output_llr_file, "w") as outfile:
             outfile.write(cset.json(exclude_unset=False))

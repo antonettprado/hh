@@ -14,9 +14,6 @@ from utils.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
 from typing import Dict, List
 from itertools import combinations
 
-SIGNAL_SAMPLES = None
-BACKG_SAMPLES = None
-WITH_TITLES = None
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
