@@ -83,8 +83,8 @@ def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2
             subcat = sc
             if len(ref) < len(init_ref): break
 
-        if ref.endswith('_lr'):
-            ref = ref.replace('_lr', '')
+        if ref.endswith('_llr'):
+            ref = ref.replace('_llr', '')
             varnames = ref.split('_x_')
             var = LikelihoodRatio(varnames)
         elif ref in ALL_VARNAMES_1D:

@@ -254,22 +254,15 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # ===============================================================================
         # ================================== Plots ======================================
         # # ===============================================================================
-        # lrs_for_vars_1D = self.get_lrs_for_vars_1D()
+        lrs_for_vars_1D = self.get_lrs_for_vars_1D()
         # lrs_for_vars_2D = self.get_lrs_for_vars_2D()
         # lrs_for_vars_3D = self.get_lrs_for_vars_3D()
         # lrs_for_vars_1D_2combos = self.get_lrs_for_vars_1D_2combos()
         # lrs_for_vars_custom_combos = self.get_lrs_for_vars_custom_combos()
         # all_lrs = lrs_for_vars_1D + lrs_for_vars_2D + lrs_for_vars_3D + lrs_for_vars_1D_2combos + lrs_for_vars_custom_combos
         
-        # hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
-        # plots.extend(hists_1D)
-
-        lrs_for_bjets_vars_1D = self.get_lrs_for_bjets_vars_1D()
-        lrs_for_bjets_vars_2D = self.get_lrs_for_bjets_vars_2D()
-        lrs_for_bjets_vars_custom_combos = self.get_lrs_for_bjets_vars_custom_combos()
-        all_lrs = lrs_for_bjets_vars_1D + lrs_for_bjets_vars_2D + lrs_for_bjets_vars_custom_combos
-
-        hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr]
+        all_lrs = lrs_for_vars_1D
+        hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         plots.extend(hists_1D)
 
         # plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)
