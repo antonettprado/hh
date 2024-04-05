@@ -56,13 +56,13 @@ export X509_USER_PROXY=$(realpath ~/private/x509up)
 ## Process NANOAODs: SL_DL_event_selection 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_event_selection.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_EventSelection --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_event_selection.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_EventSelection --envConfig config/cern.ini --distributed=driver
 ```
 
 ## Process NANOAODs: SL_DL_vars_gen 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_vars_gen.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsGen --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_vars_gen.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsGen --envConfig config/cern.ini --distributed=driver
 ```
 
 ### Postprocessing: Plot Signal vs Background Comparisons 
@@ -73,7 +73,7 @@ python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsGen -
 ## Process NANOAODs: SL_DL_vars_reco
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_vars_reco.py config/analysis_2018.yml -o Z_OUTPUT/TOTAL_VarsReco --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_vars_reco.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsReco --envConfig config/cern.ini --distributed=driver
 ```
 
 ### Postprocessing: Plot Signal vs Background Comparisons 
@@ -89,7 +89,7 @@ python3 post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco
 ## Process NANOAODs: SL_DL_likelihood_ratios
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2018.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LR --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2022.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LR --envConfig config/cern.ini --distributed=driver
 ```
 
 ### Postprocessing: Compare LR signal vs background 
@@ -105,9 +105,54 @@ python3 src/post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_L
 # ------------------------------ Trigger -------------------------------
 ## Process NanoAODs with L1 objects: SL_L1_trigger_efficiency
 ```bash
-bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2018_L1.yml -o Z_OUTPUT/L1_sample2018_pt0 --lep_pt 0
+bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2024.yml -o Z_OUTPUT/L1_sample2018_pt0 --lep_pt 0
 ```
 ### Postprocessing: Plot trigger efficiency s-curves
 ```bash
 python3 src/post_processing/trigger/plot_trigger_efficiencies.py
 ```
+
+# ------------------------------ Make Datacards -------------------------------
+## Make datacards from results 
+
+Update the yaml file (src/input/Datacard_category_discriminant.yml) with channels and discriminants to create datacards for
+
+```bash
+python3 src/post_processing/datacard/make_datacards.py -i Z_OUTPUT/TOTAL_VarsReco_LR -c config/analysis_2022.yml -f src/input/Datacard_category_discriminant.yml -a
+```
+
+# ------------------------------ Set up Higgs Combine for Fitting -------------------------------
+## Setup of Higgs Combine for fitting
+
+```bash
+cd
+cmssw-el7
+cmsrel CMSSW_11_3_4
+cd CMSSW_11_3_4/src
+cmsenv
+git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+cd HiggsAnalysis/CombinedLimit
+git fetch origin
+git checkout v9.2.0
+scramv1 b clean; scramv1 b
+cd ../../
+
+git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
+git checkout v2.0.0
+scram b
+cd CombineHarvester/CombineTools/
+
+git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
+```
+## To run the fits
+
+Use the same yaml file used to create the datacards (src/input/Datacard_category_discriminant.yml)
+
+```bash
+python3 src/post_processing/fits/runs_fits.py -i Z_OUTPUT/TOTAL_VarsReco_LR -f src/input/Datacard_category_discriminant.yml
+```
+
+
+
+
+
