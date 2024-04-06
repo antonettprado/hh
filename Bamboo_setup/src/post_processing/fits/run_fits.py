@@ -44,7 +44,7 @@ if __name__ == "__main__":
             print ("      Running for datacard: %s\n"%datacard_file)
 
             # Convert datacard to workspace
-            print ("        Convert datacard to workspace")
+            print ("        Convert datacard to workspace\n\n")
             os.system("combineTool.py -M T2W -m 125.38 -v 3 -i %s"%datacard_file)
             workspace_file = datacard_file.split(".txt")[0] + ".root"
             
@@ -53,7 +53,7 @@ if __name__ == "__main__":
             fit_results_file.write("Blinded Limits:\n\n")
             fit_results_file.close()
             print ("        Blinded Limits: ")
-            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both -t --expectSignal %s"%workspace_file) >> fit_results_filename
+            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both -t --expectSignal %s >> %s"%(workspace_file, fit_results_filename)) 
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             fit_results_file.write("Unblinded Limits:\n\n")
             fit_results_file.close()
             print ("        Unblinded Limits: ")
-            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both %s"%workspace_file) >> fit_results_filename
+            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both %s >> %s"%(workspace_file, fit_results_filename)) 
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
