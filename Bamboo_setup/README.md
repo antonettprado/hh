@@ -145,13 +145,14 @@ scram b
 cd CombineTools/
 
 git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
+export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
 ```
 ## To run the fits
 
 Use the same yaml file used to create the datacards (src/input/Datacard_category_discriminant.yml)
 
 ```bash
-python3 src/post_processing/fits/runs_fits.py -i Z_OUTPUT/TOTAL_VarsReco_LR -f src/input/Datacard_category_discriminant.yml
+python3 src/post_processing/fits/run_fits.py -i Z_OUTPUT/TOTAL_VarsReco_LR -f src/input/Datacard_category_discriminant.yml
 ```
 
 

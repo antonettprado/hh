@@ -38,7 +38,7 @@ if __name__ == "__main__":
             datacard_file = glob.glob("%s/*.txt"%discriminant_dir)[0]
             shapes_file = glob.glob("%s/*.root"%discriminant_dir)[0]
             fit_results_filename = output_dir_sel_cat_disc + datacard_file.split(".txt")[0] + "_fit_results.txt"
-            fit_results_file = open(fit_results_filename)
+            fit_results_file = open(fit_results_filename, "w")
             fit_results_file.write("Fit results for Channel: %s, Discirminant: %s, Datacard: %s\n\n"%(channel, discriminant, datacard_file))
             fit_results_file.close()
             print ("      Running for datacard: %s\n"%datacard_file)
@@ -49,22 +49,22 @@ if __name__ == "__main__":
             workspace_file = datacard_file.split(".txt")[0] + ".root"
             
             # Run blinded fit for Asymptotic Limits
-            fit_results_file = open(fit_results_filename)
+            fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("Blinded Limits:\n\n")
             fit_results_file.close()
             print ("        Blinded Limits: ")
-            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both -t --expectSignal %s"%workspace_file) > fit_results_filename
-            fit_results_file = open(fit_results_filename)
+            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both -t --expectSignal %s"%workspace_file) >> fit_results_filename
+            fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
 
             # Run unblinded fit for Asymptotic Limits
-            fit_results_file = open(fit_results_filename)
+            fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("Unblinded Limits:\n\n")
             fit_results_file.close()
             print ("        Unblinded Limits: ")
             os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both %s"%workspace_file) >> fit_results_filename
-            fit_results_file = open(fit_results_filename)
+            fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
 
