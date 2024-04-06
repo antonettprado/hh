@@ -50,19 +50,9 @@ if __name__ == "__main__":
             
             # Expected A-priori Asymptotic Limits for Blinded Fit
             fit_results_file = open(fit_results_filename, "a")
-            fit_results_file.write("Expected A-priori Asymptotic Limits for Blinded Fit\n\n")
+            fit_results_file.write("Calculating A-priori Expected Asymptotic Limits for Blinded Fit\n\n")
             fit_results_file.close()
-            print ("        Expected A-priori Asymptotic Limits for Blinded Fit ")
-            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --noFitAsimov --run blind %s >> %s"%(workspace_file, fit_results_filename)) 
-            fit_results_file = open(fit_results_filename, "a")
-            fit_results_file.write("\n\n")
-            fit_results_file.close()
-
-            # Expected Asymptotic Limits for Blinded Fit
-            fit_results_file = open(fit_results_filename, "a")
-            fit_results_file.write("Calculating Expected Asymptotic Limits for Blinded Fit\n\n")
-            fit_results_file.close()
-            print ("        Calculating Expected Asymptotic Limits for Blinded Fit ")
+            print ("        Calculating A-priori Expected Asymptotic Limits for Blinded Fit ")
             os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run blind %s >> %s"%(workspace_file, fit_results_filename)) 
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
