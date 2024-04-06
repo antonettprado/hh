@@ -53,7 +53,7 @@ if __name__ == "__main__":
             fit_results_file.write("Blinded Limits:\n\n")
             fit_results_file.close()
             print ("        Blinded Limits: ")
-            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both -t --expectSignal %s >> %s"%(workspace_file, fit_results_filename)) 
+            os.system("combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --run both -t -1 --expectSignal 1 %s >> %s"%(workspace_file, fit_results_filename)) 
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
