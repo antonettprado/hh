@@ -109,8 +109,13 @@ if __name__ == "__main__":
             print ("    Discriminant: %s"%discriminant)
             output_dir_sel_cat_disc = output_dir_sel_cat + "/" + discriminant
             os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat_disc))
-            datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_datacard.txt"
-            shapes_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_shapes.root"
+            datacard_filename, shapes_filename = "", ""
+            if args.asimov_only:
+                datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_asimov_datacard.txt"
+                shapes_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_asimov_shapes.root"
+            else:
+                datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_datacard.txt"
+                shapes_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_shapes.root"
 
             output_root_file = ROOT.TFile(shapes_filename, "recreate")
             for process in process_data:
