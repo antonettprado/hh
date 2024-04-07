@@ -1,5 +1,5 @@
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, CutFlowReport
+from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.object_definition as object_defs
@@ -685,25 +685,43 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     def get_skims(self, vars, plots):
 
-        # This loop fails due to some selections like "SL_res_2b" - cause unknown
-        # for selection_name, selection in self.jet_subcats.items():
-        #     keys = [sub_var.ref for var in vars for sub_var in var if sub_var.subcat == selection_name]
-        #     values = [sub_var.data for var in vars for sub_var in var if sub_var.subcat == selection_name]
-        #     branches = dict(zip(keys, values))
-        #     branches_from_input_tree = ["event", "Electron_pt", "Muon_pt", "Jet_pt"]
-        #     branches.update({branch: None for branch in branches_from_input_tree})
-        #     plots.append(Skim(selection_name, branches, selection))
-
-        from bamboo.plots import Skim
-        # sel_names = ["SL_res_1b","SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         sel_name = "SL_res_2b_x"
         selection = self.jet_subcats[sel_name]
-        keys = [sub_var.ref for var in vars for sub_var in var if sub_var.subcat == sel_name]
-        values = [sub_var.data for var in vars for sub_var in var if sub_var.subcat == sel_name]
-        branches = dict(zip(keys, values))
-        # branches_from_input_tree = ["event", "Electron_pt", "Muon_pt", "Jet_pt"]
-        # branches.update({branch: None for branch in branches_from_input_tree})
-        plots.append(Skim(sel_name, branches, selection))
+
+        objects = self.objects
+        sel_skim = {
+            "event": None,
+            "gen_Weight": objects["gen_Weight"],
+            "nAK4": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"])),
+            "nAK4_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_btags"])),
+            "met_pt": objects["met"].pt,
+            "met_phi": objects["met"].phi}
+
+        e0, mu0 = objects["tight_electrons"][0], objects["tight_muons"][0]
+        sel_skim.update({
+            "lepton0_pt": op.switch(e0.pt >= mu0.pt, e0.pt, mu0.pt),
+            "lepton0_eta": op.switch(e0.pt >= mu0.pt, e0.eta, mu0.eta),
+            "lepton0_phi": op.switch(e0.pt >= mu0.pt, e0.phi, mu0.phi),
+            "lepton0_relIso": op.switch(e0.pt >= mu0.pt, e0.pfRelIso03_all, mu0.pfRelIso03_all)})
+        
+        jet_tree = {
+            "AK4_0": objects["cleaned_ak4_jets"][0],
+            "AK4_1": objects["cleaned_ak4_jets"][1],
+            "AK4_2": objects["cleaned_ak4_jets"][2],
+            "AK4_btag0": objects["cleaned_ak4_btags"][0],
+            "AK4_btag1": objects["cleaned_ak4_btags"][1]}
+        for jet_name, jet in jet_tree.items():
+            sel_skim.update({
+                '_'.join([jet_name, 'pt']): jet.pt,
+                '_'.join([jet_name, 'eta']): jet.eta,
+                '_'.join([jet_name, 'phi']): jet.phi})
+        
+        sub_var_names = [sub_var.ref for var in vars for sub_var in var if sub_var.subcat == sel_name]
+        sub_var_vals = [sub_var.data for var in vars for sub_var in var if sub_var.subcat == sel_name]
+        sub_var_dict = dict(zip(sub_var_names, sub_var_vals))
+
+        sel_skim.update(sub_var_dict)
+        plots.append(Skim(sel_name, sel_skim, selection))
 
         return plots
 
@@ -796,7 +814,6 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         interp_bin_contents = np.flatten(interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers)))).flatten()
     
         return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
-
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
