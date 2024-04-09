@@ -118,7 +118,7 @@ python3 src/post_processing/trigger/plot_trigger_efficiencies.py
 Update the yaml file (src/input/Datacard_category_discriminant.yml) with channels and discriminants to create datacards for
 
 ```bash
-python3 src/post_processing/datacard/make_datacards.py -i Z_OUTPUT/TOTAL_VarsReco_LR -c config/analysis_2022.yml -f src/input/Datacard_category_discriminant.yml -a
+python3 src/post_processing/datacard/make_datacards.py -i Z_OUTPUT/TOTAL_VarsReco_LR -c config/analysis_2022.yml -f src/input/datacard_category_discriminant.yml -a
 ```
 
 # ------------------------------ Set up Higgs Combine for Fitting -------------------------------
@@ -152,7 +152,7 @@ export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
 Use the same yaml file used to create the datacards (src/input/Datacard_category_discriminant.yml)
 
 ```bash
-python3 src/post_processing/fits/run_fits.py -i Z_OUTPUT/TOTAL_VarsReco_LR -f src/input/Datacard_category_discriminant.yml
+python3 src/post_processing/fits/run_fits.py -i Z_OUTPUT/TOTAL_VarsReco_LR -f src/input/datacard_category_discriminant.yml
 ```
 
 
