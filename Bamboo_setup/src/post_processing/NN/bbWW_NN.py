@@ -52,7 +52,12 @@ X_test_events = X_test["event"]
 X_train = X_train.drop(columns=["event"])
 X_test = X_test.drop(columns=["event"])
 
-## Setting callbacks
+## ====== Optional: Pick variable subset to keep ===============
+
+vars = ['lepton0_pt', 'lepton0_phi', 'AK4_0_pt', 'AK4_1_pt', 'SL_res_2b_x_bjets_mbb', 'SL_res_2b_x_trijet_mInv']
+X_train = X_train[vars]
+X_test = X_test[vars]
+## ===================== Setting callbacks =====================
 early_stopping = EarlyStopping(monitor="val_loss", patience=5)
 
 model_checkpoint = ModelCheckpoint(
@@ -70,11 +75,11 @@ model_checkpoint = ModelCheckpoint(
                         # at the end of every epoch
 )
 
-## Defining the Model
+## ===================== Defining the Model =====================
 NDIM = len(X_train.columns)
 inputs = Input(shape=(NDIM,), name="input")
-# intermediate = Dense(units=2, activation='relu', name='intermediate')(inputs)
-outputs = Dense(units=1, name="output", kernel_initializer="normal", activation="sigmoid")(inputs)
+intermediate = Dense(units=2, activation='relu', name='intermediate')(inputs)
+outputs = Dense(units=1, name="output", kernel_initializer="normal", activation="sigmoid")(intermediate)
 
 model = Model(inputs=inputs, outputs=outputs)
 model.compile(
@@ -83,7 +88,7 @@ model.compile(
     metrics=["accuracy"])
 model.summary()
 
-## Training the model
+## ====================== Training the model ======================
 history = model.fit(
     X_train.values, # features (or independent variables)
     Y_train.values, # labels (or dependent variables)
@@ -94,17 +99,28 @@ history = model.fit(
     validation_split=0.25   # 25% of X_train_val and Y_train will be used to evaluate the model's performance
 )
 
+print("Saving model ...")
+modeldir = os.path.join(NNdir, 'myModel')
+model.save(modeldir)
+
+# Writing the list of input variables
+input_names = X_train.columns.tolist()
+input_vars_file = os.path.join(modeldir, 'input_variables.txt')
+with open(input_vars_file, 'w') as file:
+    for name in input_names:
+        file.write(name + '\n')
+
 # Optional: save the training history
 # history_df = pd.DataFrame(history.history)
 # history_df.to_csv(os.path.join(NNdir, 'model_history.csv'), index=True)
 
-## Accuracy
+## =========================== Accuracy ===========================
 Y_pred = model.predict(X_test)
 binary_predictions = (Y_pred > 0.5).astype(int)
 accuracy = accuracy_score(Y_test, binary_predictions.flatten())
 print(f"Accuracy = {accuracy}")
 
-## Output 
+## =========================== Output =============================
 X_test_events = X_test_events.reset_index(drop=True)
 Y_predict = pd.Series(Y_pred.flatten(), name='Prediction').reset_index(drop=True)
 
