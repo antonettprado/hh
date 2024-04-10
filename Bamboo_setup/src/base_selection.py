@@ -142,6 +142,12 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         # CutFlow report 
         self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
 
+        # Gen Weight
+        if self.is_MC:
+            noSel = noSel.refine('genWeight', weight=tree.genWeight)
+        else:
+            noSel = noSel
+
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
         self.yields.add(self._noSel, "self._noSel")
@@ -151,13 +157,8 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             self.yields.add(noSel, "Veto super-weighted events in HH")
             # Add neccesary plot for corrected sum of genWeights 
             self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
-        
-        # Gen Weight
-        if self.is_MC:
-            self.noSel = noSel.refine('genWeight', weight=tree.genWeight)
-        else:
-            self.noSel = noSel
-        
+        self.noSel = noSel
+
         # Base Selection -----------------------------------------------------
         # PV Selection
         baseSel = self.noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
