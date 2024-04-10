@@ -4,6 +4,7 @@ from bamboo.analysisutils import makeMultiPrimaryDatasetTriggerSelection, config
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
+import os
 
 from itertools import chain
 import re
