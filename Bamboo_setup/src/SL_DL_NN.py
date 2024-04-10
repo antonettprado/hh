@@ -3,7 +3,6 @@ from pathlib import Path
 from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.treefunctions import mvaEvaluator
-from bamboo.analysisutils import loadPlotIt
 import bamboo.treefunctions as op
 
 class SL_DL_NN(SL_DL_vars_reco):
@@ -56,5 +55,4 @@ class SL_DL_NN(SL_DL_vars_reco):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        p_config, samples, plots_1D, systematics, legend = loadPlotIt(config, [], eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes)
         print('Printing plots')

@@ -4,7 +4,6 @@ from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.plots import Skim
 from bamboo.scalefactors import get_correction
 from bamboo.treeproxies import FloatProxy
-from bamboo.analysisutils import loadPlotIt
 
 from SL_DL_vars_reco import SL_DL_vars_reco
 import utils.object_definition as object_defs
@@ -269,7 +268,6 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         # super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        p_config, samples, plots_1D, systematics, legend = loadPlotIt(config, [], eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes)
         print('Printing plots')
 
 

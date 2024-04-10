@@ -394,9 +394,8 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         return counters
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-
         super(SL_L1_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-
+        
         if self.args.test_only:
             file1 = os.path.join(resultsdir, 'bbWW_sl.root')
             df = ROOT.RDataFrame("skim_weights", file1)
