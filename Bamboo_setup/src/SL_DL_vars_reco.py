@@ -19,6 +19,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     def __init__(self, args):
         super(SL_DL_vars_reco, self).__init__(args)
+        self.event_nr_sel = "even"
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
@@ -732,7 +733,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         plots.extend(self.base_plots)
 
         super().set_objects(tree, self.args.mc_truth_b)
-        super().set_event_selections(tree, baseSel, yields, events='even')
+        super().set_event_selections(tree, baseSel, yields)
         super().set_category_groups()
 
         self.set_extra_objects()

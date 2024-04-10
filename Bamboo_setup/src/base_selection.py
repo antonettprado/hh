@@ -49,6 +49,7 @@ def getRunEra(sample):
 class NanoBaseHHbbWW(NanoAODHistoModule):
     def __init__(self, args):
         super(NanoBaseHHbbWW, self).__init__(args)
+        self.event_nr_sel = "all"
 
     def addArgs(self, parser):
         super(NanoBaseHHbbWW, self).addArgs(parser)
@@ -151,12 +152,27 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
         self.yields.add(self._noSel, "self._noSel")
-
+ 
+        # Select events in MC sample for analysis and adjust normalization -----------------------------------
         if 'HH' in sampleCfg['group']:
+            print ("Veto super-weighted events in HH")
             noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
             self.yields.add(noSel, "Veto super-weighted events in HH")
-            # Add neccesary plot for corrected sum of genWeights 
-            self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
+        cut = ()
+        if self.is_MC:
+            if self.event_nr_sel == 'all':
+                print ("Select all event numbers")
+                cut = ()
+            elif self.event_nr_sel == 'even':
+                print ("Select even event numbers")
+                cut = (tree.event % 2 == 0)
+            elif self.event_nr_sel == 'odd':
+                print ("Select odd event numbers")
+                cut = (tree.event % 2 == 1)
+            else:
+                raise ValueError("events must be 'all', 'odd', or 'even'")
+        noSel = self.noSel.refine('genEventSumWeight', cut=cut)        
+        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False)) # Add neccesary plot for corrected sum of genWeights 
         self.noSel = noSel
 
         # Base Selection -----------------------------------------------------

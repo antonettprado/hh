@@ -8,6 +8,7 @@ import bamboo.treefunctions as op
 class SL_DL_NN(SL_DL_vars_reco):
     def __init__(self, args):
         super(SL_DL_NN, self).__init__(args)
+        self.event_nr_sel = "odd"
 
     def get_NN_model(self):
         modelname = 'myModel'
@@ -32,7 +33,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         plots.extend(self.base_plots)
         
         self.set_objects(tree, self.args.mc_truth_b, use_mvaTTH=False) 
-        self.set_event_selections(tree, baseSel, yields, use_mvaTTH=False)
+        self.set_event_selections(tree, baseSel, yields)
         self.set_category_groups()
 
         self.set_extra_objects()

@@ -4,6 +4,7 @@ from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.plots import Skim
 from bamboo.scalefactors import get_correction
 from bamboo.treeproxies import FloatProxy
+from bamboo.plots import Skim
 
 from SL_DL_vars_reco import SL_DL_vars_reco
 import utils.object_definition as object_defs
@@ -20,6 +21,7 @@ ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def __init__(self, args):
         super(SL_DL_likelihood_ratio, self).__init__(args)
+        self.event_nr_sel = "odd"
         print("The input dir is: " + self.args.input_dir)
         print("The output path is: " + self.args.output)
 
@@ -218,7 +220,6 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
     def test_skim_refined(self, lrs: 'list[LikelihoodRatio]', selection, plots):
 
-        from bamboo.plots import Skim
         keys = [i.ref for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
         values = [i.data for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
         branches = dict(zip(keys, values))
@@ -234,7 +235,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         plots.extend(self.base_plots)
 
         super().set_objects(tree, self.args.mc_truth_b)
-        super().set_event_selections(tree, baseSel, yields, events='odd')
+        super().set_event_selections(tree, baseSel, yields)
         super().set_category_groups()
 
         super().set_extra_objects()
