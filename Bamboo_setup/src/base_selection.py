@@ -171,7 +171,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                 cut = (tree.event % 2 == 1)
             else:
                 raise ValueError("events must be 'all', 'odd', or 'even'")
-        noSel = self.noSel.refine('genEventSumWeight', cut=cut)        
+        noSel = noSel.refine('genEventSumWeight', cut=cut)        
         self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False)) # Add neccesary plot for corrected sum of genWeights 
         self.noSel = noSel
 
