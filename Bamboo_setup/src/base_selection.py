@@ -4,6 +4,8 @@ from bamboo.analysisutils import makeMultiPrimaryDatasetTriggerSelection, config
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.analysisutils import loadPlotIt
+
 from itertools import chain
 import re
 
@@ -199,3 +201,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected").GetBinContent(1):.3f}')
             counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
         return counters
+    
+    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+        super(NanoBaseHHbbWW, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        p_config, samples, plots_1D, systematics, legend = loadPlotIt(config, [], eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes)
