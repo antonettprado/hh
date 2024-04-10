@@ -729,6 +729,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
+        plots.extend(self.base_plots)
 
         super().set_objects(tree, self.args.mc_truth_b)
         super().set_event_selections(tree, baseSel, yields, events='even')

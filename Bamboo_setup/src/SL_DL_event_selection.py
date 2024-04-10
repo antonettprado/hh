@@ -654,6 +654,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
+        plots.extend(self.base_plots)
         
         self.set_objects(tree, self.args.mc_truth_b, use_mvaTTH=False) 
         self.set_event_selections(tree, baseSel, yields, use_mvaTTH=False)

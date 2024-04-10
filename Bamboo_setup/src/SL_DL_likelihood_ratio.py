@@ -231,6 +231,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
+        plots.extend(self.base_plots)
 
         super().set_objects(tree, self.args.mc_truth_b)
         super().set_event_selections(tree, baseSel, yields, events='odd')
