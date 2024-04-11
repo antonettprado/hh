@@ -11,7 +11,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         self.event_nr_sel = "odd"
 
     def get_NN_model(self):
-        modelname = 'myModel'
+        modelname = 'dense_model'
         NNdir = Path(__file__).parents[0] / 'post_processing' / 'NN'
         print(f'NNdir: {NNdir}')
         modeldir = NNdir / modelname
