@@ -94,6 +94,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         self.objects = {
             "event_nr": tree.event,
+            "run_nr": tree.run,
+            "ls": tree.luminosityBlock,
             "electron_ConePt": electron_ConePt,
             "muon_ConePt": muon_ConePt,
             "loose_electrons": loose_electrons,
@@ -494,6 +496,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         objects = self.objects
         base_tree = {
             "event_nr": objects["event_nr"],
+            "run_nr": objects["run_nr"],
+            "ls": objects["ls"],
             "is_sl_e": objects["is_sl_e"],
             "is_sl_mu": objects["is_sl_mu"],
             "is_dl_ee": objects["is_dl_ee"],
