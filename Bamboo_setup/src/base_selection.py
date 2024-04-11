@@ -4,6 +4,8 @@ from bamboo.analysisutils import makeMultiPrimaryDatasetTriggerSelection, config
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
+import os
+
 from itertools import chain
 import re
 
@@ -47,6 +49,7 @@ def getRunEra(sample):
 class NanoBaseHHbbWW(NanoAODHistoModule):
     def __init__(self, args):
         super(NanoBaseHHbbWW, self).__init__(args)
+        self.event_nr_sel = "all"
 
     def addArgs(self, parser):
         super(NanoBaseHHbbWW, self).addArgs(parser)
@@ -140,22 +143,38 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         # CutFlow report 
         self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
 
+        # Gen Weight
+        if self.is_MC:
+            noSel = noSel.refine('genWeight', weight=tree.genWeight)
+        else:
+            noSel = noSel
+
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
         self.yields.add(self._noSel, "self._noSel")
-
+ 
+        # Select events in MC sample for analysis and adjust normalization -----------------------------------
         if 'HH' in sampleCfg['group']:
+            print ("Veto super-weighted events in HH")
             noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
             self.yields.add(noSel, "Veto super-weighted events in HH")
-            # Add neccesary plot for corrected sum of genWeights 
-            self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
-        
-        # Gen Weight
+        cut = ()
         if self.is_MC:
-            self.noSel = noSel.refine('genWeight', weight=tree.genWeight)
-        else:
-            self.noSel = noSel
-        
+            if self.event_nr_sel == 'all':
+                print ("Select all event numbers")
+                cut = ()
+            elif self.event_nr_sel == 'even':
+                print ("Select even event numbers")
+                cut = (tree.event % 2 == 0)
+            elif self.event_nr_sel == 'odd':
+                print ("Select odd event numbers")
+                cut = (tree.event % 2 == 1)
+            else:
+                raise ValueError("events must be 'all', 'odd', or 'even'")
+        noSel = noSel.refine('genEventSumWeight', cut=cut)        
+        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False)) # Add neccesary plot for corrected sum of genWeights 
+        self.noSel = noSel
+
         # Base Selection -----------------------------------------------------
         # PV Selection
         baseSel = self.noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
@@ -167,6 +186,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         if not self.is_MC:
             baseSel = baseSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
 
+        '''
         # Triggers Paths
         # EGamma
         addHLTPath('EGamma', 'Ele32_WPTight_Gsf')
@@ -187,7 +207,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         else:
             if not self.args.noHLT:
                 baseSel = baseSel.refine('HLT', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
-                
+        '''
 
         return tree, baseSel, backend, lumiArgs
 
@@ -199,3 +219,4 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected").GetBinContent(1):.3f}')
             counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
         return counters
+    

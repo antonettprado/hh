@@ -14,6 +14,7 @@ from base_selection import NanoBaseHHbbWW
 class SL_DL_event_selection(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_event_selection, self).__init__(args)
+        self.event_nr_sel = "all"
         
     def addArgs(self, parser):
         super(SL_DL_event_selection, self).addArgs(parser)
@@ -93,6 +94,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
         self.objects = {
             "event_nr": tree.event,
+            "run_nr": tree.run,
+            "ls": tree.luminosityBlock,
             "electron_ConePt": electron_ConePt,
             "muon_ConePt": muon_ConePt,
             "loose_electrons": loose_electrons,
@@ -111,36 +114,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             "mht": mht,
             "met_ld": met_ld}
 
-    def set_event_selections(self, tree, sel, yields, use_mvaTTH=False, events='all'):
+    def set_event_selections(self, tree, baseSel, yields, use_mvaTTH=False):
 
-        def starting_selection(tree, sel, yields, events):
-
-            # Determine the cut to use
-            if events == 'all':
-                cut = ()
-            elif events == 'even':
-                cut = (tree.event % 2 == 0)
-            elif events == 'odd':
-                cut = (tree.event % 2 == 1)
-            else:
-                raise ValueError("events must be 'all', 'odd', or 'even'")
-
-            # Gen the base selection from base_selection, refine it with the relevant cut, and add to the yields table
-            if self.is_MC:
-                noSel = self.noSel.refine('genEventSumWeight', cut=cut)        
-            else:
-                noSel = self.noSel
-            yields.add(noSel, "Sample Sum of Weights") # This changes the yields in the list, even though we don't return it!
-
-            # Refine the working selection (baseSel) with the parity cut
-            if self.is_MC:
-                baseSel = sel.refine(events, cut=cut)
-            else:
-                baseSel = sel
-
-            return baseSel
-
-        baseSel = starting_selection(tree, sel, yields, events)
+        yields.add(self.noSel, "Sample Sum of Weights") # Needed to adjust the normalization in post processing scripts
 
         # Retrieve objects
         objects = self.objects
@@ -161,7 +137,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         met_ld = objects["met_ld"]
 
         # mll Selection
-        mllSel = sel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
+        mllSel = baseSel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
 
         # Apply Common Weights
         pileupWeight, top_pt_weight = op.c_float(-9999), op.c_float(-9999)
@@ -520,6 +496,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         objects = self.objects
         base_tree = {
             "event_nr": objects["event_nr"],
+            "run_nr": objects["run_nr"],
+            "ls": objects["ls"],
             "is_sl_e": objects["is_sl_e"],
             "is_sl_mu": objects["is_sl_mu"],
             "is_dl_ee": objects["is_dl_ee"],
@@ -654,6 +632,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
         plots.append(yields)
+        plots.extend(self.base_plots)
         
         self.set_objects(tree, self.args.mc_truth_b, use_mvaTTH=False) 
         self.set_event_selections(tree, baseSel, yields, use_mvaTTH=False)

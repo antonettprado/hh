@@ -57,19 +57,20 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         # Plots in base that need to be propagated to the Plotters #
         self.base_plots = []
 
+        # Gen Weight
+        if self.is_MC:
+            noSel = noSel.refine('genWeight', weight=tree.genWeight)
+        else:
+            noSel = noSel
+
         # Adding self.selections to class -----------------------------------
         self._noSel = noSel
-        # self.yields.add(self._noSel, "self._noSel")
 
-        noSel = noSel.refine("Veto bad events", cut=(op.abs(tree.genWeight) < 100)) 
-        # self.yields.add(noSel, "Veto bad events")
-        noSel = noSel.refine('genWeight', weight=tree.genWeight)
-        # self.yields.add(noSel, "genWeight")
- 
+        if 'HH' in sampleCfg['group']:
+            noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
+            # Add neccesary plot for corrected sum of genWeights 
+            self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
         self.noSel = noSel
-
-        # Add neccesary plot for corrected sum of genWeights -----------------
-        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), self.noSel, EqBin(1,0.,1.), autoSyst=False))
         
         # Base Selection -----------------------------------------------------
         # PV Selection
@@ -394,9 +395,8 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         return counters
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-
         super(SL_L1_trigger_efficiency, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-
+        
         if self.args.test_only:
             file1 = os.path.join(resultsdir, 'bbWW_sl.root')
             df = ROOT.RDataFrame("skim_weights", file1)
