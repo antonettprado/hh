@@ -186,6 +186,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         if not self.is_MC:
             baseSel = baseSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
 
+        '''
         # Triggers Paths
         # EGamma
         addHLTPath('EGamma', 'Ele32_WPTight_Gsf')
@@ -206,7 +207,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         else:
             if not self.args.noHLT:
                 baseSel = baseSel.refine('HLT', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
-                
+        '''
 
         return tree, baseSel, backend, lumiArgs
 
