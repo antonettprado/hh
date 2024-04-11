@@ -20,6 +20,9 @@ assert os.path.exists(resultsdir)
 NNdir = Bamboodir / 'src' / 'post_processing' / 'NN'
 print(f"The output directory is: {NNdir}")
 
+outdir_name = 'myModel'
+outdir = NNdir / outdir_name
+
 signal_name = resultsdir / 'bbWW_sl.root'
 background_name = resultsdir / 'TTbar_sl.root'
 up_signal = uproot.open(signal_name)
@@ -57,11 +60,13 @@ X_test = X_test.drop(columns=["event"])
 vars = ['lepton0_pt', 'lepton0_phi', 'AK4_0_pt', 'AK4_1_pt', 'SL_res_2b_x_bjets_mbb', 'SL_res_2b_x_trijet_mInv']
 X_train = X_train[vars]
 X_test = X_test[vars]
+print("Chosen features:")
+print(X_train.columns)
 ## ===================== Setting callbacks =====================
 early_stopping = EarlyStopping(monitor="val_loss", patience=5)
 
 model_checkpoint = ModelCheckpoint(
-    os.path.join(NNdir, "dense_model.h5"),   # specifies the file path where the model will be saved
+    str(outdir),   # specifies the file path where the model will be saved
     monitor="val_loss", # tells the callback to monitor the validation loss
     verbose=0,          # tells callback to not produce any output messages
     save_best_only=True,# ensures model is saved only when the monitored metric
@@ -99,13 +104,9 @@ history = model.fit(
     validation_split=0.25   # 25% of X_train_val and Y_train will be used to evaluate the model's performance
 )
 
-print("Saving model ...")
-modeldir = os.path.join(NNdir, 'myModel')
-model.save(modeldir)
-
 # Writing the list of input variables
 input_names = X_train.columns.tolist()
-input_vars_file = os.path.join(modeldir, 'input_variables.txt')
+input_vars_file = os.path.join(outdir, 'input_variables.txt')
 with open(input_vars_file, 'w') as file:
     for name in input_names:
         file.write(name + '\n')
