@@ -59,6 +59,15 @@ To run on condor (remove --distributed=driver to run locally and add -i to run i
 bambooRun -m src/SL_DL_event_selection.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_EventSelection --envConfig config/cern.ini --distributed=driver
 ```
 
+To produce skims add the option "-s" to the above command
+
+### Postprocessing: Produce tables for synchronization from skims
+```bash
+python3 src/post_processing/sync/create_sync_tables.py -i Z_OUTPUT/TOTAL_EventSelection -s bbWW_sl TTbar_sl
+```
+
+Add the different sample names for which you want to produce the tables
+
 ## Process NANOAODs: SL_DL_vars_gen 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
