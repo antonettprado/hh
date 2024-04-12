@@ -131,8 +131,9 @@ if __name__ == "__main__":
 
     ## =========================== Output =============================
     X_test_events = X_test_events.reset_index(drop=True)
+    Y_test = Y_test.reset_index(drop=True)
     Y_predict = pd.Series(Y_pred.flatten(), name='Prediction').reset_index(drop=True)
 
-    output_df = pd.concat([X_test_events, Y_predict], axis=1)
+    output_df = pd.concat([X_test_events, Y_test, Y_predict], axis=1)
     output_df.to_csv(os.path.join(output_dir, 'predictions.csv'), index=False)
     print(output_df)
