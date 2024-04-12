@@ -10,20 +10,23 @@ class SL_DL_NN(SL_DL_vars_reco):
         super(SL_DL_NN, self).__init__(args)
         self.event_nr_sel = "odd"
 
+    def addArgs(self, parser):
+        super(SL_DL_NN, self).addArgs(parser)
+        parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input NN model directory')
+
     def get_NN_model(self):
-        modelname = 'dense_model'
-        NNdir = Path(__file__).parents[0] / 'post_processing' / 'NN'
-        print(f'NNdir: {NNdir}')
-        modeldir = NNdir / modelname
-        modelpb = modeldir / 'saved_model.pb'
-        inputNodeNames = []
-        input_vars_file = modeldir / 'input_variables.txt'
-        with open(input_vars_file, 'r') as file:
-            for line in file:
-                inputNodeNames.append(line.strip())
-        print(inputNodeNames)
-        outputNodeNames = ['NN_score']
-        model = mvaEvaluator(modelpb, mvaType='Tensorflow', otherArgs = (inputNodeNames, outputNodeNames))
+        modeldir = self.args.input_dir + "/NN"
+        #inputNodeNames = []
+        #input_vars_file = modeldir / 'input_variables.txt'
+        #with open(input_vars_file, 'r') as file:
+        #    for line in file:
+        #        inputNodeNames.append(line.strip())
+        #print(inputNodeNames)
+        #modelpb = modeldir + "/saved_model.pb"
+        #model = mvaEvaluator(modelpb, mvaType='Tensorflow', otherArgs = (inputNodeNames, outputNodeNames))
+        model_onnx = modeldir + "/NN/dnn_model.onnx"
+        outputNodeNames = "output"
+        model = mvaEvaluator(model_onnx, mvaType='ONNXRuntime', otherArgs = (outputNodeNames))
         return model
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
@@ -50,11 +53,10 @@ class SL_DL_NN(SL_DL_vars_reco):
             "bjets_mbb": self.get_bjets_mbb()["SL_res_2b_x"].data,
             "trijet_mInv": self.get_trijet_mInv()["SL_res_2b_x"].data
         }
-
-        NN_score = model(*input_vars_dict.values(), defineOnFirstUse=False)
-        # muons = tree.Muon
-        plots.append(Plot.make1D('NN_score', NN_score, self.jet_subcats["SL_res_2b_x"], EqBin(10, 0, 1)))
-        # plots.append(Plot.make1D('muons_pt', muons[0].pt, baseSel, EqBin(200, 0, 200)))
+        #inputs = op.array('float', *[op.c_float(val) for val in input_vars_dict.values()])
+        #dnn_score = model(inputs)
+        dnn_score = model(*input_vars_dict.values())
+        plots.append(Plot.make1D('dnn_score', dnn_score[0], self.jet_subcats["SL_res_2b_x"], EqBin(100, 0, 1)))
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
