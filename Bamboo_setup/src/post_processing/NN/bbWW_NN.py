@@ -10,7 +10,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 import tf2onnx
 
 if __name__ == "__main__":
@@ -47,27 +47,32 @@ if __name__ == "__main__":
     backg_df = backg_df.iloc[:30000]
 
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
-    print("All columns:")
-    print(total_df.columns)
+
+    print(f"Total signal events: {len(signal_df)}")
+    print(f"Total backg events: {len(backg_df)}")
+    print("All columns:", total_df.columns, "\n")
 
     ## Dividing the data into testing and trainig datasets
     drop_before_split = ["isSignal", "gen_Weight"]
     X_df = total_df.drop(columns=drop_before_split)
     Y_df = total_df["isSignal"]
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X_df, Y_df, test_size=0.2, random_state=7)
+    test_size = 0.2
+    X_train, X_test, Y_train, Y_test = train_test_split(X_df, Y_df, test_size=test_size, random_state=7)
     X_train_events = X_train["event"]
     X_test_events = X_test["event"]
     X_train = X_train.drop(columns=["event"])
     X_test = X_test.drop(columns=["event"])
 
-    ## ====== Optional: Pick variable subset to keep ===============
+    print(f"The testing size is: {test_size}")
+    print(f"Nbr of training events: {len(X_train)}")
+    print(f"Nbr of test events: {len(X_test)}\n")
 
+    ## ====== Optional: Pick variable subset to keep ===============
     vars = ['lepton0_pt', 'lepton0_phi', 'AK4_0_pt', 'AK4_1_pt', 'SL_res_2b_x_bjets_mbb', 'SL_res_2b_x_trijet_mInv']
     X_train = X_train[vars]
     X_test = X_test[vars]
-    print("Chosen features:")
-    print(X_train.columns)
+    print("Chosen features:", X_train.columns)
     ## ===================== Setting callbacks =====================
     early_stopping = EarlyStopping(monitor="val_loss", patience=5)
 
@@ -124,16 +129,23 @@ if __name__ == "__main__":
     # history_df.to_csv(os.path.join(NNdir, 'model_history.csv'), index=True)
 
     ## =========================== Accuracy ===========================
-    Y_pred = model.predict(X_test)
-    binary_predictions = (Y_pred > 0.5).astype(int)
-    accuracy = accuracy_score(Y_test, binary_predictions.flatten())
-    print(f"Accuracy = {accuracy}")
+    Y_pred_score = model.predict(X_test)
+    Y_pred = (Y_pred_score > 0.5).astype(int)
+    Y_pred = pd.Series(Y_pred.flatten(), name='Prediction').reset_index(drop=True)
+    
+    accuracy = accuracy_score(Y_test, Y_pred)
+    print(f"Accuracy = {accuracy}\n")
 
+    tn, fp, fn, tp = confusion_matrix(Y_test, Y_pred).ravel()
+    print(f"True Negative: {tn}")
+    print(f"False Positive: {fp}")
+    print(f"False Negative: {fn}")
+    print(f"True Positive: {tp}")
     ## =========================== Output =============================
     X_test_events = X_test_events.reset_index(drop=True)
     Y_test = Y_test.reset_index(drop=True)
-    Y_predict = pd.Series(Y_pred.flatten(), name='Prediction').reset_index(drop=True)
+    Y_prediction = pd.Series(Y_pred_score.flatten(), name='Prediction Score').reset_index(drop=True)
 
-    output_df = pd.concat([X_test_events, Y_test, Y_predict], axis=1)
-    output_df.to_csv(os.path.join(output_dir, 'predictions.csv'), index=False)
-    print(output_df)
+    output_df = pd.concat([X_test_events, Y_test, Y_prediction], axis=1)
+    output_df.to_csv('predictions.csv', index=False)
+    output_df
