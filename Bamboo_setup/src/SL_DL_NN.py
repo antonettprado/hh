@@ -24,7 +24,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         #        inputNodeNames.append(line.strip())
         #print(inputNodeNames)
         #modelpb = modeldir + "/saved_model.pb"
-        #model = mvaEvaluator(modelpb, mvaType='Tensorflow', otherArgs = (inputNodeNames, outputNodeNames))
+        #model = mvaEvaluator(modelpb, mvaType='Tensorflow', otherArgs = (inputNodeNames, "output"))
         model_onnx = modeldir + "/dnn_model.onnx"
         model = mvaEvaluator(model_onnx, mvaType='ONNXRuntime', otherArgs = ("output"))
         return model
