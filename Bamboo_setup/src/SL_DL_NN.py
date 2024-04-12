@@ -25,8 +25,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         #modelpb = modeldir + "/saved_model.pb"
         #model = mvaEvaluator(modelpb, mvaType='Tensorflow', otherArgs = (inputNodeNames, outputNodeNames))
         model_onnx = modeldir + "/NN/dnn_model.onnx"
-        outputNodeNames = "output"
-        model = mvaEvaluator(model_onnx, mvaType='ONNXRuntime', otherArgs = (outputNodeNames))
+        model = mvaEvaluator(model_onnx, mvaType='ONNXRuntime', otherArgs = ("output"))
         return model
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
