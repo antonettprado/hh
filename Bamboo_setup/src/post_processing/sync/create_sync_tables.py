@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
         events = read_ntuple(input_filename)
         n_events = len(events)
-        sample = args.filename.split("/")[-1].split(".root")[0]
+        sample = input_filename.split("/")[-1].split(".root")[0]
         print ("Sample: %s"%sample)
         print ("Nr. of events: %d\n"%n_events)
 
