@@ -40,7 +40,7 @@ if __name__ == "__main__":
         if not os.path.exists(input_filename):
             print ("sample does not exist")
             sys.exit()
-        output_filename = output_dir + "/%s_sync_table.csv"
+        output_filename = output_dir + "/%s_sync_table.csv"%sample
 
         events = read_ntuple(input_filename)
         n_events = len(events)
