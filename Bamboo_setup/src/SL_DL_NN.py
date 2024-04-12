@@ -4,6 +4,7 @@ from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.treefunctions import mvaEvaluator
 import bamboo.treefunctions as op
+import os, sys
 
 class SL_DL_NN(SL_DL_vars_reco):
     def __init__(self, args):
@@ -15,7 +16,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input NN model directory')
 
     def get_NN_model(self):
-        modeldir = self.args.input_dir + "/NN"
+        modeldir = os.path.abspath(self.args.input_dir + "/NN")
         #inputNodeNames = []
         #input_vars_file = modeldir / 'input_variables.txt'
         #with open(input_vars_file, 'r') as file:
@@ -24,7 +25,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         #print(inputNodeNames)
         #modelpb = modeldir + "/saved_model.pb"
         #model = mvaEvaluator(modelpb, mvaType='Tensorflow', otherArgs = (inputNodeNames, outputNodeNames))
-        model_onnx = modeldir + "/NN/dnn_model.onnx"
+        model_onnx = modeldir + "/dnn_model.onnx"
         model = mvaEvaluator(model_onnx, mvaType='ONNXRuntime', otherArgs = ("output"))
         return model
 
