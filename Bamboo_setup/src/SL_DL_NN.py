@@ -56,7 +56,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         #inputs = op.array('float', *[op.c_float(val) for val in input_vars_dict.values()])
         #dnn_score = model(inputs)
         dnn_score = model(*input_vars_dict.values())
-        plots.append(Plot.make1D('dnn_score', dnn_score[0], self.jet_subcats["SL_res_2b_x"], EqBin(100, 0, 1)))
+        plots.append(Plot.make1D('SL_res_2b_x_dnn_score', dnn_score[0], self.jet_subcats["SL_res_2b_x"], EqBin(100, 0, 1)))
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
