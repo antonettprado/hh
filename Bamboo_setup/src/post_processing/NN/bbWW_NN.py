@@ -52,9 +52,6 @@ if __name__ == "__main__":
     print ("\n")
 
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
-
-    print(f"Total signal events: {len(signal_df)}")
-    print(f"Total backg events: {len(backg_df)}")
     print("All columns:", total_df.columns, "\n")
 
     ## Dividing the data into testing and trainig datasets
@@ -166,11 +163,9 @@ if __name__ == "__main__":
         print ("\n")
 
     ## =========================== Output =============================
-    print ("\n\n")
     X_test_events = X_test_events.reset_index(drop=True)
     Y_test = Y_test.reset_index(drop=True)
     Y_prediction = pd.Series(Y_pred_score.flatten(), name='Prediction Score').reset_index(drop=True)
 
     output_df = pd.concat([X_test_events, Y_test, Y_prediction], axis=1)
     output_df.to_csv('%s/predictions.csv'%output_dir, index=False)
-    output_df
