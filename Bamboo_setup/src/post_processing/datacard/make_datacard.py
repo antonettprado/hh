@@ -112,10 +112,10 @@ if __name__ == "__main__":
             datacard_filename, shapes_filename = "", ""
             if args.asimov_only:
                 datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_asimov_datacard.txt"
-                shapes_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_asimov_shapes.root"
+                shapes_filename = channel + "_" + discriminant + "_" + era + "_asimov_shapes.root"
             else:
                 datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_datacard.txt"
-                shapes_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_shapes.root"
+                shapes_filename = channel + "_" + discriminant + "_" + era + "_shapes.root"
 
             output_root_file = ROOT.TFile(shapes_filename, "recreate")
             for process in process_data:

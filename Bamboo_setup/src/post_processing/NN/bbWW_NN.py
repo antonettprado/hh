@@ -44,7 +44,12 @@ if __name__ == "__main__":
     backg_df["isSignal"] = np.zeros(len(backg_df))
 
     # Cutting away most backgruond events
-    backg_df = backg_df.iloc[:30000]
+    n_signal_events_total = len(signal_df)
+    print ("Total number of signal events: %d"%n_signal_events_total)
+    n_background_events_total = n_signal_events_total
+    print ("Total number of background events used: %d"%n_background_events_total)
+    backg_df = backg_df.iloc[:n_background_events_total]
+    print ("\n")
 
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
 
@@ -65,8 +70,13 @@ if __name__ == "__main__":
     X_test = X_test.drop(columns=["event"])
 
     print(f"The testing size is: {test_size}")
-    print(f"Nbr of training events: {len(X_train)}")
-    print(f"Nbr of test events: {len(X_test)}\n")
+    print(f"Number of training events: {len(X_train)}")
+    print(f"  Number of signal training events: {Y_train.value_counts()[1.0]}")
+    print(f"  Number of background training events: {Y_train.value_counts()[0.0]}")
+    print(f"Number of test events: {len(X_test)}")
+    print(f"  Number of signal test events: {Y_test.value_counts()[1.0]}")
+    print(f"  Number of background test events: {Y_test.value_counts()[0.0]}")
+    print ("\n\n")
 
     ## ====== Optional: Pick variable subset to keep ===============
     vars = ['lepton0_pt', 'lepton0_phi', 'AK4_0_pt', 'AK4_1_pt', 'SL_res_2b_x_bjets_mbb', 'SL_res_2b_x_trijet_mInv']
@@ -129,23 +139,38 @@ if __name__ == "__main__":
     # history_df.to_csv(os.path.join(NNdir, 'model_history.csv'), index=True)
 
     ## =========================== Accuracy ===========================
+    true_signal = Y_test.value_counts()[1.0]
+    true_background = Y_test.value_counts()[0.0]
     Y_pred_score = model.predict(X_test)
-    Y_pred = (Y_pred_score > 0.5).astype(int)
-    Y_pred = pd.Series(Y_pred.flatten(), name='Prediction').reset_index(drop=True)
-    
-    accuracy = accuracy_score(Y_test, Y_pred)
-    print(f"Accuracy = {accuracy}\n")
+    dnn_cuts = [0.1, 0.3, 0.5, 0.7, 0.9]
 
-    tn, fp, fn, tp = confusion_matrix(Y_test, Y_pred).ravel()
-    print(f"True Negative: {tn}")
-    print(f"False Positive: {fp}")
-    print(f"False Negative: {fn}")
-    print(f"True Positive: {tp}")
+    print ("Signal efficiency and background rejection for different cuts: \n")
+    for cut in dnn_cuts:
+        print ("  Cut: %.1f"%cut)
+        Y_pred = (Y_pred_score > cut).astype(int)
+        Y_pred = pd.Series(Y_pred.flatten(), name='Prediction').reset_index(drop=True)
+        
+        accuracy = accuracy_score(Y_test, Y_pred)
+        print(f"    Accuracy = {accuracy}\n")
+
+        tn, fp, fn, tp = confusion_matrix(Y_test, Y_pred).ravel()
+        signal_efficiency = tp/true_signal
+        background_rejection = tn/true_background
+        print ("    Signal efficiency: %.2f"%signal_efficiency)
+        print ("    Background rejection: %.2f"%background_rejection)
+        
+        #print(f"    True Negative: {tn}")
+        #print(f"    False Positive: {fp}")
+        #print(f"    False Negative: {fn}")
+        #print(f"    True Positive: {tp}")
+        print ("\n")
+
     ## =========================== Output =============================
+    print ("\n\n")
     X_test_events = X_test_events.reset_index(drop=True)
     Y_test = Y_test.reset_index(drop=True)
     Y_prediction = pd.Series(Y_pred_score.flatten(), name='Prediction Score').reset_index(drop=True)
 
     output_df = pd.concat([X_test_events, Y_test, Y_prediction], axis=1)
-    output_df.to_csv('predictions.csv', index=False)
+    output_df.to_csv('%s/predictions.csv'%output_dir, index=False)
     output_df
