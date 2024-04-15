@@ -288,4 +288,4 @@ if __name__ == "__main__":
     ax.legend()
     ax.set_xlabel('DNN score')
     ax.set_ylabel('Normalized number of events')
-    ax.savefig("%s/dnn_score_test_distribution.pdf"%output_dir)
+    fig.savefig("%s/dnn_score_test_distribution.pdf"%output_dir)
