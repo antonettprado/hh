@@ -2,15 +2,23 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 from pathlib import Path
+import importlib
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 import os, sys
 import argparse
 import uproot
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras import Model
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras import Model, regularizers
+from tensorflow.keras.metrics import BinaryAccuracy, AUC, Precision, Recall
+from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D
+from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D, BatchNormalization, Dropout
+from tensorflow.keras.layers.experimental import preprocessing
 from sklearn.metrics import accuracy_score, confusion_matrix
+import History 
 import tf2onnx
 
 if __name__ == "__main__":
@@ -50,7 +58,9 @@ if __name__ == "__main__":
     print ("Total number of background events used: %d"%n_background_events_total)
     #backg_df = backg_df.iloc[:n_background_events_total]
     print ("\n")
+
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
+    total_df = total_df[total_df.gen_Weight > 0] # remove events with negative gen_weight 
 
     # Calculating training weights
     total_df["training_weight"] = total_df["gen_Weight"].copy()
@@ -61,7 +71,7 @@ if __name__ == "__main__":
     #print("All columns:", total_df.columns, "\n")
     print (total_df)
     print ("\n")
-    
+
     # Randomize for training
     total_df = total_df.sample(frac=1)
 
@@ -69,14 +79,14 @@ if __name__ == "__main__":
     drop_before_split = ["isSignal", "gen_Weight", "training_weight"]
     X_df = total_df.drop(columns=drop_before_split)
     Y_df = total_df["isSignal"]
-    training_weights = total_df["training_weight"]
 
     test_size = 0.2
     X_train, X_test, Y_train, Y_test = train_test_split(X_df, Y_df, test_size=test_size, random_state=7)
     X_train_events = X_train["event"]
     X_test_events = X_test["event"]
-    X_train = X_train.drop(columns=["event"])
-    X_test = X_test.drop(columns=["event"])
+    training_weights = X_train["training_weight"]
+    X_train = X_train.drop(columns=["event", "training_weight"])
+    X_test = X_test.drop(columns=["event", "training_weight"])
 
     print(f"The testing size is: {test_size}")
     print(f"Number of training events: {len(X_train)}")
@@ -95,9 +105,9 @@ if __name__ == "__main__":
 
     ## ====== DNN hyperparameters ===============
     parameters = {
-        'epochs'                : 10,
+        'epochs'                : 1000,
         'lr'                    : 0.001,
-        'batch_size'            : 256,
+        'batch_size'            : 1024,
         'n_layers'              : 3,
         'n_neurons'             : 64,
         'hidden_activation'     : 'relu',
@@ -108,9 +118,66 @@ if __name__ == "__main__":
         'batch_norm'            : True,
     }
 
-    ## ===================== Setting callbacks =====================
-    early_stopping = EarlyStopping(monitor="val_loss", patience=5)
+    ## ===================== Defining the Model =====================
+    NDIM = len(X_train.columns)
+    
+    # Input layer
+    inputs = Input(shape=(NDIM,), name="input")
 
+    # Preprocessing layer
+    normalizer   = preprocessing.Normalization(
+        mean     = X_train.mean(axis=0).to_numpy(),
+        variance = X_train.var(axis=0).to_numpy(),
+        name     = 'Normalization'
+    )(inputs)
+    model_preprocess = Model(inputs=inputs, outputs=normalizer)
+    out_test = model_preprocess.predict(X_train,batch_size=5000)
+    print ('Input (after normalization) mean (should be close to 0)')
+    print (out_test.mean(axis=0))
+    print ('Input (after normalization) variance (should be close to 1)')
+    print (out_test.var(axis=0))
+    print ("\n") 
+    x = normalizer
+
+    # Hidden layers
+    for i in range(parameters['n_layers']):
+        x = Dense(
+            units                = parameters['n_neurons'], 
+            activation           = parameters['hidden_activation'], 
+            activity_regularizer = regularizers.l2(parameters['l2']),
+            name                 = f"dense_{i}"
+        )(x)
+        if parameters['batch_norm']:
+            x = BatchNormalization()(x)
+        if parameters['dropout'] > 0.:
+            x = Dropout(parameters['dropout'])(x)
+
+    # Output layer
+    outputs = Dense(
+        units                = 1,
+        kernel_initializer   = "normal",
+        activation           = parameters['output_activation'], 
+        activity_regularizer = regularizers.l2(parameters['l2']),
+        name                 = "output"
+    )(x)
+
+    model = Model(inputs=inputs, outputs=outputs)
+    model.compile(
+        optimizer = "adam", # Optimizer
+        #loss      = "binary_crossentropy", # Loss function to minimize
+        loss      = CategoricalCrossentropy(), # Loss function to minimize
+        #metrics   = ["accuracy"]
+        metrics   = [
+            BinaryAccuracy(),
+            AUC(),
+            Precision(),
+            Recall()
+        ],
+        weighted_metrics = []
+    )
+    model.summary()
+
+    ## ===================== Setting callbacks =====================
     model_checkpoint = ModelCheckpoint(
         output_dir,   # specifies the file path where the model will be saved
         monitor="val_loss", # tells the callback to monitor the validation loss
@@ -126,28 +193,40 @@ if __name__ == "__main__":
                             # at the end of every epoch
     )
 
-    ## ===================== Defining the Model =====================
-    NDIM = len(X_train.columns)
-    inputs = Input(shape=(NDIM,), name="input")
-    intermediate = Dense(units=2, activation='relu', name='intermediate')(inputs)
-    outputs = Dense(units=1, name="output", kernel_initializer="normal", activation="sigmoid")(intermediate)
+    # Stop the learning when val_loss stops increasing 
+    early_stopping = EarlyStopping( 
+        monitor              = 'val_loss', 
+        min_delta            = 0.001, 
+        patience             = 20,
+        verbose              = 1,
+        mode                 = 'min',
+        restore_best_weights = True
+    )
 
-    model = Model(inputs=inputs, outputs=outputs)
-    model.compile(
-        optimizer="adam",
-        loss="binary_crossentropy",
-        metrics=["accuracy"])
-    model.summary()
+    # reduce LR if not improvement for some time 
+    reduce_plateau = ReduceLROnPlateau(
+        monitor   = 'val_loss',
+        factor    = 0.1,
+        min_delta = 0.001, 
+        patience  = 8,
+        min_lr    = 1e-8,
+        verbose   = 2,
+        mode      = 'min'
+    )
+
+    importlib.reload(History)
+    loss_history = History.LossHistory()
 
     ## ====================== Training the model ======================
     history = model.fit(
-        X_train.values, # features (or independent variables)
-        Y_train.values, # labels (or dependent variables)
-        epochs=1000, # An epoch is one complete pass through the entire training dataset
-        batch_size=1024, # Number of samples that will be propagated through the network at once
-        verbose=1,  
-        callbacks=[early_stopping, model_checkpoint],
-        validation_split=0.25   # 25% of X_train_val and Y_train will be used to evaluate the model's performance
+        X_train, # features (or independent variables)
+        Y_train, # labels (or dependent variables)
+        verbose = 2,
+        batch_size = parameters['batch_size'], # Number of samples that will be propagated through the network at once
+        epochs = parameters['epochs'], # An epoch is one complete pass through the entire training dataset
+        sample_weight = training_weights,
+        validation_split = 0.25,  # 25% of X_train_val and Y_train will be used to evaluate the model's performance
+        callbacks = [early_stopping, reduce_plateau, loss_history]
     )
 
     model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(model, output_path="%s/dnn_model.onnx"%output_dir)
@@ -158,6 +237,8 @@ if __name__ == "__main__":
     with open(input_vars_file, 'w') as file:
         for name in input_names:
             file.write(name + '\n')
+
+    History.PlotHistory(loss_history,params=parameters,outputName="%s/dnn_history.png"%output_dir)
 
     # Optional: save the training history
     # history_df = pd.DataFrame(history.history)
