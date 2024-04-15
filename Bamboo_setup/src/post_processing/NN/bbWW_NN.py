@@ -46,18 +46,27 @@ if __name__ == "__main__":
     # Cutting away most backgruond events
     n_signal_events_total = len(signal_df)
     print ("Total number of signal events: %d"%n_signal_events_total)
-    n_background_events_total = n_signal_events_total
+    n_background_events_total = len(backg_df)
     print ("Total number of background events used: %d"%n_background_events_total)
-    backg_df = backg_df.iloc[:n_background_events_total]
+    #backg_df = backg_df.iloc[:n_background_events_total]
     print ("\n")
-
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
+
+    # Calculating training weights
+    for isSignal in total_df.isSignal.unique():
+        # training weight *= Nevents / sum of event weight
+        total_df.loc[total_df['isSignal']==isSignal,'training_weight'] *= total_df.shape[0] / total_df[total_df['isSignal']==isSignal]['gen_weight'].sum()
+
     print("All columns:", total_df.columns, "\n")
 
+    # Randomize for training
+    total_df = total_df.sample(frac=1)
+
     ## Dividing the data into testing and trainig datasets
-    drop_before_split = ["isSignal", "gen_Weight"]
+    drop_before_split = ["isSignal", "gen_Weight", "training_weight"]
     X_df = total_df.drop(columns=drop_before_split)
     Y_df = total_df["isSignal"]
+    training_weights = total_df["training_weight"]
 
     test_size = 0.2
     X_train, X_test, Y_train, Y_test = train_test_split(X_df, Y_df, test_size=test_size, random_state=7)
@@ -75,11 +84,27 @@ if __name__ == "__main__":
     print(f"  Number of background test events: {Y_test.value_counts()[0.0]}")
     print ("\n\n")
 
-    ## ====== Optional: Pick variable subset to keep ===============
-    vars = ['lepton0_pt', 'lepton0_phi', 'AK4_0_pt', 'AK4_1_pt', 'SL_res_2b_x_bjets_mbb', 'SL_res_2b_x_trijet_mInv']
-    X_train = X_train[vars]
-    X_test = X_test[vars]
+    ## ====== Pick input variable list ===============
+    input_variables = ['lepton0_pt', 'lepton0_phi', 'AK4_0_pt', 'AK4_1_pt', 'SL_res_2b_x_bjets_mbb', 'SL_res_2b_x_trijet_mInv']
+    X_train = X_train[input_variables]
+    X_test = X_test[input_variables]
     print("Chosen features:", X_train.columns)
+
+    ## ====== DNN hyperparameters ===============
+    parameters = {
+        'epochs'                : 10,
+        'lr'                    : 0.001,
+        'batch_size'            : 256,
+        'n_layers'              : 3,
+        'n_neurons'             : 64,
+        'hidden_activation'     : 'relu',
+        #'output_activation'     : 'softmax',
+        'output_activation'     : 'sigmoid',
+        'l2'                    : 1e-6,
+        'dropout'               : 0.,
+        'batch_norm'            : True,
+    }
+
     ## ===================== Setting callbacks =====================
     early_stopping = EarlyStopping(monitor="val_loss", patience=5)
 
