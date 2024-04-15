@@ -26,11 +26,12 @@ if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Train DNN")
     parser.add_argument("-i", "--input_dir", action="store", dest="input_dir", help="input_dir = input directory containing results")
+    parser.add_argument("-s", "--suffix", action="store", dest="suffix", help="suffix = suffix of output results directory")
     args = parser.parse_args()
 
     input_dir = args.input_dir + "/results"
     assert os.path.exists(input_dir)
-    output_dir = args.input_dir + "/NN"
+    output_dir = args.input_dir + "/NN_" + args.suffix
     if os.path.exists(output_dir):
         os.system("rm -rf %s"%os.path.abspath(output_dir))
     os.system("mkdir %s"%os.path.abspath(output_dir))

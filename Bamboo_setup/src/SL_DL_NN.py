@@ -16,7 +16,7 @@ class SL_DL_NN(SL_DL_vars_reco):
         parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input NN model directory')
 
     def get_NN_model(self):
-        modeldir = os.path.abspath(self.args.input_dir + "/NN")
+        modeldir = os.path.abspath(self.args.input_dir)
         #inputNodeNames = []
         #input_vars_file = modeldir / 'input_variables.txt'
         #with open(input_vars_file, 'r') as file:
