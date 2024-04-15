@@ -59,7 +59,7 @@ if __name__ == "__main__":
     n_signal_events_total = len(signal_df)
     print ("Total number of signal events: %d"%n_signal_events_total)
     #n_background_events_total = len(backg_df)
-    n_background_events_total = 30000
+    n_background_events_total = 500000
     print ("Total number of background events used: %d"%n_background_events_total)
     backg_df = backg_df.iloc[:n_background_events_total]
     print ("\n")
