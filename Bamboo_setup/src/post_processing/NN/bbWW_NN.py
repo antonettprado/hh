@@ -18,7 +18,7 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D, BatchNormalization, Dropout
 from tensorflow.keras.layers.experimental import preprocessing
 from sklearn.metrics import accuracy_score, confusion_matrix
-import History 
+#import History 
 import tf2onnx
 
 if __name__ == "__main__":
@@ -214,8 +214,8 @@ if __name__ == "__main__":
         mode      = 'min'
     )
 
-    importlib.reload(History)
-    loss_history = History.LossHistory()
+    #importlib.reload(History)
+    #loss_history = History.LossHistory()
 
     ## ====================== Training the model ======================
     history = model.fit(
@@ -226,7 +226,7 @@ if __name__ == "__main__":
         epochs = parameters['epochs'], # An epoch is one complete pass through the entire training dataset
         sample_weight = training_weights,
         validation_split = 0.25,  # 25% of X_train_val and Y_train will be used to evaluate the model's performance
-        callbacks = [early_stopping, reduce_plateau, loss_history]
+        callbacks = [early_stopping, reduce_plateau]
     )
 
     model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(model, output_path="%s/dnn_model.onnx"%output_dir)
@@ -238,7 +238,7 @@ if __name__ == "__main__":
         for name in input_names:
             file.write(name + '\n')
 
-    History.PlotHistory(loss_history,params=parameters,outputName="%s/dnn_history.png"%output_dir)
+    #History.PlotHistory(loss_history,params=parameters,outputName="%s/dnn_history.png"%output_dir)
 
     # Optional: save the training history
     # history_df = pd.DataFrame(history.history)
