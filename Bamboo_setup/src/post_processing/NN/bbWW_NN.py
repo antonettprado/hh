@@ -31,7 +31,10 @@ if __name__ == "__main__":
 
     input_dir = args.input_dir + "/results"
     assert os.path.exists(input_dir)
-    output_dir = args.input_dir + "/NN_" + args.suffix
+    if args.suffix is None:
+        output_dir = args.input_dir + "/NN"
+    else:
+        output_dir = args.input_dir + "/NN_" + args.suffix
     if os.path.exists(output_dir):
         os.system("rm -rf %s"%os.path.abspath(output_dir))
     os.system("mkdir %s"%os.path.abspath(output_dir))
