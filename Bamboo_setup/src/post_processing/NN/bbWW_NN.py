@@ -77,7 +77,7 @@ if __name__ == "__main__":
     total_df = total_df.sample(frac=1)
 
     ## Dividing the data into testing and trainig datasets
-    drop_before_split = ["isSignal", "gen_Weight", "training_weight"]
+    drop_before_split = ["isSignal", "gen_Weight"]
     X_df = total_df.drop(columns=drop_before_split)
     Y_df = total_df["isSignal"]
 
