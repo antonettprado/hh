@@ -54,9 +54,10 @@ if __name__ == "__main__":
     # Cutting away most backgruond events
     n_signal_events_total = len(signal_df)
     print ("Total number of signal events: %d"%n_signal_events_total)
-    n_background_events_total = len(backg_df)
+    #n_background_events_total = len(backg_df)
+    n_background_events_total = 30000
     print ("Total number of background events used: %d"%n_background_events_total)
-    #backg_df = backg_df.iloc[:n_background_events_total]
+    backg_df = backg_df.iloc[:n_background_events_total]
     print ("\n")
 
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
