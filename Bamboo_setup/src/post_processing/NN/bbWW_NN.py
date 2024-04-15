@@ -282,7 +282,6 @@ if __name__ == "__main__":
 
     ## =========================== Plot Signal and Background Output score distributions =============================
     fig, ax = plt.subplots()
-    output_df_signal
     ax.set_xlim(0, 1)
     ax.hist(output_df.loc['isSignal' == 1.0, 'Prediction Score'], bins=100, color='blue', label='Signal', density=True)
     ax.hist(output_df.loc['isSignal' == 0.0, 'Prediction Score'], bins=100, color='red', label='Background', density=True)
