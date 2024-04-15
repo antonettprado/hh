@@ -53,9 +53,10 @@ if __name__ == "__main__":
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
 
     # Calculating training weights
+    total_df["training_weight"] = total_df["gen_weight"].copy()
     for isSignal in total_df.isSignal.unique():
         # training weight *= Nevents / sum of event weight
-        total_df.loc[total_df['isSignal']==isSignal,'training_weight'] *= total_df.shape[0] / total_df[total_df['isSignal']==isSignal]['gen_weight'].sum()
+        total_df.loc[total_df["isSignal"]==isSignal,"training_weight"] *= total_df.shape[0] / total_df[total_df["isSignal"]==isSignal]["gen_weight"].sum()
 
     print("All columns:", total_df.columns, "\n")
 
