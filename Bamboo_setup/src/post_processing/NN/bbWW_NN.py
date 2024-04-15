@@ -283,9 +283,13 @@ if __name__ == "__main__":
     ## =========================== Plot Signal and Background Output score distributions =============================
     fig, ax = plt.subplots()
     ax.set_xlim(0, 1)
-    ax.hist(output_df.loc[output_df['isSignal'] == 1.0, 'Prediction Score'], bins=100, color='blue', label='Signal', density=True)
-    ax.hist(output_df.loc[output_df['isSignal'] == 0.0, 'Prediction Score'], bins=100, color='red', label='Background', density=True)
+    ax.hist(output_df.loc[output_df['isSignal'] == 1.0, 'Prediction Score']/true_signal, bins=100, color='blue', label='Signal', histtype='step')
+    ax.hist(output_df.loc[output_df['isSignal'] == 0.0, 'Prediction Score']/true_background, bins=100, color='red', label='Background', histtype='step')
     ax.legend()
     ax.set_xlabel('DNN score')
     ax.set_ylabel('Normalized number of events')
     fig.savefig("%s/dnn_score_test_distribution.pdf"%output_dir)
+
+
+
+    
