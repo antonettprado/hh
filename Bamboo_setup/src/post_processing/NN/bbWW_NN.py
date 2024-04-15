@@ -58,8 +58,10 @@ if __name__ == "__main__":
         # training weight *= Nevents / sum of event weight
         total_df.loc[total_df["isSignal"]==isSignal,"training_weight"] *= total_df.shape[0] / total_df[total_df["isSignal"]==isSignal]["gen_Weight"].sum()
 
-    print("All columns:", total_df.columns, "\n")
-
+    #print("All columns:", total_df.columns, "\n")
+    print (total_df)
+    print ("\n")
+    
     # Randomize for training
     total_df = total_df.sample(frac=1)
 
