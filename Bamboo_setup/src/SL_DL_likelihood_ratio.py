@@ -41,7 +41,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
             return get_correction(global_path, var_name, params={"xaxis": data[0],"yaxis":data[1], "zaxis":data[2]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     def get_lrs_for_vars_1D(self) -> 'list[LikelihoodRatio]':
-        vars_1D = self.get_all_reco_variables()
+        vars_1D = self.gather_all_reco_variables()
         lrs_for_vars_1D = []
         for var in vars_1D:
             lr = LikelihoodRatio(var.name)
@@ -58,7 +58,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return lrs_for_vars_1D
 
     def get_lrs_for_vars_2D(self) -> 'list[LikelihoodRatio]':
-        vars_2D = self.get_all_reco_2D_variables()     
+        vars_2D = self.gather_all_reco_2D_variables()     
         lrs_for_vars_2D = []   
         for var in vars_2D:
             lr = LikelihoodRatio(var.name)
@@ -77,7 +77,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return lrs_for_vars_2D
 
     def get_lrs_for_vars_3D(self) -> 'list[LikelihoodRatio]':
-        vars_3D = self.get_all_reco_3D_variables()     
+        vars_3D = self.gather_all_reco_3D_variables()     
         lrs_for_vars_3D = []   
         for var in vars_3D:
             lr = LikelihoodRatio(var.name)
