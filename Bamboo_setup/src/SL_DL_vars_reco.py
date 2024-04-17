@@ -176,9 +176,9 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         bjets_dR.populate(data, selections)
         return bjets_dR
 
-    def get_bjets_pT_bb(self) -> Variable1D:
-        bjets_pT_bb = Variable1D('bjets_pT_bb')
-        subcat_names = bjets_pT_bb.subcats
+    def get_bjets_pt_bb(self) -> Variable1D:
+        bjets_pt_bb = Variable1D('bjets_pt_bb')
+        subcat_names = bjets_pt_bb.subcats
         selections = self.get_selections_subset(subcat_names)
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
         res1b_data = (res_bjet0.p4 + best_nonbtag.p4).Pt() 
@@ -187,12 +187,12 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
             'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
             'SL_res_2b_x': res2b_data }
-        bjets_pT_bb.populate(data, selections)
-        return bjets_pT_bb
+        bjets_pt_bb.populate(data, selections)
+        return bjets_pt_bb
     
-    def get_bjet0_pT(self) -> Variable1D:
-        bjet0_pT = Variable1D('bjet0_pT')
-        subcat_names = bjet0_pT.subcats
+    def get_bjet0_pt(self) -> Variable1D:
+        bjet0_pt = Variable1D('bjet0_pt')
+        subcat_names = bjet0_pt.subcats
         selections = self.get_selections_subset(subcat_names)
         res_bjet0, _, boost_bjet0, _, _ = self._get_bjets_vars_data()
         res1b_data = res_bjet0.pt
@@ -201,12 +201,12 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
             'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
             'SL_res_2b_x': res2b_data }
-        bjet0_pT.populate(data, selections)
-        return bjet0_pT
+        bjet0_pt.populate(data, selections)
+        return bjet0_pt
 
-    def get_bjet1_pT(self) -> Variable1D:
-        bjet1_pT = Variable1D('bjet1_pT')
-        subcat_names = bjet1_pT.subcats
+    def get_bjet1_pt(self) -> Variable1D:
+        bjet1_pt = Variable1D('bjet1_pt')
+        subcat_names = bjet1_pt.subcats
         selections = self.get_selections_subset(subcat_names)
         _, res_bjet1, _, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
         res1b_data = best_nonbtag.pt
@@ -215,12 +215,12 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
             'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
             'SL_res_2b_x': res2b_data }
-        bjet1_pT.populate(data, selections)
-        return bjet1_pT
+        bjet1_pt.populate(data, selections)
+        return bjet1_pt
 
-    def get_bjets_mean_pT(self) -> Variable1D:
-        bjets_mean_pT = Variable1D('bjets_mean_pT')
-        subcat_names = bjets_mean_pT.subcats
+    def get_bjets_mean_pt(self) -> Variable1D:
+        bjets_mean_pt = Variable1D('bjets_mean_pt')
+        subcat_names = bjets_mean_pt.subcats
         selections = self.get_selections_subset(subcat_names)
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = self._get_bjets_vars_data()
         res1b_data = (res_bjet0.pt + best_nonbtag.pt)/2
@@ -229,8 +229,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
             'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
             'SL_res_2b_x': res2b_data }
-        bjets_mean_pT.populate(data, selections)
-        return bjets_mean_pT
+        bjets_mean_pt.populate(data, selections)
+        return bjets_mean_pt
 
     def get_bfatjet_mass(self) -> Variable1D:
         bfatjet_mass = Variable1D('bfatjet_mass')
@@ -255,17 +255,17 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return bfatjet_msoftdrop
     
     # Helper function for returning a list of all bjet-related variables for iteration
-    def get_bjet_vars(self) -> 'list[Variable1D]':
+    def gather_bjet_vars(self) -> 'list[Variable1D]':
         bjet_vars = [self.get_bjets_mbb(),
             self.get_bjets_dPhi(),
             self.get_bjets_dPhi_abs(),
             self.get_bjets_dEta(),
             self.get_bjets_dEta_abs(),
             self.get_bjets_dR(),
-            self.get_bjets_pT_bb(),
-            self.get_bjet0_pT(),
-            self.get_bjet1_pT(),
-            self.get_bjets_mean_pT(),
+            self.get_bjets_pt_bb(),
+            self.get_bjet0_pt(),
+            self.get_bjet1_pt(),
+            self.get_bjets_mean_pt(),
             self.get_bfatjet_mass(),
             self.get_bfatjet_msoftdrop()]
         return bjet_vars
@@ -326,28 +326,28 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         trijet_mInv.populate(data, selections)
         return trijet_mInv 
 
-    def get_trijet_pT(self) -> Variable1D:
-        trijet_pT = Variable1D('trijet_pT')
-        subcat_names = trijet_pT.subcats
+    def get_trijet_pt(self) -> Variable1D:
+        trijet_pt = Variable1D('trijet_pt')
+        subcat_names = trijet_pt.subcats
         selections = self.get_selections_subset(subcat_names)
         
         j0, j1, bjet = self._get_trijet_data()
         data = (j0.p4 + j1.p4 + bjet.p4).Pt()
         data = { 'SL_res_2b_x': data }
-        trijet_pT.populate(data, selections)
-        return trijet_pT 
+        trijet_pt.populate(data, selections)
+        return trijet_pt 
 
-    def get_trijet_pT_rat(self) -> Variable1D:
-        trijet_pT_rat = Variable1D('trijet_pT_rat')
-        subcat_names = trijet_pT_rat.subcats
+    def get_trijet_pt_rat(self) -> Variable1D:
+        trijet_pt_rat = Variable1D('trijet_pt_rat')
+        subcat_names = trijet_pt_rat.subcats
         selections = self.get_selections_subset(subcat_names)
 
         j0, j1, bjet = self._get_trijet_data()
         trijet = j0.p4 + j1.p4 + bjet.p4
         data = trijet.Pt() / (j0.pt + j1.pt + bjet.pt)
         data = { 'SL_res_2b_x':data }
-        trijet_pT_rat.populate(data, selections)
-        return trijet_pT_rat
+        trijet_pt_rat.populate(data, selections)
+        return trijet_pt_rat
 
     def get_blnu_mT(self) -> Variable1D:
         blnu_mT = Variable1D('blnu_mT')
@@ -360,16 +360,16 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         blnu_mT.populate(data, selections)
         return blnu_mT 
 
-    def get_blnu_pT(self) -> Variable1D:
-        blnu_pT = Variable1D('blnu_pT')
-        subcat_names = blnu_pT.subcats
+    def get_blnu_pt(self) -> Variable1D:
+        blnu_pt = Variable1D('blnu_pt')
+        subcat_names = blnu_pt.subcats
         selections = self.get_selections_subset(subcat_names)
 
         l_p4, nu, bjet = self._get_blnu_data()
         data = (l_p4 + nu.p4 + bjet.p4).Pt()
         data = { 'SL_res_2b_x': data }
-        blnu_pT.populate(data, selections)
-        return blnu_pT 
+        blnu_pt.populate(data, selections)
+        return blnu_pt 
 
     def get_trijet_bijet_dR(self) -> Variable1D:
         trijet_bijet_dR = Variable1D('trijet_bijet_dR')
@@ -441,21 +441,22 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return bjet_bijet_dEta
 
     # Helper function for returning a list of all top-related variables for iteration
-    def get_top_vars(self) -> 'list[Variable1D]':
+    def gather_top_vars(self) -> 'list[Variable1D]':
         top_vars = [self.get_trijet_mInv(),
-                self.get_trijet_pT(),
-                self.get_trijet_pT_rat(),
-                self.get_blnu_mT(),
-                self.get_blnu_pT(),
-                self.get_trijet_bijet_dR(),
-                self.get_trijet_bijet_dPhi(),
-                self.get_trijet_bijet_dEta(), 
-                self.get_bjet_bijet_dR(),
-                self.get_bjet_bijet_dPhi(),
-                self.get_bjet_bijet_dEta()]
+            self.get_trijet_pt(),
+            self.get_trijet_pt_rat(),
+            self.get_blnu_mT(),
+            self.get_blnu_pt(),
+            self.get_trijet_bijet_dR(),
+            self.get_trijet_bijet_dPhi(),
+            self.get_trijet_bijet_dEta(), 
+            self.get_bjet_bijet_dR(),
+            self.get_bjet_bijet_dPhi(),
+            self.get_bjet_bijet_dEta()]
+
         return top_vars
 
-    def _get_total_vars_data(self):
+    def _gather_total_vars_data(self):
         electrons = self.objects['tight_electrons']
         muons = self.objects['tight_muons']
         met = self.objects['met']
@@ -463,7 +464,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return electrons, muons, met, jets
 
     def _get_total_4vec(self):
-       electrons, muons, met, jets = self._get_total_vars_data()
+       electrons, muons, met, jets = self._gather_total_vars_data()
        zero_p4 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float>>",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
        total_el_p4 = op.rng_sum(electrons, lambda el: el.p4, start=zero_p4)
        total_mu_p4 = op.rng_sum(muons, lambda mu:mu.p4, start=zero_p4)
@@ -475,7 +476,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         subcat_names = all_sT.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        electrons, muons, met, jets = self._get_total_vars_data()
+        electrons, muons, met, jets = self._gather_total_vars_data()
         total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
         total_mu_pt = op.rng_sum(muons, lambda mu: mu.pt)
         total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
@@ -489,7 +490,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         subcat_names = all_sT_50_cut.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        electrons, muons, met, jets = self._get_total_vars_data()
+        electrons, muons, met, jets = self._gather_total_vars_data()
         e_pt_50 = op.select(electrons, lambda el: el.pt>50)
         mu_pt_50 = op.select(muons, lambda mu: mu.pt>50)
         jet_pt_50 = op.select(jets, lambda jet: jet.pt>50)
@@ -530,80 +531,35 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         subcat_names = all_jets_HT.subcats
         selections = self.get_selections_subset(subcat_names)
 
-        electrons, muons, met, jets = self._get_total_vars_data()
+        electrons, muons, met, jets = self._gather_total_vars_data()
         total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
         data = total_jet_pt
         data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
         all_jets_HT.populate(data, selections)
         return all_jets_HT
-       
-    def get_jet0_pT(self) -> Variable1D:
-        jet0_pT_var = Variable1D('jet0_pT')
-        subcat_names = jet0_pT_var.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        electrons, muons, met, jets = self._get_total_vars_data()
-        sorted_jets = op.sort(jets, lambda jet: -jet.pt)
-        jet0_pT = jets[0].pt
-        data = jet0_pT
-        data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
-        jet0_pT_var.populate(data, selections)
-        return jet0_pT_var
-       
-    def get_MET(self) -> Variable1D:
-        met_var = Variable1D('met')
-        subcat_names = met_var.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        electrons, muons, met, jets = self._get_total_vars_data()
-        data = met.pt
-        data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
-        met_var.populate(data, selections)
-        return met_var
-
-    # Helper function for returning a list of all 'total' variables for iteration
-    def get_total_vars(self) -> 'list[Variable1D]':
-        total_vars = [self.get_all_sT(),
-            self.get_all_sT_50_cut(),
-            self.get_all_mInv(),
-            self.get_all_mT(),
-            self.get_all_jets_HT(),
-            self.get_jet0_pT(),
-            self.get_MET()]
-        return total_vars
-           
-    def get_misc_vars(self) -> 'list[Variable1D]':
-        vars = [self.get_mjj()]
-        return vars
-    # ============================= New Variables ================================
-    # Once variables are finalized, move them somewhere above here 
-
-    def get_sl_lep_pT(self) -> Variable1D:
-        sl_lep_pT = Variable1D('sl_lep_pT')
-        subcat_names = sl_lep_pT.subcats
-        selections = self.get_selections_subset(subcat_names)
-
-        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
-        lep = op.multiSwitch(
-            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].pt),
-            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].pt),
-            0
-        )
-        data = { 'SL_res_2b_x': lep }
-        sl_lep_pT.populate(data, selections)
-        return sl_lep_pT
-       
-    def get_all_pT(self) -> Variable1D:
-        all_pT = Variable1D('all_pT')
-        subcat_names = all_pT.subcats
+              
+    def get_all_pt(self) -> Variable1D:
+        all_pt = Variable1D('all_pt')
+        subcat_names = all_pt.subcats
         selections = self.get_selections_subset(subcat_names)
 
         total_4vec = self._get_total_4vec()
         data = total_4vec.Pt()
         data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
-        all_pT.populate(data, selections)
-        return all_pT
-
+        all_pt.populate(data, selections)
+        return all_pt
+    
+    # Helper function for returning a list of all 'total' variables for iteration
+    def gather_total_vars(self) -> 'list[Variable1D]':
+        total_vars = [
+            self.get_all_sT(),
+            self.get_all_sT_50_cut(),
+            self.get_all_mInv(),
+            self.get_all_mT(),
+            self.get_all_jets_HT(),
+            self.get_all_pt()]
+        return total_vars
+    
     def _get_leptons_p4(self):
         electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
         lep0_p4 = op.multiSwitch(
@@ -637,15 +593,392 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         data = { 'SL_res_2b_x':sl_data, 'DL_res_2b':dl_data }
         WW_mInv.populate(data, selections)
         return WW_mInv
+           
+    def gather_misc_vars(self) -> 'list[Variable1D]':
+        vars = [
+            self.get_mjj(),
+            self.get_WW_mInv()
+        ]
+        return vars
 
-    def get_all_reco_variables(self) -> 'list[Variable1D]':
-        # ============================ End New Variables ==============================
-        self.bjet_vars = self.get_bjet_vars()
-        vars = self.get_bjet_vars() + self.get_top_vars() + self.get_total_vars() + self.get_misc_vars() + [self.get_sl_lep_pT(), self.get_all_pT(), self.get_WW_mInv()]
+    # ====================== Object Vars ==========================================
+    def get_lep0_pt(self) -> Variable1D:
+        lep0_pt = Variable1D('lep0_pt')
+        subcat_names = lep0_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        data = op.multiSwitch(
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].pt),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].pt),
+            (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[0].pt),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[0].pt),
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
+                op.switch(electrons[0].pt > muons[0].pt, electrons[0].pt, muons[0].pt)),
+            0
+        )
+        data = {'SL_res_1b': data, 'SL_res_2b': data, 'SL_boosted': data,
+                'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data,
+                'SL_res_2b_x': data }
+        lep0_pt.populate(data, selections)
+        return lep0_pt
+
+    def get_lep0_eta(self) -> Variable1D:
+        lep0_eta = Variable1D('lep0_eta')
+        subcat_names = lep0_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        data = op.multiSwitch(
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].eta),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].eta),
+            (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[0].eta),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[0].eta),
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
+                op.switch(electrons[0].pt > muons[0].pt, electrons[0].eta, muons[0].eta)),
+            0
+        )
+        data = {'SL_res_1b': data, 'SL_res_2b': data, 'SL_boosted': data,
+                'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data,
+                'SL_res_2b_x': data }
+        lep0_eta.populate(data, selections)
+        return lep0_eta
+    
+    def get_lep0_phi(self) -> Variable1D:
+        lep0_phi = Variable1D('lep0_phi')
+        subcat_names = lep0_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        data = op.multiSwitch(
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].phi),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].phi),
+            (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[0].phi),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[0].phi),
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
+                op.switch(electrons[0].pt > muons[0].pt, electrons[0].phi, muons[0].phi)),
+            0
+        )
+        data = {'SL_res_1b': data, 'SL_res_2b': data, 'SL_boosted': data,
+                'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data,
+                'SL_res_2b_x': data }
+        lep0_phi.populate(data, selections)
+        return lep0_phi
+    
+    def get_lep1_pt(self) -> Variable1D:
+        lep1_pt = Variable1D('lep1_pt')
+        subcat_names = lep1_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        data = op.multiSwitch(
+            (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[1].pt),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[1].pt),
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
+                op.switch(electrons[0].pt > muons[0].pt, muons[0].pt, electrons[0].pt)),
+            0
+        )
+        data = {'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data}
+        lep1_pt.populate(data, selections)
+        return lep1_pt
+    
+    def get_lep1_eta(self) -> Variable1D:
+        lep1_eta = Variable1D('lep1_eta')
+        subcat_names = lep1_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        data = op.multiSwitch(
+            (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[1].eta),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[1].eta),
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
+                op.switch(electrons[0].pt > muons[0].pt, muons[0].eta, electrons[0].eta)),
+            0
+        )
+        data = {'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data}
+        lep1_eta.populate(data, selections)
+        return lep1_eta
+    
+    def get_lep1_phi(self) -> Variable1D:
+        lep1_phi = Variable1D('lep1_phi')
+        subcat_names = lep1_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons = self.objects['tight_electrons'], self.objects['tight_muons']
+        data = op.multiSwitch(
+            (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[1].phi),
+            (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[1].phi),
+            (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
+                op.switch(electrons[0].pt > muons[0].pt, muons[0].phi, electrons[0].phi)),
+            0
+        )
+        data = {'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data}
+        lep1_phi.populate(data, selections)
+        return lep1_phi
+       
+    def _get_jet_objects(self):
+        ak4_jets = self.objects["cleaned_ak4_jets"]
+        ak4_btags = self.objects["cleaned_ak4_btags"]
+        ak8_btags = self.objects["cleaned_ak8_btags"]
+        return ak4_jets, ak4_btags, ak8_btags
+    
+    def get_ak4_jet0_pt(self) -> Variable1D:
+        ak4_jet0_pt = Variable1D('ak4_jet0_pt')
+        subcat_names = ak4_jet0_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[0].pt
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet0_pt.populate(data, selections)
+        return ak4_jet0_pt
+    
+    def get_ak4_jet0_eta(self) -> Variable1D:
+        ak4_jet0_eta = Variable1D('ak4_jet0_eta')
+        subcat_names = ak4_jet0_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[0].eta
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet0_eta.populate(data, selections)
+        return ak4_jet0_eta
+    
+    def get_ak4_jet0_phi(self) -> Variable1D:
+        ak4_jet0_phi = Variable1D('ak4_jet0_phi')
+        subcat_names = ak4_jet0_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[0].phi
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet0_phi.populate(data, selections)
+        return ak4_jet0_phi
+
+    def get_ak4_jet1_pt(self) -> Variable1D:
+        ak4_jet1_pt = Variable1D('ak4_jet1_pt')
+        subcat_names = ak4_jet1_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[1].pt
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet1_pt.populate(data, selections)
+        return ak4_jet1_pt
+    
+    def get_ak4_jet1_eta(self) -> Variable1D:
+        ak4_jet1_eta = Variable1D('ak4_jet1_eta')
+        subcat_names = ak4_jet1_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[1].eta
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet1_eta.populate(data, selections)
+        return ak4_jet1_eta
+    
+    def get_ak4_jet1_phi(self) -> Variable1D:
+        ak4_jet1_phi = Variable1D('ak4_jet1_phi')
+        subcat_names = ak4_jet1_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[1].phi
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet1_phi.populate(data, selections)
+        return ak4_jet1_phi
+
+    def get_ak4_jet2_pt(self) -> Variable1D:
+        ak4_jet2_pt = Variable1D('ak4_jet2_pt')
+        subcat_names = ak4_jet2_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[2].pt
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet2_pt.populate(data, selections)
+        return ak4_jet2_pt
+    
+    def get_ak4_jet2_eta(self) -> Variable1D:
+        ak4_jet2_eta = Variable1D('ak4_jet2_eta')
+        subcat_names = ak4_jet2_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[2].eta
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet2_eta.populate(data, selections)
+        return ak4_jet2_eta
+    
+    def get_ak4_jet2_phi(self) -> Variable1D:
+        ak4_jet2_phi = Variable1D('ak4_jet2_phi')
+        subcat_names = ak4_jet2_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_jets[2].phi
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_jet2_phi.populate(data, selections)
+        return ak4_jet2_phi
+
+    def get_ak4_btag0_pt(self) -> Variable1D:
+        ak4_btag0_pt = Variable1D('ak4_btag0_pt')
+        subcat_names = ak4_btag0_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_btags[0].pt
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_btag0_pt.populate(data, selections)
+        return ak4_btag0_pt
+
+    def get_ak4_btag0_eta(self) -> Variable1D:
+        ak4_btag0_eta = Variable1D('ak4_btag0_eta')
+        subcat_names = ak4_btag0_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_btags[0].eta
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_btag0_eta.populate(data, selections)
+        return ak4_btag0_eta
+
+    def get_ak4_btag0_phi(self) -> Variable1D:
+        ak4_btag0_phi = Variable1D('ak4_btag0_phi')
+        subcat_names = ak4_btag0_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_btags[0].phi
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_btag0_phi.populate(data, selections)
+        return ak4_btag0_phi
+
+    def get_ak4_btag1_pt(self) -> Variable1D:
+        ak4_btag1_pt = Variable1D('ak4_btag1_pt')
+        subcat_names = ak4_btag1_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_btags[1].pt
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_btag1_pt.populate(data, selections)
+        return ak4_btag1_pt
+
+    def get_ak4_btag1_eta(self) -> Variable1D:
+        ak4_btag1_eta = Variable1D('ak4_btag1_eta')
+        subcat_names = ak4_btag1_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_btags[1].eta
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_btag1_eta.populate(data, selections)
+        return ak4_btag1_eta
+
+    def get_ak4_btag1_phi(self) -> Variable1D:
+        ak4_btag1_phi = Variable1D('ak4_btag1_phi')
+        subcat_names = ak4_btag1_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak4_btags[1].phi
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak4_btag1_phi.populate(data, selections)
+        return ak4_btag1_phi
+
+    def get_ak8_btag0_pt(self) -> Variable1D:
+        ak8_btag0_pt = Variable1D('ak8_btag0_pt')
+        subcat_names = ak8_btag0_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak8_btags[0].pt
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak8_btag0_pt.populate(data, selections)
+        return ak8_btag0_pt
+
+    def get_ak8_btag0_eta(self) -> Variable1D:
+        ak8_btag0_eta = Variable1D('ak8_btag0_eta')
+        subcat_names = ak8_btag0_eta.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak8_btags[0].eta
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak8_btag0_eta.populate(data, selections)
+        return ak8_btag0_eta
+
+    def get_ak8_btag0_phi(self) -> Variable1D:
+        ak8_btag0_phi = Variable1D('ak8_btag0_phi')
+        subcat_names = ak8_btag0_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        ak4_jets, ak4_btags, ak8_btags = self._get_jet_objects()
+        data = ak8_btags[0].phi
+        data = {sel_name: data for sel_name in selections.keys()}
+        ak8_btag0_phi.populate(data, selections)
+        return ak8_btag0_phi
+
+    def get_met_pt(self) -> Variable1D:
+        met_pt = Variable1D('met_pt')
+        subcat_names = met_pt.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons, met, jets = self._gather_total_vars_data()
+        data = met.pt
+        data = {sel_name: data for sel_name in selections.keys()}
+        met_pt.populate(data, selections)
+        return met_pt
+
+    def get_met_phi(self) -> Variable1D:
+        met_phi = Variable1D('met_phi')
+        subcat_names = met_phi.subcats
+        selections = self.get_selections_subset(subcat_names)
+
+        electrons, muons, met, jets = self._gather_total_vars_data()
+        data = met.phi
+        data = {sel_name: data for sel_name in selections.keys()}
+        met_phi.populate(data, selections)
+        return met_phi
+
+    def gather_object_vars(self) -> list[Variable1D]:
+        object_vars = [
+            self.get_lep0_pt(),
+            self.get_lep0_eta(),
+            self.get_lep0_phi(),
+            self.get_lep1_pt(),
+            self.get_lep1_eta(),
+            self.get_lep1_phi(),
+            self.get_ak4_jet0_pt(),
+            self.get_ak4_jet0_eta(),
+            self.get_ak4_jet0_phi(),
+            self.get_ak4_jet1_pt(),
+            self.get_ak4_jet1_eta(),
+            self.get_ak4_jet1_phi(),
+            self.get_ak4_jet2_pt(),
+            self.get_ak4_jet2_eta(),
+            self.get_ak4_jet2_phi(),
+            self.get_ak4_btag0_pt(),
+            self.get_ak4_btag0_eta(),
+            self.get_ak4_btag0_phi(),
+            self.get_ak4_btag1_pt(),
+            self.get_ak4_btag1_eta(),
+            self.get_ak4_btag1_phi(),
+            self.get_ak8_btag0_pt(),
+            self.get_ak8_btag0_eta(),
+            self.get_ak8_btag0_phi(),
+            self.get_met_pt(),
+            self.get_met_phi()
+        ]
+        return object_vars
+
+    def gather_all_reco_variables(self) -> dict[str, Variable1D]:
+        vars = self.gather_object_vars() + self.gather_bjet_vars() + self.gather_top_vars() + self.gather_total_vars() + self.gather_misc_vars()
         return vars
     
-    def get_bjets_2D_vars(self) -> 'list[Variable2D]':
-        bjets_vars= self.bjet_vars
+    def gather_bjets_2D_vars(self) -> 'list[Variable2D]':
+        bjets_vars= self.gather_bjet_vars()
         bjets_vars_lookup = { var.name: var for var in bjets_vars }
         vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
         bjets_2D_vars = []
@@ -658,8 +991,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         
         return bjets_2D_vars
 
-    def get_all_reco_2D_variables(self) -> 'list[Variable2D]':
-        vars1D = self.get_all_reco_variables()
+    def gather_all_reco_2D_variables(self) -> 'list[Variable2D]':
+        vars1D = self.gather_all_reco_variables()
         vars1D_lookup = { var.name: var for var in vars1D }
         vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
         for var in vars2D:
@@ -669,8 +1002,8 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         
         return vars2D
 
-    def get_all_reco_3D_variables(self) -> 'list[Variable3D]':
-        vars1D = self.get_all_reco_variables()
+    def gather_all_reco_3D_variables(self) -> 'list[Variable3D]':
+        vars1D = self.gather_all_reco_variables()
         vars1D_lookup = { var.name: var for var in vars1D}
         vars3D = [ Variable3D(name) for name in variables.ALL_VARNAMES_3D ]
         for var3D in vars3D:
@@ -684,46 +1017,29 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         return vars3D
 
-    def get_skims(self, vars, plots):
 
-        sel_name = "SL_res_2b_x"
-        selection = self.jet_subcats[sel_name]
+    def gather_sel_vars_dicts(self) -> dict[str: Variable1D]:
+        basic_vars_dict = {
+            "nAK4": op.static_cast("UInt_t", op.rng_len(self.objects["cleaned_ak4_jets"])),
+            "nAK4_btag": op.static_cast("UInt_t", op.rng_len(self.objects["cleaned_ak4_btags"])),
+            "nAK8_btag": op.static_cast("UInt_t", op.rng_len(self.objects["cleaned_ak8_btags"]))}
+        reco_vars = self.gather_all_reco_variables()
+        sel_vars_dict = {}
+        for sel_name, sel in self.jet_subcats.items():
+            reco_vars_dict = {sub_var.name: sub_var.data for var in reco_vars for sub_var in var if sub_var.subcat == sel_name}
+            subcat_vars_dict = {**basic_vars_dict, **reco_vars_dict}
+            sel_vars_dict[sel_name] = subcat_vars_dict
 
-        objects = self.objects
-        sel_skim = {
-            "event": None,
-            "gen_Weight": objects["gen_Weight"],
-            "nAK4": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"])),
-            "nAK4_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_btags"])),
-            "met_pt": objects["met"].pt,
-            "met_phi": objects["met"].phi}
+        return sel_vars_dict
 
-        e0, mu0 = objects["tight_electrons"][0], objects["tight_muons"][0]
-        sel_skim.update({
-            "lepton0_pt": op.switch(e0.pt >= mu0.pt, e0.pt, mu0.pt),
-            "lepton0_eta": op.switch(e0.pt >= mu0.pt, e0.eta, mu0.eta),
-            "lepton0_phi": op.switch(e0.pt >= mu0.pt, e0.phi, mu0.phi),
-            "lepton0_relIso": op.switch(e0.pt >= mu0.pt, e0.pfRelIso03_all, mu0.pfRelIso03_all)})
-        
-        jet_tree = {
-            "AK4_0": objects["cleaned_ak4_jets"][0],
-            "AK4_1": objects["cleaned_ak4_jets"][1],
-            "AK4_2": objects["cleaned_ak4_jets"][2],
-            "AK4_btag0": objects["cleaned_ak4_btags"][0],
-            "AK4_btag1": objects["cleaned_ak4_btags"][1]}
-        for jet_name, jet in jet_tree.items():
-            sel_skim.update({
-                '_'.join([jet_name, 'pt']): jet.pt,
-                '_'.join([jet_name, 'eta']): jet.eta,
-                '_'.join([jet_name, 'phi']): jet.phi})
-        
-        sub_var_names = [sub_var.ref for var in vars for sub_var in var if sub_var.subcat == sel_name]
-        sub_var_vals = [sub_var.data for var in vars for sub_var in var if sub_var.subcat == sel_name]
-        sub_var_dict = dict(zip(sub_var_names, sub_var_vals))
-
-        sel_skim.update(sub_var_dict)
-        plots.append(Skim(sel_name, sel_skim, selection))
-
+    def get_skims(self, plots):
+        base_skim = {"event": None, "gen_Weight": self.objects["gen_Weight"]}
+        sel_vars_dict = self.gather_sel_vars_dicts()
+        for sel_name in ["SL_res_2b_x"]:
+            subcat_vars_dict = sel_vars_dict[sel_name]
+            sel_skim = {**base_skim, **subcat_vars_dict}
+            selection = self.jet_subcats[sel_name]
+            plots.append(Skim(sel_name, sel_skim, selection))
         return plots
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
@@ -743,17 +1059,17 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         # ================================== Plots ======================================
         # ===============================================================================
         
-        reco_vars = self.get_all_reco_variables()
+        reco_vars = self.gather_all_reco_variables()
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
         plots.extend(hists_1D)
 
-        reco_2D_vars = self.get_all_reco_2D_variables()
-        hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
-        plots.extend(hists_2D)
+        # reco_2D_vars = self.gather_all_reco_2D_variables()
+        # hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
+        # plots.extend(hists_2D)
 
-        reco_3D_vars = self.get_all_reco_3D_variables()
-        hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
-        plots.extend(hists_3D)
+        # reco_3D_vars = self.gather_all_reco_3D_variables()
+        # hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
+        # plots.extend(hists_3D)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -768,7 +1084,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         yields.add(self.jet_subcats['DL_res_2b'], 'DL_res_2b')
         yields.add(self.jet_subcats['DL_boosted'], 'DL_boosted')
 
-        plots = self.get_skims(reco_vars, plots)
+        plots = self.get_skims(plots)
 
         return plots
 
@@ -831,13 +1147,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         INTERPOLATION_SCALE_FACTOR_3D = 3
         DECIMAL_PLACES = 3
 
-        all_reco_vars_1D = self.get_all_reco_variables()
-        all_reco_vars_2D = self.get_all_reco_2D_variables()
-        all_reco_vars_3D = self.get_all_reco_3D_variables()
+        all_reco_vars_1D = self.gather_all_reco_variables()
+        all_reco_vars_2D = self.gather_all_reco_2D_variables()
+        all_reco_vars_3D = self.gather_all_reco_3D_variables()
         all_reco_vars = all_reco_vars_1D + all_reco_vars_2D + all_reco_vars_3D
 
-        all_bjets_vars_1D = self.bjet_vars
-        all_bjets_vars_2D = self.get_bjets_2D_vars()
+        all_bjets_vars_1D = self.gather_bjet_vars()
+        all_bjets_vars_2D = self.gather_bjets_2D_vars()
         all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
 
         all_corrections = []

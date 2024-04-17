@@ -13,21 +13,24 @@ class SL_DL_NN(SL_DL_vars_reco):
 
     def addArgs(self, parser):
         super(SL_DL_NN, self).addArgs(parser)
-        parser.add_argument("--input_dir", action='store', dest = "input_dir", help='Input NN model directory')
+        parser.add_argument("-nn", action='store', dest = "NNdir", help='Input NN model directory')
 
     def get_NN_model(self):
-        modeldir = os.path.abspath(self.args.input_dir)
-        #inputNodeNames = []
-        #input_vars_file = modeldir / 'input_variables.txt'
-        #with open(input_vars_file, 'r') as file:
-        #    for line in file:
-        #        inputNodeNames.append(line.strip())
-        #print(inputNodeNames)
-        #modelpb = modeldir + "/saved_model.pb"
-        #model = mvaEvaluator(modelpb, mvaType='Tensorflow', otherArgs = (inputNodeNames, "output"))
-        model_onnx = modeldir + "/dnn_model.onnx"
+        NNdir = Path(self.args.NNdir).resolve()
+        input_vars_names = []
+        input_vars_file = NNdir / 'input_variables.txt'
+        with open(input_vars_file, 'r') as file:
+           for line in file:
+               input_vars_names.append(line.strip())
+        model_onnx = NNdir / "dnn_model.onnx"
         model = mvaEvaluator(model_onnx, mvaType='ONNXRuntime', otherArgs = ("output"))
-        return model
+        return model, input_vars_names
+
+    def gather_input_vars(self, input_vars_names):
+        sel_vars_dict = super().gather_sel_vars_dicts()
+        vars_dict = sel_vars_dict["SL_res_2b_x"]
+        input_vars = [vars_dict[name] for name in input_vars_names if name in vars_dict]
+        return input_vars
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -42,22 +45,12 @@ class SL_DL_NN(SL_DL_vars_reco):
         self.set_extra_objects()
         self.set_extra_event_selections()
 
-        model = self.get_NN_model()
-        objects = self.objects
-        e0, mu0 = objects["tight_electrons"][0], objects["tight_muons"][0]
-        input_vars_dict = {
-            "lepton0_pt": op.switch(e0.pt >= mu0.pt, e0.pt, mu0.pt),
-            "lepton0_phi": op.switch(e0.pt >= mu0.pt, e0.phi, mu0.phi),
-            "AK4_0_pt": objects["cleaned_ak4_jets"][0].pt,
-            "AK4_1_pt": objects["cleaned_ak4_jets"][1].pt,
-            "bjets_mbb": self.get_bjets_mbb()["SL_res_2b_x"].data,
-            "trijet_mInv": self.get_trijet_mInv()["SL_res_2b_x"].data
-        }
-        #inputs = op.array('float', *[op.c_float(val) for val in input_vars_dict.values()])
-        #dnn_score = model(inputs)
-        dnn_score = model(*input_vars_dict.values())
+        model, input_vars_names = self.get_NN_model()
+        input_vars = self.gather_input_vars(input_vars_names)
+        dnn_score = model(*input_vars)
         plots.append(Plot.make1D('SL_res_2b_x_dnn_score', dnn_score[0], self.jet_subcats["SL_res_2b_x"], EqBin(100, 0, 1)))
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+        super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         print('Printing plots')
