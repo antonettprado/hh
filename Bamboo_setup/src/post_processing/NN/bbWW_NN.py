@@ -116,8 +116,8 @@ if __name__ == "__main__":
         'n_layers'              : 3,
         'n_neurons'             : 64,
         'hidden_activation'     : 'relu',
-        #'output_activation'     : 'softmax',
-        'output_activation'     : 'sigmoid',
+        #'output_activation'     : 'softmax', # for multi-class DNN
+        'output_activation'     : 'sigmoid', # for binary DNN
         'l2'                    : 1e-6,
         'dropout'               : 0.,
         'batch_norm'            : True,
