@@ -611,9 +611,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         )
 
         cleaned_ak4_jets_btag_sorted = op.sort(objects["cleaned_ak4_jets"], lambda jet: -get_jet_btag(jet, "ak4"))
-        ak4jet0_idx = op.switch(op.rng_len(cleaned_ak4_jets_btag_sorted) >= 1, cleaned_ak4_jets_btag_sorted[0].jetIdx, op.c_int(-9999))
-        ak4jet1_idx = op.switch(op.rng_len(cleaned_ak4_jets_btag_sorted) >= 2, cleaned_ak4_jets_btag_sorted[1].jetIdx, op.c_int(-9999))
-        cleaned_ak4_jets_rest_pt_sorted = op.select(objects["cleaned_ak4_jets"], lambda jet: op.AND(jet.jetIdx != ak4jet0_idx, jet.jetIdx != ak4jet1_idx))
+        ak4jet0_btag = op.switch(op.rng_len(cleaned_ak4_jets_btag_sorted) >= 1, get_jet_btag(cleaned_ak4_jets_btag_sorted[0], "ak4"), op.c_float(-9999))
+        ak4jet1_btag = op.switch(op.rng_len(cleaned_ak4_jets_btag_sorted) >= 2, get_jet_btag(cleaned_ak4_jets_btag_sorted[1], "ak4"), op.c_float(-9999))
+        cleaned_ak4_jets_rest_pt_sorted = op.select(objects["cleaned_ak4_jets"], lambda jet: op.AND(get_jet_btag(jet, "ak4") != ak4jet0_btag, get_jet_btag(jet, "ak4") != ak4jet1_btag))
         cleaned_ak4_jets_rest_pt_sorted = op.sort(cleaned_ak4_jets_rest_pt_sorted, lambda jet: -jet.pt)
         cleaned_ak8_jets_btag_sorted = op.sort(objects["cleaned_ak8_btags"], lambda jet: -get_jet_btag(jet, "ak8"))
 
