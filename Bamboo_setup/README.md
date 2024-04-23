@@ -76,7 +76,7 @@ bambooRun -m src/SL_DL_vars_gen.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_Va
 
 ### Postprocessing: Plot Signal vs Background Comparisons 
 ```bash
-python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsGen -l gen
+python3 src/post_processing/sig_bkg_shape_comp/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsGen
 ```
 
 ## Process NANOAODs: SL_DL_vars_reco
@@ -127,7 +127,7 @@ python3 src/post_processing/trigger/plot_trigger_efficiencies.py
 Update the yaml file (src/input/Datacard_category_discriminant.yml) with channels and discriminants to create datacards for
 
 ```bash
-python3 src/post_processing/datacard/make_datacards.py -i Z_OUTPUT/TOTAL_VarsReco_LR -c config/analysis_2022.yml -f src/input/datacard_category_discriminant.yml -a
+python3 src/post_processing/datacard/make_datacard.py -i Z_OUTPUT/TOTAL_EventSelection_2022 -c config/analysis_2022.yml -f src/input/datacard_category_discriminant.yml -r
 ```
 
 # ------------------------------ Set up Higgs Combine for Fitting -------------------------------
