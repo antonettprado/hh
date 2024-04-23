@@ -16,9 +16,8 @@ if __name__ == "__main__":
 
     input_dir = args.input_dir + "/results"
     output_dir = args.input_dir + "/datacards"
-    if os.path.exists(output_dir):
-        os.system("rm -rf %s"%os.path.abspath(output_dir))
-    os.system("mkdir %s"%os.path.abspath(output_dir))
+    if not os.path.exists(output_dir):
+        os.system("mkdir %s"%os.path.abspath(output_dir))
     print ("Using config: %s"%args.config_filename)
     print ("Creating datacards for results in: %s"%input_dir)
     print ("Datacards stored in: %s\n"%output_dir)
@@ -102,13 +101,15 @@ if __name__ == "__main__":
     for channel in cat_disc_yaml_data["Channels"]:
         print ("  Channel: %s"%channel)
         output_dir_sel_cat = output_dir + "/" + channel
-        os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat))
+        if not os.path.exists(output_dir_sel_cat):
+            os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat))
         discriminant_list = cat_disc_yaml_data["Channels"][channel]
 
         for discriminant in discriminant_list:
             print ("    Discriminant: %s"%discriminant)
             output_dir_sel_cat_disc = output_dir_sel_cat + "/" + discriminant
-            os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat_disc))
+            if not os.path.exists(output_dir_sel_cat_disc):
+                os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat_disc))
             datacard_filename, shapes_filename = "", ""
             if args.asimov_only:
                 datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_asimov_datacard.txt"

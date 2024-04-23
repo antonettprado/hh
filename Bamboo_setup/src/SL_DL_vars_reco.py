@@ -977,7 +977,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         vars = self.gather_object_vars() + self.gather_bjet_vars() + self.gather_top_vars() + self.gather_total_vars() + self.gather_misc_vars()
         return vars
     
-    def gather_bjets_2D_vars(self) -> 'list[Variable2D]':
+    def gather_bjets_2D_vars(self) -> list[Variable2D]:
         bjets_vars= self.gather_bjet_vars()
         bjets_vars_lookup = { var.name: var for var in bjets_vars }
         vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
@@ -991,7 +991,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         
         return bjets_2D_vars
 
-    def gather_all_reco_2D_variables(self) -> 'list[Variable2D]':
+    def gather_all_reco_2D_variables(self) -> list[Variable2D]:
         vars1D = self.gather_all_reco_variables()
         vars1D_lookup = { var.name: var for var in vars1D }
         vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
@@ -1002,7 +1002,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         
         return vars2D
 
-    def gather_all_reco_3D_variables(self) -> 'list[Variable3D]':
+    def gather_all_reco_3D_variables(self) -> list[Variable3D]:
         vars1D = self.gather_all_reco_variables()
         vars1D_lookup = { var.name: var for var in vars1D}
         vars3D = [ Variable3D(name) for name in variables.ALL_VARNAMES_3D ]
@@ -1017,7 +1017,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
         return vars3D
 
-
+    # Returns a dictionary, ex: sel_vars_dict = {SL_res_2b_x: {'bjets_mbb': bjets_mbb}}
     def gather_sel_vars_dicts(self) -> dict[str: Variable1D]:
         basic_vars_dict = {
             "nAK4": op.static_cast("UInt_t", op.rng_len(self.objects["cleaned_ak4_jets"])),
@@ -1083,8 +1083,11 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         yields.add(self.jet_subcats['DL_res_1b'], 'DL_res_1b')
         yields.add(self.jet_subcats['DL_res_2b'], 'DL_res_2b')
         yields.add(self.jet_subcats['DL_boosted'], 'DL_boosted')
+        yields.add(self.supercat_selections['SL'], 'SL')
+        yields.add(self.supercat_selections['DL'], 'DL')
 
-        plots = self.get_skims(plots)
+        if self.args.skim:
+            plots = self.get_skims(plots)
 
         return plots
 
@@ -1160,56 +1163,56 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         for var in all_reco_vars_1D:
             print(var.name)
             for subcat_var in var:
-                print('\t', subcat_var.ref)
-                signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
-                backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
-                
-                ratio_hist = signal_total_hist.Clone()
-                ratio_hist.Divide(backg_total_hist)
+                    print('\t', subcat_var.ref)
+                    signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
+                    backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
+                    
+                    ratio_hist = signal_total_hist.Clone()
+                    ratio_hist.Divide(backg_total_hist)
 
-                if isinstance(var, Variable1D):
-                    bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
-                    inputs = [cs.Variable(name="xaxis", type="real", description="")]
-                    data = cs.Binning(
-                        nodetype="binning",
-                        input="xaxis",
-                        edges=list(np.round(bin_edges, DECIMAL_PLACES)),
-                        content=list(np.round(bin_contents, DECIMAL_PLACES)),
-                        flow="clamp",
-                    )
-                elif isinstance(var, Variable2D):
-                    bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-                    inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                              cs.Variable(name="yaxis", type="real", description="")]
-                    data = cs.MultiBinning(
-                        nodetype="multibinning",
-                        inputs=["xaxis","yaxis"],
-                        edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
-                        content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
-                        flow="clamp",
-                    )
-                elif isinstance(var, Variable3D):
-                    bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-                    inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                              cs.Variable(name="yaxis", type="real", description=""),
-                              cs.Variable(name="zaxis", type="real", description="")]
-                    data = cs.MultiBinning(
-                        nodetype="multibinning",
-                        inputs=["xaxis","yaxis"],
-                        edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
-                        content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
-                        flow="clamp",
-                    )
+                    if isinstance(var, Variable1D):
+                        bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+                        inputs = [cs.Variable(name="xaxis", type="real", description="")]
+                        data = cs.Binning(
+                            nodetype="binning",
+                            input="xaxis",
+                            edges=list(np.round(bin_edges, DECIMAL_PLACES)),
+                            content=list(np.round(bin_contents, DECIMAL_PLACES)),
+                            flow="clamp",
+                        )
+                    elif isinstance(var, Variable2D):
+                        bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                        inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                                cs.Variable(name="yaxis", type="real", description="")]
+                        data = cs.MultiBinning(
+                            nodetype="multibinning",
+                            inputs=["xaxis","yaxis"],
+                            edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
+                            content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
+                            flow="clamp",
+                        )
+                    elif isinstance(var, Variable3D):
+                        bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                        inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                                cs.Variable(name="yaxis", type="real", description=""),
+                                cs.Variable(name="zaxis", type="real", description="")]
+                        data = cs.MultiBinning(
+                            nodetype="multibinning",
+                            inputs=["xaxis","yaxis"],
+                            edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
+                            content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
+                            flow="clamp",
+                        )
 
-                corr = cs.Correction(
-                    name=subcat_var.ref + '_llr',
-                    # description = f'llr for {subcat_var.ref}'
-                    version=0,
-                    inputs=inputs,
-                    output=cs.Variable(name="", type="real", description=""),
-                    data=data
-                )
-                all_corrections.append(corr)
+                    corr = cs.Correction(
+                        name=subcat_var.ref + '_llr',
+                        # description = f'llr for {subcat_var.ref}'
+                        version=0,
+                        inputs=inputs,
+                        output=cs.Variable(name="", type="real", description=""),
+                        data=data
+                    )
+                    all_corrections.append(corr)
 
         cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
         output_llr_file = os.path.join(resultsdir, "corrections_llr.json")

@@ -699,7 +699,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 plots.extend([Plot.make1D('_'.join([sel_name, jet_name, 'pt']), jet.pt, sel, EqBin(250, 0, 250), xTitle="pT (GeV)")])
             # Plot for MET and HT
             plots.extend([
-                Plot.make1D('_'.join([sel_name, 'MET', 'pt']), self.objects["met"].pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
+                Plot.make1D('_'.join([sel_name, 'met', 'pt']), self.objects["met"].pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
+                Plot.make1D('_'.join([sel_name, 'met', 'phi']), self.objects["met"].phi, sel, EqBin(100, -4, 4), xTitle="MET phi (GeV)"),
                 Plot.make1D('_'.join([sel_name, 'HT']), self.objects["ht_jets"], sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
 
         for plot_tag in ["pt", "eta", "pdgId", "sip3d", "pt_vs_eta"]:

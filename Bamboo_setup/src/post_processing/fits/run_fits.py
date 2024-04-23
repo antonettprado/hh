@@ -13,9 +13,8 @@ if __name__ == "__main__":
 
     input_dir = args.input_dir + "/datacards"
     output_dir = args.input_dir + "/fit_results"
-    if os.path.exists(output_dir):
-        os.system("rm -rf %s"%os.path.abspath(output_dir))
-    os.system("mkdir %s"%os.path.abspath(output_dir))
+    if not os.path.exists(output_dir):
+        os.system("mkdir %s"%os.path.abspath(output_dir))
     print ("Fits for results in: %s"%input_dir)
     print ("Fit results stored in: %s\n"%output_dir)
 
@@ -27,13 +26,15 @@ if __name__ == "__main__":
         channel_dir = input_dir + "/" + channel
         discriminant_list = cat_disc_yaml_data["Channels"][channel]
         output_dir_sel_cat = output_dir + "/" + channel
-        os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat))
+        if not os.path.exists(output_dir_sel_cat):
+            os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat))
 
         for discriminant in discriminant_list:
             print ("    Discriminant: %s"%discriminant)
             discriminant_dir = channel_dir + "/" + discriminant
             output_dir_sel_cat_disc = output_dir_sel_cat + "/" + discriminant
-            os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat_disc))
+            if not os.path.exists(output_dir_sel_cat_disc):
+                os.system("mkdir %s"%os.path.abspath(output_dir_sel_cat_disc))
 
             datacard_file = glob.glob("%s/*.txt"%discriminant_dir)[0]
             shapes_file = glob.glob("%s/*.root"%discriminant_dir)[0]
