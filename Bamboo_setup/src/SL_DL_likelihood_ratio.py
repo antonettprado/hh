@@ -118,10 +118,10 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def get_lrs_for_vars_custom_combos(self) -> 'list[LikelihoodRatio]':
         # -----------------------------------------------------------------
         vars_custom_combos = []
-        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pT', 'bjet1_pT', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_bijet_dPhi','trijet_pT_rat', 'bjet_bijet_dR', 'bjet_bijet_dPhi', 'mjj', 'lep0_pt', 'ak4_jet0_pt', 'lep0_eta', 'ak4_jet0_eta']
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
-        # vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
+        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_bijet_dPhi','trijet_pt_rat', 'bjet_bijet_dR', 'bjet_bijet_dPhi', 'mjj', 'lep0_pt', 'ak4_jet0_pt', 'lep0_eta', 'ak4_jet0_eta']
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 8))
