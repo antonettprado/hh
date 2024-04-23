@@ -103,7 +103,7 @@ if __name__ == "__main__":
     print ("\n\n")
 
     ## ====== Pick input variable list ===============
-    input_variables = ['lepton0_pt', 'lepton0_phi', 'AK4_0_pt', 'AK4_1_pt', 'SL_res_2b_x_bjets_mbb', 'SL_res_2b_x_trijet_mInv']
+    input_variables = ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
     X_train = X_train[input_variables]
     X_test = X_test[input_variables]
     print("Chosen features:", X_train.columns)
