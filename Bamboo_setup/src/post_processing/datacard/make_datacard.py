@@ -117,7 +117,7 @@ if __name__ == "__main__":
                 datacard_filename = output_dir_sel_cat_disc + "/" + channel + "_" + discriminant + "_" + era + "_datacard.txt"
                 shapes_filename = channel + "_" + discriminant + "_" + era + "_shapes.root"
 
-            output_root_file = ROOT.TFile(shapes_filename, "recreate")
+            output_root_file = ROOT.TFile(output_dir_sel_cat_disc + "/" + shapes_filename, "recreate")
             for process in process_data:
                 process_data[process]["shapes"][channel][discriminant]["total_histogram"].Write()
             output_root_file.Close()
