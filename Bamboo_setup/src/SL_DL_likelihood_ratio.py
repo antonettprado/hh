@@ -126,7 +126,6 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 8))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 9))
         # -----------------------------------------------------------------
         lrs_for_vars_1D = self.get_lrs_for_vars_1D()
         # lrs_for_vars_2D = self.get_lrs_for_vars_2D()
