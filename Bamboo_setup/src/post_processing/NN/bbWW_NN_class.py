@@ -4,6 +4,7 @@ import tensorflow as tf
 from pathlib import Path
 import matplotlib.pyplot as plt
 import os
+from argparse import ArgumentParser
 import uproot
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
@@ -238,7 +239,12 @@ class Run3Model():
 
 if __name__ == '__main__':
 
-    workdir='Local_VarsReco_2018'
+    # The root files in the given workdir must have skims
+    parser = ArgumentParser()
+    parser.add_argument("-i", "--input_dir", action="store", default="TOTAL_VarsReco_2022")
+    args = parser.parse_args()
+
+    workdir = args.input_dir
     total_df=load_data(workdir)
     total_df=preprocess_data(total_df)
     training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test = split_data(total_df)
