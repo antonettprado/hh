@@ -111,6 +111,11 @@ python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_
 python3 src/post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR --lr
 ```
 
+### Training DNN test models
+```bash
+python3 src/post_processing/NN/bbWW_NN_class.py -s Z_OUTPUT/TOTAL_VarsReco_2022
+```
+
 # ------------------------------ Trigger -------------------------------
 ## Process NanoAODs with L1 objects: SL_L1_trigger_efficiency
 ```bash
