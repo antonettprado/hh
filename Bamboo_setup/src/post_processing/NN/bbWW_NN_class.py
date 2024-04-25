@@ -17,13 +17,10 @@ from tensorflow.keras.layers.experimental import preprocessing
 import yaml
 from typing import Union
 
-BAMBOO_SETUP = Path(__file__).parents[3]
-NNDIR = BAMBOO_SETUP / 'src' / 'post_processing' / 'NN'
-NNOUTDIR = BAMBOO_SETUP / 'Z_OUTPUT' / 'Neural_Nets'
+NNDIR = Path(__file__).parent
 
-def load_data(workdir_name: str, verbose=False) -> pd.DataFrame:
+def load_data(workdir: Path, verbose=False) -> pd.DataFrame:
     
-    workdir = BAMBOO_SETUP / 'Z_OUTPUT' / workdir_name
     resultsdir = workdir / 'results'
     signal_name = resultsdir / "bbWW_sl.root"
     background_name = resultsdir / "TTbar_sl.root"
@@ -155,7 +152,7 @@ def update_model_metrics_csv(model_name: str, training_events: dict, output_metr
             df.loc[idx, key] = value
     else:
         new_model = {'name': model_name, **training_events, **output_metrics}
-        df = df.concat(new_model, ignore_index=True)
+        df = df._append(new_model, ignore_index=True)
 
     df.to_csv(csv_path, index=False)
 
@@ -305,11 +302,12 @@ if __name__ == '__main__':
 
     # The root files in the given workdir must have skims
     parser = ArgumentParser()
-    parser.add_argument("-i", "--input_dir", action="store", default="TOTAL_VarsReco_2022")
+    parser.add_argument("-i", "--input_dir", action="store", default="Z_OUTPUT/Local_VarsReco_2018")
     args = parser.parse_args()
 
-    workdir = args.input_dir
-    total_df=load_data(workdir)
+    WORKDIR = Path(args.input_dir)
+    NNOUTDIR = WORKDIR / 'Neural_Nets'
+    total_df=load_data(WORKDIR)
     total_df=preprocess_data(total_df)
     training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test = split_data(total_df)
 
@@ -351,7 +349,7 @@ if __name__ == '__main__':
             'Background Rejection': round(float(1 - fpr[optimal_idx]), 3),
             'Sensitivity (S/B)': round(sensitivity, 3),
         }
-        model_params['Trained on'] = workdir
+        model_params['Trained on'] = WORKDIR.name
 
         out_yml = myModel.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
