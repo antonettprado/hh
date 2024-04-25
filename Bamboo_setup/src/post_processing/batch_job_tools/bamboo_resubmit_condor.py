@@ -24,11 +24,11 @@ if __name__ == '__main__':
             except:
                 print ("Resubmitting Job %s"%job_id)
                 job_resubmit.append(job_id)
-    
-    job_resubmit = ','.join(job_resubmit)
 
-    print ("\nResubmitting jobs...\n")
-    print ("bambooHTCondorResubmit --ids=%s %s/batch/input/condor.cmd"%(job_resubmit, args.input_dir))
-    os.system("bambooHTCondorResubmit --ids=%s %s/batch/input/condor.cmd"%(job_resubmit, args.input_dir))
+    if len(job_resubmit) != 0:
+        job_resubmit = ','.join(job_resubmit)
+        print ("\nResubmitting jobs...\n")
+        print ("bambooHTCondorResubmit --ids=%s %s/batch/input/condor.cmd"%(job_resubmit, args.input_dir))
+        os.system("bambooHTCondorResubmit --ids=%s %s/batch/input/condor.cmd"%(job_resubmit, args.input_dir))
     print ("\n")
 
