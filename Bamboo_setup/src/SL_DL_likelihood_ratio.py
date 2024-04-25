@@ -119,7 +119,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         # -----------------------------------------------------------------
         vars_custom_combos = []
         #interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_bijet_dPhi','trijet_pt_rat', 'bjet_bijet_dR', 'bjet_bijet_dPhi', 'mjj', 'lep0_pt', 'ak4_jet0_pt', 'lep0_eta', 'ak4_jet0_eta']
-        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_pt_rat', 'bjet_bijet_dR', 'mjj']
+        interesting_vars_1D = ['bjets_mbb', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_pt_rat', 'bjet_bijet_dR', 'mjj']
         vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
