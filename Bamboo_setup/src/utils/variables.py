@@ -418,18 +418,18 @@ class Variable3D(Variable):
 
 # Definitions of the LLR binning for various dimensions of LLR
 lr_binning = { 
-               1: { 'nbins':200, 'min':-3, 'max':3 },
-               2: { 'nbins':200, 'min':-3, 'max':3 },
-               3: { 'nbins':200, 'min':-4, 'max':4 },
-               4: { 'nbins':300, 'min':-5, 'max':5 },
-               5: { 'nbins':300, 'min':-6, 'max':6 },
-               6: { 'nbins':300, 'min':-6, 'max':6 },
-               7: { 'nbins':400, 'min':-7, 'max':7 },
-               8: { 'nbins':400, 'min':-7, 'max':7 },
-               9: { 'nbins':400, 'min':-7, 'max':7 },
-               10:{ 'nbins':400, 'min':-8, 'max':-8 },
-               11:{ 'nbins':400, 'min':-8, 'max':-8 },
-               17:{ 'nbins':800, 'min':-20, 'max':20 },
+               1: { 'nbins':100, 'min':-3, 'max':3 },
+               2: { 'nbins':100, 'min':-3, 'max':3 },
+               3: { 'nbins':100, 'min':-4, 'max':4 },
+               4: { 'nbins':100, 'min':-5, 'max':5 },
+               5: { 'nbins':100, 'min':-6, 'max':6 },
+               6: { 'nbins':100, 'min':-6, 'max':6 },
+               7: { 'nbins':200, 'min':-15, 'max':15 },
+               8: { 'nbins':200, 'min':-15, 'max':15 },
+               9: { 'nbins':200, 'min':-15, 'max':15 },
+               10:{ 'nbins':250, 'min':-20, 'max':20 },
+               11:{ 'nbins':250, 'min':-20, 'max':20 },
+               17:{ 'nbins':300, 'min':-25, 'max':25 },
               }
 class LikelihoodRatio(Variable):
     '''
