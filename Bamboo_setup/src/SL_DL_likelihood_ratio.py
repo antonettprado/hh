@@ -118,14 +118,18 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
     def get_lrs_for_vars_custom_combos(self) -> 'list[LikelihoodRatio]':
         # -----------------------------------------------------------------
         vars_custom_combos = []
-        #interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_bijet_dPhi','trijet_pt_rat', 'bjet_bijet_dR', 'bjet_bijet_dPhi', 'mjj', 'lep0_pt', 'ak4_jet0_pt', 'lep0_eta', 'ak4_jet0_eta']
-        interesting_vars_1D = ['bjets_mbb', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_pt_rat', 'bjet_bijet_dR', 'mjj']
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
-        vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
+        interesting_vars_set1 = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_bijet_dPhi','trijet_pt_rat', 'bjet_bijet_dR', 'bjet_bijet_dPhi', 'mjj', 'lep0_pt', 'ak4_jet0_pt', 'lep0_eta', 'ak4_jet0_eta']
+        interesting_vars_1D = ['bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjet0_pt', 'bjet1_pt', 'trijet_mInv', 'trijet_bijet_dR', 'trijet_pt_rat', 'bjet_bijet_dR', 'mjj']
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 3))
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 4))
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 5))
+        # vars_custom_combos.extend(combinations(interesting_vars_1D, 6))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 7))
         vars_custom_combos.extend(combinations(interesting_vars_1D, 8))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 9))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, 10))
+        vars_custom_combos.extend(combinations(interesting_vars_1D, len(interesting_vars_1D)))
+        vars_custom_combos.extend(combinations(interesting_vars_set1, len(interesting_vars_set1)))
         # -----------------------------------------------------------------
         lrs_for_vars_1D = self.get_lrs_for_vars_1D()
         # lrs_for_vars_2D = self.get_lrs_for_vars_2D()
