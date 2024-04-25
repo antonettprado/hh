@@ -2,38 +2,36 @@ Models:
   - name: 'default'
     input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-    output: {type: 'Dense', units: 1, activation: 'sigmoid'}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+    output: {type: 'Dense', units: 1, activation: 'sigmoid', l2: 1e-6}
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+  - name: 'default_lr_0p0001'
+    input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
+    layers: 
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+    output: {type: 'Dense', units: 1, activation: 'sigmoid', l2: 1e-6}
+    compiler: {optimizer: 'adam', loss: 'binary_crossentropy', lr: 0.0001}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
   - name: 'default_All'
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-    output: {type: 'Dense', units: 1, activation: 'sigmoid'}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+    output: {type: 'Dense', units: 1, activation: 'sigmoid', l2: 1e-6}
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
-  - name: 'default_4layers'
-    input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
-    layers: 
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-    output: {type: 'Dense', units: 1, activation: 'sigmoid'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
-    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
-  - name: 'default_All_4layers'
+  - name: 'default_All_lr_0p0001'
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-      - {type: 'Dense', units: 64, activation: 'relu'}
-    output: {type: 'Dense', units: 1, activation: 'sigmoid'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+    output: {type: 'Dense', units: 1, activation: 'sigmoid', l2: 1e-6}
+    compiler: {optimizer: 'adam', loss: 'binary_crossentropy', lr: 0.0001}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}

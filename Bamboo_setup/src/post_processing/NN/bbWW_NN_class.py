@@ -10,8 +10,8 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras import Model, regularizers
 from tensorflow.keras.metrics import BinaryAccuracy, AUC, Precision, Recall
-# from tensorflow.keras.losses import CategoricalCrossentropy
-# from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.losses import CategoricalCrossentropy
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D, BatchNormalization, Dropout
 from tensorflow.keras.layers.experimental import preprocessing
 import yaml
@@ -21,7 +21,7 @@ BAMBOO_SETUP = Path(__file__).parents[3]
 NNDIR = BAMBOO_SETUP / 'src' / 'post_processing' / 'NN'
 NNOUTDIR = BAMBOO_SETUP / 'Z_OUTPUT' / 'Neural_Nets'
 
-def load_data(workdir_name, verbose=False) -> pd.DataFrame:
+def load_data(workdir_name: str, verbose=False) -> pd.DataFrame:
     
     workdir = BAMBOO_SETUP / 'Z_OUTPUT' / workdir_name
     resultsdir = workdir / 'results'
@@ -42,12 +42,12 @@ def load_data(workdir_name, verbose=False) -> pd.DataFrame:
     # Cutting away most backgruond events
     backg_df = backg_df.iloc[:len(signal_df)]
 
-    print (f"Total number of signal events: {len(signal_df)}")
-    print (f"Total number of background events used: {len(backg_df)}")
+    print (f"Total Signal Events: {len(signal_df)}")
+    print (f"Total Background Events used: {len(backg_df)}")
 
     total_df = pd.concat([signal_df, backg_df], ignore_index=True)
-    if verbose==True: total_df
-    return total_df
+
+    return total_df 
 
 def preprocess_data(total_df) -> pd.DataFrame:
 
@@ -62,8 +62,6 @@ def preprocess_data(total_df) -> pd.DataFrame:
         total_sum = total_df[mask]["gen_Weight"].sum()
         total_df.loc[mask, "training_weight"] *= total_df.shape[0] / total_sum
 
-    # Randomize for training
-    total_df = total_df.sample(frac=1)
     return total_df
 
 def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
@@ -91,6 +89,40 @@ def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
 
     return training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test
 
+def pick_num_train_events(X_train, Y_train, events_train, n_events: dict):
+    n_signal, n_backg = n_events['signal'], n_events['background']
+    assert X_train.index.equals(Y_train.index)
+    signal_X_train = X_train[Y_train==1]
+    signal_Y_train = Y_train[Y_train==1]
+    signal_events_train = events_train[Y_train==1]
+    backg_X_train = X_train[Y_train==0]
+    backg_Y_train = Y_train[Y_train==0]
+    backg_events_train = events_train[Y_train==0]
+    if isinstance(n_backg, str):
+        factor = int(n_backg.strip('s'))
+        desired_backg_n = int(len(signal_X_train) * factor)
+        if len(backg_X_train) >  desired_backg_n:
+            backg_X_train = backg_X_train.sample(n=desired_backg_n, random_state=42)
+            backg_Y_train = backg_Y_train.loc[backg_X_train.index]
+            backg_events_train = backg_events_train.loc[backg_X_train.index]
+        X_train = pd.concat([signal_X_train, backg_X_train])
+        Y_train = pd.concat([signal_Y_train, backg_Y_train])
+        events_train = pd.concat([signal_events_train, backg_events_train])
+    elif isinstance(n_backg, int):
+        desired_backg_n = n_backg
+        if len(backg_X_train) >  desired_backg_n:
+            backg_X_train = backg_X_train.sample(n=desired_backg_n, random_state=42)
+            backg_Y_train = backg_Y_train.loc[backg_X_train.index]
+            backg_events_train = backg_events_train.loc[backg_X_train.index]
+        X_train = pd.concat([signal_X_train, backg_X_train])
+        Y_train = pd.concat([signal_Y_train, backg_Y_train])
+        events_train = pd.concat([signal_events_train, backg_events_train])
+    
+    X_train = X_train.sample(frac=1, random_state=42).reset_index(drop=True)
+    Y_train = Y_train.sample(frac=1, random_state=42).reset_index(drop=True)    
+
+    return X_train, Y_train, events_train, len(X_train), len(Y_train)
+
 def pick_features(X_train, X_test, feature_names: list = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     if feature_names is not None:
         X_train = X_train[feature_names]
@@ -98,12 +130,42 @@ def pick_features(X_train, X_test, feature_names: list = None) -> tuple[pd.DataF
         # Resolve: If feature names not found in dataframe
         return X_train, X_test
 
+def get_optimizer(config: dict):
+    optimizer_name = config['optimizer'].lower()
+    optimizers = {'adam': Adam, 'sgd': SGD, 'rmsprop': RMSprop}
+    if optimizer_name in optimizers:
+        optimizer_class = optimizers[optimizer_name]
+        if 'lr' in config:
+            return optimizer_class(learning_rate=config['lr'])
+        else:
+            return optimizer_class()
+    else:
+        raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
+
+def update_model_metrics_csv(model_name: str, training_events: dict, output_metrics: dict, csv_path):
+    if csv_path.exists():
+        df = pd.read_csv(csv_path)
+    else:
+        columns = ['name'] + list(training_events.keys()) + list(output_metrics.keys())
+        df = pd.DataFrame(columns=columns)
+    
+    if model_name in df['name'].values:
+        idx = df[df['name']==model_name].index
+        for key, value in {**training_events, **output_metrics}.items():
+            df.loc[idx, key] = value
+    else:
+        new_model = {'name': model_name, **training_events, **output_metrics}
+        df = df.concat(new_model, ignore_index=True)
+
+    df.to_csv(csv_path, index=False)
+
 class Run3Model():
 
-    def __init__(self, name, X_train, Y_train):
+    def __init__(self, name: str, X_train: pd.DataFrame, Y_train: pd.Series):
         self.name = name
         self.X_train = X_train
         self.Y_train = Y_train
+        self.ndim = len(X_train.columns)
 
         self.modeldir = NNOUTDIR / name
         if not self.modeldir.exists(): 
@@ -142,28 +204,30 @@ class Run3Model():
 
     def setup_model(self, params):
 
-        NDIM = len(self.X_train.columns)
-        inputs = Input(shape=(NDIM,), name="input")
+        # Input Layer
+        inputs = Input(shape=(self.ndim,), name="input")
 
         # Preprocessing layer
         normalizer   = preprocessing.Normalization(
-            mean     = X_train.mean(axis=0).to_numpy(),
-            variance = X_train.var(axis=0).to_numpy(),
+            mean     = self.X_train.mean(axis=0).to_numpy(),
+            variance = self.X_train.var(axis=0).to_numpy(),
             name     = 'Normalization')(inputs)
 
         x = normalizer
 
+        # Hidden Layer
         for layer in params['layers']:
             if layer['type'] == 'Dense':
-                x = Dense(units=layer['units'], activation=layer['activation'], activity_regularizer=regularizers.l2(1e-6))(x)
+                x = Dense(units=layer['units'], activation=layer['activation'], activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
                 x = BatchNormalization()(x)
 
+        # Output Layer
         if params['output']['type'] == 'Dense':
-            outputs = Dense(units=1,kernel_initializer = "normal", activation = 'sigmoid', activity_regularizer = regularizers.l2(1e-6), name = "output")(x)
+            outputs = Dense(units=1,kernel_initializer = "normal", activation = 'sigmoid', activity_regularizer = regularizers.l2(float(layer['l2'])), name = "output")(x)
         
         model = Model(inputs=inputs, outputs=outputs)
         model.compile(
-            optimizer = params['compiler']['optimizer'], # Optimizer
+            optimizer = get_optimizer(params['compiler']),
             loss      = params['compiler']['loss'], # Loss function to minimize fpr binary ANN
             #loss      = CategoricalCrossentropy(), # Loss function to minimize for multiclass ANN
             #metrics   = ["accuracy"]
@@ -254,20 +318,34 @@ if __name__ == '__main__':
         yaml_data = yaml.safe_load(file)
     model_list = yaml_data['Models']
 
+    csv_path = NNOUTDIR / 'models_performance.csv'
+
     for model_params in model_list:
 
-        if model_params['input_vars'] != 'All':
-            X_train, X_test = pick_features(X_train, X_test, model_params['input_vars'])
+        print(f"Model: {model_params['name']}")
+        # X_train_mod, Y_train_mod, events_train_mod, n_signal_train, n_backg_train = pick_num_train_events(X_train, Y_train, events_train, model_params['n_events'])
 
-        myModel = Run3Model(model_params['name'], X_train, Y_train)
+        X_train_mod = X_train
+        Y_train_mod = Y_train
+        X_test_mod = X_test
+        Y_test_mod = Y_test
+
+        if model_params['input_vars'] != 'All':
+            X_train_mod, X_test_mod = pick_features(X_train_mod, X_test_mod, model_params['input_vars'])
+
+        myModel = Run3Model(model_params['name'], X_train_mod, Y_train_mod)
         myModel.setup_model(model_params)
         myModel.train_model(model_params, training_weights)
-        output_df = myModel.final_output(X_test, Y_test, events_test)
+        output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
         fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
         myModel.draw_score_dist(output_df, myModel.modeldir)
         myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
 
-        model_params['Output_metrics'] = {
+        model_params['Training Events'] = {
+            'signal': int(Y_train[Y_train == 1].count()),
+            'background': int(Y_train[Y_train == 0].count())
+        }
+        model_params['Output Metrics'] = {
             'Optimal threshold': round(float(optimal_threshold), 3),
             'Signal Efficiency': round(float(tpr[optimal_idx]), 3),
             'Background Rejection': round(float(1 - fpr[optimal_idx]), 3),
@@ -278,4 +356,6 @@ if __name__ == '__main__':
         out_yml = myModel.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
             yaml.dump(model_params, file, sort_keys=False)
+
+        update_model_metrics_csv(model_params['name'], model_params['Training Events'], model_params['Output Metrics'], csv_path)
 
