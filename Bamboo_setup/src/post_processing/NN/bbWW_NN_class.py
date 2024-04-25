@@ -18,6 +18,7 @@ import yaml
 from typing import Union
 
 NNDIR = Path(__file__).parent
+NNOUTDIR = None
 
 def load_data(workdir: Path, verbose=False) -> pd.DataFrame:
     
@@ -298,14 +299,10 @@ class Run3Model():
         ax.legend(loc="lower right")
         fig.savefig(modeldir / "dnn_roc.pdf")
 
-if __name__ == '__main__':
 
-    # The root files in the given workdir must have skims
-    parser = ArgumentParser()
-    parser.add_argument("-i", "--input_dir", action="store", default="Z_OUTPUT/Local_VarsReco_2018")
-    args = parser.parse_args()
-
-    WORKDIR = Path(args.input_dir)
+def main(workdir_path: str):
+    global NNOUTDIR
+    WORKDIR = Path(workdir_path)
     NNOUTDIR = WORKDIR / 'Neural_Nets'
     total_df=load_data(WORKDIR)
     total_df=preprocess_data(total_df)
@@ -319,10 +316,7 @@ if __name__ == '__main__':
     csv_path = NNOUTDIR / 'models_performance.csv'
 
     for model_params in model_list:
-
         print(f"Model: {model_params['name']}")
-        # X_train_mod, Y_train_mod, events_train_mod, n_signal_train, n_backg_train = pick_num_train_events(X_train, Y_train, events_train, model_params['n_events'])
-
         X_train_mod = X_train
         Y_train_mod = Y_train
         X_test_mod = X_test
@@ -339,6 +333,7 @@ if __name__ == '__main__':
         myModel.draw_score_dist(output_df, myModel.modeldir)
         myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
 
+        # ----------- Logging model info -------------------
         model_params['Training Events'] = {
             'signal': int(Y_train[Y_train == 1].count()),
             'background': int(Y_train[Y_train == 0].count())
@@ -347,7 +342,7 @@ if __name__ == '__main__':
             'Optimal threshold': round(float(optimal_threshold), 3),
             'Signal Efficiency': round(float(tpr[optimal_idx]), 3),
             'Background Rejection': round(float(1 - fpr[optimal_idx]), 3),
-            'Sensitivity (S/B)': round(sensitivity, 3),
+            'Sensitivity (S/B)': round(sensitivity, 3)
         }
         model_params['Trained on'] = WORKDIR.name
 
@@ -356,4 +351,13 @@ if __name__ == '__main__':
             yaml.dump(model_params, file, sort_keys=False)
 
         update_model_metrics_csv(model_params['name'], model_params['Training Events'], model_params['Output Metrics'], csv_path)
+
+if __name__ == '__main__':
+
+    # The root files in the given workdir must have skims
+    parser = ArgumentParser()
+    parser.add_argument("-i", "--input_dir", action="store", default="Z_OUTPUT/Local_VarsReco_2018")
+    args = parser.parse_args()
+
+    main(args.input_dir)
 
