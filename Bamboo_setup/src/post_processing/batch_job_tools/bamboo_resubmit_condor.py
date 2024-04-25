@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     jobs = glob.glob("%s/batch/output/*"%args.input_dir)
     for job in jobs:
-        root_file = "%s/*.root"%job
+        root_file = glob.glob("%s/*.root"%job)[0]
         root_file_size = os.path.getsize(root_file)
         job_id = job.split("/")[-1]
         if root_file_size == 0:
