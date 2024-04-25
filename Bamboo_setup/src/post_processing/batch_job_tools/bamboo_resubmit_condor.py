@@ -14,13 +14,16 @@ if __name__ == '__main__':
         root_file_name = glob.glob("%s/*.root"%job)[0]
         root_file_size = os.path.getsize(root_file_name)
         job_id = job.split("/")[-1]
-        #if root_file_size == 0:
-        try :
-            root_file = ROOT.TFile(root_file_name)
-            root_file.Close()
-        except:
+        if root_file_size == 0:
             print ("Resubmitting Job %s"%job_id)
             job_resubmit.append(job_id)
+        else:
+            try:
+                root_file = ROOT.TFile(root_file_name)
+                root_file.Close()
+            except:
+                print ("Resubmitting Job %s"%job_id)
+                job_resubmit.append(job_id)
     
     job_resubmit = ','.join(job_resubmit)
 
