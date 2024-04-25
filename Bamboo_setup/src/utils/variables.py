@@ -192,7 +192,10 @@ class Variable():
             tot_hist.Add(self.get_hist_from_file(subcat, file))
 
         if normalized:
-            tot_hist.Scale(1/tot_hist.Integral())
+            integral = tot_hist.Integral()
+            if integral != 0.0:
+                tot_hist.Scale(1/tot_hist.Integral())
+                
         return tot_hist
 
     def is_child(self) -> bool:
@@ -423,6 +426,10 @@ lr_binning = {
                6: { 'nbins':300, 'min':-6, 'max':6 },
                7: { 'nbins':400, 'min':-7, 'max':7 },
                8: { 'nbins':400, 'min':-7, 'max':7 },
+               9: { 'nbins':400, 'min':-7, 'max':7 },
+               10:{ 'nbins':400, 'min':-8, 'max':-8 },
+               11:{ 'nbins':400, 'min':-8, 'max':-8 },
+               17:{ 'nbins':800, 'min':-20, 'max':20 },
               }
 class LikelihoodRatio(Variable):
     '''

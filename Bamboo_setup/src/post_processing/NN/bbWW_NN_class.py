@@ -213,17 +213,28 @@ class Run3Model():
 
         x = normalizer
 
-        # Hidden Layer
+        # Hidden Layers
         for layer in params['layers']:
             if layer['type'] == 'Dense':
-                x = Dense(units=layer['units'], activation=layer['activation'], activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+                x = Dense(
+                    units=layer['units'], 
+                    activation=layer['activation'], 
+                    activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
                 x = BatchNormalization()(x)
 
         # Output Layer
-        if params['output']['type'] == 'Dense':
-            outputs = Dense(units=1,kernel_initializer = "normal", activation = 'sigmoid', activity_regularizer = regularizers.l2(float(layer['l2'])), name = "output")(x)
+        outputs = []
+        for layer in params['outputs']:
+            if layer['type'] == 'Dense':
+                output = Dense(
+                    units=layer['units'],
+                    kernel_initializer = layer['kernel_initializer'], 
+                    activation = layer['activation'], 
+                    activity_regularizer = regularizers.l2(float(layer['l2'])), 
+                    name = layer['name'])(x)
+                outputs.append(output)
         
-        model = Model(inputs=inputs, outputs=outputs)
+        model = Model(inputs=inputs, outputs=outputs, name=params['name'])
         model.compile(
             optimizer = get_optimizer(params['compiler']),
             loss      = params['compiler']['loss'], # Loss function to minimize fpr binary ANN
@@ -233,6 +244,7 @@ class Run3Model():
             weighted_metrics = [])
         
         self.model = model
+        tf.keras.utils.plot_model(model, to_file=self.modeldir/'model_plot.pdf')
 
     def train_model(self, params, training_weights):
         if self.model == None: raise ValueError('self.model is None. Set up the model first')
