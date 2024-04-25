@@ -19,5 +19,7 @@ if __name__ == '__main__':
     
     job_resubmit = ','.join(job_resubmit)
 
+    print ("\nResubmitting jobs...")
     os.system("bambooHTCondorResubmit --ids=%s %s/batch/input/condor.cmd"%(job_resubmit, args.input_dir))
+    print ("\n")
 
