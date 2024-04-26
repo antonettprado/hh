@@ -424,12 +424,12 @@ lr_binning = {
                4: { 'nbins':100, 'min':-5, 'max':5 },
                5: { 'nbins':100, 'min':-6, 'max':6 },
                6: { 'nbins':100, 'min':-6, 'max':6 },
-               7: { 'nbins':200, 'min':-15, 'max':15 },
-               8: { 'nbins':200, 'min':-15, 'max':15 },
-               9: { 'nbins':200, 'min':-15, 'max':15 },
-               10:{ 'nbins':250, 'min':-20, 'max':20 },
-               11:{ 'nbins':250, 'min':-20, 'max':20 },
-               17:{ 'nbins':300, 'min':-25, 'max':25 },
+               7: { 'nbins':75, 'min':-15, 'max':15 },
+               8: { 'nbins':75, 'min':-15, 'max':15 },
+               9: { 'nbins':75, 'min':-15, 'max':15 },
+               10:{ 'nbins':75, 'min':-15, 'max':15 },
+               11:{ 'nbins':75, 'min':-15, 'max':15 },
+               17:{ 'nbins':100, 'min':-20, 'max':20 },
               }
 class LikelihoodRatio(Variable):
     '''

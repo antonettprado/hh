@@ -259,9 +259,12 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         # super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        print('Printing plots')
-
-
         # file1 = os.path.join(self.args.output, 'results/bbWW_sl.root')
         # df = ROOT.RDataFrame("SL_res_2b_x", file1)
         # df.Display({"event", "bjets_mbb"}, 5, 20).Print()
+
+        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
+        compare_subcategories(workdir, no_type=False)
+
+        from post_processing.cut_based_sel.cut_based_selections import main as cut_based_selections
+        cut_based_selections(workdir)

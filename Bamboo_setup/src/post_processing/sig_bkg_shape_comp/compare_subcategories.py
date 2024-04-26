@@ -20,9 +20,10 @@ OUTPUT_PATH = None
 OUTPUT_DIR = None
 SIGNAL_SAMPLES = None
 BACKG_SAMPLES = None
+FAILED_VARIABLES = []
+
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
-FAILED_VARIABLES = []
 
 
 def draw_1D_total(hist_signal, hist_backg, ss_var, path):
@@ -67,10 +68,10 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path):
     canvas_norm.SetLeftMargin(0.13)
     canvas_norm.Update()
 
-    canvas_norm.SaveAs(os.path.join(path, ss_var.name + '.pdf'))
+    canvas_norm.SaveAs( str(path / (ss_var.name + '.pdf')))
     canvas_norm.Close()
 
-def draw_2D_total(signal_hist, backg_hist, ss_var, path):
+def draw_2D_total(signal_hist, backg_hist, ss_var, path: Path):
     for hist, color, of_type in ((signal_hist, ROOT.kBlue, 'signal'), (backg_hist, ROOT.kRed, 'backg')):
         hist.SetStats(0)
         canvas = ROOT.TCanvas('canvas', '', 200, 200)
@@ -82,16 +83,16 @@ def draw_2D_total(signal_hist, backg_hist, ss_var, path):
         hist.GetYaxis().SetTitle(ss_var.yfull_title)
         canvas.Update()
 
-        canvas.SaveAs(os.path.join(path, ss_var.name + '_' + of_type + '.pdf'))
+        canvas.SaveAs( str(path / (ss_var.name + '_' + of_type + '.pdf')))
         canvas.Close()
 
 
-def draw1D(var: Variable1D, dirname='1D'):
+def draw1D(var: Variable1D, dirname: str ='1D'):
     # For subcat-specific var in var
-    path_1D = os.path.join(OUTPUT_PATH, dirname)
+    path_1D = OUTPUT_PATH / dirname
     for ss_var in var:
-        this_path = os.path.join(path_1D, ss_var.subcat)
-        if not os.path.exists(this_path): os.makedirs(this_path)
+        this_path = path_1D / ss_var.subcat
+        if not this_path.exists(): this_path.mkdir(parents=True)
         try:
             total_signal = ss_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
             total_backg = ss_var.get_total_hist(BACKG_SAMPLES, normalized=True)
@@ -104,11 +105,11 @@ def draw1D(var: Variable1D, dirname='1D'):
             FAILED_VARIABLES.append(ss_var.ref)
         
 
-def draw2D(var: Variable2D):
-    path_2D = os.path.join(OUTPUT_PATH, '2D')
+def draw2D(var: Variable2D, dirname: str = '2D'):
+    path_2D = OUTPUT_PATH / '2D'
     for ss_var in var:
-        this_path = os.path.join(path_2D, ss_var.subcat)
-        if not os.path.exists(this_path): os.makedirs(this_path)
+        this_path = path_2D / ss_var.subcat
+        if not this_path.exists(): this_path.mkdir(parents=True)
         try:
             total_signal = var.get_total_hist(SIGNAL_SAMPLES, ss_var.subcat, normalized=True)
             total_backg = var.get_total_hist(BACKG_SAMPLES, ss_var.subcat, normalized=True)
@@ -117,10 +118,10 @@ def draw2D(var: Variable2D):
             print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
             FAILED_VARIABLES.append(ss_var.ref)
         except ZeroDivisionError:
-            parint(f'Comparison for {ss_var.ref} failed: Empty histogram')
+            print(f'Comparison for {ss_var.ref} failed: Empty histogram')
             FAILED_VARIABLES.append(ss_var.ref)
 
-def draw1D_notype(ref, path):
+def draw1D_notype(ref, path: Path):
     print(ref)
     def get_hist_from_i_file(hist_ref: str, file: TFile):
         file_name = Path(file.GetName()).stem
@@ -166,30 +167,25 @@ def draw1D_notype(ref, path):
     hist_signal.Draw("hist")
     hist_backg.Draw("hist sames")
     leg.Draw()
-
     canvas.Update()
-    canvas.SaveAs(os.path.join(path, ref + '.pdf'))
+    canvas.SaveAs(str(path / (ref +'.pdf')))
     canvas.Close()
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Comparing signal vs background")
-    parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source path")
-    parser.add_argument("-nt", "--no_type", action="store_true", default=False, help="No Variable type")
-    args = parser.parse_args()
-
-    SOURCE_PATH = args.source_path
-    SOURCE_DIR = SOURCE_PATH[SOURCE_PATH.rfind('/') + 1:]
-    OUTPUT_PATH = os.path.join(SOURCE_PATH, "comparisons")
+def main(source_path: str, no_type=False):
+    global SOURCE_PATH, SOURCE_DIR, OUTPUT_PATH, OUTPUT_DIR, SIGNAL_SAMPLES, BACKG_SAMPLES, FAILED_VARIABLES
+    SOURCE_PATH = Path(source_path)
+    SOURCE_DIR = SOURCE_PATH.name
+    OUTPUT_PATH = SOURCE_PATH / "comparisons"
     results_path = Path(SOURCE_PATH) / 'results'
     SIGNAL_SAMPLES = variables.open_root_files(ALL_SIGNAL_SAMPLES, results_path)
     BACKG_SAMPLES = variables.open_root_files(ALL_BACKG_SAMPLES, results_path)
     
-    if not os.path.exists(OUTPUT_PATH):
-        os.makedirs(OUTPUT_PATH)
+    if not OUTPUT_PATH.exists():
+        OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
     
-    print("The source path is: " + SOURCE_PATH)
-    print("The output path is: " + OUTPUT_PATH)
+    print("The source path is: " + SOURCE_PATH.name)
+    print("The output path is: " + OUTPUT_PATH.name)
 
     # Get a list of all the histogram references in a file
     # Assume these references are identical between files!!
@@ -200,9 +196,9 @@ if __name__ == "__main__":
         if isinstance(obj, ROOT.TH1) or isinstance(obj, ROOT.TH2):
             refs.append(obj.GetName())
 
-    if args.no_type:
-        path_notype = os.path.join(OUTPUT_PATH, "notype")
-        if not os.path.exists(path_notype): os.makedirs(path_notype)
+    if no_type:
+        path_notype = OUTPUT_PATH / "notype"
+        if not path_notype.exists(): path_notype.mkdir(exist_ok=True)
         for ref in refs:
             if 'yield' not in ref:
                 draw1D_notype(ref, path_notype)
@@ -212,7 +208,7 @@ if __name__ == "__main__":
             if isinstance(var, Variable1D):
                 draw1D(var)
             elif isinstance(var, Variable2D) or isinstance(var, Variable3D):
-                draw2D(var)
+                draw2D(var, dirname='2D')
             elif isinstance(var, LikelihoodRatio):
                 draw1D(var, dirname='LR')
             else:
@@ -220,3 +216,12 @@ if __name__ == "__main__":
         if FAILED_VARIABLES:
             print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")
             print(*FAILED_VARIABLES, sep='\n')
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Comparing signal vs background")
+    parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source path")
+    parser.add_argument("-nt", "--no_type", action="store_true", default=False, help="No Variable type")
+    args = parser.parse_args()
+
+    main(args.source_path, args.no_type)
