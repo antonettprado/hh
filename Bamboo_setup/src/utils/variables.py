@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 import copy
 VARPATH = Path(__file__).parents[1] / 'input' / 'variables.json'
-CFGPATH = Path(__file__).parents[2] / 'config' / 'analysis_2018.yml'
+CFGPATH = Path(__file__).parents[2] / 'config' / 'analysis_2022.yml'
 
 # Load all variable names into local namespace (for looping)
 ALL_VARNAMES_1D = None
@@ -23,7 +23,7 @@ with open(VARPATH, 'r') as f:
 # Load config file and get the luminosity and cross sections
 with open(CFGPATH, "r") as yaml_file:
     yaml_data = yaml.safe_load(yaml_file)
-    LUMINOSITY: float = yaml_data['eras']['2018']['luminosity']
+    LUMINOSITY: float = yaml_data['eras']['2022']['luminosity']
     CROSS_SECTIONS: 'dict[str, float]' = { sample_name: sample_data['cross-section'] for sample_name, sample_data in yaml_data['samples'].items() }
 
 # Helper utility function for getting the weights stored in root files
@@ -195,7 +195,7 @@ class Variable():
             integral = tot_hist.Integral()
             if integral != 0.0:
                 tot_hist.Scale(1/tot_hist.Integral())
-                
+        
         return tot_hist
 
     def is_child(self) -> bool:
@@ -498,3 +498,5 @@ if __name__ == '__main__':
 
     open_root_files(['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root', 'TTbar_sl.root', 'TTbar_dl.root'], 'Z_OUTPUT/TOTAL_VarsReco_0824/results')
     print(SUM_WEIGHTS)
+
+    # For now, you must change the configuration file year by hand in lines 8 and 26

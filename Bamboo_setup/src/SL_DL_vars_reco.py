@@ -20,6 +20,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
     def __init__(self, args):
         super(SL_DL_vars_reco, self).__init__(args)
         self.event_nr_sel = "even"
+        self.output_llr = True
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
@@ -1138,83 +1139,84 @@ class SL_DL_vars_reco(SL_DL_event_selection):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        print("------------------ Calculating Likelihood Ratios --------------------")
 
-        files_in_resultsdir = os.listdir(resultsdir)
-        PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
-        PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
-        SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
-        BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
-        INTERPOLATION_SCALE_FACTOR_1D = 9
-        INTERPOLATION_SCALE_FACTOR_2D = 3
-        INTERPOLATION_SCALE_FACTOR_3D = 3
-        DECIMAL_PLACES = 3
+        if self.output_llr:
+            print("------------------ Calculating Likelihood Ratios --------------------")
+            files_in_resultsdir = os.listdir(resultsdir)
+            PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
+            PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
+            SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
+            BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
+            INTERPOLATION_SCALE_FACTOR_1D = 9
+            INTERPOLATION_SCALE_FACTOR_2D = 3
+            INTERPOLATION_SCALE_FACTOR_3D = 3
+            DECIMAL_PLACES = 3
 
-        all_reco_vars_1D = self.gather_all_reco_variables()
-        all_reco_vars_2D = self.gather_all_reco_2D_variables()
-        all_reco_vars_3D = self.gather_all_reco_3D_variables()
-        all_reco_vars = all_reco_vars_1D + all_reco_vars_2D + all_reco_vars_3D
+            all_reco_vars_1D = self.gather_all_reco_variables()
+            all_reco_vars_2D = self.gather_all_reco_2D_variables()
+            all_reco_vars_3D = self.gather_all_reco_3D_variables()
+            all_reco_vars = all_reco_vars_1D + all_reco_vars_2D + all_reco_vars_3D
 
-        all_bjets_vars_1D = self.gather_bjet_vars()
-        all_bjets_vars_2D = self.gather_bjets_2D_vars()
-        all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
+            all_bjets_vars_1D = self.gather_bjet_vars()
+            all_bjets_vars_2D = self.gather_bjets_2D_vars()
+            all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
 
-        all_corrections = []
-        for var in all_reco_vars_1D:
-            print(var.name)
-            for subcat_var in var:
-                    print('\t', subcat_var.ref)
-                    signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
-                    backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
-                    
-                    ratio_hist = signal_total_hist.Clone()
-                    ratio_hist.Divide(backg_total_hist)
+            all_corrections = []
+            for var in all_reco_vars_1D:
+                print(var.name)
+                for subcat_var in var:
+                        print('\t', subcat_var.ref)
+                        signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
+                        backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
+                        
+                        ratio_hist = signal_total_hist.Clone()
+                        ratio_hist.Divide(backg_total_hist)
 
-                    if isinstance(var, Variable1D):
-                        bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
-                        inputs = [cs.Variable(name="xaxis", type="real", description="")]
-                        data = cs.Binning(
-                            nodetype="binning",
-                            input="xaxis",
-                            edges=list(np.round(bin_edges, DECIMAL_PLACES)),
-                            content=list(np.round(bin_contents, DECIMAL_PLACES)),
-                            flow="clamp",
+                        if isinstance(var, Variable1D):
+                            bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+                            inputs = [cs.Variable(name="xaxis", type="real", description="")]
+                            data = cs.Binning(
+                                nodetype="binning",
+                                input="xaxis",
+                                edges=list(np.round(bin_edges, DECIMAL_PLACES)),
+                                content=list(np.round(bin_contents, DECIMAL_PLACES)),
+                                flow="clamp",
+                            )
+                        elif isinstance(var, Variable2D):
+                            bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                                    cs.Variable(name="yaxis", type="real", description="")]
+                            data = cs.MultiBinning(
+                                nodetype="multibinning",
+                                inputs=["xaxis","yaxis"],
+                                edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
+                                content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
+                                flow="clamp",
+                            )
+                        elif isinstance(var, Variable3D):
+                            bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                                    cs.Variable(name="yaxis", type="real", description=""),
+                                    cs.Variable(name="zaxis", type="real", description="")]
+                            data = cs.MultiBinning(
+                                nodetype="multibinning",
+                                inputs=["xaxis","yaxis"],
+                                edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
+                                content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
+                                flow="clamp",
+                            )
+
+                        corr = cs.Correction(
+                            name=subcat_var.ref + '_llr',
+                            # description = f'llr for {subcat_var.ref}'
+                            version=0,
+                            inputs=inputs,
+                            output=cs.Variable(name="", type="real", description=""),
+                            data=data
                         )
-                    elif isinstance(var, Variable2D):
-                        bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-                        inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                                cs.Variable(name="yaxis", type="real", description="")]
-                        data = cs.MultiBinning(
-                            nodetype="multibinning",
-                            inputs=["xaxis","yaxis"],
-                            edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
-                            content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
-                            flow="clamp",
-                        )
-                    elif isinstance(var, Variable3D):
-                        bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-                        inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                                cs.Variable(name="yaxis", type="real", description=""),
-                                cs.Variable(name="zaxis", type="real", description="")]
-                        data = cs.MultiBinning(
-                            nodetype="multibinning",
-                            inputs=["xaxis","yaxis"],
-                            edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
-                            content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
-                            flow="clamp",
-                        )
+                        all_corrections.append(corr)
 
-                    corr = cs.Correction(
-                        name=subcat_var.ref + '_llr',
-                        # description = f'llr for {subcat_var.ref}'
-                        version=0,
-                        inputs=inputs,
-                        output=cs.Variable(name="", type="real", description=""),
-                        data=data
-                    )
-                    all_corrections.append(corr)
-
-        cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(resultsdir, "corrections_llr.json")
-        with open(output_llr_file, "w") as outfile:
-            outfile.write(cset.json(exclude_unset=False))
+            cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
+            output_llr_file = os.path.join(resultsdir, "corrections_llr.json")
+            with open(output_llr_file, "w") as outfile:
+                outfile.write(cset.json(exclude_unset=False))

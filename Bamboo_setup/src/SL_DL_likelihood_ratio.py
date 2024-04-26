@@ -24,6 +24,7 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         self.event_nr_sel = "odd"
         print("The input dir is: " + self.args.input_dir)
         print("The output path is: " + self.args.output)
+        self.output_llr=False
 
     def addArgs(self, parser):
         super(SL_DL_likelihood_ratio, self).addArgs(parser)
@@ -258,10 +259,12 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        # super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+
         # file1 = os.path.join(self.args.output, 'results/bbWW_sl.root')
         # df = ROOT.RDataFrame("SL_res_2b_x", file1)
         # df.Display({"event", "bjets_mbb"}, 5, 20).Print()
+
+        super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
         compare_subcategories(workdir, no_type=False)
