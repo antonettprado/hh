@@ -11,9 +11,13 @@ if __name__ == '__main__':
     job_resubmit = []
     jobs = glob.glob("%s/batch/output/*"%args.input_dir)
     for job in jobs:
+        job_id = job.split("/")[-1]
+        if len(glob.glob("%s/*.root"%job)) == 0:
+            print ("Resubmitting Job %s"%job_id)
+            job_resubmit.append(job_id)
+            continue
         root_file_name = glob.glob("%s/*.root"%job)[0]
         root_file_size = os.path.getsize(root_file_name)
-        job_id = job.split("/")[-1]
         if root_file_size == 0:
             print ("Resubmitting Job %s"%job_id)
             job_resubmit.append(job_id)
