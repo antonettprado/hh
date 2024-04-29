@@ -1064,13 +1064,13 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
         plots.extend(hists_1D)
 
-        # reco_2D_vars = self.gather_all_reco_2D_variables()
-        # hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
-        # plots.extend(hists_2D)
+        reco_2D_vars = self.gather_all_reco_2D_variables()
+        hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
+        plots.extend(hists_2D)
 
-        # reco_3D_vars = self.gather_all_reco_3D_variables()
-        # hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
-        # plots.extend(hists_3D)
+        reco_3D_vars = self.gather_all_reco_3D_variables()
+        hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
+        plots.extend(hists_3D)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -1123,7 +1123,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
     
         return [x_interp_bin_edges, y_interp_bin_edges], interp_bin_contents
     
-    def interpolate_3D_root_histogram(self, root_hist, scale_factor):
+    def interpolate_3d_root_histogram(self, root_hist, scale_factor):
         bin_contents = np.log([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
         x_seed_data, x_interp_bin_centers, x_interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
         y_seed_data, y_interp_bin_centers, y_interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
@@ -1133,7 +1133,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, z_interp_bin_centers, indexing='ij')).reshape(3,-1).T
     
         interp_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data, z_seed_data], a_seed_data, interpolated_bin_centers, method='linear')
-        interp_bin_contents = np.flatten(interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers)))).flatten()
+        interp_bin_contents = interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers))).flatten()
     
         return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
 
@@ -1162,7 +1162,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
 
             all_corrections = []
-            for var in all_reco_vars_1D:
+            for var in all_reco_vars_3D:
                 print(var.name)
                 for subcat_var in var:
                         print('\t', subcat_var.ref)
@@ -1184,25 +1184,27 @@ class SL_DL_vars_reco(SL_DL_event_selection):
                             )
                         elif isinstance(var, Variable2D):
                             bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
                             inputs = [cs.Variable(name="xaxis", type="real", description=""),
                                     cs.Variable(name="yaxis", type="real", description="")]
                             data = cs.MultiBinning(
                                 nodetype="multibinning",
                                 inputs=["xaxis","yaxis"],
-                                edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
-                                content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
+                                edges=bin_edges,
+                                content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
                                 flow="clamp",
                             )
                         elif isinstance(var, Variable3D):
-                            bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            bin_edges, bin_contents = self.interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
                             inputs = [cs.Variable(name="xaxis", type="real", description=""),
                                     cs.Variable(name="yaxis", type="real", description=""),
                                     cs.Variable(name="zaxis", type="real", description="")]
                             data = cs.MultiBinning(
                                 nodetype="multibinning",
-                                inputs=["xaxis","yaxis"],
-                                edges=np.round(bin_edges, DECIMAL_PLACES).to_list(),
-                                content=np.round(bin_contents, DECIMAL_PLACES).to_list(),
+                                inputs=["xaxis","yaxis", "zaxis"],
+                                edges=bin_edges,
+                                content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
                                 flow="clamp",
                             )
 
