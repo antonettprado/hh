@@ -1162,7 +1162,7 @@ class SL_DL_vars_reco(SL_DL_event_selection):
             all_bjets_vars = all_bjets_vars_1D + all_bjets_vars_2D
 
             all_corrections = []
-            for var in all_reco_vars_3D:
+            for var in all_reco_vars:
                 print(var.name)
                 for subcat_var in var:
                         print('\t', subcat_var.ref)
