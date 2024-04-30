@@ -267,7 +267,8 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        compare_subcategories(workdir, no_type=False)
+        compare_subcategories(workdir)
+        compare_subcategories(workdir, sen=True)
 
         from post_processing.cut_based_sel.cut_based_selections import main as cut_based_selections
         cut_based_selections(workdir)
