@@ -10,6 +10,9 @@ from pathlib import Path
 import argparse
 from utils import variables
 from utils.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
+import math
+from typing import Union
+import pandas as pd
 
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
@@ -21,12 +24,40 @@ OUTPUT_DIR = None
 SIGNAL_SAMPLES = None
 BACKG_SAMPLES = None
 FAILED_VARIABLES = []
+PROBLEMATIC_VARIABLES = []
+EPSILON = 0.000001
 
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
 
 def draw_1D_total(hist_signal, hist_backg, ss_var, path):
+
+    sen_line = True
+    if sen_line:
+        try:
+            max_sen, max_sen_bin, max_height = 0, 0, 0
+            for i_bin in range(1, hist_signal.GetNbinsX()+1):
+                i_signal = hist_signal.GetBinContent(i_bin)
+                i_backg = hist_backg.GetBinContent(i_bin)
+                if i_backg == 0: i_backg = i_backg + EPSILON
+                i_sen = i_signal/math.sqrt(i_backg)
+                if i_sen > max_sen:
+                    max_sen, max_sen_bin = i_sen, i_bin
+                    max_height = max(i_signal, i_backg)
+            if hist_signal.GetMaximum()>hist_backg.GetMaximum(): 
+                hist = hist_signal
+            else: 
+                hist = hist_backg
+            max_sen_bin_x_center = hist.GetBinCenter(max_sen_bin)
+            line = ROOT.TLine(max_sen_bin_x_center, 0, max_sen_bin_x_center, max_height)
+            line.SetLineColor(ROOT.kGreen)
+            line.SetLineWidth(3)
+        except ValueError:
+            print(f'Sensitivity calculation for {ss_var.ref} failed')
+            PROBLEMATIC_VARIABLES.append([ss_var.ref, i_bin, i_signal, i_backg])
+            sen_line = False
+
     hist_signal.SetLineColor(ROOT.kBlue)
     hist_signal.SetLineWidth(3)
     hist_signal.SetStats(0)
@@ -64,6 +95,10 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path):
     canvas_norm.SetGrid()
     hist_signal.Draw("hist")
     hist_backg.Draw("hist sames")
+    if sen_line: 
+        line.Draw("same")
+        leg.AddEntry(line, f'Max Sensitivity: {max_sen:.3f}', 'l')
+        leg.SetTextSize(0.03)
     leg.Draw()
     canvas_norm.SetLeftMargin(0.13)
     canvas_norm.Update()
@@ -87,11 +122,62 @@ def draw_2D_total(signal_hist, backg_hist, ss_var, path: Path):
         canvas.Close()
 
 
-def draw1D(var: Variable1D, dirname: str ='1D'):
-    # For subcat-specific var in var
-    path_1D = OUTPUT_PATH / dirname
+def draw_sensitivity(var: Union[Variable1D, LikelihoodRatio], dirname, sensitivity_df):
+    path = OUTPUT_PATH / dirname
     for ss_var in var:
-        this_path = path_1D / ss_var.subcat
+        this_path = path / ss_var.subcat
+        if not this_path.exists(): this_path.mkdir(parents=True)
+
+        signal_hist = ss_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
+        backg_hist = ss_var.get_total_hist(BACKG_SAMPLES, normalized=True)
+
+        try:
+            sensitivity_hist = ROOT.TH1F(ss_var.name, "Sensitivity: "+ss_var.name, ss_var.nbins, ss_var.min, ss_var.max)
+            for i_bin in range(1, signal_hist.GetNbinsX()+1):
+                i_signal = signal_hist.GetBinContent(i_bin)
+                i_backg = backg_hist.GetBinContent(i_bin)
+                if i_backg == 0: i_backg = i_backg + EPSILON
+                i_sens = i_signal/math.sqrt(i_backg)
+                sensitivity_hist.SetBinContent(i_bin, i_sens)
+
+            max_sen_bin = sensitivity_hist.GetMaximumBin()
+            max_sen = sensitivity_hist.GetBinContent(max_sen_bin)
+
+            max_sen_bin_x_center = sensitivity_hist.GetBinCenter(max_sen_bin)
+            line = ROOT.TLine(max_sen_bin_x_center, 0, max_sen_bin_x_center, max_sen)
+            line.SetLineColor(ROOT.kGreen)
+            line.SetLineWidth(3)
+
+            canvas = ROOT.TCanvas('canvas', '', 200, 200)
+            canvas.SetGrid()
+
+            sensitivity_hist.SetLineColor(ROOT.kBlack)
+            sensitivity_hist.SetLineWidth(3)
+            sensitivity_hist.SetStats(0)
+            sensitivity_hist.Draw("hist")
+            line.Draw("same")
+
+            canvas.Update()
+            canvas.SaveAs( str(path / (var.name + '.pdf')))
+
+            sensitivity_df.loc[len(sensitivity_df)] = [ss_var.ref, max_sen, max_sen_bin_x_center]
+        except KeyError:
+            print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
+            FAILED_VARIABLES.append(ss_var.ref)
+        except ValueError:
+            print(f'Sensitivity calculation for {ss_var.ref} failed')
+            PROBLEMATIC_VARIABLES.append([ss_var.ref, i_bin, i_signal, i_backg])
+
+
+    # Save max sens in a sort of summary file
+ 
+
+def draw1D(var: Variable1D, dirname: str):
+    # For subcat-specific var in var
+    path = OUTPUT_PATH / dirname
+
+    for ss_var in var:
+        this_path = path / ss_var.subcat
         if not this_path.exists(): this_path.mkdir(parents=True)
         try:
             total_signal = ss_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
@@ -172,8 +258,8 @@ def draw1D_notype(ref, path: Path):
     canvas.Close()
 
 
-def main(source_path: str, no_type=False):
-    global SOURCE_PATH, SOURCE_DIR, OUTPUT_PATH, OUTPUT_DIR, SIGNAL_SAMPLES, BACKG_SAMPLES, FAILED_VARIABLES
+def main(source_path: str, no_type: bool=False, sen:bool = False):
+    global SOURCE_PATH, SOURCE_DIR, OUTPUT_PATH, OUTPUT_DIR, SIGNAL_SAMPLES, BACKG_SAMPLES, FAILED_VARIABLES, PROBLEMATIC_VARIABLES
     SOURCE_PATH = Path(source_path)
     SOURCE_DIR = SOURCE_PATH.name
     OUTPUT_PATH = SOURCE_PATH / "comparisons"
@@ -183,6 +269,9 @@ def main(source_path: str, no_type=False):
     
     if not OUTPUT_PATH.exists():
         OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+
+    if sen:
+        sen_df = pd.DataFrame(columns=['Name', 'Max Sensitivity', 'LLR for Max Sen'])
     
     print("The source path is: " + SOURCE_PATH.name)
     print("The output path is: " + OUTPUT_PATH.name)
@@ -206,22 +295,37 @@ def main(source_path: str, no_type=False):
         vars = variables.parse_vars_from_refs(refs)
         for var in vars:
             if isinstance(var, Variable1D):
-                draw1D(var)
+                if sen: 
+                    sen_df = draw_sensitivity(var, dirname = 'sensitivity', sensitivity_df=sen_df)
+                else: draw1D(var, dirname='1D')
             elif isinstance(var, Variable2D) or isinstance(var, Variable3D):
                 draw2D(var, dirname='2D')
             elif isinstance(var, LikelihoodRatio):
-                draw1D(var, dirname='LR')
+                if sen: 
+                    sen_dfsen_df = draw_sensitivity(var, dirname = 'sensitivity', sensitivity_df=sen_df)
+                else: draw1D(var, dirname='LR')
             else:
                 FAILED_VARIABLES.append(var)
         if FAILED_VARIABLES:
             print(f"WARNING: {len(FAILED_VARIABLES)} variable references were not found in at least one results file:")
             print(*FAILED_VARIABLES, sep='\n')
+        if PROBLEMATIC_VARIABLES:
+            print(f"WARNING: {len(PROBLEMATIC_VARIABLES)} had problems calculating the sensitivity:")
+            for VAR_INFO in PROBLEMATIC_VARIABLES:
+                print(VAR_INFO[0])
+                print(f'\tnbin: {VAR_INFO[1]}')
+                print(f'\tsignal: {VAR_INFO[2]}')
+                print(f'\tbackg: {VAR_INFO[3]}')
+        if sen:
+            sen_summary_file = OUTPUT_PATH / 'sensitivity' / 'sen_summary.csv'
+            sen_df.to_csv(sen_summary_file, index=False)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-s", "--source_path", action="store", dest="source_path", help="source path")
     parser.add_argument("-nt", "--no_type", action="store_true", default=False, help="No Variable type")
+    parser.add_argument("-sen", "--sensitivity", action="store_true", help="Draw sensitivity distributions")
     args = parser.parse_args()
 
-    main(args.source_path, args.no_type)
+    main(args.source_path, args.no_type, args.sensitivity)
