@@ -49,7 +49,7 @@ def grab_info_from_datacard(datacard_file, asimov_only:bool, rate_only:bool):
 
 def modify_datacard(datacard_file, asimov_only:bool, rate_only:bool, signal_factor=None, backg_factor=None):
 
-    signal_rate, backg_rate, lines, rate_line_num = grab_info_from_datacard(datacard_file, rate_only)
+    signal_rate, backg_rate, lines, rate_line_num = grab_info_from_datacard(datacard_file, asimov_only, rate_only)
     new_sig = round(signal_rate*signal_factor, 4)
     new_backg = round(backg_rate*backg_factor, 4)
     new_rate_line = "    ".join(["rate", f"{new_sig:.4f}", f"{new_backg:.4f}"])
@@ -120,7 +120,7 @@ def main(workdir: str, effi: float, whichvars: str, asimov_only: bool, rate_only
     input_file = BAMBOO_SETUP / "src" / "input" / "discriminant_list.txt"
     yaml_file = BAMBOO_SETUP / "src" / "input" / "datacard_category_discriminant.yml"
     cuts_file = Path(workdir) / "cuts" / "SL_res_2b_x.csv"
-    fit_summary_file = WORKDIR / "fit_summary_test.csv"
+    fit_summary_file = WORKDIR / "fit_summary.csv"
 
     cuts_df = get_cuts_df(cuts_file)
     all_vars_from_cuts_df = cuts_df['Variable'].unique()
