@@ -74,22 +74,40 @@ def get_cuts_df(file: Path) -> pd.DataFrame:
     cuts_df = df.drop(columns=['isHeader', 'Data'])
     return cuts_df
 
-def prepare_fit_summary(possible_effis) -> pd.DataFrame:
-    possible_effis = [0.75, 0.85, 0.9]
-    stats = ['signal', 'backg', 'sensitivity', 'UL']
-    columns = pd.MultiIndex.from_product([possible_effis, stats])
-    df = pd.DataFrame(columns=columns, index=['Discriminant'])
-    return df
+def prepare_fit_summary(fit_summary_file, possible_effis, rate_only) -> pd.DataFrame:
 
-def update_fit_summary(df, var:str, signal, backg, effi: float):
+    if fit_summary_file.exists():
+        if rate_only:
+            fit_summary_df = pd.read_csv(fit_summary_file, header=[0, 1], index_col=0)
+            fixed_columns = pd.MultiIndex.from_tuples(
+                [(float(effi), stat) if effi.replace('.', '', 1).isdigit() else (effi, stat) 
+                for effi, stat in fit_summary_df.columns])
+            fit_summary_df.columns = fixed_columns
+        else:
+             fit_summary_df = pd.read_csv(fit_summary_file, header=[0], index_col=0)
+    else:
+        if rate_only:
+            stats = ['signal', 'backg', 'sensitivity', 'UL']
+            columns = pd.MultiIndex.from_product([possible_effis, stats])
+            fit_summary_df = pd.DataFrame(columns=columns, index=['Discriminant'])
+        else:
+            columns = ['signal', 'backg', 'sensitivity', 'UL']
+            fit_summary_df = pd.DataFrame(columns=columns, index=['Discriminant'])
+
+    return fit_summary_df
+
+def update_fit_summary(df, var:str, signal, backg, rate_only, effi: float):
     sensitivity = round(signal/math.sqrt(backg), 6)
 
-    udpate_data = {(effi,'signal'): signal, (effi,'backg'):backg, (effi,'sensitivity'): sensitivity}
-
-    if var in df.index:
-        for column_key, value in udpate_data.items():
-            df.at[var, column_key] = value
+    if rate_only:
+        udpate_data = {(effi,'signal'): signal, (effi,'backg'):backg, (effi,'sensitivity'): sensitivity, (effi,'UL'): None}
+        if var in df.index:
+            for column_key, value in udpate_data.items():
+                df.at[var, column_key] = value
+        else:
+            df.loc[var] = udpate_data
     else:
+        udpate_data = {'signal': signal, 'backg':backg, 'sensitivity': sensitivity, 'UL': None}
         df.loc[var] = udpate_data
 
     return df
@@ -102,7 +120,7 @@ def main(workdir: str, effi: float, whichvars: str, asimov_only: bool, rate_only
     input_file = BAMBOO_SETUP / "src" / "input" / "discriminant_list.txt"
     yaml_file = BAMBOO_SETUP / "src" / "input" / "datacard_category_discriminant.yml"
     cuts_file = Path(workdir) / "cuts" / "SL_res_2b_x.csv"
-    fit_summary_file = WORKDIR / "fit_summary_ALL.csv"
+    fit_summary_file = WORKDIR / "fit_summary_test.csv"
 
     cuts_df = get_cuts_df(cuts_file)
     all_vars_from_cuts_df = cuts_df['Variable'].unique()
@@ -110,14 +128,7 @@ def main(workdir: str, effi: float, whichvars: str, asimov_only: bool, rate_only
     print(f"The possible efficienceis are: {possible_effis}")
     assert effi in possible_effis, 'Efficiency not valid'
 
-    if fit_summary_file.exists():
-        fit_summary_df = pd.read_csv(fit_summary_file, header=[0, 1], index_col=0)
-        fixed_columns = pd.MultiIndex.from_tuples(
-            [(float(effi), stat) if effi.replace('.', '', 1).isdigit() else (effi, stat) 
-            for effi, stat in fit_summary_df.columns])
-        fit_summary_df.columns = fixed_columns
-    else: # If file doesn't exist yet
-        fit_summary_df = prepare_fit_summary(possible_effis)
+    fit_summary_df = prepare_fit_summary(fit_summary_file, possible_effis, rate_only)
 
     if whichvars == 'list': vars_list = read_disc_list_file(input_file)
     elif whichvars == 'all': vars_list = all_vars_from_cuts_df
@@ -129,17 +140,14 @@ def main(workdir: str, effi: float, whichvars: str, asimov_only: bool, rate_only
             signal_factor = cuts_df.loc[(cuts_df['Variable']==var) & (cuts_df['Effi']==effi), 'Signal Frac'].iloc[0]
             backg_factor = cuts_df.loc[(cuts_df['Variable']==var) & (cuts_df['Effi']==effi), 'Background Frac'].iloc[0]
             new_signal_rate, new_backg_rate = modify_datacard(dc, asimov_only, rate_only, signal_factor, backg_factor)
-            fit_summary_df = update_fit_summary(fit_summary_df, var, new_signal_rate, new_backg_rate, effi)
+            fit_summary_df = update_fit_summary(fit_summary_df, var, new_signal_rate, new_backg_rate, rate_only, effi)
         else:
             signal_rate, backg_rate, _, _ = grab_info_from_datacard(dc, asimov_only, rate_only)
-            fit_summary_df = update_fit_summary(fit_summary_df, var, signal_rate, backg_rate, effi)
+            fit_summary_df = update_fit_summary(fit_summary_df, var, signal_rate, backg_rate, rate_only, effi)
 
         if (index + 1)%10 == 0:
             fit_summary_df.to_csv(fit_summary_file, index=True)
             print(f"Updated and saved fit summary after processing {index + 1} variables")
-
-    # if rate_only: 
-    #     fit_summary_file = fit_summary_file.with_name(fit_summary_file.stem + '_r_' + fit_summary_file.suffix)
 
     fit_summary_df.to_csv(fit_summary_file, header=True, index=True)
 
