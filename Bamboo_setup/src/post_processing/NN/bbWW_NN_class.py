@@ -16,6 +16,7 @@ from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D, Bat
 from tensorflow.keras.layers.experimental import preprocessing
 import yaml
 from typing import Union
+import tf2onnx
 
 NNDIR = Path(__file__).parent
 NNOUTDIR = None
@@ -261,6 +262,15 @@ class Run3Model():
 
         self.history = history
 
+    def save_model(self):
+        model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
+        # Writing the list of input variables
+        input_names = self.X_train.columns.tolist()
+        input_vars_file = self.modeldir /'input_variables.txt'
+        with open(input_vars_file, 'w') as file:
+            for name in input_names:
+                file.write(name + '\n')
+
     def final_output(self, X_test, Y_test, events_test) -> pd.DataFrame:
         events_test = events_test.reset_index(drop=True)
         Y_test = Y_test.reset_index(drop=True)
@@ -344,6 +354,7 @@ def main(workdir_path: str):
         fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
         myModel.draw_score_dist(output_df, myModel.modeldir)
         myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
+        myModel.save_model()
 
         # ----------- Logging model info -------------------
         model_params['Training Events'] = {
@@ -368,8 +379,8 @@ if __name__ == '__main__':
 
     # The root files in the given workdir must have skims
     parser = ArgumentParser()
-    parser.add_argument("-i", "--input_dir", action="store", default="Z_OUTPUT/Local_VarsReco_2018")
+    parser.add_argument("-w", "--workdir", action="store", help="Ex: Z_OUTPUT/TOTAL_VarsReco_LLR")
     args = parser.parse_args()
 
-    main(args.input_dir)
+    main(args.workdir)
 

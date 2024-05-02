@@ -1138,7 +1138,12 @@ class SL_DL_vars_reco(SL_DL_event_selection):
         return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+
+        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
+        compare_subcategories(workdir, shape_only=True)
+        compare_subcategories(workdir)
 
         if self.output_llr:
             print("------------------ Calculating Likelihood Ratios --------------------")
