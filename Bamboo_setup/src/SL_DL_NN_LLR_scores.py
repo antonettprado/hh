@@ -93,7 +93,6 @@ class SL_DL_NN_LLR_scores(SL_DL_vars_reco):
         dnn_score.populate(data, selections)
         return dnn_score
 
-
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
@@ -135,7 +134,3 @@ class SL_DL_NN_LLR_scores(SL_DL_vars_reco):
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
         super(SL_DL_NN_LLR_scores, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-
-        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        compare_subcategories(workdir)
-        compare_subcategories(workdir, shape_only=True)
