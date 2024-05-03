@@ -6,7 +6,6 @@ import argparse
 import math
 import numpy as np
 BAMBOO_SETUP = Path(__file__).parents[3]
-WORDIR = None
 
 def read_disc_list_file(text_file):
     assert text_file.exists() == True
@@ -22,15 +21,16 @@ def modify_yaml(yaml_file, var_name):
     with open(yaml_file, "w") as file:
         yaml.dump(yaml_data, file, sort_keys=False)
 
-def run_make_datacard(workdir: str, asimov_only: bool, rate_only: bool, var):
-    assert Path(workdir).exists() == True
-    command = f"python3 src/post_processing/datacard/make_datacard.py -i {workdir} -c config/analysis_2022.yml -f src/input/datacard_category_discriminant.yml"
+def run_make_datacard(workdir: Path, asimov_only: bool, rate_only: bool, var):
+    
+    assert workdir.exists(), f"{workdir.resolve()} does not exist"
+    command = f"python3 src/post_processing/datacard/make_datacard.py -i {workdir.resolve()} -c config/analysis_2022.yml -f src/input/datacard_category_discriminant.yml"
     if asimov_only: command = f"{command} -a"
     if rate_only: command = f"{command} -r"
     subprocess.run(command.split(' '))
 
     if asimov_only:
-        dc = WORKDIR / "datacards" / "SL_res_2b_x" / var / f"SL_res_2b_x_{var}_2022_asimov_datacard.txt"
+        dc = workdir / "datacards" / "SL_res_2b_x" / var / f"SL_res_2b_x_{var}_2022_asimov_datacard.txt"
 
     return dc
 
@@ -74,7 +74,7 @@ def get_cuts_df(file: Path) -> pd.DataFrame:
     cuts_df = df.drop(columns=['isHeader', 'Data'])
     return cuts_df
 
-def prepare_fit_summary(fit_summary_file, possible_effis, rate_only) -> pd.DataFrame:
+def prepare_fit_summary(fit_summary_file:Path, rate_only:bool, possible_effis:list=None) -> pd.DataFrame:
 
     if fit_summary_file.exists():
         if rate_only:
@@ -112,26 +112,28 @@ def update_fit_summary(df, var:str, signal, backg, rate_only, effi: float):
 
     return df
 
-def main(workdir: str, effi: float, whichvars: str, asimov_only: bool, rate_only: bool):
-    global WORKDIR
-    print(f"Running for: rate_only = {rate_only},\t asimov_only = {asimov_only}")
+def run_on_workdir(workdir: Path, whichvars: str, asimov_only: bool, rate_only: bool, effi: float = None ):
 
-    WORKDIR = Path(workdir)
+    assert workdir.exists(), f"{workdir.resolve()} does not exist"
+
     input_file = BAMBOO_SETUP / "src" / "input" / "discriminant_list.txt"
     yaml_file = BAMBOO_SETUP / "src" / "input" / "datacard_category_discriminant.yml"
-    cuts_file = Path(workdir) / "cuts" / "SL_res_2b_x.csv"
-    fit_summary_file = WORKDIR / "fit_summary.csv"
-
-    cuts_df = get_cuts_df(cuts_file)
-    all_vars_from_cuts_df = cuts_df['Variable'].unique()
-    possible_effis = cuts_df['Effi'].unique()
-    print(f"The possible efficienceis are: {possible_effis}")
-    assert effi in possible_effis, 'Efficiency not valid'
-
-    fit_summary_df = prepare_fit_summary(fit_summary_file, possible_effis, rate_only)
-
-    if whichvars == 'list': vars_list = read_disc_list_file(input_file)
-    elif whichvars == 'all': vars_list = all_vars_from_cuts_df
+    fit_summary_file = workdir / "fit_summary.csv"
+    
+    if rate_only:
+        cuts_file = workdir / "cuts" / "SL_res_2b_x.csv"
+        cuts_df = get_cuts_df(cuts_file)
+        all_vars_from_cuts_df = cuts_df['Variable'].unique()
+        possible_effis = cuts_df['Effi'].unique()
+        print(f"The possible efficienceis are: {possible_effis}")
+        assert effi in possible_effis, 'Efficiency not valid'
+        fit_summary_df = prepare_fit_summary(fit_summary_file, rate_only, possible_effis)
+        if whichvars == 'all': vars_list = all_vars_from_cuts_df
+        elif whichvars == 'list': vars_list = read_disc_list_file(input_file)
+    else:
+        fit_summary_df = prepare_fit_summary(fit_summary_file, rate_only)
+        if whichvars == 'list': 
+            vars_list = read_disc_list_file(input_file)
 
     for index, var in enumerate(vars_list):
         modify_yaml(yaml_file, var)
@@ -151,15 +153,31 @@ def main(workdir: str, effi: float, whichvars: str, asimov_only: bool, rate_only
 
     fit_summary_df.to_csv(fit_summary_file, header=True, index=True)
 
+def main(superworkdir:bool, workdir: str, whichvars: str, asimov_only: bool, rate_only: bool, effi: float = None ):
+
+    print(f"Running for: rate_only = {rate_only},\t asimov_only = {asimov_only}")
+
+    if superworkdir:
+        superworkdir = Path(workdir)
+        workdirs = [dir.resolve() for dir in superworkdir.iterdir() if dir.is_dir()]
+        for workdir in workdirs:
+            run_on_workdir(workdir, whichvars, asimov_only, rate_only, effi)
+
+    else:
+        workdir = Path(workdir)
+        assert workdir.exists(), f"{workdir.resolve()} does not exist"
+        run_on_workdir(workdir, whichvars, asimov_only, rate_only, effi)
+
 if __name__ == "__main__":
     
     # Doind rate only for now !
     parser = argparse.ArgumentParser()
-    parser.add_argument("-w", "--workdir", action='store', help="work directory. Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
-    parser.add_argument("-e", "--effi", action='store', help="efficiency. Ex: 0.75")
-    parser.add_argument("-v", "--vars", action='store', help="Which vars to run: from disc_list (-v list) or all vars from cut sel (-v all)")
-    parser.add_argument("-r", "--rate_only", action="store_true", dest="rate_only", help="rate_only = to make datacards for rate only")
+    parser.add_argument("-sw", "--superworkdir", action='store_true', help="superwork directory that contain a workdir per NN. Ex: Z_OUTPUT/Local_Scores_2022")
+    parser.add_argument("-w", "--workdir", action='store', type=str, help="work directory. Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
     parser.add_argument("-a", "--asimov_only", action="store_true", dest="asimov_only", help="asimov_only = to make datacards for asimov only")
+    parser.add_argument("-v", "--vars", action='store', type=str, help="Which vars to run: from disc_list (-v list) or all vars from cut sel if rate_only used (-v all)")
+    parser.add_argument("-r", "--rate_only", action="store_true", dest="rate_only", help="rate_only = to make datacards for rate only")
+    parser.add_argument("-e", "--effi", action='store', type=float, help="efficiency. Ex: 0.75")
     args = parser.parse_args()
 
     '''
@@ -168,4 +186,17 @@ if __name__ == "__main__":
     $ python3 src/post_processing/datacard/make_all.py -w $OUTPUT/TOTAL_VarsReco_2022_LLR_7to11products -e 0.75 -v all -a
     '''
 
-    main(args.workdir, float(args.effi), args.vars, args.asimov_only, args.rate_only)
+    if args.rate_only:
+        if args.effi is None: 
+            parser.error("-e (--effi) is required when -r (--rate_only) is used.")
+        else:
+            main(args.superworkdir, args.workdir, args.vars, args.asimov_only, args.rate_only, args.effi)
+    else:
+        if args.effi is not None:
+            print("Efficiency value will be ignored (only used for running on rate_only)")
+        if args.vars == 'all':
+            parser.error("If not running on rate_only results vars must be from list: -v list")
+        elif args.vars == 'list':
+            main(args.superworkdir, args.workdir, args.vars, args.asimov_only, args.rate_only)
+        else:
+            parser.error("value for -v (--vars) is incorrect. Enter -v all or -v list")

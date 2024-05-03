@@ -61,6 +61,9 @@ def preprocess_data(total_df) -> pd.DataFrame:
         total_sum = total_df[mask]["gen_Weight"].sum()
         total_df.loc[mask, "training_weight"] *= total_df.shape[0] / total_sum
 
+    # Randomize for training
+    total_df = total_df.sample(frac=1)
+
     return total_df
 
 def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
@@ -187,7 +190,8 @@ class Run3Model():
             patience             = 20,
             verbose              = 1,
             mode                 = 'min',
-            restore_best_weights = True)
+            restore_best_weights = True
+        )
 
         # reduce LR if not improvement for some time 
         reduce_plateau = ReduceLROnPlateau(
@@ -197,7 +201,8 @@ class Run3Model():
             patience  = 8,
             min_lr    = 1e-8,
             verbose   = 2,
-            mode      = 'min')
+            mode      = 'min'
+        )
         
         return [early_stopping, reduce_plateau]
 
@@ -349,6 +354,7 @@ def main(workdir_path: str):
 
         myModel = Run3Model(model_params['name'], X_train_mod, Y_train_mod)
         myModel.setup_model(model_params)
+        myModel.model.summary()
         myModel.train_model(model_params, training_weights)
         output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
         fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
@@ -358,8 +364,12 @@ def main(workdir_path: str):
 
         # ----------- Logging model info -------------------
         model_params['Training Events'] = {
-            'signal': int(Y_train[Y_train == 1].count()),
-            'background': int(Y_train[Y_train == 0].count())
+            'signal': int(Y_train_mod[Y_train_mod == 1].count()),
+            'background': int(Y_train_mod[Y_train_mod == 0].count())
+        }
+        model_params['Test Events'] = {
+            'signal': int(Y_test_mod[Y_test_mod == 1].count()),
+            'background': int(Y_test_mod[Y_test_mod == 0].count())
         }
         model_params['Output Metrics'] = {
             'Optimal threshold': round(float(optimal_threshold), 3),
@@ -374,6 +384,8 @@ def main(workdir_path: str):
             yaml.dump(model_params, file, sort_keys=False)
 
         update_model_metrics_csv(model_params['name'], model_params['Training Events'], model_params['Output Metrics'], csv_path)
+
+        print(f"The DNN models tested were saved to {WORKDIR} ")
 
 if __name__ == '__main__':
 

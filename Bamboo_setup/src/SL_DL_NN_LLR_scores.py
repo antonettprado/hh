@@ -19,18 +19,18 @@ class SL_DL_NN_LLR_scores(SL_DL_vars_reco):
     def __init__(self, args):
         super(SL_DL_NN_LLR_scores, self).__init__(args)
         self.event_nr_sel = "odd"
-        print("The input Reco Vars directory is: " + self.args.recovars_dir)
+        print("The input work directory is: " + self.args.workdir)
         print("The output path is: " + self.args.output)
         self.output_llr=False
 
     def addArgs(self, parser):
         super(SL_DL_NN_LLR_scores, self).addArgs(parser)
-        parser.add_argument("-recovars", action='store', dest = "recovars_dir", help='Input reco vars directory')
-        parser.add_argument("-nn", action='store', dest = "NNdir", help='Input NN model directory')
+        parser.add_argument("-w", action='store', dest = "workdir", help='Input Workdir (for llr correction file and NNdir)')
+        parser.add_argument("-nn", action='store', dest = "NNdir", help='NN model directory w.r.t workdir. Ex: -nn Neural_Nets/default if Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/default')
         
     def get_var_lr(self, data: List, var_name, selection, defineOnFirstUse=True):
-        recovars_dir = Path(self.args.recovars_dir)
-        corr_llr = recovars_dir / 'results' / 'corrections_llr.json'
+        input_workdir = Path(self.args.workdir)
+        corr_llr = input_workdir / 'results' / 'corrections_llr.json'
         corr_llr = corr_llr.resolve()
         if len(data) == 1: 
             return get_correction(corr_llr, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
@@ -56,8 +56,18 @@ class SL_DL_NN_LLR_scores(SL_DL_vars_reco):
             lrs_for_vars_1D.append(lr)
         return lrs_for_vars_1D
 
+    def pick_lr(self, name, lrs):
+        lr = None
+        for lr_i in lrs:
+            if name == lr_i.name:
+                lr = lr_i
+                break
+        return lr
+
+
     def get_NN_model(self):
-        NNdir = Path(self.args.NNdir).resolve()
+        input_workdir = Path(self.args.workdir)
+        NNdir = input_workdir / self.args.NNdir
         input_vars_names = []
         input_vars_file = NNdir / 'input_variables.txt'
         with open(input_vars_file, 'r') as file:
@@ -72,14 +82,6 @@ class SL_DL_NN_LLR_scores(SL_DL_vars_reco):
         vars_dict = sel_vars_dict["SL_res_2b_x"]
         input_vars = [vars_dict[name] for name in input_vars_names if name in vars_dict]
         return input_vars
-
-    def pick_lr(self, name, lrs):
-        lr = None
-        for lr_i in lrs:
-            if name == lr_i.name:
-                lr = lr_i
-                break
-        return lr
 
     def get_dnn_score(self):
         dnn_score = Variable1D("DNN_score")
