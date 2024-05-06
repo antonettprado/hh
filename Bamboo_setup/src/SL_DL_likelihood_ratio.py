@@ -211,10 +211,10 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
 
     def test_skim_refined(self, lrs: 'list[LikelihoodRatio]', selection, plots):
 
-        keys = [i.ref for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
+        keys = [i.name for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
         values = [i.data for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
-        branches = dict(zip(keys, values))
-        branches.update({"event":None})
+        branches = {"event":None, "gen_Weight": self.objects["gen_Weight"]}
+        branches.update(dict(zip(keys, values)))
         plots.append(Skim('SL_res_2b_x', branches, selection))
         return plots
 
@@ -232,15 +232,6 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         super().set_extra_objects()
         super().set_extra_event_selections()
 
-        SL_res_1b = self.jet_subcats["SL_res_1b"]
-        SL_res_2b = self.jet_subcats["SL_res_2b"]
-        SL_boosted = self.jet_subcats["SL_boosted"]
-        SL_res_1b_x = self.jet_subcats["SL_res_1b_x"]
-        SL_res_2b_x = self.jet_subcats["SL_res_2b_x"]
-        DL_res_1b = self.jet_subcats["DL_res_1b"] 
-        DL_res_2b = self.jet_subcats["DL_res_2b"]
-        DL_boosted = self.jet_subcats["DL_boosted"]
-
         # ===============================================================================
         # ================================== Plots ======================================
         # # ===============================================================================
@@ -254,7 +245,23 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         hists_1D = [Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == "SL_res_2b_x"]
         plots.extend(hists_1D)
 
-        # plots = self.test_skim_refined(all_lrs, SL_res_2b_x, plots)
+        # ===============================================================================
+        # ============================= Cutflow Report ==================================
+        # ===============================================================================
+        
+        yields.add(self.jet_subcats['SL_res_1b'], 'SL_res_1b')
+        yields.add(self.jet_subcats['SL_res_1b_x'], 'SL_res_1b_x')
+        yields.add(self.jet_subcats['SL_res_2b'], 'SL_res_2b')
+        yields.add(self.jet_subcats['SL_res_2b_x'], 'SL_res_2b_x')
+        yields.add(self.jet_subcats['SL_boosted'], 'SL_boosted')
+        yields.add(self.jet_subcats['DL_res_1b'], 'DL_res_1b')
+        yields.add(self.jet_subcats['DL_res_2b'], 'DL_res_2b')
+        yields.add(self.jet_subcats['DL_boosted'], 'DL_boosted')
+        yields.add(self.supercat_selections['SL'], 'SL')
+        yields.add(self.supercat_selections['DL'], 'DL')
+
+
+        plots = self.test_skim_refined(all_lrs, self.jet_subcats['SL_res_2b_x'], plots)
 
         return plots
 
