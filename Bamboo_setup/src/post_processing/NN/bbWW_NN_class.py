@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from pathlib import Path
 import matplotlib.pyplot as plt
-import os
+import os, sys
 from argparse import ArgumentParser
 import uproot
 from sklearn.model_selection import train_test_split
@@ -77,13 +77,13 @@ def preprocess_data(total_df) -> pd.DataFrame:
 def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
     ## Dividing the data into testing and training datasets
     drop_before_split = ["isSignal", "HH", "ttbar", "gen_Weight"]
+    processes = ["HH", "ttbar"]
     X_df = total_df.drop(columns=drop_before_split)
     Y_df = total_df["isSignal"]
-    Y_signal_hh_df = total_df["HH"]
-    Y_background_ttbar_df = total_df["ttbar"]
+    Y_df_multi = total_df[processes]
 
     test_size = 0.2
-    X_train, X_test, Y_train, Y_test, Y_train_signal_hh, Y_test_signal_hh,  Y_train_background_ttbar, Y_test_background_ttbar = train_test_split(X_df, Y_df, Y_signal_hh_df, Y_background_ttbar_df, test_size=test_size, random_state=7)
+    X_train, X_test, Y_train, Y_test, Y_train_multi, Y_test_multi = train_test_split(X_df, Y_df, Y_df_multi, test_size=test_size, random_state=7)
     
     events_train = X_train["event"]
     events_test = X_test["event"]
@@ -95,14 +95,14 @@ def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
     print(f"Number of training events: {len(X_train)}")
     print(f"  Number of HH signal training events: {Y_train.value_counts()[1.0]}")
     print(f"  Number of total background training events: {Y_train.value_counts()[0.0]}")
-    print(f"    Number of ttbar background training events: {Y_train_background_ttbar.value_counts()[1.0]}")
+    print(f"    Number of ttbar background training events: {Y_train_multi["ttbar"].value_counts()[1.0]}")
     print(f"Number of test events: {len(X_test)}")
     print(f"  Number of HH signal test events: {Y_test.value_counts()[1.0]}")
     print(f"  Number of total background test events: {Y_test.value_counts()[0.0]}")
-    print(f"    Number of test background training events: {Y_test_background_ttbar.value_counts()[1.0]}")
+    print(f"    Number of test background training events: {Y_test_multi["ttbar"].value_counts()[1.0]}")
     print ()
 
-    return training_weights, events_train, X_train, Y_train, Y_train_signal_hh, Y_train_background_ttbar, events_test, X_test, Y_test, Y_test_signal_hh, Y_test_background_ttbar
+    return training_weights, events_train, X_train, Y_train, Y_train_multi, events_test, X_test, Y_test, Y_test_multi
 
 def pick_num_train_events(X_train, Y_train, events_train, n_events: dict):
     n_signal, n_backg = n_events['signal'], n_events['background']
@@ -345,7 +345,7 @@ def main(workdir_path: str, n_bkg: int):
     NNOUTDIR = WORKDIR / 'Neural_Nets'
     total_df=load_data(WORKDIR, n_bkg)
     total_df=preprocess_data(total_df)
-    training_weights, events_train, X_train, Y_train, Y_train_signal_hh, Y_train_background_ttbar, events_test, X_test, Y_test, Y_test_signal_hh, Y_test_background_ttbar = split_data(total_df)
+    training_weights, events_train, X_train, Y_train, Y_train_multi, events_test, X_test, Y_test, Y_test_multi = split_data(total_df)
 
     test_models = NNDIR / 'NN_test_models.yml'
     with open(test_models, 'r') as file:
@@ -356,10 +356,13 @@ def main(workdir_path: str, n_bkg: int):
 
     for model_params in model_list:
         print(f"Model: {model_params['name']}")
+        n_output_nodes = model_params['n_output_nodes']
         X_train_mod = X_train
         Y_train_mod = Y_train
+        Y_train_multi_mod = Y_train_multi
         X_test_mod = X_test
         Y_test_mod = Y_test
+        Y_test_multi_mod = Y_test_multi
 
         if model_params['input_vars'] != 'All':
             X_train_mod, X_test_mod = pick_features(X_train_mod, X_test_mod, model_params['input_vars'])
