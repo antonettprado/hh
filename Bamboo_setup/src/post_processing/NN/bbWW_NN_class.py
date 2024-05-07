@@ -74,16 +74,14 @@ def preprocess_data(total_df) -> pd.DataFrame:
 
     return total_df
 
-def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
+def split_data(total_df, processes) -> dict[str: Union[pd.DataFrame, pd.Series]]:
     ## Dividing the data into testing and training datasets
-    drop_before_split = ["isSignal", "HH", "ttbar", "gen_Weight"]
-    processes = ["HH", "ttbar"]
+    drop_before_split =  processes + ["gen_Weight"]
     X_df = total_df.drop(columns=drop_before_split)
-    Y_df = total_df["isSignal"]
-    Y_df_multi = total_df[processes]
+    Y_df = total_df[processes]
 
     test_size = 0.2
-    X_train, X_test, Y_train, Y_test, Y_train_multi, Y_test_multi = train_test_split(X_df, Y_df, Y_df_multi, test_size=test_size, random_state=7)
+    X_train, X_test, Y_train, Y_test = train_test_split(X_df, Y_df, test_size=test_size, random_state=7)
     
     events_train = X_train["event"]
     events_test = X_test["event"]
@@ -91,18 +89,17 @@ def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
     X_train = X_train.drop(columns=["event", "training_weight"])
     X_test = X_test.drop(columns=["event", "training_weight"])
 
+    print ()
     print(f"The testing size is: %d"%test_size)
     print(f"Number of training events: %d"%len(X_train))
-    print(f"  Number of HH signal training events: %d"%Y_train.value_counts()[1.0])
-    print(f"  Number of total background training events: %d"%Y_train.value_counts()[0.0])
-    print(f"    Number of ttbar background training events: %d"%Y_train_multi["ttbar"].value_counts()[1.0])
+    for process in processes:
+        print(f"  Number of %s training events: %d"%(process, Y_train[process].value_counts()[1.0]))
     print(f"Number of test events: %d"%len(X_test))
-    print(f"  Number of HH signal test events: %d"%Y_test.value_counts()[1.0])
-    print(f"  Number of total background test events: %d"%Y_test.value_counts()[0.0])
-    print(f"    Number of test background training events: %d"%Y_test_multi["ttbar"].value_counts()[1.0])
+    for process in processes:
+        print(f"  Number of %s test events: %d"%(process, Y_test[process].value_counts()[1.0]))
     print ()
 
-    return training_weights, events_train, X_train, Y_train, Y_train_multi, events_test, X_test, Y_test, Y_test_multi
+    return training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test
 
 def pick_num_train_events(X_train, Y_train, events_train, n_events: dict):
     n_signal, n_backg = n_events['signal'], n_events['background']
@@ -345,7 +342,6 @@ def main(workdir_path: str, n_bkg: int):
     NNOUTDIR = WORKDIR / 'Neural_Nets'
     total_df=load_data(WORKDIR, n_bkg)
     total_df=preprocess_data(total_df)
-    training_weights, events_train, X_train, Y_train, Y_train_multi, events_test, X_test, Y_test, Y_test_multi = split_data(total_df)
 
     test_models = NNDIR / 'NN_test_models.yml'
     with open(test_models, 'r') as file:
@@ -357,17 +353,16 @@ def main(workdir_path: str, n_bkg: int):
     for model_params in model_list:
         print(f"Model: {model_params['name']}")
         n_output_nodes = model_params['n_output_nodes']
-        X_train_mod = X_train
-        Y_train_mod = Y_train
-        Y_train_multi_mod = Y_train_multi
-        X_test_mod = X_test
-        Y_test_mod = Y_test
-        Y_test_multi_mod = Y_test_multi
+        processes = model_params['processes']
+        print ("Output nodes (%d): "%n_output_nodes + processes)
+
+        training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df, processes)
 
         if model_params['input_vars'] != 'All':
             X_train_mod, X_test_mod = pick_features(X_train_mod, X_test_mod, model_params['input_vars'])
 
         myModel = Run3Model(model_params['name'], X_train_mod, Y_train_mod)
+
         myModel.setup_model(model_params)
         myModel.model.summary()
         myModel.train_model(model_params, training_weights)
