@@ -4,13 +4,13 @@ from bamboo.plots import Plot, DerivedPlot, SummedPlot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.analysisutils import loadPlotIt
 from plotit.plotit import Stack
-
 from bamboo.analysismodules import NanoAODHistoModule
-import os
-import ROOT
 from bamboo.root import gbl
+import os
 import correctionlib.schemav2 as cs
+import ROOT
 import numpy as np
+import scipy.interpolate
 
 
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
@@ -31,6 +31,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
     def __init__(self, args):
         super(SL_DL_vars_gen, self).__init__(args)
+        self.event_nr_sel = 'even'
 
     def addArgs(self, parser):
         super(SL_DL_vars_gen, self).addArgs(parser)
@@ -38,14 +39,57 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         parser.add_argument("--bjets_num", action='store', type=int, default=2, help='Minimum number of bjets per event')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
-        tree, noSel, backend, lumiArcs = super(NanoAODHistoModule, self).prepareTree(
+        tree, noSel, backend, lumiArcs = super(SL_DL_vars_gen, self).prepareTree(
                                         tree=tree,
                                         sample=sample,
                                         sampleCfg=sampleCfg,
                                         description=nanoGenDescription,
                                         backend=backend)
-        noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=()) # For weighted gen-level events
+
+        # Plots in base that need to be propagated to the Plotters #
+        self.base_plots = []
+
+        # CutFlow report 
+        self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
+
+        # Gen Weight
+        noSel = noSel.refine('genWeight', weight=tree.genWeight) # For weighted gen-level events
+
+        # Adding self.selections to class -----------------------------------
+        self._noSel = noSel
+        self.yields.add(self._noSel, "self._noSel")
+ 
+        # Select events in MC sample for analysis and adjust normalization -----------------------------------
+        if 'HH' in sampleCfg['group']:
+            print ("Veto super-weighted events in HH")
+            noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
+            self.yields.add(noSel, "Veto super-weighted events in HH")
+        cut = ()
+        if self.event_nr_sel == 'all':
+            print (">>> Select ALL event numbers")
+            cut = ()
+        elif self.event_nr_sel == 'even':
+            print (">>>>>>>>> Select EVEN event numbers")
+            cut = (tree.event % 2 == 0)
+        elif self.event_nr_sel == 'odd':
+            print (">>>>>>>>>>>>>>>>>> Select ODD event numbers")
+            cut = (tree.event % 2 == 1)
+        else:
+            raise ValueError("events must be 'all', 'odd', or 'even'")
+        noSel = noSel.refine('genEventSumWeight', cut=cut)
+        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False)) # Add neccesary plot for corrected sum of genWeights 
+        self.noSel = noSel
+
         return tree, noSel, backend, lumiArcs
+
+    def readCounters(self, resultsFile):
+        counters = super(SL_DL_vars_gen, self).readCounters(resultsFile)
+        # Corrections to the generated sum "
+        if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
+            sample = os.path.basename(resultsFile.GetName())
+            print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected").GetBinContent(1):.3f}')
+            counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
+        return counters
 
     def set_gen_objects(self, tree):
 
@@ -409,22 +453,33 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         objs = self.gen_objects
         sel, tag = self.get_selection_and_tags(sel_name)
 
-        top_quarks = op.select(objs['genParts'], lambda p: op.abs(p.pdgId) == 6)
-        top_quarks_n = op.rng_len(top_quarks)
-        top_quarks = op.sort(top_quarks, lambda t: -t.pt)
-        top_quark0 = top_quarks[0]
-        top_quark1 = top_quarks[1]
-        top_quarks_pt = (top_quark0.p4 + top_quark1.p4).Pt()
+        b_from_top = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == 5, p.genPartMother.pdgId == 6))
+        Wp_from_top = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == 24, p.genPartMother.pdgId == 6))
+        bbar_from_topbar = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == -5, p.genPartMother.pdgId == -6))
+        Wm_bosons_from_topbar = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == -24, p.genPartMother.pdgId == -6))
+        
+        top = b_from_top[0].parent
+        topbar = bbar_from_topbar[0].parent
+        ttpair_pt = (top.p4 + topbar.p4).Pt()
+
+        eqbin = EqBin(250,0,500)
         plots.extend([
-            Plot.make1D(tag+'top_quarks_n', top_quarks_n, sel, EqBin(10,0,10)),
-            Plot.make1D(tag+'top_quark0_pt', top_quark0.pt, sel, EqBin(125,0,500)),
-            Plot.make1D(tag+'top_quark1_pt', top_quark1.pt, sel, EqBin(125,0,500)),
-            Plot.make2D(tag+'top_quark1_pt_vs_top_quark0_pt', [top_quark0.pt, top_quark1.pt], sel, [EqBin(125,0,500), EqBin(125,0,500)]),
-            Plot.make1D(tag+'top_quarks_pt', top_quarks_pt, sel, EqBin(125,0,500)),
-            Plot.make1D(tag+'top_quarks_1p05pt', top_quarks_pt*1.05, sel, EqBin(125,0,500)),
-            Plot.make1D(tag+'top_quarks_1p10pt', top_quarks_pt*1.10, sel, EqBin(125,0,500)),
-            Plot.make1D(tag+'top_quarks_1p15pt', top_quarks_pt*1.15, sel, EqBin(125,0,500)),
-            Plot.make1D(tag+'top_quarks_1p20pt', top_quarks_pt*1.20, sel, EqBin(125,0,500)),
+            Plot.make1D(tag+'n_b_from_top', op.rng_len(b_from_top), sel, EqBin(10,0,10)),
+            Plot.make1D(tag+'n_W_from_top', op.rng_len(Wp_from_top), sel, EqBin(10,0,10)),
+            Plot.make1D(tag+'n_b_from_topbar', op.rng_len(bbar_from_topbar), sel, EqBin(10,0,10)),
+            Plot.make1D(tag+'n_W_from_topbar', op.rng_len(Wm_bosons_from_topbar), sel, EqBin(10,0,10)),
+
+            Plot.make1D(tag+'n_top_PdgId', top.pdgId, sel, EqBin(20,-10,10)),
+            Plot.make1D(tag+'n_topbar_PdgId', topbar.pdgId, sel, EqBin(20,-10,10)),
+
+            Plot.make1D(tag+'top_pt', top.pt, sel, eqbin),
+            Plot.make1D(tag+'topbar_pt', topbar.pt, sel, eqbin),
+            Plot.make2D(tag+'topbar_pt_vs_top_pt', [top.pt, topbar.pt], sel, [eqbin, eqbin]),
+            Plot.make1D(tag+'ttpair_pt', ttpair_pt, sel, eqbin),
+            Plot.make1D(tag+'ttpair_1p05pt', ttpair_pt*1.05, sel, eqbin),
+            Plot.make1D(tag+'ttpair_1p10pt', ttpair_pt*1.10, sel, eqbin),
+            Plot.make1D(tag+'ttpair_1p15pt', ttpair_pt*1.15, sel, eqbin),
+            Plot.make1D(tag+'ttpair_1p20pt', ttpair_pt*1.20, sel, eqbin),
         ])
 
         return plots
@@ -444,10 +499,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return plots
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
-
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
+        plots.extend(self.base_plots)
 
         self.set_gen_objects(tree)
         self.set_selections(noSel)
@@ -476,6 +531,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         # ============================= Cutflow Report ==================================
         # ===============================================================================
 
+        yields.add(self.selections['noSel'], 'noSel')
         yields.add(self.selections['SL_res_1b'], 'SL_res_1b')
         yields.add(self.selections['SL_res_1b_x'], 'SL_res_1b_x')
         yields.add(self.selections['SL_res_2b'], 'SL_res_2b')
@@ -514,50 +570,42 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         # df.Display({"event", "GenPart_pdgId", "GenPart_genPartIdxMother"}, 5, 20).Print()
 
 
-        # print("------------------ Calculating Likelihood Ratios --------------------")
-        # from utils import variables
-        # from post_processing.sig_bkg_shape_comp.compare_subcategories import get_total_hist
+        print("------------------ Calculating Temporal Ratio --------------------")
+        from utils import variables
+        from post_processing.sig_bkg_shape_comp.compare_subcategories import get_total_hist
 
-        # files_in_resultsdir = os.listdir(resultsdir)
-        # PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
-        # PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
-        # SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
-        # BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
-        # INTERPOLATION_SCALE_FACTOR_1D = 9
-        # DECIMAL_PLACES = 3
+        files_in_resultsdir = os.listdir(resultsdir)
+        PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
+        PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
+        SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
+        BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
+        INTERPOLATION_SCALE_FACTOR_1D = 9
+        DECIMAL_PLACES = 3
 
-        # file = SIGNAL_SAMPLES[0]
-        # refs = []
-        # for key in file.GetListOfKeys():
-        #     obj = key.ReadObj()
-        #     if isinstance(obj, ROOT.TH1) or isinstance(obj, ROOT.TH2):
-        #         if 'yields' not in obj.GetName():
-        #             refs.append(obj.GetName())
+        ref_pt = 'SL_res_2b_x_ttpair_pt'
+        ref_1p10pt = 'SL_res_2b_x_ttpair_1p10pt'
+        hist_pt = get_total_hist(ref_pt, BACKG_SAMPLES, normalized=False)
+        hist_1p10pt = get_total_hist(ref_1p10pt, BACKG_SAMPLES, normalized=False)
 
-        # # Only relevant for background samples
-        # all_corrections = []
-        # quarks_pt = refs['SL_res_2b_x_top_quarks_pt']
-        # quarks_1p10pt = refs['SL_res_2b_x_top_quarks_1p10pt']
-        # hist_pt = get_total_hist(quarks_pt, BACKG_SAMPLES, normalized=False)
-        # hist_1p10pt = get_total_hist(quarks_1p10pt, BACKG_SAMPLES, normalized=False)
+        ratio_hist = hist_1p10pt.Clone()
+        ratio_hist.Divide(hist_pt)
 
-        # ratio_hist = hist_pt.Clone()
-        # ratio_hist.Divide(hist_1p10pt)
-        # bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
-        # corr = cs.Correction(
-        #     name='top_quarks_pt_ratio',
-        #     version=0,
-        #     inputs=["xaxis"],
-        #     output=cs.Variable(name="", type="real", description=""),
-        #     data=cs.Binning(
-        #         nodetype="binning",
-        #         input="xaxis",
-        #         edges=list(np.round(bin_edges, DECIMAL_PLACES)),
-        #         content=list(np.round(bin_contents, DECIMAL_PLACES)),
-        #         flow="clamp"
-        #     )
-        # )
-        # cset = cs.CorrectionSet(schema_version=2, description=f"TTbar pt scaling", corrections=all_corrections) 
-        # output_llr_file = os.path.join(resultsdir, "ttbar_pt_scaling.json")
-        # with open(output_llr_file, "w") as outfile:
-        #     outfile.write(cset.json(exclude_unset=False))
+        all_corrections = []
+        bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+        corr = cs.Correction(
+            name='top_quarks_pt_ratio',
+            version=0,
+            inputs=[cs.Variable(name="xaxis", type="real")],
+            output=cs.Variable(name="", type="real", description=""),
+            data=cs.Binning(
+                nodetype="binning",
+                input="xaxis",
+                edges=list(np.round(bin_edges, DECIMAL_PLACES)),
+                content=list(np.round(bin_contents, DECIMAL_PLACES)),
+                flow="clamp"))
+        all_corrections.append(corr)
+
+        cset = cs.CorrectionSet(schema_version=2, description=f"TTbar pt scaling", corrections=all_corrections) 
+        output_llr_file = os.path.join(resultsdir, "ttbar_pt_scaling.json")
+        with open(output_llr_file, "w") as outfile:
+            outfile.write(cset.json(exclude_unset=False))
