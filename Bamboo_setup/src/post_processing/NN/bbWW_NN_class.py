@@ -21,7 +21,7 @@ import tf2onnx
 NNDIR = Path(__file__).parent
 NNOUTDIR = None
 
-def load_data(workdir: Path, verbose=False) -> pd.DataFrame:
+def load_data(workdir: Path, n_bkg: int, verbose=False) -> pd.DataFrame:
     
     resultsdir = workdir / 'results'
     signal_name = resultsdir / "bbWW_sl.root"
@@ -40,6 +40,8 @@ def load_data(workdir: Path, verbose=False) -> pd.DataFrame:
 
     # Cutting away most backgruond events
     #backg_df = backg_df.iloc[:len(signal_df)]
+    if n_bkg <= len(backg_df):
+        backg_df = backg_df.iloc[:n_bkg]
 
     print (f"Total Signal Events: {len(signal_df)}")
     print (f"Total Background Events used: {len(backg_df)}")
@@ -327,11 +329,11 @@ class Run3Model():
         fig.savefig(modeldir / "dnn_roc.pdf")
 
 
-def main(workdir_path: str):
+def main(workdir_path: str, n_bkg: int):
     global NNOUTDIR
     WORKDIR = Path(workdir_path)
     NNOUTDIR = WORKDIR / 'Neural_Nets'
-    total_df=load_data(WORKDIR)
+    total_df=load_data(WORKDIR, n_bkg)
     total_df=preprocess_data(total_df)
     training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test = split_data(total_df)
 
@@ -392,7 +394,8 @@ if __name__ == '__main__':
     # The root files in the given workdir must have skims
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", action="store", help="Ex: Z_OUTPUT/TOTAL_VarsReco_LLR")
+    parser.add_argument("-n", "--n_bkg", action="store", default = 500000, help="n_bkg = number of background events to be used for training")
     args = parser.parse_args()
 
-    main(args.workdir)
+    main(args.workdir, int(args.n_bkg))
 
