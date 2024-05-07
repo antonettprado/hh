@@ -1,5 +1,6 @@
 Models:
   - name: 'default'
+    n_output_nodes: 1
     input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -11,6 +12,7 @@ Models:
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
   
   - name: 'default_Allvars'
+    n_output_nodes: 1
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -21,7 +23,8 @@ Models:
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-  # - name: 'default_lr0p0001'
+  # - name: 'default_Allvars_lr0p0001'
+  #   n_output_nodes: 1
   #   input_vars: 'All'
   #   layers: 
   #     - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -32,8 +35,9 @@ Models:
   #   compiler: {optimizer: 'adam', loss: 'binary_crossentropy', lr: 0.0001}
   #   fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-  - name: 'default_4layers'
-    input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
+  - name: 'default_Allvars_4layers'
+    n_output_nodes: 1
+    input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -44,8 +48,9 @@ Models:
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-  - name: 'default_5layers'
-    input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
+  - name: 'default_Allvars_5layers'
+    n_output_nodes: 1
+    input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -57,18 +62,14 @@ Models:
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-
-
-  # - name: 'default_2outputs'
-  #   input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
-  #   layers: 
-  #     - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-  #     - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-  #     - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-  #     - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-  #     - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-  #   outputs: 
-  #     - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output1'}
-  #     - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output2'}
-  #   compiler: {optimizer: 'adam', loss: ['binary_crossentropy', 'binary_crossentropy']}
-  #   fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+  - name: 'default_Allvars_2outputs'
+    n_output_nodes: 2
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+    outputs: 
+      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
+    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}

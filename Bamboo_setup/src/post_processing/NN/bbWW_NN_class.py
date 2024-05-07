@@ -24,29 +24,35 @@ NNOUTDIR = None
 def load_data(workdir: Path, n_bkg: int, verbose=False) -> pd.DataFrame:
     
     resultsdir = workdir / 'results'
-    signal_name = resultsdir / "bbWW_sl.root"
-    background_name = resultsdir / "TTbar_sl.root"
-    up_signal = uproot.open(signal_name)
-    up_backg = uproot.open(background_name)
+    signal_hh_name = resultsdir / "bbWW_sl.root"
+    background_ttbar_name = resultsdir / "TTbar_sl.root"
+    up_signal_hh = uproot.open(signal_hh_name)
+    up_backg_ttbar = uproot.open(background_ttbar_name)
 
     sel_names = ['SL_res_2b_x']
     for sel_name in sel_names:
-        signal_df = up_signal[sel_name].arrays(library="pd")
-        backg_df = up_backg[sel_name].arrays(library="pd")
+        signal_hh_df = up_signal_hh[sel_name].arrays(library="pd")
+        backg_ttbar_df = up_backg_ttbar[sel_name].arrays(library="pd")
 
     # Adding isSignal variable
-    signal_df["isSignal"] = np.ones(len(signal_df))
-    backg_df["isSignal"] = np.zeros(len(backg_df))
+    signal_hh_df["isSignal"] = np.ones(len(signal_hh_df))
+    backg_ttbar_df["isSignal"] = np.zeros(len(backg_ttbar_df))
 
-    # Cutting away most backgruond events
-    #backg_df = backg_df.iloc[:len(signal_df)]
-    if n_bkg <= len(backg_df):
-        backg_df = backg_df.iloc[:n_bkg]
+    # Adding columns for each process
+    signal_hh_df["HH"] = np.ones(len(signal_hh_df))
+    signal_hh_df["ttbar"] = np.zeros(len(signal_hh_df))
+    backg_ttbar_df["HH"] = np.zeros(len(backg_ttbar_df))
+    backg_ttbar_df["ttbar"] = np.ones(len(backg_ttbar_df))
 
-    print (f"Total Signal Events: {len(signal_df)}")
-    print (f"Total Background Events used: {len(backg_df)}")
+    # Cutting away most background events
+    #backg_ttbar_df = backg_ttbar_df.iloc[:len(signal_hh_df)]
+    if n_bkg <= len(backg_ttbar_df):
+        backg_ttbar_df = backg_ttbar_df.iloc[:n_bkg]
 
-    total_df = pd.concat([signal_df, backg_df], ignore_index=True)
+    print (f"Total HH Signal Events: {len(signal_hh_df)}")
+    print (f"Total ttbar Background Events used: {len(backg_ttbar_df)}")
+
+    total_df = pd.concat([signal_hh_df, backg_ttbar_df], ignore_index=True)
 
     return total_df 
 
@@ -69,13 +75,15 @@ def preprocess_data(total_df) -> pd.DataFrame:
     return total_df
 
 def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
-    ## Dividing the data into testing and trainig datasets
-    drop_before_split = ["isSignal", "gen_Weight"]
+    ## Dividing the data into testing and training datasets
+    drop_before_split = ["isSignal", "HH", "ttbar", "gen_Weight"]
     X_df = total_df.drop(columns=drop_before_split)
     Y_df = total_df["isSignal"]
+    Y_signal_hh_df = total_df["HH"]
+    Y_background_ttbar_df = total_df["ttbar"]
 
     test_size = 0.2
-    X_train, X_test, Y_train, Y_test = train_test_split(X_df, Y_df, test_size=test_size, random_state=7)
+    X_train, X_test, Y_train, Y_test, Y_train_signal_hh, Y_test_signal_hh,  Y_train_background_ttbar, Y_test_background_ttbar = train_test_split(X_df, Y_df, Y_signal_hh_df, Y_background_ttbar_df, test_size=test_size, random_state=7)
     
     events_train = X_train["event"]
     events_test = X_test["event"]
@@ -85,13 +93,16 @@ def split_data(total_df) -> dict[str: Union[pd.DataFrame, pd.Series]]:
 
     print(f"The testing size is: {test_size}")
     print(f"Number of training events: {len(X_train)}")
-    print(f"  Number of signal training events: {Y_train.value_counts()[1.0]}")
-    print(f"  Number of background training events: {Y_train.value_counts()[0.0]}")
+    print(f"  Number of HH signal training events: {Y_train.value_counts()[1.0]}")
+    print(f"  Number of total background training events: {Y_train.value_counts()[0.0]}")
+    print(f"    Number of ttbar background training events: {Y_train_background_ttbar.value_counts()[1.0]}")
     print(f"Number of test events: {len(X_test)}")
-    print(f"  Number of signal test events: {Y_test.value_counts()[1.0]}")
-    print(f"  Number of background test events: {Y_test.value_counts()[0.0]}")
+    print(f"  Number of HH signal test events: {Y_test.value_counts()[1.0]}")
+    print(f"  Number of total background test events: {Y_test.value_counts()[0.0]}")
+    print(f"    Number of test background training events: {Y_test_background_ttbar.value_counts()[1.0]}")
+    print ()
 
-    return training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test
+    return training_weights, events_train, X_train, Y_train, Y_train_signal_hh, Y_train_background_ttbar, events_test, X_test, Y_test, Y_test_signal_hh, Y_test_background_ttbar
 
 def pick_num_train_events(X_train, Y_train, events_train, n_events: dict):
     n_signal, n_backg = n_events['signal'], n_events['background']
@@ -246,7 +257,6 @@ class Run3Model():
         model.compile(
             optimizer = get_optimizer(params['compiler']),
             loss      = params['compiler']['loss'], # Loss function to minimize fpr binary ANN
-            #loss      = CategoricalCrossentropy(), # Loss function to minimize for multiclass ANN
             #metrics   = ["accuracy"]
             metrics   = [BinaryAccuracy(), AUC(), Precision(), Recall()],
             weighted_metrics = [])
@@ -335,7 +345,7 @@ def main(workdir_path: str, n_bkg: int):
     NNOUTDIR = WORKDIR / 'Neural_Nets'
     total_df=load_data(WORKDIR, n_bkg)
     total_df=preprocess_data(total_df)
-    training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test = split_data(total_df)
+    training_weights, events_train, X_train, Y_train, Y_train_signal_hh, Y_train_background_ttbar, events_test, X_test, Y_test, Y_test_signal_hh, Y_test_background_ttbar = split_data(total_df)
 
     test_models = NNDIR / 'NN_test_models.yml'
     with open(test_models, 'r') as file:
