@@ -30,7 +30,6 @@ EPSILON = 0.000001
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
-
 def draw_1D_total(hist_signal, hist_backg, ss_var, path, shape_only):
     try:
         if not shape_only:
@@ -71,14 +70,17 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path, shape_only):
     hist_backg.SetLineWidth(3)
     hist_backg.SetStats(0)
 
-    hist_signal.GetXaxis().SetRangeUser(ss_var.min, ss_var.max)
-    hist_signal.GetXaxis().SetTitle(ss_var.full_title)
     if shape_only:
+        hist_signal.GetXaxis().SetRangeUser(ss_var.min, ss_var.max)
+        hist_signal.GetXaxis().SetTitle(ss_var.full_title)
         hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
         hist_signal.GetYaxis().SetTitle('normalized events')
     else:
+        hist_backg.GetXaxis().SetRangeUser(ss_var.min, ss_var.max)
+        hist_backg.GetXaxis().SetTitle(ss_var.full_title)
         hist_backg.SetMinimum(1e-7)
         hist_backg.SetMaximum(max(hist_signal.GetMaximum(), hist_backg.GetMaximum())*100)
+        hist_backg.GetYaxis().SetTitle('events')
 
     # Zoom as necessary
     if isinstance(ss_var, LikelihoodRatio):
@@ -96,6 +98,7 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path, shape_only):
         max_bin = min(ss_var.nbins, max(max_sbin + right_padding, max_bbin + right_padding))
         min_bin = max(1, min(min_sbin - left_padding, min_bbin - left_padding))
         hist_signal.GetXaxis().SetRange(min_bin, max_bin)
+        hist_backg.GetXaxis().SetRange(min_bin, max_bin)
     
     canvas = ROOT.TCanvas('canvas', '', 200, 200)
     canvas.SetGrid()
@@ -124,10 +127,8 @@ def draw_1D_total(hist_signal, hist_backg, ss_var, path, shape_only):
         leg.SetTextSize(0.025)
 
     leg.Draw()
-
     canvas.SetLeftMargin(0.13)
     canvas.Update()
-
     canvas.SaveAs( str(path / (ss_var.name + '.pdf')))
     canvas.Close()
 
@@ -146,31 +147,39 @@ def draw_2D_total(signal_hist, backg_hist, ss_var, path: Path, shape_only):
         canvas.SaveAs( str(path / (ss_var.name + '_' + of_type + '.pdf')))
         canvas.Close()
  
-def draw1D(var: Variable1D, shape_only:bool, dirname: str):
+def draw1D(var, shape_only:bool, dirname: str):
     # For subcat-specific var in var
     path = OUTPUT_PATH / dirname
 
     if shape_only: normalization = True
     else: normalization = False
 
-    for ss_var in var:
-        this_path = path / ss_var.subcat
+    if isinstance(var, Variable1D):
+        for ss_var in var:
+            this_path = path / ss_var.subcat
+            if shape_only: final_path = this_path / 'shape_only'
+            else: final_path = this_path / 'scaled'
+            if not final_path.exists(): final_path.mkdir(parents=True, exist_ok=True)
 
-        if shape_only: final_path = this_path / 'shape_only'
-        else: final_path = this_path / 'scaled'
+            try:
+                total_signal = ss_var.get_total_hist(SIGNAL_SAMPLES, normalized=normalization)
+                total_backg = ss_var.get_total_hist(BACKG_SAMPLES, normalized=normalization)
+                draw_1D_total(total_signal, total_backg, ss_var, final_path, shape_only)
+            except KeyError:
+                print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
+                FAILED_VARIABLES.append(ss_var.ref)
+            except ZeroDivisionError:
+                print(f'Comparison for {ss_var.ref} failed: Empty histogram')
+                FAILED_VARIABLES.append(ss_var.ref)
+    else:
+
+        if shape_only: final_path = path / 'shape_only'
+        else: final_path = path / 'scaled'
         if not final_path.exists(): final_path.mkdir(parents=True, exist_ok=True)
 
-        try:
-            total_signal = ss_var.get_total_hist(SIGNAL_SAMPLES, normalized=normalization)
-            total_backg = ss_var.get_total_hist(BACKG_SAMPLES, normalized=normalization)
-            draw_1D_total(total_signal, total_backg, ss_var, final_path, shape_only)
-        except KeyError:
-            print(f'Comparison for {ss_var.ref} failed: Reference not found in file')
-            FAILED_VARIABLES.append(ss_var.ref)
-        except ZeroDivisionError:
-            print(f'Comparison for {ss_var.ref} failed: Empty histogram')
-            FAILED_VARIABLES.append(ss_var.ref)
-        
+        total_signal = get_total_hist(var, SIGNAL_SAMPLES, normalized=normalization)
+        total_backg = get_total_hist(var, BACKG_SAMPLES, normalized=normalization)
+        draw1D_notype(total_signal, total_backg, var, final_path, shape_only)
 
 def draw2D(var: Variable2D, shape_only:bool, dirname: str = '2D'):
     path_2D = OUTPUT_PATH / '2D'
@@ -196,30 +205,28 @@ def draw2D(var: Variable2D, shape_only:bool, dirname: str = '2D'):
             print(f'Comparison for {ss_var.ref} failed: Empty histogram')
             FAILED_VARIABLES.append(ss_var.ref)
 
+# =======================================================================
+def get_hist_from_i_file(hist_ref: str, file: TFile):
+    file_name = Path(file.GetName()).stem
+    try:
+        hist = file.Get(hist_ref)
+        hist.SetDirectory(0)
+    except AttributeError as err:
+        raise KeyError(f"'{hist_ref}' not found in {file_name}") from err
+    scale_factor = variables.CROSS_SECTIONS[file_name] * variables.LUMINOSITY / variables.SUM_WEIGHTS[file_name]
+    hist.Scale(scale_factor)
+    return  hist
 
-def draw1D_notype(ref, path: Path):
-    print(ref)
-    def get_hist_from_i_file(hist_ref: str, file: TFile):
-        file_name = Path(file.GetName()).stem
-        try:
-            hist = file.Get(hist_ref)
-            hist.SetDirectory(0)
-        except AttributeError as err:
-            raise KeyError(f"'{hist_ref}' not found in {file_name}") from err
-        scale_factor = variables.CROSS_SECTIONS[file_name] * variables.LUMINOSITY / variables.SUM_WEIGHTS[file_name]
-        hist.Scale(scale_factor)
-        return  hist
+def get_total_hist(hist_ref:str, files:'list[TFile]', normalized:bool = False):
+    total_hist = get_hist_from_i_file(hist_ref, files[0])
+    for i_file in files[1:]:
+        total_hist.Add(get_hist_from_i_file(hist_ref, i_file))
+    if normalized:
+        total_hist.Scale(1/total_hist.Integral())
+    return total_hist
 
-    def get_total_hist(hist_ref:str, files:'list[TFile]', normalized:bool = False):
-        total_hist = get_hist_from_i_file(hist_ref, files[0])
-        for i_file in files[1:]:
-            total_hist.Add(get_hist_from_i_file(hist_ref, i_file))
-        if normalized:
-            total_hist.Scale(1/total_hist.Integral())
-        return total_hist
-        
-    hist_signal = get_total_hist(ref, SIGNAL_SAMPLES, normalized=True)
-    hist_backg = get_total_hist(ref, BACKG_SAMPLES, normalized=True)
+def draw1D_notype(hist_signal, hist_backg, var, path: Path, shape_only:bool):
+    print(var)
 
     hist_signal.SetLineColor(ROOT.kBlue)
     hist_signal.SetLineWidth(3)
@@ -228,23 +235,41 @@ def draw1D_notype(ref, path: Path):
     hist_backg.SetLineWidth(3)
     hist_backg.SetStats(0)
 
-    leg = ROOT.TLegend(0.6, 0.8, 0.9, 0.9)
-    leg.AddEntry(hist_signal, 'Signal', 'l')
-    leg.AddEntry(hist_backg, 'Background', 'l')
+    if shape_only:
+        hist_signal.GetXaxis().SetRangeUser(hist_signal.GetXaxis().GetXmin(), hist_signal.GetXaxis().GetXmax())
+        # hist_signal.GetXaxis().SetTitle()
+        hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
+        hist_signal.GetYaxis().SetTitle('normalized events')
+    else:
+        # hist_backg.GetXaxis().SetTitle()
+        hist_backg.SetMinimum(1e-7)
+        hist_backg.SetMaximum(max(hist_signal.GetMaximum(), hist_backg.GetMaximum())*100)
+        hist_backg.GetYaxis().SetTitle('events')
 
     canvas = ROOT.TCanvas("canvas", '', 200, 200)
     canvas.SetGrid()
-    canvas.SetLeftMargin(0.13)
-    # canvas.SetRightMargin(0.15)
 
-    hist_signal.GetXaxis().SetRangeUser(hist_signal.GetXaxis().GetXmin(), hist_signal.GetXaxis().GetXmax())
-    hist_signal.GetYaxis().SetRangeUser(0, 1.1*max(hist_signal.GetMaximum(), hist_backg.GetMaximum()))
+    signal_scale_factor = 20
+    if shape_only:
+        hist_signal.Draw("hist")
+        hist_backg.Draw("hist same")
+        hist_sig_leg = f"Signal"
+    else:
+        canvas.SetLogy()
+        hist_backg.Draw("hist")
+        hist_signal.Scale(signal_scale_factor)
+        hist_signal.Draw("hist same")
+        hist_sig_leg = f"Signal x {signal_scale_factor}"
+        # hist_s_sqrt_b.Draw('hist same')
 
-    hist_signal.Draw("hist")
-    hist_backg.Draw("hist sames")
+    leg = ROOT.TLegend(0.6, 0.8, 0.9, 0.9)
+    leg.AddEntry(hist_signal, hist_sig_leg, 'l')
+    leg.AddEntry(hist_backg, 'Background', 'l')
+    
     leg.Draw()
+    canvas.SetLeftMargin(0.13)
     canvas.Update()
-    canvas.SaveAs(str(path / (ref +'.pdf')))
+    canvas.SaveAs(str(path / (var +'.pdf')))
     canvas.Close()
 
 
@@ -270,14 +295,13 @@ def main(source_path: str, shape_only:bool=False, no_type: bool=False):
     for key in file.GetListOfKeys():
         obj = key.ReadObj()
         if isinstance(obj, ROOT.TH1) or isinstance(obj, ROOT.TH2):
-            refs.append(obj.GetName())
+            if 'yields' not in obj.GetName():
+                refs.append(obj.GetName())
 
-    if all([shape_only, no_type]):
-        path_notype = OUTPUT_PATH / "notype"
-        if not path_notype.exists(): path_notype.mkdir(exist_ok=True)
+    if no_type:
         for ref in refs:
             if 'yield' not in ref:
-                draw1D_notype(ref, path_notype)
+                draw1D(ref, shape_only, dirname='notype')
     else:
         vars = variables.parse_vars_from_refs(refs)
         for var in vars:

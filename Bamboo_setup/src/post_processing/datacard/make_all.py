@@ -47,12 +47,17 @@ def grab_info_from_datacard(datacard_file, asimov_only:bool, rate_only:bool):
     backg_rate = float(elements[2])
     return signal_rate, backg_rate, lines, rate_line_num
 
-def modify_datacard(datacard_file, asimov_only:bool, rate_only:bool, signal_factor=None, backg_factor=None):
+def get_factors_from_cuts_df(var: str, effi:float, cuts_df=None):
 
-    signal_rate, backg_rate, lines, rate_line_num = grab_info_from_datacard(datacard_file, asimov_only, rate_only)
+    signal_factor = cuts_df.loc[(cuts_df['Variable']==var) & (cuts_df['Effi']==effi), 'Signal Frac'].iloc[0]
+    backg_factor = cuts_df.loc[(cuts_df['Variable']==var) & (cuts_df['Effi']==effi), 'Background Frac'].iloc[0]
+    return signal_factor, backg_factor
+
+def modify_datacard(datacard_file, signal_rate=None, backg_rate=None, signal_factor=None, backg_factor=None, lines=None, rate_line_num=None):
+
     new_sig = round(signal_rate*signal_factor, 4)
     new_backg = round(backg_rate*backg_factor, 4)
-    new_rate_line = "    ".join(["rate", f"{new_sig:.4f}", f"{new_backg:.4f}"])
+    new_rate_line = "    ".join(["rate", f"{new_sig:.4f}", f"{new_backg:.4f}\n"])
     lines[rate_line_num] = new_rate_line
     with open(datacard_file, 'w') as file:
         file.writelines(lines)
@@ -96,7 +101,7 @@ def prepare_fit_summary(fit_summary_file:Path, rate_only:bool, possible_effis:li
 
     return fit_summary_df
 
-def update_fit_summary(df, var:str, signal, backg, rate_only, effi: float):
+def update_fit_summary(df, var:str, signal, backg, rate_only, effi: float=None):
     sensitivity = round(signal/math.sqrt(backg), 6)
 
     if rate_only:
@@ -112,7 +117,7 @@ def update_fit_summary(df, var:str, signal, backg, rate_only, effi: float):
 
     return df
 
-def run_on_workdir(workdir: Path, whichvars: str, asimov_only: bool, rate_only: bool, effi: float = None ):
+def run_on_workdir(workdir: Path, whichvars: str, asimov_only: bool, rate_only: bool, effis: list[float] = None ):
 
     assert workdir.exists(), f"{workdir.resolve()} does not exist"
 
@@ -121,12 +126,12 @@ def run_on_workdir(workdir: Path, whichvars: str, asimov_only: bool, rate_only: 
     fit_summary_file = workdir / "fit_summary.csv"
     
     if rate_only:
-        cuts_file = workdir / "cuts" / "SL_res_2b_x.csv"
+        cuts_file = workdir / "cuts_lower_effis" / "SL_res_2b_x.csv"
         cuts_df = get_cuts_df(cuts_file)
         all_vars_from_cuts_df = cuts_df['Variable'].unique()
         possible_effis = cuts_df['Effi'].unique()
         print(f"The possible efficienceis are: {possible_effis}")
-        assert effi in possible_effis, 'Efficiency not valid'
+        for effi in effis: assert effi in possible_effis, f'Efficiency of {effi} not valid'
         fit_summary_df = prepare_fit_summary(fit_summary_file, rate_only, possible_effis)
         if whichvars == 'all': vars_list = all_vars_from_cuts_df
         elif whichvars == 'list': vars_list = read_disc_list_file(input_file)
@@ -138,14 +143,14 @@ def run_on_workdir(workdir: Path, whichvars: str, asimov_only: bool, rate_only: 
     for index, var in enumerate(vars_list):
         modify_yaml(yaml_file, var)
         dc = run_make_datacard(workdir, asimov_only, rate_only, var)
-        if rate_only:
-            signal_factor = cuts_df.loc[(cuts_df['Variable']==var) & (cuts_df['Effi']==effi), 'Signal Frac'].iloc[0]
-            backg_factor = cuts_df.loc[(cuts_df['Variable']==var) & (cuts_df['Effi']==effi), 'Background Frac'].iloc[0]
-            new_signal_rate, new_backg_rate = modify_datacard(dc, asimov_only, rate_only, signal_factor, backg_factor)
-            fit_summary_df = update_fit_summary(fit_summary_df, var, new_signal_rate, new_backg_rate, rate_only, effi)
+        signal_rate, backg_rate, lines, rate_line_num = grab_info_from_datacard(dc, asimov_only, rate_only)
+        if rate_only: 
+            for effi in effis:
+                signal_factor, backg_factor = get_factors_from_cuts_df(var, effi, cuts_df)
+                new_signal_rate, new_backg_rate = modify_datacard(dc, signal_rate, backg_rate, signal_factor, backg_factor, lines, rate_line_num)
+                fit_summary_df = update_fit_summary(fit_summary_df, var, new_signal_rate, new_backg_rate, rate_only, effi)
         else:
-            signal_rate, backg_rate, _, _ = grab_info_from_datacard(dc, asimov_only, rate_only)
-            fit_summary_df = update_fit_summary(fit_summary_df, var, signal_rate, backg_rate, rate_only, effi)
+            fit_summary_df = update_fit_summary(fit_summary_df, var, signal_rate, backg_rate, rate_only)
 
         if (index + 1)%10 == 0:
             fit_summary_df.to_csv(fit_summary_file, index=True)
@@ -153,7 +158,7 @@ def run_on_workdir(workdir: Path, whichvars: str, asimov_only: bool, rate_only: 
 
     fit_summary_df.to_csv(fit_summary_file, header=True, index=True)
 
-def main(superworkdir:bool, workdir: str, whichvars: str, asimov_only: bool, rate_only: bool, effi: float = None ):
+def main(superworkdir:bool, workdir: str, whichvars: str, asimov_only: bool, rate_only: bool, effis: list[float] = None ):
 
     print(f"Running for: rate_only = {rate_only},\t asimov_only = {asimov_only}")
 
@@ -161,12 +166,12 @@ def main(superworkdir:bool, workdir: str, whichvars: str, asimov_only: bool, rat
         superworkdir = Path(workdir)
         workdirs = [dir.resolve() for dir in superworkdir.iterdir() if dir.is_dir()]
         for workdir in workdirs:
-            run_on_workdir(workdir, whichvars, asimov_only, rate_only, effi)
+            run_on_workdir(workdir, whichvars, asimov_only, rate_only, effis)
 
     else:
         workdir = Path(workdir)
         assert workdir.exists(), f"{workdir.resolve()} does not exist"
-        run_on_workdir(workdir, whichvars, asimov_only, rate_only, effi)
+        run_on_workdir(workdir, whichvars, asimov_only, rate_only, effis)
 
 if __name__ == "__main__":
     
@@ -177,23 +182,27 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--asimov_only", action="store_true", dest="asimov_only", help="asimov_only = to make datacards for asimov only")
     parser.add_argument("-v", "--vars", action='store', type=str, help="Which vars to run: from disc_list (-v list) or all vars from cut sel if rate_only used (-v all)")
     parser.add_argument("-r", "--rate_only", action="store_true", dest="rate_only", help="rate_only = to make datacards for rate only")
-    parser.add_argument("-e", "--effi", action='store', type=float, help="efficiency. Ex: 0.75")
+    parser.add_argument("-e", "--effis", action='store', nargs='+', type=float, help="Efficiency as a list of floats. Example: -e 0.75")
     args = parser.parse_args()
 
     '''
     To run this, you must have already run cut_based_selections.py, since this script uses the csv file of the cuts produced
-    Example:
-    $ python3 src/post_processing/datacard/make_all.py -w $OUTPUT/TOTAL_VarsReco_2022_LLR_7to11products -e 0.75 -v all -a
+    Example1:
+    $ python3 src/post_processing/datacard/make_all.py -w $OUTPUT/TOTAL_VarsReco_2022_LLR_7to11products -a -v all
+    Example2:
+    $ python3 src/post_processing/datacard/make_all.py -w $OUTPUT/TOTAL_VarsReco_2022_LLR_7to11products -a -r -e 0.5 0.75 -v all
     '''
 
     if args.rate_only:
-        if args.effi is None: 
+        if args.effis is None: 
             parser.error("-e (--effi) is required when -r (--rate_only) is used.")
+        if len(args.effis) > 1:
+            parser.error("Only one effi at a time")
         else:
-            main(args.superworkdir, args.workdir, args.vars, args.asimov_only, args.rate_only, args.effi)
+            main(args.superworkdir, args.workdir, args.vars, args.asimov_only, args.rate_only, args.effis)
     else:
-        if args.effi is not None:
-            print("Efficiency value will be ignored (only used for running on rate_only)")
+        if args.effis is not None:
+            print("Efficiency value(s) will be ignored (only used for running on rate_only)")
         if args.vars == 'all':
             parser.error("If not running on rate_only results vars must be from list: -v list")
         elif args.vars == 'list':
