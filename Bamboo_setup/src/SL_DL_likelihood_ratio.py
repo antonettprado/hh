@@ -1,10 +1,8 @@
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, CutFlowReport
+from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
-from bamboo.plots import Skim
 from bamboo.scalefactors import get_correction
 from bamboo.treeproxies import FloatProxy
-from bamboo.plots import Skim
 
 from SL_DL_vars_reco import SL_DL_vars_reco
 import utils.object_definition as object_defs
@@ -266,10 +264,6 @@ class SL_DL_likelihood_ratio(SL_DL_vars_reco):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-
-        # file1 = os.path.join(self.args.output, 'results/bbWW_sl.root')
-        # df = ROOT.RDataFrame("SL_res_2b_x", file1)
-        # df.Display({"event", "bjets_mbb"}, 5, 20).Print()
 
         super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
