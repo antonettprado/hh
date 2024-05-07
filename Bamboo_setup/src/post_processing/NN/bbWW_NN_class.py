@@ -354,7 +354,7 @@ def main(workdir_path: str, n_bkg: int):
         print(f"Model: {model_params['name']}")
         n_output_nodes = model_params['n_output_nodes']
         processes = model_params['processes']
-        print ("Output nodes (%d): "%n_output_nodes + processes)
+        print ("Output nodes (%d): "%n_output_nodes, processes)
 
         training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df, processes)
 
