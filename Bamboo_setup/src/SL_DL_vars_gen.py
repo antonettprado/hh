@@ -1,14 +1,31 @@
 from bamboo.treedecorators import nanoGenDescription
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, DerivedPlot, SummedPlot, CutFlowReport
+from bamboo.plots import Plot, DerivedPlot, SummedPlot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.analysisutils import loadPlotIt
 from plotit.plotit import Stack
 
 from bamboo.analysismodules import NanoAODHistoModule
-from input.constants import *
 import os
+import ROOT
 from bamboo.root import gbl
+import correctionlib.schemav2 as cs
+import numpy as np
+
+
+ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
+ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
+
+EQBIN_BJETS_PT = EqBin(125, 0, 500)
+EQBIN_BJETS_ETA= EqBin(100, -7, 7)
+EQBIN_BJETS_ETA_ABS= EqBin(50, 0, 7)
+EQBIN_BJETS_PHI= EqBin(100, -4, 4)
+EQBIN_BJETS_PHI_ABS= EqBin(50, 0, 4)
+EQBIN_BJETS_DR = EqBin(100, 0, 7)
+EQBIN_BJETS_MBB = EqBin(125, 0, 500)
+EQBIN_TT_PT = EqBin(125, 0, 500)
+EQBIN_ALL_ST = EqBin(500, 0, 2000)
+EQBIN_ALL = EqBin(600, 0, 3000)
 
 class SL_DL_vars_gen(NanoAODHistoModule):
 
@@ -29,10 +46,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
                                         backend=backend)
         noSel = noSel.refine('genWeight', weight=tree.genWeight, cut=()) # For weighted gen-level events
         return tree, noSel, backend, lumiArcs
-                                                    
-    def get_SL_DL_vars_reco(self, tree, noSel):
-        
-        # Retrieve objects ==============================================
+
+    def set_gen_objects(self, tree):
+
         genParts = tree.GenPart
         genJets = tree.GenJet
         genJetAK8s = tree.GenJetAK8
@@ -52,359 +68,380 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         nonbJetAK8s = op.select(selected_genJetAK8s, lambda jet: op.NOT(jet.hadronFlavour == 5))
         sorted_nonbJetAK8s = op.sort(nonbJets, lambda jet: -jet.pt)
 
-        # Define selections ================================================
+        self.gen_objects = dict(
+            genParts=genParts,
+            genJets=genJets,
+            genJetAK8s=genJetAK8s,
+            electrons=genElectrons,
+            muons=genMuons,
+            MET=MET,
+            selected_genJets=selected_genJets,
+            bJets=bJets,
+            sorted_bJets=sorted_bJets,
+            nonbJets=nonbJets,
+            sorted_nonbJets=sorted_nonbJets,
+            selected_genJetAK8s=selected_genJetAK8s,
+            bJetAK8s=bJetAK8s,
+            sorted_bJetAK8s=sorted_bJetAK8s,
+            nonbJetAK8s=nonbJetAK8s,
+            sorted_nonbJetAK8s=sorted_nonbJetAK8s
+        )
+
+    def set_selections(self, noSel):
+
+        objs = self.gen_objects
         SL = noSel.refine("SL", cut=[op.OR(
-            op.AND(op.rng_len(genElectrons) == 1, op.rng_len(genMuons) == 0),
-            op.AND(op.rng_len(genElectrons) == 0, op.rng_len(genMuons) == 1))])
+            op.AND(op.rng_len(objs['electrons']) == 1, op.rng_len(objs['muons']) == 0),
+            op.AND(op.rng_len(objs['electrons']) == 0, op.rng_len(objs['muons']) == 1))])
         DL = noSel.refine("DL", cut=[op.OR(
-            op.AND(op.rng_len(genElectrons)==2, op.rng_len(genMuons) == 0),
-            op.AND(op.rng_len(genElectrons)==0, op.rng_len(genMuons) == 2),
-            op.AND(op.rng_len(genElectrons)==1, op.rng_len(genMuons) == 1))])
+            op.AND(op.rng_len(objs['electrons'])==2, op.rng_len(objs['muons']) == 0),
+            op.AND(op.rng_len(objs['electrons'])==0, op.rng_len(objs['muons']) == 2),
+            op.AND(op.rng_len(objs['electrons'])==1, op.rng_len(objs['muons']) == 1))])
 
-        SL_res_1b = SL.refine("SL resolved 1b jet selection", cut=[op.AND(op.rng_len(bJets) == 1, op.rng_len(bJetAK8s) == 0)])
-        SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) >= 2, op.rng_len(bJetAK8s) == 0)])
-        SL_boosted = SL.refine("SL boosted jet selection", cut=[ op.rng_len(bJetAK8s)>= 1])
+        SL_res_1b = SL.refine("SL resolved 1b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) == 1, op.rng_len(objs['bJetAK8s']) == 0)])
+        SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) >= 2, op.rng_len(objs['bJetAK8s']) == 0)])
+        SL_boosted = SL.refine("SL boosted jet selection", cut=[ op.rng_len(objs['bJetAK8s'])>= 1])
 
-        DL_res_1b = DL.refine("DL resolved 1b jet selection", cut=[op.AND(op.rng_len(bJets) == 1, op.rng_len(bJetAK8s) == 0)])
-        DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(bJets) >= 2, op.rng_len(bJetAK8s) == 0)])
-        DL_boosted = DL.refine("DL boosteded jet selection", cut=[op.rng_len(bJetAK8s)>= 1])
+        DL_res_1b = DL.refine("DL resolved 1b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) == 1, op.rng_len(objs['bJetAK8s']) == 0)])
+        DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) >= 2, op.rng_len(objs['bJetAK8s']) == 0)])
+        DL_boosted = DL.refine("DL boosteded jet selection", cut=[op.rng_len(objs['bJetAK8s'])>= 1])
 
         # Include extra selection of >=2 nonbjets for resolved selections only
-        SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(sorted_nonbJets)>=2])
-        SL_res_2b_x = SL_res_2b.refine("Nonbjets>=2 for SL_res_2b_x", cut=[op.rng_len(sorted_nonbJets)>=2])
+        SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(objs['sorted_nonbJets'])>=2])
+        SL_res_2b_x = SL_res_2b.refine("Nonbjets>=2 for SL_res_2b_x", cut=[op.rng_len(objs['sorted_nonbJets'])>=2])
 
-        # ================================================================
-        # ================================================================
-        # ================================================================
-        hists_1D = []
-        hists_2D = []
+        self.selections=dict(
+            noSel=noSel,
+            SL=SL,
+            DL=DL,
+            SL_res_1b=SL_res_1b,
+            SL_res_2b=SL_res_2b,
+            SL_boosted=SL_boosted,
+            DL_res_1b=DL_res_1b,
+            DL_res_2b=DL_res_2b,
+            DL_boosted=DL_boosted,
+            SL_res_1b_x=SL_res_1b_x,
+            SL_res_2b_x=SL_res_2b_x
+        )
+
+    def get_selection_and_tags(self, sel_name):
+        sel = self.selections[sel_name]
+        tag = sel_name + '_'
+        return sel, tag
+
+    # Get hists for bquarks for specific selection
+    def get_bquarks(self, sel_name, plots):
+
+        objs = self.gen_objects
+        sel, tag = self.get_selection_and_tags(sel_name)
+
+        bParts = op.select(objs['genParts'], lambda part: op.OR(part.pdgId == 5, part.pdgId == -5))
+        bParts_from_H = op.select(bParts, lambda b: b.genPartMother.pdgId == 25)
+        bParts_from_T = op.select(bParts, lambda b: op.abs(b.genPartMother.pdgId) == 6)
+        n_b_from_H = op.rng_len(bParts_from_H)
+        n_b_from_T = op.rng_len(bParts_from_T)
+        n_H = op.rng_count(objs['genParts'], lambda part: part.pdgId == 25)
+        n_T = op.rng_count(objs['genParts'], lambda part: op.abs(part.pdgId) == 6)
+
+        plots.extend([
+            Plot.make1D(tag+"n_b_from_H", n_b_from_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from H"),
+            Plot.make1D(tag+"n_b_from_T", n_b_from_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from T"),
+            Plot.make1D(tag+"n_H", n_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of H"),
+            Plot.make1D(tag+"n_T", n_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of T"),
+        ])
+
+        # #------------------ Get dR between b-particle and b-jet --------------------
+        jet_part_pairs = op.combine((objs['sorted_bjets'], bParts_from_H), N=2)
+        dR_of_pairs = op.map(jet_part_pairs, lambda pair: op.dR(pair[0].p4, pair[1].p4))
+
+        idx_of_min_pair = op.rng_min_element_index(dR_of_pairs, lambda dR: dR)
+        min_pair = jet_part_pairs[idx_of_min_pair]
+        jet_of_min_pair = min_pair[0]
+        part_of_min_pair = min_pair[1]
+
+        conj_pair = op.rng_find(jet_part_pairs, lambda pair: op.AND(pair[0].idx != jet_of_min_pair.idx, pair[1].idx != part_of_min_pair.idx))
+        jet_of_conj_pair = conj_pair[0]
+        part_of_conj_pair = conj_pair[1]        
+
+        two_dR = op.select(dR_of_pairs, lambda dR: op.OR(
+            op.dR(jet_of_min_pair.p4, part_of_min_pair.p4) == dR,
+            op.dR(jet_of_conj_pair.p4, part_of_conj_pair.p4) == dR))
+
+        # dR_0_plot = Plot.make1D(tag+"two_dR0", two_dR[0], BOTHs, EqBin(100, 0, 1), title="dR", xTitle="")
+        # dR_1_plot = Plot.make1D(tag+"two_dR1", two_dR[1], BOTHs, EqBin(100, 0, 1), title="dR", xTitle="")
+        # two_dR_plot = SummedPlot("two_dR", [dR_0_plot, dR_1_plot], xTitle="")
+        # plots.extend[(two_dR_plot)]
+
+        # #---------------------- Get 2D plots of bquarks from H ---------------------------
+        bParts_from_H_dEta = bParts_from_H[0].eta - bParts_from_H[1].eta
+        bParts_from_H_dPhi = op.dPhi(bParts_from_H[0].p4, bParts_from_H[1].p4)
+        bParts_from_H_dR = op.dR(bParts_from_H[0].p4, bParts_from_H[1].p4)
+        bjet0 = objs['sorted_bjets'][0]
+        bjet1 = objs['sorted_bjets'][1]
+        bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
+        
+        plots.extend([
+            Plot.make2D(tag+"bPartsH_dPhi_vs_dEta", [bParts_from_H_dEta, bParts_from_H_dPhi], sel, [EQBIN_BJETS_ETA, EQBIN_BJETS_PHI] ,title="", xTitle="dEta", yTitle="dPhi"),
+            Plot.make2D(tag+"bPartsH_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dEta], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_ETA] ,title="", xTitle="mbb", yTitle="dEta"),
+            Plot.make2D(tag+"bPartsH_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dPhi], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_PHI] ,title="", xTitle="mbb", yTitle="dPhi"),
+            Plot.make2D(tag+"bPartsH_dR_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dR], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_DR] ,title="", xTitle="mbb", yTitle="dR"),
+        ])
+
+        # #---------------------- Get 2D plots of bquarks from T ---------------------------
+        bParts_from_T_dEta = bParts_from_T[0].eta - bParts_from_T[1].eta
+        bParts_from_T_dPhi = op.dPhi(bParts_from_T[0].p4, bParts_from_T[1].p4)
+        bParts_from_T_dR = op.dR(bParts_from_T[0].p4, bParts_from_T[1].p4)
+
+        plots.extend([
+            Plot.make2D(tag+"bPartsT_dPhi_vs_dEta", [bParts_from_T_dEta, bParts_from_T_dPhi], sel, [EQBIN_BJETS_ETA, EQBIN_BJETS_PHI] ,title="", xTitle="dEta", yTitle="dPhi"),
+            Plot.make2D(tag+"bPartsT_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dEta], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_ETA] ,title="", xTitle="mbb", yTitle="dEta"),
+            Plot.make2D(tag+"bPartsT_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dPhi], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_PHI] ,title="", xTitle="mbb", yTitle="dPhi"),
+            Plot.make2D(tag+"bPartsT_dR_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dR], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_DR] ,title="", xTitle="mbb", yTitle="dR"),
+        ])
+        
+        return plots
+    
+    # Get hists and vars for bjets for specific selection
+    def get_bjets_vars(self, sel_name, plots):
+
+        objs = self.gen_objects
+        sel, tag = self.get_selection_and_tags(sel_name)
+
+        bjets_vars = {}        
+        if "res" in sel_name:
+            bjet0 = objs['sorted_bjets'][0]
+            bjet1 = objs['sorted_bjets'][1]
+        
+            bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
+            bjets_pT_bb = (bjet0.p4 + bjet1.p4).Pt()
+            bjets_dPhi = op.deltaPhi(bjet0.p4, bjet1.p4)
+            bjets_dPhi_abs = op.abs(bjets_dPhi)
+            bjets_dEta = bjet0.eta - bjet1.eta
+            bjets_dEta_abs = op.abs(bjets_dEta)
+            bjets_dR = op.deltaR(bjet0.p4, bjet1.p4) 
+            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
+
+            plots.extend([
+                Plot.make1D(tag+"bjets0_pT" , bjet0.pt, sel, EQBIN_BJETS_PT, xTitle="p_{T} for bJet_0 (GeV)" ),
+                Plot.make1D(tag+"bjets1_pT" , bjet1.pt, sel, EQBIN_BJETS_PT, xTitle="p_{T} for bJet_1 (GeV)" ),
+                Plot.make1D(tag+"bjets_mean_pT" , bjets_mean_pT, sel, EQBIN_BJETS_PT, xTitle="<p_{T}> for bjets (GeV)"),
+                Plot.make1D(tag+"bjets_pT_bb", bjets_pT_bb, sel, EQBIN_BJETS_PT, title="", xTitle="p_{T} of total p4 of bjets (GeV)"),
+                Plot.make1D(tag+"bjets_dEta" , bjets_dEta, sel, EQBIN_BJETS_ETA, xTitle="dEta for bjets"),
+                Plot.make1D(tag+"bjets_dEta_abs" , bjets_dEta_abs, sel, EQBIN_BJETS_ETA_ABS= EqBin(50, 0, 7), xTitle="abs(dEta) for bjets"),
+                Plot.make1D(tag+"bjets_dPhi" , bjets_dPhi, sel, EQBIN_BJETS_PHI, xTitle="dPhi for bjets"),
+                Plot.make1D(tag+"bjets_dPhi_abs" , bjets_dPhi_abs, sel, EQBIN_BJETS_PHI_ABS, xTitle="abs(dPhi) for bjets"),
+                Plot.make1D(tag+"bjets_dR" , bjets_dR, sel, EQBIN_BJETS_DR, xTitle="deltaR for bjets"),
+                Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EQBIN_BJETS_MBB, xTitle="m_{bb} (GeV)"),
+            ])
+
+            plots.extend([
+                Plot.make2D(tag+"bjets_dR_vs_pT_bb" , [bjets_pT_bb, bjets_dR], sel, [EQBIN_BJETS_PT, EQBIN_BJETS_DR], xTitle="pT of bb", yTitle="dR"),
+                Plot.make2D(tag+"bjets_dEta_vs_pT_bb" , [bjets_pT_bb, bjets_dEta], sel, [EQBIN_BJETS_PT, EQBIN_BJETS_ETA], xTitle="pT of bb", yTitle="dEta"),
+                Plot.make2D(tag+"bjets_dPhi_vs_pT_bb", [bjets_pT_bb, bjets_dPhi], sel, [EQBIN_BJETS_PT, EQBIN_BJETS_PHI], xTitle="pT of bb", yTitle="dPhi"),
+                Plot.make2D(tag+"bjets_dR_vs_mbb" , [bjets_mbb, bjets_dR], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_DR], xTitle="mbb", yTitle="dR"),
+                Plot.make2D(tag+"bjets_pT_bb_vs_mbb" , [bjets_mbb, bjets_pT_bb], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_PT], xTitle="mbb", yTitle="pT of bb"),
+                Plot.make2D(tag+"bjets_dEta_vs_mbb" , [bjets_mbb, bjets_dEta], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_ETA], xTitle="mbb", yTitle="dEta"),
+                Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EQBIN_BJETS_MBB, EQBIN_BJETS_PHI], xTitle="mbb", yTitle="dPhi"),
+                Plot.make2D(tag+"bjets_dPhi_vs_dEta" , [bjets_dEta, bjets_dPhi], sel, [EQBIN_BJETS_ETA, EQBIN_BJETS_PHI], xTitle="dEta", yTitle="dPhi"),
+                Plot.make2D(tag+"bjets_dPhi_abs_vs_dEta_abs" , [bjets_dEta_abs, bjets_dPhi_abs], sel, [EQBIN_BJETS_ETA_ABS, EQBIN_BJETS_PHI_ABS], xTitle="abs(dEta)", yTitle="abs(dPhi)"),
+            ])
+
+            bjets_vars["bjets0_pT"] = bjet0.pt
+            bjets_vars["bjets1_pT"] = bjet1.pt
+            bjets_vars["bjets_mean_pT"] = bjets_mean_pT
+            bjets_vars["bjets_pT_bb"] = bjets_pT_bb
+            bjets_vars["bjets_dEta"] = bjets_dEta
+            bjets_vars["bjets_dEta_abs"] = bjets_dEta_abs
+            bjets_vars["bjets_dPhi"] = bjets_dPhi
+            bjets_vars["bjets_dPhi_abs"] = bjets_dPhi_abs
+            bjets_vars["bjets_dR"] = bjets_dR
+            bjets_vars["bjets_mbb"] = bjets_mbb
+
+        elif "boosted" in sel_name:
+            fatjet = objs['sorted_bjets'][0]
+            bjets_mbb = fatjet.mass
+
+            plots.append(Plot.make1D(tag+"bfatjet_mass", fatjet.mass, sel, EQBIN_BJETS_MBB, title="", xTitle="bFatJet mass (GeV)"))
+
+            bjets_vars["bjets_mbb"] = bjets_mbb
+        
+        return plots, bjets_vars                                                
+    
+    # Get hists and vars for top for specific selection
+    def get_top_vars(self, sel_name, plots):
+
+        objs = self.gen_objects
+        sel, tag = self.get_selection_and_tags(sel_name)
+
+        top_vars = {}
+        
+        m_W = 80.377 # GeV
+        
+        t1_mInv_leadb = op.invariant_mass(objs['sorted_bjets'][0].p4, objs['sorted_nonbjets'][0].p4, objs['sorted_nonbjets'][1].p4)
+        t1_mInv_subleadb = op.invariant_mass(objs['sorted_bjets'][1].p4, objs['sorted_nonbjets'][0].p4, objs['sorted_nonbjets'][1].p4)
+
+        # Using combinations
+        jj_combos = op.combine((objs['sorted_nonbjets']),N=2)
+        jj_combos_mjj = op.map(jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4))
+        
+        # Mtop calculation from max pT of sum of 4-momentum of bjj for jj pair with mjj closest to m_W
+        jj_combo_mjj_mW_index = op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: op.abs(combo_mjj - m_W))
+        jj_mjj_mW = jj_combos[jj_combo_mjj_mW_index]
+    
+        b1_jj_combos_mjj_mW_pt = op.map(objs['sorted_bjets'], lambda b1: (b1.p4 + jj_mjj_mW[0].p4 + jj_mjj_mW[1].p4).Pt())
+        t1_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b1_jj_combos_mjj_mW_pt, lambda combo_pt: combo_pt)
+        b1_combo_max_pt_mjj_mW = objs['sorted_bjets'][t1_combo_max_pt_mjj_mW_index]
+        t1_mInv = op.invariant_mass(b1_combo_max_pt_mjj_mW.p4, jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
+        t1_pt = b1_jj_combos_mjj_mW_pt[t1_combo_max_pt_mjj_mW_index]
+        
+        rest_bjets_max_pt_mjj_mW = op.select(objs['sorted_bjets'], lambda b: op.NOT(b.idx == b1_combo_max_pt_mjj_mW.idx))
+        if op.rng_len(objs['electrons'])==1 and op.rng_len(objs['muons'])==0:
+            lep = objs['electrons'][0]
+        if op.rng_len(objs['electrons'])==0 and op.rng_len(objs['muons'])==1:
+            lep = objs['muons'][0]
+        b2_lnu_combos_pt_for_max_pt_mjj_mW = op.map(rest_bjets_max_pt_mjj_mW, lambda b2: (b2.p4 + lep.p4 + objs['MET'].p4).Pt())
+        t2_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b2_lnu_combos_pt_for_max_pt_mjj_mW, lambda blnu_pt: blnu_pt)
+        b2_combo_max_pt_mjj_mW = rest_bjets_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
+        t2_mT = (b2_combo_max_pt_mjj_mW.p4 + lep.p4 + objs['MET'].p4).Mt()
+        t2_pt = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
+                    
+        plots.extend([
+            Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EQBIN_TT_PT, xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
+            Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EQBIN_TT_PT, xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
+            Plot.make1D(tag+"t1_mInv" , t1_mInv, sel, EQBIN_TT_PT, xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
+            Plot.make1D(tag+"t1_pt" , t1_pt, sel, EQBIN_TT_PT, xTitle="p_{T} for top1 (GeV)"),
+            Plot.make1D(tag+"t2_mT" , t2_mT, sel, EQBIN_TT_PT, xTitle="m_{T} for top2 (GeV)"),
+            Plot.make1D(tag+"t2_pt" , t2_pt, sel, EQBIN_TT_PT, xTitle="p_{T} for top2 (GeV)"),
+        ])
+
+        top_vars["t1_mInv_leadb"] = t1_mInv_leadb
+        top_vars["t1_mInv_subleadb"] = t1_mInv_subleadb
+        top_vars["t1_mInv"] = t1_mInv
+        top_vars["t1_pt"] = t1_pt
+        top_vars["t2_mT"] = t2_mT
+        top_vars["t2_pt"] = t2_pt
+
+        return plots, top_vars
+
+    # Get hists and vars for total vars for specific selection
+    def get_total_vars(self, sel_name, plots):
+
+        objs = self.gen_objects
+        sel, tag = self.get_selection_and_tags(sel_name)
+
+        total_vars = {}
+
+        total_e_pt = op.rng_sum(objs['electrons'], lambda el: el.pt)
+        total_mu_pt = op.rng_sum(objs['muons'], lambda mu: mu.pt)
+        total_jet_pt = op.rng_sum(objs['selected_genJets'], lambda jet: jet.pt)
+        all_sT = op.sum(total_e_pt, total_mu_pt, total_jet_pt, objs['MET'].pt)
+
+        e_pt_50 = op.select(objs['electrons'], lambda el: el.pt>50)
+        mu_pt_50 = op.select(objs['muons'], lambda mu: mu.pt>50)
+        jet_pt_50 = op.select(objs['selected_genJets'], lambda jet: jet.pt>50)
+        total_e_pt_50 = op.switch(op.rng_count(e_pt_50)>0, op.rng_sum(e_pt_50, lambda el: el.pt, start=op.c_float(0.)), op.c_float(0.))
+        total_mu_pt_50 = op.switch(op.rng_count(mu_pt_50)>0, op.rng_sum(mu_pt_50, lambda mu: mu.pt, start=op.c_float(0.)), op.c_float(0.))
+        total_jet_pt_50 = op.switch(op.rng_count(jet_pt_50)>0, op.rng_sum(jet_pt_50, lambda jet: jet.pt, start=op.c_float(0.)), op.c_float(0.))
+        all_sT_50_no_met = op.sum(total_e_pt_50, total_mu_pt_50, total_jet_pt_50)
+        all_sT_50 = op.switch(objs['MET'].pt > 50, all_sT_50_no_met + objs['MET'].pt, all_sT_50_no_met)
+        all_sT_50_cut = op.switch(all_sT_50 == 0, -9999, all_sT_50)
+
+        zero_p4 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
+        total_el_p4 = op.rng_sum(objs['electrons'], lambda el: el.p4, start=zero_p4)
+        total_mu_p4 = op.rng_sum(objs['muons'], lambda mu:mu.p4, start=zero_p4)
+        total_jet_p4 = op.rng_sum(objs['selected_genJets'], lambda jet:jet.p4, start=zero_p4)
+        
+        all_mInv_noMET = (total_el_p4 + total_mu_p4 + total_jet_p4).M()
+        all_mT_noMET = (total_el_p4 + total_mu_p4 + total_jet_p4).Mt()
+        all_mInv = (total_el_p4 + total_mu_p4 + total_jet_p4 + objs['MET'].p4).M()
+        all_mT = (total_el_p4 + total_mu_p4 + total_jet_p4 + objs['MET'].p4).Mt()
+
+        plots.extend([
+            Plot.make1D(tag+"all_sT" , all_sT, sel, EQBIN_ALL_ST, title="all_sT", xTitle="s_{T} (GeV)"),
+            Plot.make1D(tag+"all_sT_50" , all_sT_50, sel, EQBIN_ALL_ST, title="all_sT_50", xTitle="s_{T} (GeV)"),
+            Plot.make1D(tag+"all_sT_50_cut" , all_sT_50_cut, sel, EQBIN_ALL_ST, title="all_sT_50_cut", xTitle="s_{T} (GeV)"),
+            Plot.make1D(tag+"all_mInv" , all_mInv, sel, EQBIN_ALL, title="all_mInv", xTitle="m_{inv} (GeV)"),
+            Plot.make1D(tag+"all_mT" , all_mT, sel, EQBIN_ALL, title="all_mT", xTitle="m_{T} (GeV)"),
+        ])
+
+        total_vars["all_sT"] = all_sT
+        total_vars["all_sT_50"] = all_sT_50
+        total_vars["all_sT_50_cut"] = all_sT_50_cut
+        total_vars["all_mInv"] = all_mInv
+        total_vars["all_mT"] = all_mT
+
+        return plots, total_vars
+
+    def for_lepton_pt_study(self, plots):
+
+        objs = self.gen_objects
+        SL_res_2b_x = self.selections['SL_res_2b_x']
 
         # Add gen level lepton variables to plots
-        arbitrary_lepton_pt = op.switch(op.rng_len(genElectrons)==1, genElectrons[0].pt, genMuons[0].pt)
-        arbitrary_lepton_eta = op.switch(op.rng_len(genElectrons)==1, genElectrons[0].eta, genMuons[0].eta)
-        SL_res_2b_x_e_only = SL_res_2b_x.refine('only electrons', cut=[op.rng_len(genElectrons)==1])
-        SL_res_2b_x_mu_only = SL_res_2b_x.refine('only muons', cut=[op.rng_len(genMuons)==1])
+        arbitrary_lepton_pt = op.switch(op.rng_len(objs['electrons'])==1, objs['electrons'][0].pt, objs['muon'][0].pt)
+        arbitrary_lepton_eta = op.switch(op.rng_len(objs['electrons'])==1, objs['electrons'][0].eta, objs['muon'][0].eta)
+        SL_res_2b_x_e_only = SL_res_2b_x.refine('only electrons', cut=[op.rng_len(objs['electrons'])==1])
+        SL_res_2b_x_mu_only = SL_res_2b_x.refine('only muons', cut=[op.rng_len(objs['muon'])==1])
         
         # mjj, gen level
-        jj_combos = op.combine((sorted_nonbJets), N=2)
+        jj_combos = op.combine((objs['sorted_nonbJets']), N=2)
         jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Pt())
         jj_mjj_mW = jj_combos[op.rng_max_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
         mjj = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
 
         # Add additional plots
-        hists_1D.extend([
+        plots.extend([
             Plot.make1D("SL_res_2b_x_lepton_pT", arbitrary_lepton_pt, SL_res_2b_x, EqBin(250, 0, 250), xTitle="SL_res_2b_x lepton pT (GeV)" ),
-            Plot.make1D("SL_res_2b_x_electron_pT", genElectrons[0].pt, SL_res_2b_x_e_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x electron pT (GeV)"),
-            Plot.make1D("SL_res_2b_x_muon_pT", genMuons[0].pt, SL_res_2b_x_mu_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x muon pT (GeV)" ),
+            Plot.make1D("SL_res_2b_x_electron_pT", objs['electrons'][0].pt, SL_res_2b_x_e_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x electron pT (GeV)"),
+            Plot.make1D("SL_res_2b_x_muon_pT", objs['muon'][0].pt, SL_res_2b_x_mu_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x muon pT (GeV)" ),
             Plot.make1D("SL_res_2b_x_mjj", mjj, SL_res_2b_x, EqBin(200, 0, 200), xTitle="SL_res_2b_x mjj (GeV)" ),
             
             Plot.make2D("SL_res_2b_x_lepton_pT_vs_eta", (arbitrary_lepton_eta, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x lepton #eta', yTitle='SL_res_2b_x lepton pT (GeV)'),
-            Plot.make2D("SL_res_2b_x_electron_pT_vs_eta", (genElectrons[0].eta, genElectrons[0].pt), SL_res_2b_x_e_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x electron #eta', yTitle='SL_res_2b_x electron pT (GeV)'),
-            Plot.make2D("SL_res_2b_x_muon_pT_vs_eta", (genMuons[0].eta, genMuons[0].pt), SL_res_2b_x_mu_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x muon #eta', yTitle='SL_res_2b_x muon pT (GeV)'),
+            Plot.make2D("SL_res_2b_x_electron_pT_vs_eta", (objs['electrons'][0].eta, objs['electrons'][0].pt), SL_res_2b_x_e_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x electron #eta', yTitle='SL_res_2b_x electron pT (GeV)'),
+            Plot.make2D("SL_res_2b_x_muon_pT_vs_eta", (objs['muon'][0].eta, objs['muon'][0].pt), SL_res_2b_x_mu_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x muon #eta', yTitle='SL_res_2b_x muon pT (GeV)'),
             Plot.make2D("SL_res_2b_x_lepton_pT_vs_mjj", (mjj, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(200, 0, 200), EqBin(250, 0, 250)), xTitle='SL_res_2b_x mjj (GeV)', yTitle='SL_res_2b_x lepton pT (GeV)'),
-
         ])
 
-        def get_selection_and_tags(sel_string):
-            if "SL" in sel_string:
-                if sel_string == "SL_res_1b":
-                    sel = SL_res_1b
-                elif sel_string == "SL_res_1b_x":
-                    sel = SL_res_1b_x
-                elif sel_string == "SL_res_2b":
-                    sel = SL_res_2b
-                elif sel_string == "SL_res_2b_x":
-                    sel = SL_res_2b_x
-                elif sel_string == "SL_boosted":
-                    sel = SL_boosted
-                    
-            elif "DL" in sel_string:
-                if sel_string == "DL_res_1b":
-                    sel = DL_res_1b
-                elif sel_string == "DL_res_2b":
-                    sel = DL_res_2b
-                elif sel_string == "DL_boosted":
-                    sel = DL_boosted
+        return plots
 
-            elif "noSel" in sel_string:
-                sel = noSel
+    def for_DNN_study(self, sel_name, plots):
 
-            return sel, sel_string+"_"
+        objs = self.gen_objects
+        sel, tag = self.get_selection_and_tags(sel_name)
 
-        def get_from_noSel(genParts, sorted_bjets, sel_string):
-            sel, tag = get_selection_and_tags(sel_string)
-
-            bParts = op.select(genParts, lambda part: op.OR(part.pdgId == 5, part.pdgId == -5))
-            bParts_from_H = op.select(bParts, lambda b: b.genPartMother.pdgId == 25)
-            bParts_from_T = op.select(bParts, lambda b: op.abs(b.genPartMother.pdgId) == 6)
-            n_b_from_H = op.rng_len(bParts_from_H)
-            n_b_from_T = op.rng_len(bParts_from_T)
-            n_H = op.rng_count(genParts, lambda part: part.pdgId == 25)
-            n_T = op.rng_count(genParts, lambda part: op.abs(part.pdgId) == 6)
-
-            hists_1D.extend([
-                Plot.make1D(tag+"n_b_from_H", n_b_from_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from H"),
-                Plot.make1D(tag+"n_b_from_T", n_b_from_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of b from T"),
-                Plot.make1D(tag+"n_H", n_H, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of H"),
-                Plot.make1D(tag+"n_T", n_T, sel, EqBin(10, 0, 10), title="", xTitle="Nbr. of T"),
-            ])
-
-            # #------------------ Get dR between b-particle and b-jet --------------------
-            jet_part_pairs = op.combine((sorted_bjets, bParts_from_H), N=2)
-            dR_of_pairs = op.map(jet_part_pairs, lambda pair: op.dR(pair[0].p4, pair[1].p4))
-
-            idx_of_min_pair = op.rng_min_element_index(dR_of_pairs, lambda dR: dR)
-            min_pair = jet_part_pairs[idx_of_min_pair]
-            jet_of_min_pair = min_pair[0]
-            part_of_min_pair = min_pair[1]
-
-            conj_pair = op.rng_find(jet_part_pairs, lambda pair: op.AND(pair[0].idx != jet_of_min_pair.idx, pair[1].idx != part_of_min_pair.idx))
-            jet_of_conj_pair = conj_pair[0]
-            part_of_conj_pair = conj_pair[1]        
-
-            two_dR = op.select(dR_of_pairs, lambda dR: op.OR(
-                op.dR(jet_of_min_pair.p4, part_of_min_pair.p4) == dR,
-                op.dR(jet_of_conj_pair.p4, part_of_conj_pair.p4) == dR))
-
-            # dR_0_plot = Plot.make1D(tag+"two_dR0", two_dR[0], BOTHs, EqBin(100, 0, 1), title="dR", xTitle="")
-            # dR_1_plot = Plot.make1D(tag+"two_dR1", two_dR[1], BOTHs, EqBin(100, 0, 1), title="dR", xTitle="")
-            # two_dR_plot = SummedPlot("two_dR", [dR_0_plot, dR_1_plot], xTitle="")
-            # plots.extend[(two_dR_plot)]
-
-            # #---------------------- Get 2D plots of bquarks from H ---------------------------
-            bParts_from_H_dEta = bParts_from_H[0].eta - bParts_from_H[1].eta
-            bParts_from_H_dPhi = op.dPhi(bParts_from_H[0].p4, bParts_from_H[1].p4)
-            bParts_from_H_dR = op.dR(bParts_from_H[0].p4, bParts_from_H[1].p4)
-            bjet0 = sorted_bjets[0]
-            bjet1 = sorted_bjets[1]
-            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
-            
-            hists_2D.extend([
-                Plot.make2D(tag+"bPartsH_dPhi_vs_dEta", [bParts_from_H_dEta, bParts_from_H_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="dEta", yTitle="dPhi"),
-                Plot.make2D(tag+"bPartsH_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dEta], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="dEta"),
-                Plot.make2D(tag+"bPartsH_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="dPhi"),
-                Plot.make2D(tag+"bPartsH_dR_vs_bjets_mbb", [bjets_mbb, bParts_from_H_dR], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="dR"),
-            ])
-
-            # #---------------------- Get 2D plots of bquarks from T ---------------------------
-            bParts_from_T_dEta = bParts_from_T[0].eta - bParts_from_T[1].eta
-            bParts_from_T_dPhi = op.dPhi(bParts_from_T[0].p4, bParts_from_T[1].p4)
-            bParts_from_T_dR = op.dR(bParts_from_T[0].p4, bParts_from_T[1].p4)
-            bjet0 = sorted_bjets[0]
-            bjet1 = sorted_bjets[1]
-            bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4) 
-            
-            hists_2D.extend([
-                Plot.make2D(tag+"bPartsT_dPhi_vs_dEta", [bParts_from_T_dEta, bParts_from_T_dPhi], sel, [EqBin(100,-7,7), EqBin(100,-4,4)] ,title="", xTitle="dEta", yTitle="dPhi"),
-                Plot.make2D(tag+"bPartsT_dEta_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dEta], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100,-7,7)] ,title="", xTitle="mbb", yTitle="dEta"),
-                Plot.make2D(tag+"bPartsT_dPhi_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(100,-4,4)] ,title="", xTitle="mbb", yTitle="dPhi"),
-                Plot.make2D(tag+"bPartsT_dR_vs_bjets_mbb", [bjets_mbb, bParts_from_T_dR], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)] ,title="", xTitle="mbb", yTitle="dR"),
-            ])
-
-        def get_bjets_vars(sorted_bjets, sel_string):
-
-            bjets_vars = {}
-            sel, tag = get_selection_and_tags(sel_string)
-            
-            if "res" in sel_string:
-                bjet0 = sorted_bjets[0]
-                bjet1 = sorted_bjets[1]
-            
-                bjets_mean_pT = (bjet0.pt + bjet1.pt)/2
-                bjets_pT_bb = (bjet0.p4 + bjet1.p4).Pt()
-                bjets_dPhi = op.deltaPhi(bjet0.p4, bjet1.p4)
-                bjets_dPhi_abs = op.abs(bjets_dPhi)
-                bjets_dEta = bjet0.eta - bjet1.eta
-                bjets_dEta_abs = op.abs(bjets_dEta)
-                bjets_dR = op.deltaR(bjet0.p4, bjet1.p4) 
-                bjets_mbb = op.invariant_mass(bjet0.p4, bjet1.p4)
-
-                hists_1D.extend([
-                    Plot.make1D(tag+"bjets0_pT" , bjet0.pt, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), xTitle="p_{T} for bJet_0 (GeV)" ),
-                    Plot.make1D(tag+"bjets1_pT" , bjet1.pt, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), xTitle="p_{T} for bJet_1 (GeV)" ),
-                    Plot.make1D(tag+"bjets_mean_pT" , bjets_mean_pT, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), xTitle="<p_{T}> for bjets (GeV)"),
-                    Plot.make1D(tag+"bjets_pT_bb", bjets_pT_bb, sel, EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), title="", xTitle="p_{T} of total p4 of bjets (GeV)"),
-                    Plot.make1D(tag+"bjets_dEta" , bjets_dEta, sel, EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), xTitle="dEta for bjets"),
-                    Plot.make1D(tag+"bjets_dEta_abs" , bjets_dEta_abs, sel, EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX), xTitle="abs(dEta) for bjets"),
-                    Plot.make1D(tag+"bjets_dPhi" , bjets_dPhi, sel, EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX), xTitle="dPhi for bjets"),
-                    Plot.make1D(tag+"bjets_dPhi_abs" , bjets_dPhi_abs, sel, EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX), xTitle="abs(dPhi) for bjets"),
-                    Plot.make1D(tag+"bjets_dR" , bjets_dR, sel, EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX), xTitle="deltaR for bjets"),
-                    Plot.make1D(tag+"bjets_mbb" , bjets_mbb, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), xTitle="m_{bb} (GeV)"),
-                ])
-
-                hists_2D.extend([
-                    Plot.make2D(tag+"bjets_dR_vs_pT_bb" , [bjets_pT_bb, bjets_dR], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)], xTitle="pT of bb", yTitle="dR"),
-                    Plot.make2D(tag+"bjets_dEta_vs_pT_bb" , [bjets_pT_bb, bjets_dEta], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)], xTitle="pT of bb", yTitle="dEta"),
-                    Plot.make2D(tag+"bjets_dPhi_vs_pT_bb", [bjets_pT_bb, bjets_dPhi], sel, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="pT of bb", yTitle="dPhi"),
-                    Plot.make2D(tag+"bjets_dR_vs_mbb" , [bjets_mbb, bjets_dR], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DR_BINS, BJETS_DR_MIN, BJETS_DR_MAX)], xTitle="mbb", yTitle="dR"),
-                    Plot.make2D(tag+"bjets_pT_bb_vs_mbb" , [bjets_mbb, bjets_pT_bb], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX)], xTitle="mbb", yTitle="pT of bb"),
-                    Plot.make2D(tag+"bjets_dEta_vs_mbb" , [bjets_mbb, bjets_dEta], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX)], xTitle="mbb", yTitle="dEta"),
-                    Plot.make2D(tag+"bjets_dPhi_vs_mbb", [bjets_mbb, bjets_dPhi], sel, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="mbb", yTitle="dPhi"),
-                    Plot.make2D(tag+"bjets_dPhi_vs_dEta" , [bjets_dEta, bjets_dPhi], sel, [EqBin(BJETS_DETA_BINS, BJETS_DETA_MIN, BJETS_DETA_MAX), EqBin(BJETS_DPHI_BINS, BJETS_DPHI_MIN, BJETS_DPHI_MAX)], xTitle="dEta", yTitle="dPhi"),
-                    Plot.make2D(tag+"bjets_dPhi_abs_vs_dEta_abs" , [bjets_dEta_abs, bjets_dPhi_abs], sel, [EqBin(BJETS_DETA_ABS_BINS, BJETS_DETA_ABS_MIN, BJETS_DETA_ABS_MAX), EqBin(BJETS_DPHI_ABS_BINS, BJETS_DPHI_ABS_MIN, BJETS_DPHI_ABS_MAX)], xTitle="abs(dEta)", yTitle="abs(dPhi)"),
-                ])
-
-                bjets_vars["bjets0_pT"] = bjet0.pt
-                bjets_vars["bjets1_pT"] = bjet1.pt
-                bjets_vars["bjets_mean_pT"] = bjets_mean_pT
-                bjets_vars["bjets_pT_bb"] = bjets_pT_bb
-                bjets_vars["bjets_dEta"] = bjets_dEta
-                bjets_vars["bjets_dEta_abs"] = bjets_dEta_abs
-                bjets_vars["bjets_dPhi"] = bjets_dPhi
-                bjets_vars["bjets_dPhi_abs"] = bjets_dPhi_abs
-                bjets_vars["bjets_dR"] = bjets_dR
-                bjets_vars["bjets_mbb"] = bjets_mbb
-
-            elif "boosted" in sel_string:
-                fatjet = sorted_bjets[0]
-                bjets_mbb = fatjet.mass
-
-                hists_1D.append(Plot.make1D(tag+"bfatjet_mass", fatjet.mass, sel, EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), title="", xTitle="bFatJet mass (GeV)"))
-
-                bjets_vars["bjets_mbb"] = bjets_mbb
-            
-            return bjets_vars
-
-        def get_top_vars(sorted_bjets, sorted_nonbjets, electrons, muons, MET, sel_string):
-
-            top_vars = {}
-            sel, tag = get_selection_and_tags(sel_string)
-            
-            m_W = 80.377 # GeV
-            
-            t1_mInv_leadb = op.invariant_mass(sorted_bjets[0].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
-            t1_mInv_subleadb = op.invariant_mass(sorted_bjets[1].p4, sorted_nonbjets[0].p4, sorted_nonbjets[1].p4)
-
-            # Using combinations
-            jj_combos = op.combine((sorted_nonbjets),N=2)
-            jj_combos_mjj = op.map(jj_combos, lambda combo: op.invariant_mass(combo[0].p4, combo[1].p4))
-            
-            # Mtop calculation from max pT of sum of 4-momentum of bjj for jj pair with mjj closest to m_W
-            jj_combo_mjj_mW_index = op.rng_min_element_index(jj_combos_mjj, lambda combo_mjj: op.abs(combo_mjj - m_W))
-            jj_mjj_mW = jj_combos[jj_combo_mjj_mW_index]
-        
-            b1_jj_combos_mjj_mW_pt = op.map(sorted_bjets, lambda b1: (b1.p4 + jj_mjj_mW[0].p4 + jj_mjj_mW[1].p4).Pt())
-            t1_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b1_jj_combos_mjj_mW_pt, lambda combo_pt: combo_pt)
-            b1_combo_max_pt_mjj_mW = sorted_bjets[t1_combo_max_pt_mjj_mW_index]
-            t1_mInv = op.invariant_mass(b1_combo_max_pt_mjj_mW.p4, jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
-            t1_pt = b1_jj_combos_mjj_mW_pt[t1_combo_max_pt_mjj_mW_index]
-            
-            rest_bjets_max_pt_mjj_mW = op.select(sorted_bjets, lambda b: op.NOT(b.idx == b1_combo_max_pt_mjj_mW.idx))
-            if op.rng_len(electrons)==1 and op.rng_len(muons)==0:
-                lep = electrons[0]
-            if op.rng_len(electrons)==0 and op.rng_len(muons)==1:
-                lep = muons[0]
-            b2_lnu_combos_pt_for_max_pt_mjj_mW = op.map(rest_bjets_max_pt_mjj_mW, lambda b2: (b2.p4 + lep.p4 + MET.p4).Pt())
-            t2_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b2_lnu_combos_pt_for_max_pt_mjj_mW, lambda blnu_pt: blnu_pt)
-            b2_combo_max_pt_mjj_mW = rest_bjets_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
-            t2_mT = (b2_combo_max_pt_mjj_mW.p4 + lep.p4 + MET.p4).Mt()
-            t2_pt = b2_lnu_combos_pt_for_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
-                        
-            hists_1D.extend([
-                Plot.make1D(tag+"t1_mInv_leadb" , t1_mInv_leadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (bjj for leading b) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_mInv_subleadb" , t1_mInv_subleadb, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{0} (bjj for subleading b) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_mInv" , t1_mInv, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{inv} (b1_jj) for top1 (GeV)"),
-                Plot.make1D(tag+"t1_pt" , t1_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top1 (GeV)"),
-                Plot.make1D(tag+"t2_mT" , t2_mT, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="m_{T} for top2 (GeV)"),
-                Plot.make1D(tag+"t2_pt" , t2_pt, sel, EqBin(T_BINS, T_MIN, T_MAX), xTitle="p_{T} for top2 (GeV)"),
-            ])
-
-            top_vars["t1_mInv_leadb"] = t1_mInv_leadb
-            top_vars["t1_mInv_subleadb"] = t1_mInv_subleadb
-            top_vars["t1_mInv"] = t1_mInv
-            top_vars["t1_pt"] = t1_pt
-            top_vars["t2_mT"] = t2_mT
-            top_vars["t2_pt"] = t2_pt
-
-            return top_vars
- 
-        def get_total_vars(electrons, muons, jets, MET, sel_string):
-
-            total_vars = {}
-            sel, tag = get_selection_and_tags(sel_string)
-
-            total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
-            total_mu_pt = op.rng_sum(muons, lambda mu: mu.pt)
-            total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
-            all_sT = op.sum(total_e_pt, total_mu_pt, total_jet_pt, MET.pt)
-
-            e_pt_50 = op.select(electrons, lambda el: el.pt>50)
-            mu_pt_50 = op.select(muons, lambda mu: mu.pt>50)
-            jet_pt_50 = op.select(jets, lambda jet: jet.pt>50)
-            total_e_pt_50 = op.switch(op.rng_count(e_pt_50)>0, op.rng_sum(e_pt_50, lambda el: el.pt, start=op.c_float(0.)), op.c_float(0.))
-            total_mu_pt_50 = op.switch(op.rng_count(mu_pt_50)>0, op.rng_sum(mu_pt_50, lambda mu: mu.pt, start=op.c_float(0.)), op.c_float(0.))
-            total_jet_pt_50 = op.switch(op.rng_count(jet_pt_50)>0, op.rng_sum(jet_pt_50, lambda jet: jet.pt, start=op.c_float(0.)), op.c_float(0.))
-            all_sT_50_no_met = op.sum(total_e_pt_50, total_mu_pt_50, total_jet_pt_50)
-            all_sT_50 = op.switch(MET.pt > 50, all_sT_50_no_met + MET.pt, all_sT_50_no_met)
-            all_sT_50_cut = op.switch(all_sT_50 == 0, -9999, all_sT_50)
-
-            zero_p4 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
-            total_el_p4 = op.rng_sum(electrons, lambda el: el.p4, start=zero_p4)
-            total_mu_p4 = op.rng_sum(muons, lambda mu:mu.p4, start=zero_p4)
-            total_jet_p4 = op.rng_sum(jets, lambda jet:jet.p4, start=zero_p4)
-            
-            all_mInv_noMET = (total_el_p4 + total_mu_p4 + total_jet_p4).M()
-            all_mT_noMET = (total_el_p4 + total_mu_p4 + total_jet_p4).Mt()
-            all_mInv = (total_el_p4 + total_mu_p4 + total_jet_p4 + MET.p4).M()
-            all_mT = (total_el_p4 + total_mu_p4 + total_jet_p4 + MET.p4).Mt()
-
-            hists_1D.extend([
-                Plot.make1D(tag+"all_sT" , all_sT, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT", xTitle="s_{T} (GeV)"),
-                Plot.make1D(tag+"all_sT_50" , all_sT_50, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50", xTitle="s_{T} (GeV)"),
-                Plot.make1D(tag+"all_sT_50_cut" , all_sT_50_cut, sel, EqBin(ALL_ST_BINS, ALL_ST_MIN, ALL_ST_MAX), title="all_sT_50_cut", xTitle="s_{T} (GeV)"),
-                Plot.make1D(tag+"all_mInv" , all_mInv, sel, EqBin(ALL_MINV_BINS, ALL_MINV_MIN, ALL_MINV_MAX), title="all_mInv", xTitle="m_{inv} (GeV)"),
-                Plot.make1D(tag+"all_mT" , all_mT, sel, EqBin(ALL_MT_BINS, ALL_MT_MIN, ALL_MT_MAX), title="all_mT", xTitle="m_{T} (GeV)"),
-            ])
-
-            total_vars["all_sT"] = all_sT
-            total_vars["all_sT_50"] = all_sT_50
-            total_vars["all_sT_50_cut"] = all_sT_50_cut
-            total_vars["all_mInv"] = all_mInv
-            total_vars["all_mT"] = all_mT
-
-            return total_vars
-
-        SL_res_2b_x_bjets = get_bjets_vars(sorted_bJets, "SL_res_2b_x")
-        get_bjets_vars(sorted_bJetAK8s, "SL_boosted")
-        get_bjets_vars(sorted_bJets, "DL_res_2b")
-        get_bjets_vars(sorted_bJetAK8s, "DL_boosted")
-
-        SL_res_2b_x_top_vars = get_top_vars(bJets, sorted_nonbJets, genElectrons, genMuons, MET, 'SL_res_2b_x')
-
-        SL_res_2b_x_bjets_mbb = SL_res_2b_x_bjets["bjets_mbb"]
-        SL_res_2b_x_bjets_pT_bb = SL_res_2b_x_bjets["bjets_pT_bb"]
-        SL_res_2b_x_t1_mInv = SL_res_2b_x_top_vars["t1_mInv"]
-        hists_2D.extend([
-            Plot.make2D("SL_res_2b_x"+"_"+"t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], SL_res_2b_x, [EqBin(BJETS_MBB_BINS, BJETS_MBB_MIN, BJETS_MBB_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
-            Plot.make2D("SL_res_2b_x"+"_"+"t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], SL_res_2b_x, [EqBin(BJET_PT_BINS, BJET_PT_MIN, BJET_PT_MAX), EqBin(T_BINS, T_MIN, T_MAX)], xTitle="pT of bb", yTitle="m_{inv} for t_{1}"),
+        top_quarks = op.select(objs['genParts'], lambda p: op.abs(p.pdgId) == 6)
+        top_quarks_n = op.rng_len(top_quarks)
+        top_quarks = op.sort(top_quarks, lambda t: -t.pt)
+        top_quark0 = top_quarks[0]
+        top_quark1 = top_quarks[1]
+        top_quarks_pt = (top_quark0.p4 + top_quark1.p4).Pt()
+        plots.extend([
+            Plot.make1D(tag+'top_quarks_n', top_quarks_n, sel, EqBin(10,0,10)),
+            Plot.make1D(tag+'top_quark0_pt', top_quark0.pt, sel, EqBin(125,0,500)),
+            Plot.make1D(tag+'top_quark1_pt', top_quark1.pt, sel, EqBin(125,0,500)),
+            Plot.make2D(tag+'top_quark1_pt_vs_top_quark0_pt', [top_quark0.pt, top_quark1.pt], sel, [EqBin(125,0,500), EqBin(125,0,500)]),
+            Plot.make1D(tag+'top_quarks_pt', top_quarks_pt, sel, EqBin(125,0,500)),
+            Plot.make1D(tag+'top_quarks_1p05pt', top_quarks_pt*1.05, sel, EqBin(125,0,500)),
+            Plot.make1D(tag+'top_quarks_1p10pt', top_quarks_pt*1.10, sel, EqBin(125,0,500)),
+            Plot.make1D(tag+'top_quarks_1p15pt', top_quarks_pt*1.15, sel, EqBin(125,0,500)),
+            Plot.make1D(tag+'top_quarks_1p20pt', top_quarks_pt*1.20, sel, EqBin(125,0,500)),
         ])
 
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_res_1b')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_res_1b_x')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_res_2b')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_res_2b_x')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'SL_boosted')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'DL_res_1b')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'DL_res_2b')
-        get_total_vars(genElectrons, genMuons, selected_genJets, MET, 'DL_boosted')
+        return plots
 
-        # ================================================================
-        # ================================================================
-        # ================================================================
+    def get_skims(self, sel_name, plots):
+        objs = self.gen_objects
+        sel = self.selections[sel_name]
+        branches = {
+            "event":None, 
+            "GenPart_pdgId":None,
+            "GenPart_genPartIdxMother": None}
+            # "genPart_pdgId": objs['genParts'].pdgId,
+            # "genPart_Mother_pdgId": objs['genParts'].genPartMother.pdgId}
 
-        selections = {}
-        selections["SL"] = {} 
-        selections["DL"] = {}
-        selections["SL"]["SL_res_1b"] = SL_res_1b
-        selections["SL"]["SL_res_2b"] = SL_res_2b
-        selections["SL"]["SL_boosted"] = SL_boosted
-        selections["SL"]["SL_res_1b_x"] = SL_res_1b_x
-        selections["SL"]["SL_res_2b_x"] = SL_res_2b_x
-        selections["DL"]["DL_res_1b"] = DL_res_1b
-        selections["DL"]["DL_res_2b"] = DL_res_2b
-        selections["DL"]["DL_boosted"] = DL_boosted
+        plots.append(Skim(sel_name, branches, sel))
 
-        return hists_1D, hists_2D, selections
+        return plots
 
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
 
@@ -412,52 +449,115 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         plots.append(yields)
 
-        hists_1D, hists_2D, selections = self.get_SL_DL_vars_reco(tree, noSel)
-        
-        SL_res_1b = selections["SL"]["SL_res_1b"]
-        SL_res_2b = selections["SL"]["SL_res_2b"]
-        SL_boosted = selections["SL"]["SL_boosted"]
-        SL_res_1b_x = selections["SL"]["SL_res_1b_x"]
-        SL_res_2b_x = selections["SL"]["SL_res_2b_x"]
-        DL_res_1b = selections["DL"]["DL_res_1b"] 
-        DL_res_2b = selections["DL"]["DL_res_2b"]
-        DL_boosted = selections["DL"]["DL_boosted"]
+        self.set_gen_objects(tree)
+        self.set_selections(noSel)
 
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
 
-        for hist in hists_1D:
-            plots.append(hist)
-        for hist in hists_2D:
-            plots.append(hist)
+        # plots = self.get_bquarks('SL_res_2b_x', plots)
+        # plots, SL_res_2b_x_bjets_vars = self.get_bjets_vars('SL_res_2b_x', plots)
+        # plots, SL_res_2b_x_top_vars = self.get_top_vars('SL_res_2b_x', plots)
+        # plots, SL_res_2b_x_total_vars = self.get_total_vars('SL_res_2b_x', plots)
+
+        # SL_res_2b_x_bjets_mbb = SL_res_2b_x_bjets_vars["bjets_mbb"]
+        # SL_res_2b_x_bjets_pT_bb = SL_res_2b_x_bjets_vars["bjets_pT_bb"]
+        # SL_res_2b_x_t1_mInv = SL_res_2b_x_top_vars["t1_mInv"]
+        # plots.extend([
+        #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_MBB, EQBIN_TT_PT], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
+        #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_PT, EQBIN_TT_PT], xTitle="pT of bb", yTitle="m_{inv} for t_{1}")])
+
+        plots = self.for_DNN_study('SL_res_2b_x', plots)
+
+        plots = self.get_skims('noSel', plots)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
-        
-        yields.add(SL_res_1b, 'SL_res_1b')
-        yields.add(SL_res_1b_x, 'SL_res_1b_x')
-        yields.add(SL_res_2b, 'SL_res_2b')
-        yields.add(SL_res_2b_x, 'SL_res_2b_x')
-        yields.add(SL_boosted, 'SL_boosted')
-        yields.add(DL_res_1b, 'DL_res_1b')
-        yields.add(DL_res_2b, 'DL_res_2b')
-        yields.add(DL_boosted, 'DL_boosted')
+
+        yields.add(self.selections['SL_res_1b'], 'SL_res_1b')
+        yields.add(self.selections['SL_res_1b_x'], 'SL_res_1b_x')
+        yields.add(self.selections['SL_res_2b'], 'SL_res_2b')
+        yields.add(self.selections['SL_res_2b_x'], 'SL_res_2b_x')
+        yields.add(self.selections['SL_boosted'], 'SL_boosted')
+        yields.add(self.selections['DL_res_1b'], 'DL_res_1b')
+        yields.add(self.selections['DL_res_2b'], 'DL_res_2b')
+        yields.add(self.selections['DL_boosted'], 'DL_boosted')
 
         return plots
 
 
+    def _get_interpolated_axis_data(self, root_axis, scale_factor):
+            bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
+            hbw = (bin_centers[1] - bin_centers[0]) / 2
+            bin_edges = np.append(bin_centers - hbw, bin_centers[-1] + hbw)
+            interp_bin_edges = np.linspace(bin_edges[0], bin_edges[-1], num=len(bin_centers) * scale_factor + 1)
+            interp_bin_centers = (interp_bin_edges[:-1] + interp_bin_edges[1:]) / 2
+            interp_seed_data = np.pad(bin_centers, 1, constant_values=(bin_edges[0], bin_edges[-1]))
+            return interp_seed_data, interp_bin_centers, interp_bin_edges
+    
+    def interpolate_1d_root_histogram(self, root_hist, scale_factor):
+            bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
+            x_seed_data, interp_bin_centers, interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+            y_seed_data = np.pad(bin_contents, 1, 'edge')
+    
+            interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
+
+            return interp_bin_edges, interp_bin_contents
+
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_gen, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        plotList_2D = [ ap for ap in self.plotList if ( isinstance(ap, Plot) or isinstance(ap, DerivedPlot) ) and len(ap.binnings) == 2 ]
-        p_config, samples, plots_2D, systematics, legend = loadPlotIt(config, plotList_2D, eras=self.args.eras[1], workdir=workdir, resultsdir=resultsdir, readCounters=self.readCounters, vetoFileAttributes=self.__class__.CustomSampleAttributes, plotDefaults=self.plotDefaults)
-        
-        for plot in plots_2D:
-            expStack = Stack(smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
-            cv = gbl.TCanvas(f"c{plot.name}")
-            expStack.obj.Draw("COLZ")
-            cv.Update()
-            cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
 
-    
+        # file = os.path.join(self.args.output, 'results/TTbar_sl.root')
+        # df = ROOT.RDataFrame("noSel", file)
+        # df.Display({"event", "GenPart_pdgId", "GenPart_genPartIdxMother"}, 5, 20).Print()
+
+
+        # print("------------------ Calculating Likelihood Ratios --------------------")
+        # from utils import variables
+        # from post_processing.sig_bkg_shape_comp.compare_subcategories import get_total_hist
+
+        # files_in_resultsdir = os.listdir(resultsdir)
+        # PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
+        # PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
+        # SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
+        # BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
+        # INTERPOLATION_SCALE_FACTOR_1D = 9
+        # DECIMAL_PLACES = 3
+
+        # file = SIGNAL_SAMPLES[0]
+        # refs = []
+        # for key in file.GetListOfKeys():
+        #     obj = key.ReadObj()
+        #     if isinstance(obj, ROOT.TH1) or isinstance(obj, ROOT.TH2):
+        #         if 'yields' not in obj.GetName():
+        #             refs.append(obj.GetName())
+
+        # # Only relevant for background samples
+        # all_corrections = []
+        # quarks_pt = refs['SL_res_2b_x_top_quarks_pt']
+        # quarks_1p10pt = refs['SL_res_2b_x_top_quarks_1p10pt']
+        # hist_pt = get_total_hist(quarks_pt, BACKG_SAMPLES, normalized=False)
+        # hist_1p10pt = get_total_hist(quarks_1p10pt, BACKG_SAMPLES, normalized=False)
+
+        # ratio_hist = hist_pt.Clone()
+        # ratio_hist.Divide(hist_1p10pt)
+        # bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+        # corr = cs.Correction(
+        #     name='top_quarks_pt_ratio',
+        #     version=0,
+        #     inputs=["xaxis"],
+        #     output=cs.Variable(name="", type="real", description=""),
+        #     data=cs.Binning(
+        #         nodetype="binning",
+        #         input="xaxis",
+        #         edges=list(np.round(bin_edges, DECIMAL_PLACES)),
+        #         content=list(np.round(bin_contents, DECIMAL_PLACES)),
+        #         flow="clamp"
+        #     )
+        # )
+        # cset = cs.CorrectionSet(schema_version=2, description=f"TTbar pt scaling", corrections=all_corrections) 
+        # output_llr_file = os.path.join(resultsdir, "ttbar_pt_scaling.json")
+        # with open(output_llr_file, "w") as outfile:
+        #     outfile.write(cset.json(exclude_unset=False))
