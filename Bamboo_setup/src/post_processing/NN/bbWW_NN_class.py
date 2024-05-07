@@ -39,7 +39,7 @@ def load_data(workdir: Path, verbose=False) -> pd.DataFrame:
     backg_df["isSignal"] = np.zeros(len(backg_df))
 
     # Cutting away most backgruond events
-    backg_df = backg_df.iloc[:len(signal_df)]
+    #backg_df = backg_df.iloc[:len(signal_df)]
 
     print (f"Total Signal Events: {len(signal_df)}")
     print (f"Total Background Events used: {len(backg_df)}")
