@@ -304,7 +304,6 @@ class Run3Model():
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
-    @staticmethod
     def draw_score_dist(self, output_df, modeldir):
         color_map = {
             1: 'blue',
