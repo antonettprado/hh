@@ -298,6 +298,9 @@ class Run3Model():
             score = Y_pred_score[:,i]
             score = pd.Series(score.flatten(), name='%s Prediction Score'%process).reset_index(drop=True)
             output_df = pd.concat([output_df, score], axis=1)        
+        
+        
+        
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
@@ -385,7 +388,7 @@ def main(workdir_path: str, n_bkg: int):
         myModel.model.summary()
         myModel.train_model(model_params, training_weights)
         output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
-        '''
+        
         myModel.draw_score_dist(output_df, myModel.modeldir)
         if n_output_nodes == 1:
             fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
@@ -414,7 +417,6 @@ def main(workdir_path: str, n_bkg: int):
             yaml.dump(model_params, file, sort_keys=False)
 
         update_model_metrics_csv(model_params['name'], model_params['Training Events'], model_params['Output Metrics'], csv_path)
-        '''
 
         print(f"The DNN models tested were saved to {WORKDIR} \n\n")
 
