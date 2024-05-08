@@ -79,7 +79,7 @@ def preprocess_data(total_df) -> pd.DataFrame:
 
 def split_data(total_df, processes) -> dict[str: Union[pd.DataFrame, pd.Series]]:
     ## Dividing the data into testing and training datasets
-    drop_before_split =  processes + ["gen_Weight"]
+    drop_before_split =  ["isSignal", "HH", "ttbar", "gen_Weight"]
     X_df = total_df.drop(columns=drop_before_split)
     Y_df = total_df[processes]
 
