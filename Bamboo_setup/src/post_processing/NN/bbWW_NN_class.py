@@ -93,7 +93,7 @@ def split_data(total_df, processes) -> dict[str: Union[pd.DataFrame, pd.Series]]
     X_test = X_test.drop(columns=["event", "training_weight"])
 
     print ()
-    print(f"The testing size is: %d"%test_size)
+    print(f"The testing size is: %%.2f"%test_size)
     print(f"Number of training events: %d"%len(X_train))
     for process in processes:
         print(f"  Number of %s training events: %d"%(process, Y_train[process].value_counts()[1.0]))
@@ -293,14 +293,11 @@ class Run3Model():
         events_test = events_test.reset_index(drop=True)
         Y_test = Y_test.reset_index(drop=True)
         Y_pred_score = self.model.predict(X_test)
-        print (Y_pred_score)
-
-        #for (i, process) in enumerate(self.processes):
-        #    score = Y_pred_score[i]
-
-
-        Y_pred_score = pd.Series(Y_pred_score.flatten(), name='Prediction Score').reset_index(drop=True)
-        output_df = pd.concat([events_test, Y_test, Y_pred_score], axis=1)
+        output_df = pd.concat([events_test, Y_test], axis=1)
+        for (i, process) in enumerate(self.processes):
+            score = Y_pred_score[:,i]
+            score = pd.Series(score.flatten(), name='%s Prediction Score'%process).reset_index(drop=True)
+            output_df = pd.concat([output_df, score], axis=1)        
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
@@ -309,6 +306,9 @@ class Run3Model():
         # DNN Score Distribution on test set
         fig, ax = plt.subplots()
         ax.set_xlim(0, 1)
+        
+
+
         ax.hist(output_df.loc[output_df['isSignal'] == 1.0, 'Prediction Score'], bins=50, color='blue', label='Signal', histtype='step', density=True)
         ax.hist(output_df.loc[output_df['isSignal'] == 0.0, 'Prediction Score'], bins=50, color='red', label='Background', histtype='step', density=True)
         ax.legend()
@@ -407,7 +407,7 @@ def main(workdir_path: str, n_bkg: int):
         update_model_metrics_csv(model_params['name'], model_params['Training Events'], model_params['Output Metrics'], csv_path)
         '''
 
-        print(f"The DNN models tested were saved to {WORKDIR} ")
+        print(f"The DNN models tested were saved to {WORKDIR} \n\n")
 
 if __name__ == '__main__':
 
