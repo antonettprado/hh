@@ -329,7 +329,7 @@ class Run3Model():
             ax.legend()
             ax.set_xlabel('DNN score')
             ax.set_ylabel('Normalized number of events')
-            filename = "%s_dnn_score_test_distribution.pdf"%process
+            filename = "%s_dnn_score_test_distribution.pdf"%label
             fig.savefig(modeldir / filename)
 
         if len(processes) > 1:
