@@ -423,6 +423,7 @@ def main(workdir_path: str, n_bkg: int):
         model_params['Total Training Events'] = len(X_train_mod)
         model_params['Total Test Events'] = len(X_test_mod)
         model_params['Training Events'] = {}
+        model_params['Test Events'] = {}
         for process in processes:
             model_params['Training Events'][process] = Y_train_mod[process].value_counts()[1.0]
             model_params['Test Events'][process] = Y_test_mod[process].value_counts()[1.0]
