@@ -400,7 +400,7 @@ def main(workdir_path: str, n_bkg: int):
         n_output_nodes = model_params['n_output_nodes']
         processes = model_params['processes']
         print ("Output nodes (%d): "%n_output_nodes, processes)
-        total_df_mod = total_df
+        total_df_mod = total_df.copy(deep=True)
 
         training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df_mod, processes)
         print ()
