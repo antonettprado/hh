@@ -387,7 +387,6 @@ def main(workdir_path: str, n_bkg: int):
         myModel.model.summary()
         myModel.train_model(model_params, training_weights)
         output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
-        
         myModel.draw_score_dist(output_df, myModel.modeldir)
         if n_output_nodes == 1:
             fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
