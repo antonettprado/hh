@@ -7,6 +7,7 @@ import os, sys
 from argparse import ArgumentParser
 import uproot
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_curve, accuracy_score, auc
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras import Model, regularizers
 from tensorflow.keras.metrics import BinaryAccuracy, AUC, Precision, Recall
@@ -49,8 +50,10 @@ def load_data(workdir: Path, n_bkg: int, verbose=False) -> pd.DataFrame:
     if n_bkg <= len(backg_ttbar_df):
         backg_ttbar_df = backg_ttbar_df.iloc[:n_bkg]
 
+    print ()
     print (f"Total HH Signal Events: {len(signal_hh_df)}")
     print (f"Total ttbar Background Events used: {len(backg_ttbar_df)}")
+    print ()
 
     total_df = pd.concat([signal_hh_df, backg_ttbar_df], ignore_index=True)
 
@@ -173,10 +176,11 @@ def update_model_metrics_csv(model_name: str, training_events: dict, output_metr
 
 class Run3Model():
 
-    def __init__(self, name: str, X_train: pd.DataFrame, Y_train: pd.Series):
+    def __init__(self, name: str, X_train: pd.DataFrame, Y_train: pd.DataFrame, processes: list):
         self.name = name
         self.X_train = X_train
         self.Y_train = Y_train
+        self.processes = processes
         self.ndim = len(X_train.columns)
 
         self.modeldir = NNOUTDIR / name
@@ -289,22 +293,17 @@ class Run3Model():
         events_test = events_test.reset_index(drop=True)
         Y_test = Y_test.reset_index(drop=True)
         Y_pred_score = self.model.predict(X_test)
+        print (Y_pred_score)
+
+        #for (i, process) in enumerate(self.processes):
+        #    score = Y_pred_score[i]
+
+
         Y_pred_score = pd.Series(Y_pred_score.flatten(), name='Prediction Score').reset_index(drop=True)
         output_df = pd.concat([events_test, Y_test, Y_pred_score], axis=1)
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
-
-    def output_metrics(self, output_df):
-        from sklearn.metrics import roc_curve, accuracy_score
-        fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
-        optimal_idx = np.argmax(tpr - fpr)
-        optimal_threshold = thresholds[optimal_idx]
-        cut_output = output_df.loc[output_df['Prediction Score'] > optimal_threshold]
-        signal = cut_output.loc[output_df['isSignal']==1] 
-        backg = cut_output.loc[output_df['isSignal']==0]
-        sensitivity = len(signal)/len(backg)
-        return fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity
-
+    
     @staticmethod
     def draw_score_dist(output_df, modeldir):
         # DNN Score Distribution on test set
@@ -317,9 +316,18 @@ class Run3Model():
         ax.set_ylabel('Normalized number of events')
         fig.savefig(modeldir / "dnn_score_test_distribution.pdf")
 
+    def output_metrics(self, output_df):
+        fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
+        optimal_idx = np.argmax(tpr - fpr)
+        optimal_threshold = thresholds[optimal_idx]
+        cut_output = output_df.loc[output_df['Prediction Score'] > optimal_threshold]
+        signal = cut_output.loc[output_df['isSignal']==1] 
+        backg = cut_output.loc[output_df['isSignal']==0]
+        sensitivity = len(signal)/len(backg)
+        return fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity
+
     @staticmethod
     def draw_roc(fpr, tpr, modeldir, optimal_idx=None):
-        from sklearn.metrics import auc
         # Plot ROC
         roc_auc = auc(fpr, tpr)
         fig, ax = plt.subplots()
@@ -357,36 +365,39 @@ def main(workdir_path: str, n_bkg: int):
         print ("Output nodes (%d): "%n_output_nodes, processes)
 
         training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df, processes)
+        print ()
 
         if model_params['input_vars'] != 'All':
             X_train_mod, X_test_mod = pick_features(X_train_mod, X_test_mod, model_params['input_vars'])
 
-        myModel = Run3Model(model_params['name'], X_train_mod, Y_train_mod)
+        myModel = Run3Model(model_params['name'], X_train_mod, Y_train_mod, processes)
 
         myModel.setup_model(model_params)
         myModel.model.summary()
         myModel.train_model(model_params, training_weights)
         output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
-        fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
+        '''
         myModel.draw_score_dist(output_df, myModel.modeldir)
-        myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
+        if n_output_nodes == 1:
+            fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
+            myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
         myModel.save_model()
 
         # ----------- Logging model info -------------------
-        model_params['Training Events'] = {
-            'signal': int(Y_train_mod[Y_train_mod == 1].count()),
-            'background': int(Y_train_mod[Y_train_mod == 0].count())
-        }
-        model_params['Test Events'] = {
-            'signal': int(Y_test_mod[Y_test_mod == 1].count()),
-            'background': int(Y_test_mod[Y_test_mod == 0].count())
-        }
-        model_params['Output Metrics'] = {
-            'Optimal threshold': round(float(optimal_threshold), 3),
-            'Signal Efficiency': round(float(tpr[optimal_idx]), 3),
-            'Background Rejection': round(float(1 - fpr[optimal_idx]), 3),
-            'Sensitivity (S/B)': round(sensitivity, 3)
-        }
+        model_params['Total Training Events'] = len(X_train_mod)
+        model_params['Total Test Events'] = len(X_test_mod)
+        model_params['Training Events'] = {}
+        for process in processes:
+            model_params['Training Events'][process] = Y_train_mod[process].value_counts()[1.0]
+            model_params['Test Events'][process] = Y_test_mod[process].value_counts()[1.0]
+        model_params['Output Metrics'] = {}
+        if n_output_nodes == 1:
+            model_params['Output Metrics'] = {
+                'Optimal threshold': round(float(optimal_threshold), 3),
+                'Signal Efficiency': round(float(tpr[optimal_idx]), 3),
+                'Background Rejection': round(float(1 - fpr[optimal_idx]), 3),
+                'Sensitivity (S/B)': round(sensitivity, 3)
+            }
         model_params['Trained on'] = WORKDIR.name
 
         out_yml = myModel.modeldir / 'model_info.yml'
@@ -394,6 +405,7 @@ def main(workdir_path: str, n_bkg: int):
             yaml.dump(model_params, file, sort_keys=False)
 
         update_model_metrics_csv(model_params['name'], model_params['Training Events'], model_params['Output Metrics'], csv_path)
+        '''
 
         print(f"The DNN models tested were saved to {WORKDIR} ")
 
