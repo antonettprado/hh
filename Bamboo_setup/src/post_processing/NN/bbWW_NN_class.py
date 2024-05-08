@@ -93,7 +93,7 @@ def split_data(total_df, processes) -> dict[str: Union[pd.DataFrame, pd.Series]]
     X_test = X_test.drop(columns=["event", "training_weight"])
 
     print ()
-    print(f"The testing size is: %%.2f"%test_size)
+    print(f"The testing size is: %.2f"%test_size)
     print(f"Number of training events: %d"%len(X_train))
     for process in processes:
         print(f"  Number of %s training events: %d"%(process, Y_train[process].value_counts()[1.0]))
