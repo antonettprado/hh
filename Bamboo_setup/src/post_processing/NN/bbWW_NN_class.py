@@ -307,7 +307,8 @@ class Run3Model():
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
-    def draw_score_dist(self, output_df, modeldir):
+    @staticmethod
+    def draw_score_dist(output_df, modeldir, processes):
         color_map = {
             0: 'blue',
             1: 'red',
@@ -315,10 +316,10 @@ class Run3Model():
             3: 'green'
         }
         # DNN Score Distribution on test set
-        for (i, process) in enumerate(self.processes): 
+        for (i, process) in enumerate(processes): 
             fig, ax = plt.subplots()
             ax.set_xlim(0, 1)
-            for (i, process) in enumerate(self.processes):
+            for (i, process) in enumerate(processes):
                 label = process
                 if process == "isSignal":
                     label = "Signal"
@@ -328,18 +329,19 @@ class Run3Model():
             ax.legend()
             ax.set_xlabel('DNN score')
             ax.set_ylabel('Normalized number of events')
-            fig.savefig(modeldir / "%s_dnn_score_test_distribution.pdf"%process)
+            filename = "%s_dnn_score_test_distribution.pdf"%process
+            fig.savefig(modeldir / filename)
 
-        if len(self.processes) > 1:
+        if len(processes) > 1:
             fig, ax = plt.subplots()
             ax.set_xlim(0, 1)
-            for (i, process) in enumerate(self.processes):
+            for (i, process) in enumerate(processes):
                 label = process
                 ax.hist(output_df.loc[output_df[process] == 1.0, 'S/(S+B)'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
             ax.legend()
             ax.set_xlabel('S/(S+B)')
             ax.set_ylabel('Normalized number of events')
-            fig.savefig(modeldir / "S/(S+B)_test_distribution.pdf"%process)
+            fig.savefig(modeldir / "S/(S+B)_test_distribution.pdf")
 
     def output_metrics(self, output_df):
         fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
@@ -401,7 +403,7 @@ def main(workdir_path: str, n_bkg: int):
         myModel.model.summary()
         myModel.train_model(model_params, training_weights)
         output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
-        myModel.draw_score_dist(output_df, myModel.modeldir)
+        myModel.draw_score_dist(output_df, myModel.modeldir, myModel.processes)
         if n_output_nodes == 1:
             fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
             myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
