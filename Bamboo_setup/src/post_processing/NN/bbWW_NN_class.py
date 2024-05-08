@@ -302,19 +302,28 @@ class Run3Model():
         return output_df
     
     @staticmethod
-    def draw_score_dist(output_df, modeldir):
+    def draw_score_dist(self, output_df, modeldir):
+        color_map = {
+            1: 'blue',
+            2: 'red',
+            3: 'black',
+            4: 'green'
+        }
         # DNN Score Distribution on test set
-        fig, ax = plt.subplots()
-        ax.set_xlim(0, 1)
-        
-
-
-        ax.hist(output_df.loc[output_df['isSignal'] == 1.0, 'Prediction Score'], bins=50, color='blue', label='Signal', histtype='step', density=True)
-        ax.hist(output_df.loc[output_df['isSignal'] == 0.0, 'Prediction Score'], bins=50, color='red', label='Background', histtype='step', density=True)
-        ax.legend()
-        ax.set_xlabel('DNN score')
-        ax.set_ylabel('Normalized number of events')
-        fig.savefig(modeldir / "dnn_score_test_distribution.pdf")
+        for (i, process) in enumerate(self.processes): 
+            fig, ax = plt.subplots()
+            ax.set_xlim(0, 1)
+            for (i, process) in enumerate(self.processes):
+                label = process
+                if process == "isSignal":
+                    label = "Signal"
+                ax.hist(output_df.loc[output_df[process] == 1.0, '%s Prediction Score'%process], bins=50, color=color_map[i], label=label, histtype='step', density=True)
+                if process == "isSignal":
+                    ax.hist(output_df.loc[output_df[process] == 0.0, '%s Prediction Score'%process], bins=50, color=color_map[2], label="Background", histtype='step', density=True)
+            ax.legend()
+            ax.set_xlabel('DNN score')
+            ax.set_ylabel('Normalized number of events')
+            fig.savefig(modeldir / "%s_dnn_score_test_distribution.pdf"%process)
 
     def output_metrics(self, output_df):
         fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
