@@ -298,18 +298,21 @@ class Run3Model():
             score = Y_pred_score[:,i]
             score = pd.Series(score.flatten(), name='%s Prediction Score'%process).reset_index(drop=True)
             output_df = pd.concat([output_df, score], axis=1)        
-        
-        
-        
+        if len(self.processes) > 1:
+            output_df["S"] = output_df["HH"]
+            output_df["S+B"] = np.zeros(len(output_df))
+            for (i, process) in enumerate(self.processes):
+                output_df["S+B"] += output_df[process]
+            output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
     def draw_score_dist(self, output_df, modeldir):
         color_map = {
-            1: 'blue',
-            2: 'red',
-            3: 'black',
-            4: 'green'
+            0: 'blue',
+            1: 'red',
+            2: 'black',
+            3: 'green'
         }
         # DNN Score Distribution on test set
         for (i, process) in enumerate(self.processes): 
@@ -326,6 +329,17 @@ class Run3Model():
             ax.set_xlabel('DNN score')
             ax.set_ylabel('Normalized number of events')
             fig.savefig(modeldir / "%s_dnn_score_test_distribution.pdf"%process)
+
+        if len(self.processes) > 1:
+            fig, ax = plt.subplots()
+            ax.set_xlim(0, 1)
+            for (i, process) in enumerate(self.processes):
+                label = process
+                ax.hist(output_df.loc[output_df[process] == 1.0, 'S/(S+B)'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
+            ax.legend()
+            ax.set_xlabel('S/(S+B)')
+            ax.set_ylabel('Normalized number of events')
+            fig.savefig(modeldir / "S/(S+B)_test_distribution.pdf"%process)
 
     def output_metrics(self, output_df):
         fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
