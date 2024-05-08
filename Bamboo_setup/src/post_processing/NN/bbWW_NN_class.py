@@ -303,10 +303,10 @@ class Run3Model():
             score = pd.Series(score.flatten(), name=name).reset_index(drop=True)
             output_df = pd.concat([output_df, score], axis=1)        
         if len(self.processes) > 1:
-            output_df["S"] = output_df["HH"]
+            output_df["S"] = output_df["HH Prediction Score"]
             output_df["S+B"] = np.zeros(len(output_df))
             for (i, process) in enumerate(self.processes):
-                output_df["S+B"] += output_df[process]
+                output_df["S+B"] += output_df["%s Prediction Score"%process]
             output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
@@ -332,7 +332,7 @@ class Run3Model():
                     name = "%s Prediction Score"%process
                 ax.hist(output_df.loc[output_df[process] == 1.0, name], bins=50, color=color_map[i], label=label, histtype='step', density=True)
                 if process == "isSignal":
-                    ax.hist(output_df.loc[output_df[process] == 0.0, name], bins=50, color=color_map[2], label="Background", histtype='step', density=True)
+                    ax.hist(output_df.loc[output_df[process] == 0.0, name], bins=50, color=color_map[1], label="Background", histtype='step', density=True)
             ax.legend()
             ax.set_xlabel('DNN score')
             ax.set_ylabel('Normalized number of events')
@@ -351,15 +351,15 @@ class Run3Model():
             ax.legend()
             ax.set_xlabel('S/(S+B)')
             ax.set_ylabel('Normalized number of events')
-            fig.savefig(modeldir / "S/(S+B)_test_distribution.pdf")
+            fig.savefig(modeldir / "dnn_score_ratio_test_distribution.pdf")
 
     def output_metrics(self, output_df):
         fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
         optimal_idx = np.argmax(tpr - fpr)
         optimal_threshold = thresholds[optimal_idx]
         cut_output = output_df.loc[output_df['Prediction Score'] > optimal_threshold]
-        signal = cut_output.loc[output_df['isSignal']==1] 
-        backg = cut_output.loc[output_df['isSignal']==0]
+        signal = cut_output.loc[output_df['isSignal']==1.0] 
+        backg = cut_output.loc[output_df['isSignal']==0.0]
         sensitivity = len(signal)/len(backg)
         return fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity
 
@@ -400,8 +400,9 @@ def main(workdir_path: str, n_bkg: int):
         n_output_nodes = model_params['n_output_nodes']
         processes = model_params['processes']
         print ("Output nodes (%d): "%n_output_nodes, processes)
+        total_df_mod = total_df
 
-        training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df, processes)
+        training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df_mod, processes)
         print ()
 
         if model_params['input_vars'] != 'All':
