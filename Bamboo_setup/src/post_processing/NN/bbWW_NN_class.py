@@ -296,7 +296,11 @@ class Run3Model():
         output_df = pd.concat([events_test, Y_test], axis=1)
         for (i, process) in enumerate(self.processes):
             score = Y_pred_score[:,i]
-            score = pd.Series(score.flatten(), name='%s Prediction Score'%process).reset_index(drop=True)
+            if process == "isSignal":
+                name = "Prediction Score"
+            else:
+                name = "%s Prediction Score"%process
+            score = pd.Series(score.flatten(), name=name).reset_index(drop=True)
             output_df = pd.concat([output_df, score], axis=1)        
         if len(self.processes) > 1:
             output_df["S"] = output_df["HH"]
@@ -323,13 +327,19 @@ class Run3Model():
                 label = process
                 if process == "isSignal":
                     label = "Signal"
-                ax.hist(output_df.loc[output_df[process] == 1.0, '%s Prediction Score'%process], bins=50, color=color_map[i], label=label, histtype='step', density=True)
+                    name = "Prediction Score"
+                else:
+                    name = "%s Prediction Score"%process
+                ax.hist(output_df.loc[output_df[process] == 1.0, name], bins=50, color=color_map[i], label=label, histtype='step', density=True)
                 if process == "isSignal":
-                    ax.hist(output_df.loc[output_df[process] == 0.0, '%s Prediction Score'%process], bins=50, color=color_map[2], label="Background", histtype='step', density=True)
+                    ax.hist(output_df.loc[output_df[process] == 0.0, name], bins=50, color=color_map[2], label="Background", histtype='step', density=True)
             ax.legend()
             ax.set_xlabel('DNN score')
             ax.set_ylabel('Normalized number of events')
-            filename = "%s_dnn_score_test_distribution.pdf"%label
+            if process == "isSignal":
+                filename = "dnn_score_test_distribution.pdf"
+            else:
+                filename = "%s_dnn_score_test_distribution.pdf"%label
             fig.savefig(modeldir / filename)
 
         if len(processes) > 1:
