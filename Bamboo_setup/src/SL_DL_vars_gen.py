@@ -509,7 +509,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         plots.extend(self.base_plots)
 
         self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
-        self.selections = SL_DL_vars_gen.get_selections(noSel)
+        self.selections = SL_DL_vars_gen.get_selections(self.gen_objects, noSel)
 
         # ===============================================================================
         # ================================== Plots ======================================
