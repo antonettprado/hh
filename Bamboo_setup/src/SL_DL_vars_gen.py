@@ -550,24 +550,6 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return plots
 
 
-    def _get_interpolated_axis_data(self, root_axis, scale_factor):
-            bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
-            hbw = (bin_centers[1] - bin_centers[0]) / 2
-            bin_edges = np.append(bin_centers - hbw, bin_centers[-1] + hbw)
-            interp_bin_edges = np.linspace(bin_edges[0], bin_edges[-1], num=len(bin_centers) * scale_factor + 1)
-            interp_bin_centers = (interp_bin_edges[:-1] + interp_bin_edges[1:]) / 2
-            interp_seed_data = np.pad(bin_centers, 1, constant_values=(bin_edges[0], bin_edges[-1]))
-            return interp_seed_data, interp_bin_centers, interp_bin_edges
-    
-    def interpolate_1d_root_histogram(self, root_hist, scale_factor):
-            bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
-            x_seed_data, interp_bin_centers, interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-            y_seed_data = np.pad(bin_contents, 1, 'edge')
-    
-            interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
-
-            return interp_bin_edges, interp_bin_contents
-
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_vars_gen, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
@@ -579,6 +561,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         print("------------------ Calculating Temporal Ratio --------------------")
         from utils import variables
         from post_processing.sig_bkg_shape_comp.compare_subcategories import get_total_hist
+        from post_processing import plotting
 
         files_in_resultsdir = os.listdir(resultsdir)
         PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
@@ -597,7 +580,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         ratio_hist.Divide(hist_pt)
 
         all_corrections = []
-        bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+        bin_edges, bin_contents = plotting.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
         corr = cs.Correction(
             name='top_quarks_pt_ratio',
             version=0,

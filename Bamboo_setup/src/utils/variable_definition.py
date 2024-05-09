@@ -1,6 +1,6 @@
 from bamboo import treefunctions as op
 from utils import variables
-from utils.variables import Variable1D, Variable2D, Variable3D
+from utils.variables import Variable, Variable1D, Variable2D, Variable3D
 import utils.object_definition as object_defs
 
 SELECTIONS = None
@@ -966,3 +966,20 @@ def gather_all_3D_variables(objects) -> list[Variable3D]:
         var3D.populate(xvar, yvar, zvar)
 
     return vars3D
+
+
+# Returns a dictionary, ex: sel_vars_dict = {SL_res_2b_x: {'bjets_mbb': bjets_mbb}}
+def gathers_vars_dict(objects, selections) -> dict[str: dict[str: Variable]]:
+    basic_vars_dict = {
+        "nAK4": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"])),
+        "nAK4_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_btags"])),
+        "nAK8_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"]))}
+    vars1D = gather_all_1D_variables(objects)
+    sel_vars_dict = {}
+    for sel_name, sel in selections.items():
+        if sel_name not in ["SL", "DL"]:
+            vars1D_dict = {sub_var.name: sub_var.data for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
+            subcat_vars_dict = {**basic_vars_dict, **vars1D_dict}
+            sel_vars_dict[sel_name] = subcat_vars_dict
+
+    return sel_vars_dict

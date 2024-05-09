@@ -6,7 +6,7 @@ from base_selection import NanoBaseHHbbWW
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.variable_definition as var_defs
 from utils import variables
-from utils.variables import Variable1D, Variable2D, Variable3D
+from utils.variables import Variable, Variable1D, Variable2D, Variable3D
 
 from pathlib import Path
 import os
@@ -71,27 +71,10 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         return selections
 
-    # Returns a dictionary, ex: sel_vars_dict = {SL_res_2b_x: {'bjets_mbb': bjets_mbb}}
-    @staticmethod
-    def gather_sel_vars_dicts(objects, selections) -> dict[str: Variable1D]:
-        basic_vars_dict = {
-            "nAK4": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"])),
-            "nAK4_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_btags"])),
-            "nAK8_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"]))}
-        vars1D = var_defs.gather_all_1D_variables(objects)
-        sel_vars_dict = {}
-        for sel_name, sel in selections.items():
-            if sel_name not in ["SL", "DL"]:
-                vars1D_dict = {sub_var.name: sub_var.data for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
-                subcat_vars_dict = {**basic_vars_dict, **vars1D_dict}
-                sel_vars_dict[sel_name] = subcat_vars_dict
-
-        return sel_vars_dict
-
     @staticmethod
     def get_skims(objects, selections, plots):
         base_skim = {"event": None, "gen_Weight": objects["gen_Weight"]}
-        sel_vars_dict = SL_DL_vars_reco.gather_sel_vars_dicts(objects, selections)
+        sel_vars_dict = var_defs.gathers_vars_dict(objects, selections)
         for sel_name in ["SL_res_2b_x"]:
             subcat_vars_dict = sel_vars_dict[sel_name]
             sel_skim = {**base_skim, **subcat_vars_dict}
@@ -146,51 +129,6 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         return plots
 
-    def _get_interpolated_axis_data(self, root_axis, scale_factor):
-            bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
-            hbw = (bin_centers[1] - bin_centers[0]) / 2
-            bin_edges = np.append(bin_centers - hbw, bin_centers[-1] + hbw)
-            interp_bin_edges = np.linspace(bin_edges[0], bin_edges[-1], num=len(bin_centers) * scale_factor + 1)
-            interp_bin_centers = (interp_bin_edges[:-1] + interp_bin_edges[1:]) / 2
-            interp_seed_data = np.pad(bin_centers, 1, constant_values=(bin_edges[0], bin_edges[-1]))
-            return interp_seed_data, interp_bin_centers, interp_bin_edges
-    
-    def interpolate_1d_root_histogram(self, root_hist, scale_factor):
-            bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
-            x_seed_data, interp_bin_centers, interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-            y_seed_data = np.pad(bin_contents, 1, 'edge')
-    
-            interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
-
-            return interp_bin_edges, interp_bin_contents
-    
-    def interpolate_2d_root_histogram(self, root_hist, scale_factor):
-        bin_contents = np.log([[root_hist.GetBinContent(xbin, ybin) for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
-        x_seed_data, x_interp_bin_centers, x_interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-        y_seed_data, y_interp_bin_centers, y_interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
-        z_seed_data = np.pad(bin_contents, 1, 'edge')
-    
-        interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, indexing='ij')).reshape(2,-1).T
-    
-        interp_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data], z_seed_data, interpolated_bin_centers, method='linear')
-        interp_bin_contents = interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers))).flatten()
-    
-        return [x_interp_bin_edges, y_interp_bin_edges], interp_bin_contents
-    
-    def interpolate_3d_root_histogram(self, root_hist, scale_factor):
-        bin_contents = np.log([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
-        x_seed_data, x_interp_bin_centers, x_interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-        y_seed_data, y_interp_bin_centers, y_interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
-        z_seed_data, z_interp_bin_centers, z_interp_bin_edges = self._get_interpolated_axis_data(root_hist.GetZaxis(), scale_factor)
-        a_seed_data = np.pad(bin_contents, 1, 'edge')
-    
-        interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, z_interp_bin_centers, indexing='ij')).reshape(3,-1).T
-    
-        interp_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data, z_seed_data], a_seed_data, interpolated_bin_centers, method='linear')
-        interp_bin_contents = interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers))).flatten()
-    
-        return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
-
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
@@ -200,6 +138,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         compare_subcategories(workdir)
 
         if self.output_llr:
+            from post_processing import plotting
             print("------------------ Calculating Likelihood Ratios --------------------")
             files_in_resultsdir = os.listdir(resultsdir)
             PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
@@ -231,7 +170,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
                         ratio_hist.Divide(backg_total_hist)
 
                         if isinstance(var, Variable1D):
-                            bin_edges, bin_contents = self.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+                            bin_edges, bin_contents = plotting.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
                             inputs = [cs.Variable(name="xaxis", type="real", description="")]
                             data = cs.Binning(
                                 nodetype="binning",
@@ -241,7 +180,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
                                 flow="clamp",
                             )
                         elif isinstance(var, Variable2D):
-                            bin_edges, bin_contents = self.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            bin_edges, bin_contents = plotting.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
                             bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
                             inputs = [cs.Variable(name="xaxis", type="real", description=""),
                                     cs.Variable(name="yaxis", type="real", description="")]
@@ -253,7 +192,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
                                 flow="clamp",
                             )
                         elif isinstance(var, Variable3D):
-                            bin_edges, bin_contents = self.interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
                             bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
                             inputs = [cs.Variable(name="xaxis", type="real", description=""),
                                     cs.Variable(name="yaxis", type="real", description=""),
