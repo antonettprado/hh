@@ -339,7 +339,7 @@ class Run3Model():
                     label = "Signal"
                 ax.hist(output_df.loc[output_df[process_2] == 1.0, name], bins=50, color=color_map[j], label=label, histtype='step', density=True)
                 if process_2 == "isSignal":
-                    ax.hist(output_df.loc[output_df[process_2] == 0.0, name], bins=50, color=color_map[j], label="Background", histtype='step', density=True)
+                    ax.hist(output_df.loc[output_df[process_2] == 0.0, name], bins=50, color=color_map[1], label="Background", histtype='step', density=True)
             ax.legend()
             ax.set_xlabel('DNN score')
             ax.set_ylabel('Normalized number of events')
