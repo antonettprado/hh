@@ -5,6 +5,9 @@ import utils.object_definition as object_defs
 
 SELECTIONS = None
 
+# =====================================================================
+# ================== IMPORTANT ========================================
+# =====================================================================
 # Must set selections for vars before using any function in this script
 def set_selections_for_vars(selections: dict):
     global SELECTIONS
