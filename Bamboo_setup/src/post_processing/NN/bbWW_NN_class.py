@@ -359,7 +359,8 @@ class Run3Model():
             fig1.savefig(modeldir / "dnn_score_ratio_s_sb_test_distribution.pdf")
 
             fig2, ax2 = plt.subplots()
-            ax2.set_xlim(0, 1)
+            #ax2.set_xlim(0, 1)
+            ax2.set_xscale('log')
             for (i, process) in enumerate(processes):
                 label = process
                 ax2.hist(output_df.loc[output_df[process] == 1.0, 'S/B'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
