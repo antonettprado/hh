@@ -327,16 +327,16 @@ class Run3Model():
         for (i, process) in enumerate(processes): 
             fig, ax = plt.subplots()
             ax.set_xlim(0, 1)
-            for (i, process) in enumerate(processes):
-                label = process
-                if process == "isSignal":
+            for (j, process_2) in enumerate(processes):
+                label = process_2
+                if process_2 == "isSignal":
                     label = "Signal"
                     name = "Prediction Score"
                 else:
-                    name = "%s Prediction Score"%process
-                ax.hist(output_df.loc[output_df[process] == 1.0, name], bins=50, color=color_map[i], label=label, histtype='step', density=True)
-                if process == "isSignal":
-                    ax.hist(output_df.loc[output_df[process] == 0.0, name], bins=50, color=color_map[1], label="Background", histtype='step', density=True)
+                    name = "%s Prediction Score"%process_2
+                ax.hist(output_df.loc[output_df[process_2] == 1.0, name], bins=50, color=color_map[j], label=label, histtype='step', density=True)
+                if process_2 == "isSignal":
+                    ax.hist(output_df.loc[output_df[process_2] == 0.0, name], bins=50, color=color_map[j], label="Background", histtype='step', density=True)
             ax.legend()
             ax.set_xlabel('DNN score')
             ax.set_ylabel('Normalized number of events')
