@@ -313,7 +313,7 @@ class Run3Model():
                     output_df["B"] += output_df["%s Prediction Score"%process]
             output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
             output_df["S/B"] = output_df["S"]/output_df["B"]
-            output_df["log_S/B"] = math.log(output_df["S/B"])
+            output_df["log_S/B"] = np.log10(output_df["S/B"])
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
