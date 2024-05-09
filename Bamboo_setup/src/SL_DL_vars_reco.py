@@ -18,10 +18,10 @@ import scipy.interpolate
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 
-class SL_DL_vars_reco_v3(NanoBaseHHbbWW):
+class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     def __init__(self, args):
-        super(SL_DL_vars_reco_v3, self).__init__(args)
+        super(SL_DL_vars_reco, self).__init__(args)
         self.event_nr_sel = "even"
         self.output_llr = True
         # self.vars1D = get_all_1D_variables()
@@ -30,7 +30,7 @@ class SL_DL_vars_reco_v3(NanoBaseHHbbWW):
         # If you want to filter any variables out to avoid using in this analysis, do it here for efficiency
         
     def addArgs(self, parser):
-        super(SL_DL_vars_reco_v3, self).addArgs(parser)
+        super(SL_DL_vars_reco, self).addArgs(parser)
         parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
 
     @staticmethod
@@ -91,7 +91,7 @@ class SL_DL_vars_reco_v3(NanoBaseHHbbWW):
     @staticmethod
     def get_skims(objects, selections, plots):
         base_skim = {"event": None, "gen_Weight": objects["gen_Weight"]}
-        sel_vars_dict = SL_DL_vars_reco_v3.gather_sel_vars_dicts(objects, selections)
+        sel_vars_dict = SL_DL_vars_reco.gather_sel_vars_dicts(objects, selections)
         for sel_name in ["SL_res_2b_x"]:
             subcat_vars_dict = sel_vars_dict[sel_name]
             sel_skim = {**base_skim, **subcat_vars_dict}
@@ -106,8 +106,8 @@ class SL_DL_vars_reco_v3(NanoBaseHHbbWW):
         plots.append(yields)
         plots.extend(self.base_plots)
 
-        objects = SL_DL_vars_reco_v3.get_objects(tree, self.era)
-        selections = SL_DL_vars_reco_v3.get_selections(tree, objects, baseSel, yields, self.is_MC, self.era, self.sample)
+        objects = SL_DL_vars_reco.get_objects(tree, self.era)
+        selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, yields, self.is_MC, self.era, self.sample)
         var_defs.set_selections_for_vars(selections)
 
         # ===============================================================================
@@ -142,7 +142,7 @@ class SL_DL_vars_reco_v3(NanoBaseHHbbWW):
         yields.add(selections['DL'], 'DL')
 
         if not self.args.no_skim:
-            plots = SL_DL_vars_reco_v3.get_skims(objects, selections, plots)
+            plots = SL_DL_vars_reco.get_skims(objects, selections, plots)
 
         return plots
 
@@ -193,7 +193,7 @@ class SL_DL_vars_reco_v3(NanoBaseHHbbWW):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_DL_vars_reco_v3, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
         compare_subcategories(workdir, shape_only=True)
