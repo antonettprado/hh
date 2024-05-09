@@ -1,4 +1,5 @@
 from bamboo import treefunctions as op
+from utils import variables
 from utils.variables import Variable1D, Variable2D, Variable3D
 import utils.object_definition as object_defs
 
@@ -933,3 +934,35 @@ def gather_object_vars(objects) -> list[Variable1D]:
         get_met_phi(objects)
     ]
     return object_vars
+
+
+def gather_all_1D_variables(objects) -> list[Variable1D]:
+    vars = gather_object_vars(objects) + gather_bjet_vars(objects) + gather_top_vars(objects) + gather_total_vars(objects) + gather_misc_vars(objects)
+    return vars
+
+
+def gather_all_2D_variables(objects) -> list[Variable2D]:
+    vars1D = gather_all_1D_variables(objects)
+    vars1D_lookup = { var.name: var for var in vars1D }
+    vars2D = [ Variable2D(name) for name in variables.ALL_VARNAMES_2D ]
+    for var in vars2D:
+        xvar = vars1D_lookup[var.xname]
+        yvar = vars1D_lookup[var.yname]
+        var.populate(xvar, yvar)
+    
+    return vars2D
+
+def gather_all_3D_variables(objects) -> list[Variable3D]:
+    vars1D = gather_all_1D_variables(objects)
+    vars1D_lookup = { var.name: var for var in vars1D}
+    vars3D = [ Variable3D(name) for name in variables.ALL_VARNAMES_3D ]
+    for var3D in vars3D:
+        xvar = vars1D_lookup[var3D.xname]
+        yvar = vars1D_lookup[var3D.yname]
+        zvar = vars1D_lookup[var3D.zname]
+        for var1D in [xvar, yvar, zvar]:           
+            var1D.update(nbins=10)
+            var1D.generate_eqbin()
+        var3D.populate(xvar, yvar, zvar)
+
+    return vars3D
