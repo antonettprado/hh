@@ -4,10 +4,9 @@ from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.scalefactors import get_correction
 import bamboo.treefunctions as op
-from bamboo.treefunctions import mvaEvaluator
-from SL_DL_event_selection import SL_DL_event_selection
+
 from SL_DL_vars_reco import SL_DL_vars_reco
-import utils.event_definition as event_defs
+from SL_DL_NN_v2 import SL_DL_NN_v2
 import utils.variable_definition as var_defs
 from pathlib import Path
 import os
@@ -118,23 +117,6 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
             counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
         return counters
 
-    def get_NN_model(self):
-        NNdir = Path(self.args.NNdir).resolve()
-        input_vars_names = []
-        input_vars_file = NNdir / 'input_variables.txt'
-        with open(input_vars_file, 'r') as file:
-           for line in file:
-               input_vars_names.append(line.strip())
-        model_onnx = NNdir / "dnn_model.onnx"
-        model = mvaEvaluator(model_onnx, mvaType='ONNXRuntime', otherArgs = ("output"))
-        return model, input_vars_names
-
-    def gather_input_vars(self, input_vars_names, objects, selections):
-        sel_vars_dict = SL_DL_vars_reco.gather_sel_vars_dicts(objects, selections)
-        vars_dict = sel_vars_dict["SL_res_2b_x"]
-        input_vars = [vars_dict[name] for name in input_vars_names if name in vars_dict]
-        return input_vars
-
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=True, recursive=False)
@@ -146,10 +128,15 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, yields, self.is_MC, self.era, self.sample)
         var_defs.set_selections_for_vars(selections)
 
-        model, input_vars_names = self.get_NN_model()
-        input_vars = self.gather_input_vars(input_vars_names, objects, selections)
-        dnn_score = model(*input_vars)
-        plots.append(Plot.make1D('SL_res_2b_x_dnn_score', dnn_score[0], selections["SL_res_2b_x"], EqBin(100, 0, 1)))
+        # ===============================================================================
+        # ================================== Plots ======================================
+        # ===============================================================================
+
+        sel_name = "SL_res_2b_x"
+
+        dnn_score = SL_DL_NN_v2.get_dnn_score(self.args.NNdir, objects)
+        dnn_score = dnn_score[sel_name]
+        plots.append(Plot.make1D(dnn_score.ref, dnn_score.data, dnn_score.selection, dnn_score.eqbin, xTitle=dnn_score.full_title))
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -165,6 +152,8 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         yields.add(selections['DL_res_1b'], 'DL_res_1b')
         yields.add(selections['DL_res_2b'], 'DL_res_2b')
         yields.add(selections['DL_boosted'], 'DL_boosted')
+        yields.add(selections['SL'], 'SL')
+        yields.add(selections['DL'], 'DL')
 
         return plots
 
