@@ -154,7 +154,7 @@ def draw1D(var, shape_only:bool, dirname: str):
     if shape_only: normalization = True
     else: normalization = False
 
-    if isinstance(var, Variable1D):
+    if isinstance(var, Variable1D) or isinstance(var, LikelihoodRatio):
         for ss_var in var:
             this_path = path / ss_var.subcat
             if shape_only: final_path = this_path / 'shape_only'
