@@ -158,7 +158,7 @@ def get_optimizer(config: dict):
     else:
         raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
 
-def update_model_metrics_csv(model_name: str, training_events: dict, output_metrics: dict, csv_path):
+def update_model_metrics_csv(model_name: str, training_events: dict, output_metrics: dict, csv_path:Path, is_multiclass:bool=False, classes:list=None):
     if csv_path.exists():
         df = pd.read_csv(csv_path)
     else:
@@ -172,6 +172,14 @@ def update_model_metrics_csv(model_name: str, training_events: dict, output_metr
     else:
         new_model = {'name': model_name, **training_events, **output_metrics}
         df = df._append(new_model, ignore_index=True)
+
+    if is_multiclass and classes:
+        for class_name in classes:
+            class_auc_key = f'{class_name}_AUC'
+            if class_auc_key not in df.columns:
+                df[class_auc_key] = np.nan
+            if class_auc_key in output_metrics:
+                df.loc[df['name'] == model_name, class_auc_key] = output_metrics[class_auc_key]
 
     df.to_csv(csv_path, index=False)
 
@@ -397,6 +405,49 @@ class Run3Model():
         ax.legend(loc="lower right")
         fig.savefig(modeldir / "dnn_roc.pdf")
 
+    def output_multiclass_metrics(self, output_df, classes):
+
+        n_classes = len(classes)
+        # Prepare a dictionary for each class in a multiclass classification scenario
+        roc_metrics = {class_name: {} for class_name in classes}
+        fpr_dict, tpr_dict, auc_dict = {}, {}, {}
+
+        # Loop through each class and calculate ROC curve
+        for i, class_name in enumerate(classes):
+            true_binary_labels = output_df[class_name]
+            pred_scores = output_df[f"{class_name} Prediction Score"]
+
+            fpr, tpr, thresholds = roc_curve(true_binary_labels, pred_scores)
+            auc_value = auc(fpr, tpr)
+
+            fpr_dict[class_name] = fpr
+            tpr_dict[class_name] = tpr
+            auc_dict[class_name] = auc_value
+            roc_metrics[class_name] = {
+                "fpr": fpr,
+                "tpr": tpr,
+                "thresholds": thresholds,
+                "auc": auc_value}
+            
+        return roc_metrics
+
+    @staticmethod
+    def draw_multiclass_roc(fpr_dict, tpr_dict, auc_dict, modeldir, classes):
+        fig, ax = plt.subplots()
+        for class_name in classes:
+            fpr = fpr_dict[class_name]
+            tpr = tpr_dict[class_name]
+            auc_value = auc_dict[class_name]
+
+            ax.plot(fpr, tpr, lw=2, label=f"{class_name} (AUC = {auc_value:.3f})")
+
+        ax.plot([0,1], [0,1], linestyle='--', lw=2, color="k", label="random chance")
+        ax.set_xlim([0, 1.0])
+        ax.set_ylim([0, 1.0])
+        ax.set_xlabel("False Positive Rate")
+        ax.set_title("ROC Curves - Multiclass")
+        ax.legend(loc="lower right")
+        fig.savefig(modeldir/ "multiclass_roc.pdf")
 
 def main(workdir_path: str, n_bkg: int):
     global NNOUTDIR
@@ -416,7 +467,7 @@ def main(workdir_path: str, n_bkg: int):
         print(f"Model: {model_params['name']}")
         n_output_nodes = model_params['n_output_nodes']
         processes = model_params['processes']
-        print ("Output nodes (%d): "%n_output_nodes, processes)
+        print (f"Output nodes ({n_output_nodes}): {processes}")
         total_df_mod = total_df.copy(deep=True)
 
         training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df_mod, processes)
@@ -433,8 +484,17 @@ def main(workdir_path: str, n_bkg: int):
         output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
         myModel.draw_score_dist(output_df, myModel.modeldir, myModel.processes)
         if n_output_nodes == 1:
+            # Binary classification
             fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
             myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
+        else:
+            # Multiclass classification
+            roc_metrics = myModel.output_multiclass_metrics(output_df, processes)
+            fpr_dict = {class_name: values['fpr'] for class_name, values in roc_metrics.items()}
+            tpr_dict = {class_name: values['tpr'] for class_name, values in roc_metrics.items()}
+            auc_dict = {class_name: values['auc'] for class_name, values in roc_metrics.items()}
+            myModel.draw_multiclass_roc(fpr_dict, tpr_dict, auc_dict, myModel.modeldir, processes)
+
         myModel.save_model()
 
         # ----------- Logging model info -------------------
@@ -459,7 +519,14 @@ def main(workdir_path: str, n_bkg: int):
         with open(out_yml, 'w') as file:
             yaml.dump(model_params, file, sort_keys=False)
 
-        update_model_metrics_csv(model_params['name'], model_params['Training Events'], model_params['Output Metrics'], csv_path)
+        is_multiclass = n_output_nodes > 1
+        update_model_metrics_csv(
+            model_name = model_params['name'], 
+            training_events = model_params['Training Events'], 
+            output_metrics = model_params['Output Metrics'], 
+            csv_path = csv_path,
+            is_multiclass = is_multiclass,
+            classes=processes if is_multiclass else None)
 
         print(f"The DNN models tested were saved to {WORKDIR} \n\n")
 
