@@ -8,7 +8,7 @@ import os, sys
 from argparse import ArgumentParser
 import uproot
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_curve, accuracy_score, auc
+from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras import Model, regularizers
 from tensorflow.keras.metrics import BinaryAccuracy, AUC, Precision, Recall
@@ -308,17 +308,17 @@ class Run3Model():
             if process == "isSignal":
                 name = "Prediction Score"
             else:
-                name = "%s Prediction Score"%process
+                name = f"{process} Prediction Score"
             score = pd.Series(score.flatten(), name=name).reset_index(drop=True)
-            output_df = pd.concat([output_df, score], axis=1)        
+            output_df = pd.concat([output_df, score], axis=1)       
         if len(self.processes) > 1:
             output_df["S"] = output_df["HH Prediction Score"]
             output_df["S+B"] = np.zeros(len(output_df))
             output_df["B"] = np.zeros(len(output_df))
             for (i, process) in enumerate(self.processes):
-                output_df["S+B"] += output_df["%s Prediction Score"%process]
+                output_df["S+B"] += output_df[f"{process} Prediction Score"]
                 if process != "HH":
-                    output_df["B"] += output_df["%s Prediction Score"%process]
+                    output_df["B"] += output_df[f"{process} Prediction Score"]
             output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
             output_df["S/B"] = output_df["S"]/output_df["B"]
             output_df["log_S/B"] = np.log10(output_df["S/B"])
@@ -340,7 +340,7 @@ class Run3Model():
             if process == "isSignal":
                 name = "Prediction Score"
             else:
-                name = "%s Prediction Score"%process
+                name = f"{process} Prediction Score"
             for (j, process_2) in enumerate(processes):
                 label = process_2
                 if process == "isSignal":
@@ -449,6 +449,47 @@ class Run3Model():
         ax.legend(loc="lower right")
         fig.savefig(modeldir/ "multiclass_roc.pdf")
 
+    def generate_confusion_matrix(self, X_test, Y_test, processes, binary_classifier_threshold=None):
+
+        # Predict class probabilities
+        Y_pred_probs = self.model.predict(X_test)
+
+        if len(processes) == 1 and binary_classifier_threshold is not None:
+            # Binary classifier
+            Y_pred_labels = (Y_pred_probs >= binary_classifier_threshold).astype(int).flatten()
+            Y_test_labels = Y_test.values.flatten()
+            # Map processes to specific labels
+            binary_labels = ["Background", "Signal"]
+            x_ticks = y_ticks = binary_labels
+        else:
+            Y_pred_labels = np.argmax(Y_pred_probs, axis=1)
+            Y_test_labels = np.argmax(Y_test.to_numpy(), axis=1)
+            x_ticks = y_ticks = processes
+
+        # Generate confusion matrix
+        cm = confusion_matrix(Y_test_labels, Y_pred_labels)
+
+        # Display confusion matrix
+        fig, ax = plt.subplots(figsize=(8,6))
+        ax.matshow(cm, cmap=plt.cm.Blues, alpha=0.6)
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                ax.text(x=j, y=i, s=cm[i, j], va='center', ha='center')
+
+        ax.set_xlabel('Predicted', labelpad=10)
+        ax.set_ylabel('Actual', labelpad=10)
+        ax.set_title('Confusion Matrix')
+        ax.set_xticks(range(len(x_ticks)))
+        ax.set_yticks(range(len(y_ticks)))
+        ax.set_xticklabels(x_ticks, rotation=0)
+        ax.set_yticklabels(y_ticks)
+
+        ax.xaxis.set_ticks_position('bottom')
+        ax.xaxis.set_label_position('bottom')
+        plt.tight_layout()
+        fig.savefig(self.modeldir / 'confusion_matrix.pdf')
+
+
 def main(workdir_path: str, n_bkg: int):
     global NNOUTDIR
     WORKDIR = Path(workdir_path)
@@ -487,6 +528,7 @@ def main(workdir_path: str, n_bkg: int):
             # Binary classification
             fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
             myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
+            myModel.generate_confusion_matrix(X_test_mod, Y_test_mod, processes, optimal_threshold)
         else:
             # Multiclass classification
             roc_metrics = myModel.output_multiclass_metrics(output_df, processes)
@@ -494,6 +536,7 @@ def main(workdir_path: str, n_bkg: int):
             tpr_dict = {class_name: values['tpr'] for class_name, values in roc_metrics.items()}
             auc_dict = {class_name: values['auc'] for class_name, values in roc_metrics.items()}
             myModel.draw_multiclass_roc(fpr_dict, tpr_dict, auc_dict, myModel.modeldir, processes)
+            myModel.generate_confusion_matrix(X_test_mod, Y_test_mod, processes)
 
         myModel.save_model()
 
