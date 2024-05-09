@@ -305,9 +305,13 @@ class Run3Model():
         if len(self.processes) > 1:
             output_df["S"] = output_df["HH Prediction Score"]
             output_df["S+B"] = np.zeros(len(output_df))
+            output_df["B"] = np.zeros(len(output_df))
             for (i, process) in enumerate(self.processes):
                 output_df["S+B"] += output_df["%s Prediction Score"%process]
+                if process is not "HH":
+                    output_df["B"] += output_df["%s Prediction Score"%process]
             output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
+            output_df["S/B"] = output_df["S"]/output_df["B"]
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
@@ -339,7 +343,7 @@ class Run3Model():
             if process == "isSignal":
                 filename = "dnn_score_test_distribution.pdf"
             else:
-                filename = "%s_dnn_score_test_distribution.pdf"%label
+                filename = "%s_dnn_score_test_distribution.pdf"%process
             fig.savefig(modeldir / filename)
 
         if len(processes) > 1:
@@ -351,7 +355,17 @@ class Run3Model():
             ax.legend()
             ax.set_xlabel('S/(S+B)')
             ax.set_ylabel('Normalized number of events')
-            fig.savefig(modeldir / "dnn_score_ratio_test_distribution.pdf")
+            fig.savefig(modeldir / "dnn_score_ratio_s_sb_test_distribution.pdf")
+
+            fig, ax = plt.subplots()
+            ax.set_xlim(0, 1)
+            for (i, process) in enumerate(processes):
+                label = process
+                ax.hist(output_df.loc[output_df[process] == 1.0, 'S/B'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
+            ax.legend()
+            ax.set_xlabel('S/B')
+            ax.set_ylabel('Normalized number of events')
+            fig.savefig(modeldir / "dnn_score_ratio_s_b_test_distribution.pdf")
 
     def output_metrics(self, output_df):
         fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
