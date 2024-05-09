@@ -308,7 +308,7 @@ class Run3Model():
             output_df["B"] = np.zeros(len(output_df))
             for (i, process) in enumerate(self.processes):
                 output_df["S+B"] += output_df["%s Prediction Score"%process]
-                if process is not "HH":
+                if process != "HH":
                     output_df["B"] += output_df["%s Prediction Score"%process]
             output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
             output_df["S/B"] = output_df["S"]/output_df["B"]
