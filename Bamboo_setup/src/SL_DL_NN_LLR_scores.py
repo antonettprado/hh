@@ -5,8 +5,6 @@ from bamboo.scalefactors import get_correction
 from bamboo.treefunctions import mvaEvaluator
 
 from SL_DL_vars_reco import SL_DL_vars_reco
-import os
-import ROOT
 from pathlib import Path
 from utils.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
 from typing import Dict, List
@@ -55,15 +53,6 @@ class SL_DL_NN_LLR_scores(SL_DL_vars_reco):
             lr.populate(lr_data, super().get_selections_subset(lr_data.keys()))
             lrs_for_vars_1D.append(lr)
         return lrs_for_vars_1D
-
-    def pick_lr(self, name, lrs):
-        lr = None
-        for lr_i in lrs:
-            if name == lr_i.name:
-                lr = lr_i
-                break
-        return lr
-
 
     def get_NN_model(self):
         input_workdir = Path(self.args.workdir)
