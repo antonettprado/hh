@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import math
 import tensorflow as tf
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -312,6 +313,7 @@ class Run3Model():
                     output_df["B"] += output_df["%s Prediction Score"%process]
             output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
             output_df["S/B"] = output_df["S"]/output_df["B"]
+            output_df["log_S/B"] = math.log(output_df["S/B"])
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
         return output_df
     
@@ -360,12 +362,11 @@ class Run3Model():
 
             fig2, ax2 = plt.subplots()
             #ax2.set_xlim(0, 1)
-            ax2.set_xscale('log')
             for (i, process) in enumerate(processes):
                 label = process
-                ax2.hist(output_df.loc[output_df[process] == 1.0, 'S/B'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
+                ax2.hist(output_df.loc[output_df[process] == 1.0, 'log_S/B'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
             ax2.legend()
-            ax2.set_xlabel('S/B')
+            ax2.set_xlabel('log(S/B)')
             ax2.set_ylabel('Normalized number of events')
             fig2.savefig(modeldir / "dnn_score_ratio_s_b_test_distribution.pdf")
 
