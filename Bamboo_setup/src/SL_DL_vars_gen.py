@@ -91,7 +91,8 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
         return counters
 
-    def set_gen_objects(self, tree):
+    @staticmethod
+    def get_gen_objects(tree):
 
         genParts = tree.GenPart
         genJets = tree.GenJet
@@ -112,7 +113,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         nonbJetAK8s = op.select(selected_genJetAK8s, lambda jet: op.NOT(jet.hadronFlavour == 5))
         sorted_nonbJetAK8s = op.sort(nonbJets, lambda jet: -jet.pt)
 
-        self.gen_objects = dict(
+        gen_objects = dict(
             genParts=genParts,
             genJets=genJets,
             genJetAK8s=genJetAK8s,
@@ -128,33 +129,34 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             bJetAK8s=bJetAK8s,
             sorted_bJetAK8s=sorted_bJetAK8s,
             nonbJetAK8s=nonbJetAK8s,
-            sorted_nonbJetAK8s=sorted_nonbJetAK8s
-        )
+            sorted_nonbJetAK8s=sorted_nonbJetAK8s)
+        
+        return gen_objects
 
-    def set_selections(self, noSel):
+    @staticmethod
+    def get_selections(gen_objects, noSel):
 
-        objs = self.gen_objects
         SL = noSel.refine("SL", cut=[op.OR(
-            op.AND(op.rng_len(objs['electrons']) == 1, op.rng_len(objs['muons']) == 0),
-            op.AND(op.rng_len(objs['electrons']) == 0, op.rng_len(objs['muons']) == 1))])
+            op.AND(op.rng_len(gen_objects['electrons']) == 1, op.rng_len(gen_objects['muons']) == 0),
+            op.AND(op.rng_len(gen_objects['electrons']) == 0, op.rng_len(gen_objects['muons']) == 1))])
         DL = noSel.refine("DL", cut=[op.OR(
-            op.AND(op.rng_len(objs['electrons'])==2, op.rng_len(objs['muons']) == 0),
-            op.AND(op.rng_len(objs['electrons'])==0, op.rng_len(objs['muons']) == 2),
-            op.AND(op.rng_len(objs['electrons'])==1, op.rng_len(objs['muons']) == 1))])
+            op.AND(op.rng_len(gen_objects['electrons'])==2, op.rng_len(gen_objects['muons']) == 0),
+            op.AND(op.rng_len(gen_objects['electrons'])==0, op.rng_len(gen_objects['muons']) == 2),
+            op.AND(op.rng_len(gen_objects['electrons'])==1, op.rng_len(gen_objects['muons']) == 1))])
 
-        SL_res_1b = SL.refine("SL resolved 1b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) == 1, op.rng_len(objs['bJetAK8s']) == 0)])
-        SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) >= 2, op.rng_len(objs['bJetAK8s']) == 0)])
-        SL_boosted = SL.refine("SL boosted jet selection", cut=[ op.rng_len(objs['bJetAK8s'])>= 1])
+        SL_res_1b = SL.refine("SL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        SL_boosted = SL.refine("SL boosted jet selection", cut=[ op.rng_len(gen_objects['bJetAK8s'])>= 1])
 
-        DL_res_1b = DL.refine("DL resolved 1b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) == 1, op.rng_len(objs['bJetAK8s']) == 0)])
-        DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(objs['bJets']) >= 2, op.rng_len(objs['bJetAK8s']) == 0)])
-        DL_boosted = DL.refine("DL boosteded jet selection", cut=[op.rng_len(objs['bJetAK8s'])>= 1])
+        DL_res_1b = DL.refine("DL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        DL_boosted = DL.refine("DL boosteded jet selection", cut=[op.rng_len(gen_objects['bJetAK8s'])>= 1])
 
         # Include extra selection of >=2 nonbjets for resolved selections only
-        SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(objs['sorted_nonbJets'])>=2])
-        SL_res_2b_x = SL_res_2b.refine("Nonbjets>=2 for SL_res_2b_x", cut=[op.rng_len(objs['sorted_nonbJets'])>=2])
+        SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
+        SL_res_2b_x = SL_res_2b.refine("Nonbjets>=2 for SL_res_2b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
 
-        self.selections=dict(
+        selections=dict(
             noSel=noSel,
             SL=SL,
             DL=DL,
@@ -165,8 +167,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             DL_res_2b=DL_res_2b,
             DL_boosted=DL_boosted,
             SL_res_1b_x=SL_res_1b_x,
-            SL_res_2b_x=SL_res_2b_x
-        )
+            SL_res_2b_x=SL_res_2b_x)
+        
+        return selections
 
     def get_selection_and_tags(self, sel_name):
         sel = self.selections[sel_name]
@@ -501,11 +504,12 @@ class SL_DL_vars_gen(NanoAODHistoModule):
     def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
+        yields.add(self.noSel, "Sample Sum of Weights") # Needed to adjust the normalization in post processing scripts
         plots.append(yields)
         plots.extend(self.base_plots)
 
-        self.set_gen_objects(tree)
-        self.set_selections(noSel)
+        self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
+        self.selections = SL_DL_vars_gen.get_selections(noSel)
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -540,6 +544,8 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         yields.add(self.selections['DL_res_1b'], 'DL_res_1b')
         yields.add(self.selections['DL_res_2b'], 'DL_res_2b')
         yields.add(self.selections['DL_boosted'], 'DL_boosted')
+        yields.add(self.selections['SL'], 'SL')
+        yields.add(self.selections['DL'], 'DL')
 
         return plots
 
