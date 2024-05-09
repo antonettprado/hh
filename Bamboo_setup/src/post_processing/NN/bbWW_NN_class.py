@@ -327,13 +327,14 @@ class Run3Model():
         for (i, process) in enumerate(processes): 
             fig, ax = plt.subplots()
             ax.set_xlim(0, 1)
+            if process == "isSignal":
+                name = "Prediction Score"
+            else:
+                name = "%s Prediction Score"%process
             for (j, process_2) in enumerate(processes):
                 label = process_2
-                if process_2 == "isSignal":
+                if process == "isSignal":
                     label = "Signal"
-                    name = "Prediction Score"
-                else:
-                    name = "%s Prediction Score"%process_2
                 ax.hist(output_df.loc[output_df[process_2] == 1.0, name], bins=50, color=color_map[j], label=label, histtype='step', density=True)
                 if process_2 == "isSignal":
                     ax.hist(output_df.loc[output_df[process_2] == 0.0, name], bins=50, color=color_map[j], label="Background", histtype='step', density=True)
@@ -347,25 +348,25 @@ class Run3Model():
             fig.savefig(modeldir / filename)
 
         if len(processes) > 1:
-            fig, ax = plt.subplots()
-            ax.set_xlim(0, 1)
+            fig1, ax1 = plt.subplots()
+            ax1.set_xlim(0, 1)
             for (i, process) in enumerate(processes):
                 label = process
-                ax.hist(output_df.loc[output_df[process] == 1.0, 'S/(S+B)'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
-            ax.legend()
-            ax.set_xlabel('S/(S+B)')
-            ax.set_ylabel('Normalized number of events')
-            fig.savefig(modeldir / "dnn_score_ratio_s_sb_test_distribution.pdf")
+                ax1.hist(output_df.loc[output_df[process] == 1.0, 'S/(S+B)'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
+            ax1.legend()
+            ax1.set_xlabel('S/(S+B)')
+            ax1.set_ylabel('Normalized number of events')
+            fig1.savefig(modeldir / "dnn_score_ratio_s_sb_test_distribution.pdf")
 
-            fig, ax = plt.subplots()
-            ax.set_xlim(0, 1)
+            fig2, ax2 = plt.subplots()
+            ax2.set_xlim(0, 1)
             for (i, process) in enumerate(processes):
                 label = process
-                ax.hist(output_df.loc[output_df[process] == 1.0, 'S/B'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
-            ax.legend()
-            ax.set_xlabel('S/B')
-            ax.set_ylabel('Normalized number of events')
-            fig.savefig(modeldir / "dnn_score_ratio_s_b_test_distribution.pdf")
+                ax2.hist(output_df.loc[output_df[process] == 1.0, 'S/B'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
+            ax2.legend()
+            ax2.set_xlabel('S/B')
+            ax2.set_ylabel('Normalized number of events')
+            fig2.savefig(modeldir / "dnn_score_ratio_s_b_test_distribution.pdf")
 
     def output_metrics(self, output_df):
         fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
