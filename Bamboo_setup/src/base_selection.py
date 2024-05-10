@@ -78,7 +78,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                 print("Couldn't find branch tree.HLT.%s, will omit it!" % HLT)
 
         def getNanoAODDescription():
-            groups = ["PV_", "Flag_", "HLT_", "MET_", "PuppiMET_", "GenPart_"]
+            groups = ["PV_", "Flag_", "HLT_", "MET_", "PuppiMET_", "GenPart_", "GenMET_"]
             collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet", "nGenJet", "nGenJetAK8", "nSubGenJetAK8"]
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
