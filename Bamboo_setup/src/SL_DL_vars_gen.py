@@ -134,7 +134,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return gen_objects
 
     @staticmethod
-    def get_selections(gen_objects, noSel):
+    def get_gen_selections(gen_objects, noSel):
 
         SL = noSel.refine("SL", cut=[op.OR(
             op.AND(op.rng_len(gen_objects['electrons']) == 1, op.rng_len(gen_objects['muons']) == 0),
@@ -485,7 +485,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             Plot.make1D(tag+'ttpair_1p20pt', ttpair_pt*1.20, sel, EQBIN_TT_PT),
         ])
 
-        return plots
+        study_objs = dict(ttpair_pt=ttpair_pt)
+
+        return plots, study_objs
 
     def get_skims(self, sel_name, plots):
         objs = self.gen_objects
@@ -501,7 +503,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
         return plots
 
-    def definePlots(self, tree, noSel, sample=None, sampleCfg=None):
+    def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         yields = CutFlowReport("yields", printInLog=False, recursive=False)
         yields.add(self.noSel, "Sample Sum of Weights") # Needed to adjust the normalization in post processing scripts
@@ -509,7 +511,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         plots.extend(self.base_plots)
 
         self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
-        self.selections = SL_DL_vars_gen.get_selections(self.gen_objects, noSel)
+        self.selections = SL_DL_vars_gen.get_gen_selections(self.gen_objects, baseSel)
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -527,7 +529,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_MBB, EQBIN_TT_PT], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_PT, EQBIN_TT_PT], xTitle="pT of bb", yTitle="m_{inv} for t_{1}")])
 
-        plots = self.for_DNN_study('SL_res_2b_x', self.gen_objects, self.selections, plots)
+        plots, _ = SL_DL_vars_gen.for_DNN_study('SL_res_2b_x', self.gen_objects, self.selections, plots)
 
         plots = self.get_skims('noSel', plots)
 
