@@ -171,8 +171,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         
         return selections
 
-    def get_selection_and_tags(self, sel_name):
-        sel = self.selections[sel_name]
+    @staticmethod
+    def get_selection_and_tags(sel_name, selections):
+        sel = selections[sel_name]
         tag = sel_name + '_'
         return sel, tag
 
@@ -451,10 +452,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
         return plots
 
-    def for_DNN_study(self, sel_name, plots):
+    @staticmethod
+    def for_DNN_study(sel_name, objs, selections, plots):
 
-        objs = self.gen_objects
-        sel, tag = self.get_selection_and_tags(sel_name)
+        sel, tag = SL_DL_vars_gen.get_selection_and_tags(sel_name, selections)
 
         b_from_top = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == 5, p.genPartMother.pdgId == 6))
         Wp_from_top = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == 24, p.genPartMother.pdgId == 6))
@@ -465,7 +466,6 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         topbar = bbar_from_topbar[0].parent
         ttpair_pt = (top.p4 + topbar.p4).Pt()
 
-        eqbin = EqBin(250,0,500)
         plots.extend([
             Plot.make1D(tag+'n_b_from_top', op.rng_len(b_from_top), sel, EqBin(10,0,10)),
             Plot.make1D(tag+'n_W_from_top', op.rng_len(Wp_from_top), sel, EqBin(10,0,10)),
@@ -475,14 +475,14 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             Plot.make1D(tag+'n_top_PdgId', top.pdgId, sel, EqBin(20,-10,10)),
             Plot.make1D(tag+'n_topbar_PdgId', topbar.pdgId, sel, EqBin(20,-10,10)),
 
-            Plot.make1D(tag+'top_pt', top.pt, sel, eqbin),
-            Plot.make1D(tag+'topbar_pt', topbar.pt, sel, eqbin),
-            Plot.make2D(tag+'topbar_pt_vs_top_pt', [top.pt, topbar.pt], sel, [eqbin, eqbin]),
-            Plot.make1D(tag+'ttpair_pt', ttpair_pt, sel, eqbin),
-            Plot.make1D(tag+'ttpair_1p05pt', ttpair_pt*1.05, sel, eqbin),
-            Plot.make1D(tag+'ttpair_1p10pt', ttpair_pt*1.10, sel, eqbin),
-            Plot.make1D(tag+'ttpair_1p15pt', ttpair_pt*1.15, sel, eqbin),
-            Plot.make1D(tag+'ttpair_1p20pt', ttpair_pt*1.20, sel, eqbin),
+            Plot.make1D(tag+'top_pt', top.pt, sel, EQBIN_TT_PT),
+            Plot.make1D(tag+'topbar_pt', topbar.pt, sel, EQBIN_TT_PT),
+            Plot.make2D(tag+'topbar_pt_vs_top_pt', [top.pt, topbar.pt], sel, [EQBIN_TT_PT, EQBIN_TT_PT]),
+            Plot.make1D(tag+'ttpair_pt', ttpair_pt, sel, EQBIN_TT_PT),
+            Plot.make1D(tag+'ttpair_1p05pt', ttpair_pt*1.05, sel, EQBIN_TT_PT),
+            Plot.make1D(tag+'ttpair_1p10pt', ttpair_pt*1.10, sel, EQBIN_TT_PT),
+            Plot.make1D(tag+'ttpair_1p15pt', ttpair_pt*1.15, sel, EQBIN_TT_PT),
+            Plot.make1D(tag+'ttpair_1p20pt', ttpair_pt*1.20, sel, EQBIN_TT_PT),
         ])
 
         return plots
@@ -527,7 +527,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_MBB, EQBIN_TT_PT], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_PT, EQBIN_TT_PT], xTitle="pT of bb", yTitle="m_{inv} for t_{1}")])
 
-        plots = self.for_DNN_study('SL_res_2b_x', plots)
+        plots = self.for_DNN_study('SL_res_2b_x', self.gen_objects, self.selections, plots)
 
         plots = self.get_skims('noSel', plots)
 
@@ -558,7 +558,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         # df.Display({"event", "GenPart_pdgId", "GenPart_genPartIdxMother"}, 5, 20).Print()
 
 
-        print("------------------ Calculating Temporal Ratio --------------------")
+        print("------------------ Calculating Ratio for DNN study --------------------")
         from utils import variables
         from post_processing.sig_bkg_shape_comp.compare_subcategories import get_total_hist
         from post_processing import plotting
@@ -579,10 +579,17 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         ratio_hist = hist_1p10pt.Clone()
         ratio_hist.Divide(hist_pt)
 
+        # canvas = ROOT.TCanvas('canvas', '', 200, 200)
+        # canvas.SetGrid()
+        # ratio_hist.Draw("hist")
+        # canvas.Update()
+        # canvas.SaveAs( resultsdir + 'ratio.pdf')
+        # canvas.Close()
+
         all_corrections = []
         bin_edges, bin_contents = plotting.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
         corr = cs.Correction(
-            name='top_quarks_pt_ratio',
+            name='ttpair_pt_ratio',
             version=0,
             inputs=[cs.Variable(name="xaxis", type="real")],
             output=cs.Variable(name="", type="real", description=""),
@@ -595,6 +602,6 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         all_corrections.append(corr)
 
         cset = cs.CorrectionSet(schema_version=2, description=f"TTbar pt scaling", corrections=all_corrections) 
-        output_llr_file = os.path.join(resultsdir, "ttbar_pt_scaling.json")
+        output_llr_file = os.path.join(resultsdir, "ttpair_pt_scaling.json")
         with open(output_llr_file, "w") as outfile:
             outfile.write(cset.json(exclude_unset=False))
