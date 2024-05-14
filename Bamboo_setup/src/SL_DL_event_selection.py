@@ -642,14 +642,11 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
-        yields = CutFlowReport("yields", printInLog=True, recursive=False)
-        plots.append(yields)
+        plots.append(self.yields)
         plots.extend(self.base_plots)
-
-        yields.add(self.noSel, "Sample Sum of Weights") # Needed to adjust the normalization in post processing scripts
         
         self.objects = SL_DL_event_selection.get_objects(tree, self.era, self.args.mc_truth_b, use_mvaTTH=False) 
-        self.selections = SL_DL_event_selection.get_event_selections(tree, self.objects, baseSel, yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
+        self.selections = SL_DL_event_selection.get_event_selections(tree, self.objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
         
         self.set_category_groups(self.selections)
 
@@ -658,10 +655,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         # ===============================================================================
 
         # Adding Yields for ALL selections --------------------
-        yields.add(baseSel, 'Basic Event Selection')
         for gen_sel_name, gen_sel_dict in self.selections.items():
             for sel_name, sel in gen_sel_dict.items():
-                yields.add(sel, sel_name)
+                self.yields.add(sel, sel_name)
 
         # Adding Skims ----------------------------------------
         if self.args.skim:

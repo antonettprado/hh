@@ -68,6 +68,8 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         self.era = sampleCfg['era'] 
         self.is_MC = isMC()
         self.triggersPerPrimaryDataset = {}
+        self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
+        self.base_plots = []    # Plots in base that need to be propagated to the Plotters
 
         def addHLTPath(PD, HLT):
             if PD not in self.triggersPerPrimaryDataset.keys():
@@ -83,7 +85,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
 
-        tree, noSel, backend, lumiArgs = super(NanoBaseHHbbWW, self).prepareTree(tree=tree,
+        tree, _noSel, backend, lumiArgs = super(NanoBaseHHbbWW, self).prepareTree(tree=tree,
                                                                                  sample=sample,
                                                                                  sampleCfg=sampleCfg,
                                                                                  description=getNanoAODDescription(),
@@ -137,29 +139,22 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         configureJets(tree._FatJet, jetType="AK8PFPuppi", **cmJMEArgs)
         '''
 
-        # Plots in base that need to be propagated to the Plotters #
-        self.base_plots = []
+        # ------------------------------ _noSel -------------------------------
+        self.yields.add(_noSel, "_noSel")
 
-        # CutFlow report 
-        self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
-
-        # Gen Weight
+        # ------------------------------- noSel -------------------------------
+        # If MC sample, apply genWeights, select events and adjust normalization 
         if self.is_MC:
-            noSel = noSel.refine('genWeight', weight=tree.genWeight)
-        else:
-            noSel = noSel
 
-        # Adding self.selections to class -----------------------------------
-        self._noSel = noSel
-        self.yields.add(self._noSel, "self._noSel")
- 
-        # Select events in MC sample for analysis and adjust normalization -----------------------------------
-        if 'HH' in sampleCfg['group']:
-            print ("Veto super-weighted events in HH")
-            noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
-            self.yields.add(noSel, "Veto super-weighted events in HH")
-        cut = ()
-        if self.is_MC:
+            _noSel_genWeight = _noSel.refine('_noSel_genWeight', weight=tree.genWeight)
+            self.yields.add(_noSel_genWeight, "_noSel_genWeight")
+
+            if 'HH' in sampleCfg['group']:
+                print ("Veto super-weighted events in HH")
+                _noSel_genWeight = _noSel_genWeight.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
+                self.yields.add(_noSel_genWeight, "_noSel_genWeight veto")
+
+            cut = ()
             if self.event_nr_sel == 'all':
                 print ("Select all event numbers")
                 cut = ()
@@ -171,43 +166,34 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
                 cut = (tree.event % 2 == 1)
             else:
                 raise ValueError("events must be 'all', 'odd', or 'even'")
-        noSel = noSel.refine('genEventSumWeight', cut=cut)        
-        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False)) # Add neccesary plot for corrected sum of genWeights 
+            
+            _noSel_genWeight = _noSel_genWeight.refine('genEventSumWeight', cut=cut)
+            self.yields.add(_noSel_genWeight, "_noSel_genWeight cut")
+
+            noSel = _noSel_genWeight
+
+        else:
+            noSel = _noSel
+
+        self.yields.add(noSel, "noSel")
         self.noSel = noSel
 
-        # Base Selection -----------------------------------------------------
+        # Add neccesary plot for corrected sum of genWeights 
+        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
+
+        # --------------------------- Base Selection ---------------------------
         # PV Selection
-        baseSel = self.noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
+        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
 
         # MET Filter Selection
         baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
+
         if self.era in ["2017", "2018"]:
             baseSel = baseSel.refine('met_filter_2017_2018', cut=[tree.Flag.ecalBadCalibFilterV2])
         if not self.is_MC:
             baseSel = baseSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
 
-        '''
-        # Triggers Paths
-        # EGamma
-        addHLTPath('EGamma', 'Ele32_WPTight_Gsf')
-        addHLTPath('EGamma', 'Ele23_Ele12_CaloIdL_TrackIdL_IsoVL')
-        # addHLTPath('EGamma', 'Ele28_eta2p1_WPTight_Gsf_HT150')
-        # SingleMuon
-        addHLTPath('SingleMuon', 'IsoMu24')
-        addHLTPath('SingleMuon', 'IsoMu27')
-        # MuonEG
-        addHLTPath('MuonEG', 'Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ')
-        # DoubleMuon
-        addHLTPath('DoubleMuon', 'Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8')
-
-        # Trigger Selection
-        if self.is_MC:
-            if not self.args.noHLT:
-                baseSel = baseSel.refine('HLT', cut=(op.OR(*chain.from_iterable(self.triggersPerPrimaryDataset.values()))))
-        else:
-            if not self.args.noHLT:
-                baseSel = baseSel.refine('HLT', cut=[makeMultiPrimaryDatasetTriggerSelection(sample, self.triggersPerPrimaryDataset)])
-        '''
+        self.yields.add(baseSel, "baseSel") # Needed to adjust the normalization in post processing scripts
 
         return tree, baseSel, backend, lumiArgs
 
@@ -219,4 +205,3 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             print (f'Sample {sample} : genEventSumw correction from {counters["genEventSumw"]:.3f} to {resultsFile.Get("generated_sum_corrected").GetBinContent(1):.3f}')
             counters["genEventSumw"] = resultsFile.Get('generated_sum_corrected').GetBinContent(1)
         return counters
-    

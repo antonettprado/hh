@@ -39,48 +39,76 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         parser.add_argument("--bjets_num", action='store', type=int, default=2, help='Minimum number of bjets per event')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
-        tree, noSel, backend, lumiArcs = super(SL_DL_vars_gen, self).prepareTree(
+
+        def isMC():
+            if sampleCfg['type'] == 'data':
+                return False
+            elif sampleCfg['type'] == 'mc':
+                return True
+            else:
+                raise RuntimeError(f"The type '{sampleCfg['type']}' of {sample} dataset not understood.")
+
+        self.sample = sample
+        self.era = sampleCfg['era'] 
+        self.is_MC = isMC()
+        self.triggersPerPrimaryDataset = {}
+        self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
+        self.base_plots = []    # Plots in base that need to be propagated to the Plotters
+
+        tree, _noSel, backend, lumiArcs = super(SL_DL_vars_gen, self).prepareTree(
                                         tree=tree,
                                         sample=sample,
                                         sampleCfg=sampleCfg,
                                         description=nanoGenDescription,
                                         backend=backend)
 
-        # Plots in base that need to be propagated to the Plotters #
-        self.base_plots = []
+        # ------------------------------ _noSel -------------------------------
+        self.yields.add(_noSel, "_noSel")
 
-        # CutFlow report 
-        self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
+        # ------------------------------- noSel -------------------------------
+        # If MC sample, apply genWeights, select events and adjust normalization 
+        if self.is_MC:
 
-        # Gen Weight
-        noSel = noSel.refine('genWeight', weight=tree.genWeight) # For weighted gen-level events
+            _noSel_genWeight = _noSel.refine('_noSel_genWeight', weight=tree.genWeight)
+            self.yields.add(_noSel_genWeight, "_noSel_genWeight")
 
-        # Adding self.selections to class -----------------------------------
-        self._noSel = noSel
-        self.yields.add(self._noSel, "self._noSel")
- 
-        # Select events in MC sample for analysis and adjust normalization -----------------------------------
-        if 'HH' in sampleCfg['group']:
-            print ("Veto super-weighted events in HH")
-            noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
-            self.yields.add(noSel, "Veto super-weighted events in HH")
-        cut = ()
-        if self.event_nr_sel == 'all':
-            print (">>> Select ALL event numbers")
+            if 'HH' in sampleCfg['group']:
+                print ("Veto super-weighted events in HH")
+                _noSel_genWeight = _noSel_genWeight.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
+                self.yields.add(_noSel_genWeight, "_noSel_genWeight veto")
+
             cut = ()
-        elif self.event_nr_sel == 'even':
-            print (">>>>>>>>> Select EVEN event numbers")
-            cut = (tree.event % 2 == 0)
-        elif self.event_nr_sel == 'odd':
-            print (">>>>>>>>>>>>>>>>>> Select ODD event numbers")
-            cut = (tree.event % 2 == 1)
+            if self.event_nr_sel == 'all':
+                print ("Select all event numbers")
+                cut = ()
+            elif self.event_nr_sel == 'even':
+                print ("Select even event numbers")
+                cut = (tree.event % 2 == 0)
+            elif self.event_nr_sel == 'odd':
+                print ("Select odd event numbers")
+                cut = (tree.event % 2 == 1)
+            else:
+                raise ValueError("events must be 'all', 'odd', or 'even'")
+            
+            _noSel_genWeight = _noSel_genWeight.refine('genEventSumWeight', cut=cut)
+            self.yields.add(_noSel_genWeight, "_noSel_genWeight cut")
+
+            noSel = _noSel_genWeight
+
         else:
-            raise ValueError("events must be 'all', 'odd', or 'even'")
-        noSel = noSel.refine('genEventSumWeight', cut=cut)
-        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False)) # Add neccesary plot for corrected sum of genWeights 
+            noSel = _noSel
+
+        self.yields.add(noSel, "noSel")
         self.noSel = noSel
 
-        return tree, noSel, backend, lumiArcs
+        # Add neccesary plot for corrected sum of genWeights 
+        self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
+
+        # --------------------------- Base Selection ---------------------------
+        baseSel = noSel
+        self.yields.add(baseSel, "baseSel") # Needed to adjust the normalization in post processing scripts
+
+        return tree, baseSel, backend, lumiArcs
 
     def readCounters(self, resultsFile):
         counters = super(SL_DL_vars_gen, self).readCounters(resultsFile)
@@ -505,9 +533,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
-        yields = CutFlowReport("yields", printInLog=False, recursive=False)
-        yields.add(self.noSel, "Sample Sum of Weights") # Needed to adjust the normalization in post processing scripts
-        plots.append(yields)
+        plots.append(self.yields)
         plots.extend(self.base_plots)
 
         self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
@@ -537,17 +563,17 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         # ============================= Cutflow Report ==================================
         # ===============================================================================
 
-        yields.add(self.selections['noSel'], 'noSel')
-        yields.add(self.selections['SL_res_1b'], 'SL_res_1b')
-        yields.add(self.selections['SL_res_1b_x'], 'SL_res_1b_x')
-        yields.add(self.selections['SL_res_2b'], 'SL_res_2b')
-        yields.add(self.selections['SL_res_2b_x'], 'SL_res_2b_x')
-        yields.add(self.selections['SL_boosted'], 'SL_boosted')
-        yields.add(self.selections['DL_res_1b'], 'DL_res_1b')
-        yields.add(self.selections['DL_res_2b'], 'DL_res_2b')
-        yields.add(self.selections['DL_boosted'], 'DL_boosted')
-        yields.add(self.selections['SL'], 'SL')
-        yields.add(self.selections['DL'], 'DL')
+        self.yields.add(self.selections['noSel'], 'noSel')
+        self.yields.add(self.selections['SL_res_1b'], 'SL_res_1b')
+        self.yields.add(self.selections['SL_res_1b_x'], 'SL_res_1b_x')
+        self.yields.add(self.selections['SL_res_2b'], 'SL_res_2b')
+        self.yields.add(self.selections['SL_res_2b_x'], 'SL_res_2b_x')
+        self.yields.add(self.selections['SL_boosted'], 'SL_boosted')
+        self.yields.add(self.selections['DL_res_1b'], 'DL_res_1b')
+        self.yields.add(self.selections['DL_res_2b'], 'DL_res_2b')
+        self.yields.add(self.selections['DL_boosted'], 'DL_boosted')
+        self.yields.add(self.selections['SL'], 'SL')
+        self.yields.add(self.selections['DL'], 'DL')
 
         return plots
 
