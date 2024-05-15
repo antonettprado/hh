@@ -172,17 +172,17 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             op.AND(op.rng_len(gen_objects['electrons'])==0, op.rng_len(gen_objects['muons']) == 2),
             op.AND(op.rng_len(gen_objects['electrons'])==1, op.rng_len(gen_objects['muons']) == 1))])
 
-        SL_res_1b = SL.refine("SL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        SL_res_2b = SL.refine("SL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        SL_boosted = SL.refine("SL boosted jet selection", cut=[ op.rng_len(gen_objects['bJetAK8s'])>= 1])
+        SL_res_1b = SL.refine("Gen SL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        SL_res_2b = SL.refine("Gen SL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        SL_boosted = SL.refine("Gen SL boosted jet selection", cut=[ op.rng_len(gen_objects['bJetAK8s'])>= 1])
 
-        DL_res_1b = DL.refine("DL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        DL_res_2b = DL.refine("DL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        DL_boosted = DL.refine("DL boosteded jet selection", cut=[op.rng_len(gen_objects['bJetAK8s'])>= 1])
+        DL_res_1b = DL.refine("Gen DL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        DL_res_2b = DL.refine("Gen DL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        DL_boosted = DL.refine("Gen DL boosteded jet selection", cut=[op.rng_len(gen_objects['bJetAK8s'])>= 1])
 
         # Include extra selection of >=2 nonbjets for resolved selections only
-        SL_res_1b_x = SL_res_1b.refine("Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
-        SL_res_2b_x = SL_res_2b.refine("Nonbjets>=2 for SL_res_2b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
+        SL_res_1b_x = SL_res_1b.refine("Gen Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
+        SL_res_2b_x = SL_res_2b.refine("Gen Nonbjets>=2 for SL_res_2b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
 
         selections=dict(
             noSel=noSel,
@@ -481,7 +481,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return plots
 
     @staticmethod
-    def for_DNN_study(sel_name, objs, selections, plots):
+    def for_DNN_study(sel_name, objs, selections, plots=None):
 
         sel, tag = SL_DL_vars_gen.get_selection_and_tags(sel_name, selections)
 
@@ -494,24 +494,25 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         topbar = bbar_from_topbar[0].parent
         ttpair_pt = (top.p4 + topbar.p4).Pt()
 
-        plots.extend([
-            Plot.make1D(tag+'n_b_from_top', op.rng_len(b_from_top), sel, EqBin(10,0,10)),
-            Plot.make1D(tag+'n_W_from_top', op.rng_len(Wp_from_top), sel, EqBin(10,0,10)),
-            Plot.make1D(tag+'n_b_from_topbar', op.rng_len(bbar_from_topbar), sel, EqBin(10,0,10)),
-            Plot.make1D(tag+'n_W_from_topbar', op.rng_len(Wm_bosons_from_topbar), sel, EqBin(10,0,10)),
+        if plots is not None:
+            plots.extend([
+                Plot.make1D(tag+'n_b_from_top', op.rng_len(b_from_top), sel, EqBin(10,0,10)),
+                Plot.make1D(tag+'n_W_from_top', op.rng_len(Wp_from_top), sel, EqBin(10,0,10)),
+                Plot.make1D(tag+'n_b_from_topbar', op.rng_len(bbar_from_topbar), sel, EqBin(10,0,10)),
+                Plot.make1D(tag+'n_W_from_topbar', op.rng_len(Wm_bosons_from_topbar), sel, EqBin(10,0,10)),
 
-            Plot.make1D(tag+'n_top_PdgId', top.pdgId, sel, EqBin(20,-10,10)),
-            Plot.make1D(tag+'n_topbar_PdgId', topbar.pdgId, sel, EqBin(20,-10,10)),
+                Plot.make1D(tag+'n_top_PdgId', top.pdgId, sel, EqBin(20,-10,10)),
+                Plot.make1D(tag+'n_topbar_PdgId', topbar.pdgId, sel, EqBin(20,-10,10)),
 
-            Plot.make1D(tag+'top_pt', top.pt, sel, EQBIN_TT_PT),
-            Plot.make1D(tag+'topbar_pt', topbar.pt, sel, EQBIN_TT_PT),
-            Plot.make2D(tag+'topbar_pt_vs_top_pt', [top.pt, topbar.pt], sel, [EQBIN_TT_PT, EQBIN_TT_PT]),
-            Plot.make1D(tag+'ttpair_pt', ttpair_pt, sel, EQBIN_TT_PT),
-            Plot.make1D(tag+'ttpair_1p05pt', ttpair_pt*1.05, sel, EQBIN_TT_PT),
-            Plot.make1D(tag+'ttpair_1p10pt', ttpair_pt*1.10, sel, EQBIN_TT_PT),
-            Plot.make1D(tag+'ttpair_1p15pt', ttpair_pt*1.15, sel, EQBIN_TT_PT),
-            Plot.make1D(tag+'ttpair_1p20pt', ttpair_pt*1.20, sel, EQBIN_TT_PT),
-        ])
+                Plot.make1D(tag+'top_pt', top.pt, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'topbar_pt', topbar.pt, sel, EQBIN_TT_PT),
+                Plot.make2D(tag+'topbar_pt_vs_top_pt', [top.pt, topbar.pt], sel, [EQBIN_TT_PT, EQBIN_TT_PT]),
+                Plot.make1D(tag+'ttpair_pt', ttpair_pt, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p05pt', ttpair_pt*1.05, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p10pt', ttpair_pt*1.10, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p15pt', ttpair_pt*1.15, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p20pt', ttpair_pt*1.20, sel, EQBIN_TT_PT),
+            ])
 
         study_objs = dict(ttpair_pt=ttpair_pt)
 
