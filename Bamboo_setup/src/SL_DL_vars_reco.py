@@ -84,13 +84,11 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
-        yields = CutFlowReport("yields", printInLog=True, recursive=False)        
-        yields.add(self.noSel, "Sample Sum of Weights") # Needed to adjust the normalization in post processing scripts
-        plots.append(yields)
+        plots.append(self.yields)
         plots.extend(self.base_plots)
 
         objects = SL_DL_vars_reco.get_objects(tree, self.era)
-        selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, yields, self.is_MC, self.era, self.sample)
+        selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         var_defs.set_selections_for_vars(selections)
 
         # ===============================================================================
@@ -113,16 +111,16 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         # ============================= Cutflow Report ==================================
         # ===============================================================================
         
-        yields.add(selections['SL_res_1b'], 'SL_res_1b')
-        yields.add(selections['SL_res_1b_x'], 'SL_res_1b_x')
-        yields.add(selections['SL_res_2b'], 'SL_res_2b')
-        yields.add(selections['SL_res_2b_x'], 'SL_res_2b_x')
-        yields.add(selections['SL_boosted'], 'SL_boosted')
-        yields.add(selections['DL_res_1b'], 'DL_res_1b')
-        yields.add(selections['DL_res_2b'], 'DL_res_2b')
-        yields.add(selections['DL_boosted'], 'DL_boosted')
-        yields.add(selections['SL'], 'SL')
-        yields.add(selections['DL'], 'DL')
+        self.yields.add(selections['SL_res_1b'], 'SL_res_1b')
+        self.yields.add(selections['SL_res_1b_x'], 'SL_res_1b_x')
+        self.yields.add(selections['SL_res_2b'], 'SL_res_2b')
+        self.yields.add(selections['SL_res_2b_x'], 'SL_res_2b_x')
+        self.yields.add(selections['SL_boosted'], 'SL_boosted')
+        self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
+        self.yields.add(selections['DL_res_2b'], 'DL_res_2b')
+        self.yields.add(selections['DL_boosted'], 'DL_boosted')
+        self.yields.add(selections['SL'], 'SL')
+        self.yields.add(selections['DL'], 'DL')
 
         if not self.args.no_skim:
             plots = SL_DL_vars_reco.get_skims(objects, selections, plots)
