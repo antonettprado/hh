@@ -147,7 +147,7 @@ def draw_2D_total(signal_hist, backg_hist, ss_var, path: Path, shape_only):
         canvas.SaveAs( str(path / (ss_var.name + '_' + of_type + '.pdf')))
         canvas.Close()
  
-def draw1D(var, shape_only:bool, dirname: str):
+def draw1D(var, shape_only:bool, dirname: str, notype_custom=False):
     # For subcat-specific var in var
     path = OUTPUT_PATH / dirname
 
@@ -172,7 +172,6 @@ def draw1D(var, shape_only:bool, dirname: str):
                 print(f'Comparison for {ss_var.ref} failed: Empty histogram')
                 FAILED_VARIABLES.append(ss_var.ref)
     else:
-
         if shape_only: final_path = path / 'shape_only'
         else: final_path = path / 'scaled'
         if not final_path.exists(): final_path.mkdir(parents=True, exist_ok=True)
@@ -225,8 +224,7 @@ def get_total_hist(hist_ref:str, files:'list[TFile]', normalized:bool = False):
         total_hist.Scale(1/total_hist.Integral())
     return total_hist
 
-def draw1D_notype(hist_signal, hist_backg, var, path: Path, shape_only:bool):
-    print(var)
+def draw1D_notype(hist_signal, hist_backg, outname, path: Path, shape_only:bool):
 
     hist_signal.SetLineColor(ROOT.kBlue)
     hist_signal.SetLineWidth(3)
@@ -269,11 +267,43 @@ def draw1D_notype(hist_signal, hist_backg, var, path: Path, shape_only:bool):
     leg.Draw()
     canvas.SetLeftMargin(0.13)
     canvas.Update()
-    canvas.SaveAs(str(path / (var +'.pdf')))
+    canvas.SaveAs(str(path / (outname +'.pdf')))
     canvas.Close()
 
+def draw_ttpair_pts_for_DNNstudy(dirname):
 
-def main(source_path: str, shape_only:bool=False, no_type: bool=False):
+    final_path = OUTPUT_PATH / dirname
+    if not final_path.exists(): final_path.mkdir(parents=True, exist_ok=True)
+
+    ttpair_pt = get_total_hist('SL_res_2b_x_ttpair_pt', BACKG_SAMPLES, normalized=False)
+    ttpair_1p10pt = get_total_hist('SL_res_2b_x_ttpair_1p10pt', BACKG_SAMPLES, normalized=False)
+
+    ttpair_pt.SetLineColorAlpha(ROOT.kGreen, 0.5)
+    ttpair_pt.SetLineWidth(3)
+    ttpair_pt.SetStats(0)
+    ttpair_1p10pt.SetLineColorAlpha(ROOT.kViolet, 0.5)
+    ttpair_1p10pt.SetLineWidth(3)
+    ttpair_1p10pt.SetStats(0)
+
+    ttpair_pt.SetMinimum(-1e-3)
+    ttpair_pt.SetMaximum(max(ttpair_pt.GetMaximum(), ttpair_1p10pt.GetMaximum())*1.1)
+    ttpair_pt.GetYaxis().SetTitle('events')
+
+    canvas = ROOT.TCanvas("canvas", '', 200, 200)
+    canvas.SetGrid()
+    ttpair_pt.Draw("hist")
+    ttpair_1p10pt.Draw("hist same")
+
+    leg = ROOT.TLegend(0.55, 0.75, 0.9, 0.9)
+    leg.AddEntry(ttpair_pt, 'ttpair_pt', 'l')
+    leg.AddEntry(ttpair_1p10pt, 'ttpair_pt*1.10', 'l')
+    leg.Draw()
+
+    canvas.Update()
+    canvas.SaveAs(str(final_path / ('ttpair_pts' +'.pdf')))
+    canvas.Close()
+
+def main(source_path: str, shape_only:bool=False, no_type: bool=False, custom:bool=False):
     global SOURCE_PATH, SOURCE_DIR, OUTPUT_PATH, OUTPUT_DIR, SIGNAL_SAMPLES, BACKG_SAMPLES, FAILED_VARIABLES, PROBLEMATIC_VARIABLES
     SOURCE_PATH = Path(source_path)
     SOURCE_DIR = SOURCE_PATH.name
@@ -298,6 +328,8 @@ def main(source_path: str, shape_only:bool=False, no_type: bool=False):
             if 'yields' not in obj.GetName():
                 refs.append(obj.GetName())
 
+    if custom:
+        draw_ttpair_pts_for_DNNstudy(dirname='custom')
     if no_type:
         for ref in refs:
             if 'yield' not in ref:
@@ -331,6 +363,7 @@ if __name__ == "__main__":
     # --no_type currently only working for shape_only
     parser.add_argument("-nt", "--no_type", action="store_true", default=False, help="No Variable type")
     parser.add_argument("-s", "--shape_only", action="store_true", help="Comparing shapes only")
+    parser.add_argument("-c", "--custom", action="store_true", help="Custom plotting")
     args = parser.parse_args()
 
-    main(args.workdir, args.shape_only, args.no_type)
+    main(args.workdir, args.shape_only, args.no_type, args.custom)

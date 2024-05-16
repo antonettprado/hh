@@ -10,8 +10,8 @@ import os
 import correctionlib.schemav2 as cs
 import ROOT
 import numpy as np
-import scipy.interpolate
-
+import uproot
+from pathlib import Path
 
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
@@ -578,14 +578,16 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
         return plots
 
-
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+
         super(SL_DL_vars_gen, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+
+        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
+        compare_subcategories(workdir, shape_only=False, no_type=False, custom=True)
 
         # file = os.path.join(self.args.output, 'results/TTbar_sl.root')
         # df = ROOT.RDataFrame("noSel", file)
         # df.Display({"event", "GenPart_pdgId", "GenPart_genPartIdxMother"}, 5, 20).Print()
-
 
         print("------------------ Calculating Ratio for DNN study --------------------")
         from utils import variables
@@ -608,15 +610,24 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         ratio_hist = hist_1p10pt.Clone()
         ratio_hist.Divide(hist_pt)
 
-        # canvas = ROOT.TCanvas('canvas', '', 200, 200)
-        # canvas.SetGrid()
-        # ratio_hist.Draw("hist")
-        # canvas.Update()
-        # canvas.SaveAs( resultsdir + 'ratio.pdf')
-        # canvas.Close()
+        ratio_file = ROOT.TFile(resultsdir + "/ttpair_pt_ratio.root", "RECREATE")
+        ratio_hist.Write()
+        ratio_file.Close()
+
+        canvas = ROOT.TCanvas('canvas', '', 200, 200)
+        canvas.SetGrid()
+        ratio_hist.SetStats(0)
+        ratio_hist.Draw("hist")
+        canvas.Update()
+        canvas.SaveAs( resultsdir + 'ratio.pdf')
+        canvas.Close()
 
         all_corrections = []
-        bin_edges, bin_contents = plotting.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
+
+        nbins= ratio_hist.GetNbinsX()
+        bin_edges = np.array([ratio_hist.GetBinLowEdge(i+1) for i in range(nbins+1)])
+        bin_contents = np.array([ratio_hist.GetBinContent(i+1) for i in range(nbins)])
+
         corr = cs.Correction(
             name='ttpair_pt_ratio',
             version=0,
