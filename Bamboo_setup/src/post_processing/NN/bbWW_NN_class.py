@@ -580,13 +580,13 @@ def main(workdir_path: str, n_bkg: int):
 
         input_variabless_ranked_shap = myModel.input_variable_ranking_shap(X_test_mod, Y_test_mod)
         #input_variabless_ranked_gradient = myModel.input_variable_ranking_gradient(X_test_mod)
-        print ("Ranked input variables: ")
+        print ("\nRanked input variables: ")
         #print ("  Shapley    Gradients")
         n_var = len(input_variabless_ranked_shap)
         for i in range(0, n_var):
             #print ("  %s    %s"%(input_variabless_ranked_shap[i], input_variabless_ranked_gradient[i]))
             print ("  %s"%(input_variabless_ranked_shap[i]))
-        print ()
+        print ("\n")
 
         myModel.save_model()
 
