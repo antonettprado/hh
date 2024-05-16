@@ -17,7 +17,7 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D, BatchNormalization, Dropout
 from tensorflow.keras.layers.experimental import preprocessing
-from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
+from tensorflow.keras.wrappers import KerasRegressor
 import yaml
 from typing import Union
 import tf2onnx
