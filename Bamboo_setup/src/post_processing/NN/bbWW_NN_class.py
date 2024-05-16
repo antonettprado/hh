@@ -495,9 +495,9 @@ class Run3Model():
 
         fig1, ax1 = plt.subplots(figsize=(8,6))
         ax1.matshow(cm_true_norm, cmap=plt.cm.Blues, alpha=0.6)
-        for i in range(cm_true_norm.shape[0]):
-            for j in range(cm_true_norm.shape[1]):
-                ax1.text(x=j, y=i, s=cm_true_norm[i, j], va='center', ha='center')
+        for i in range(len(cm_true_norm)):
+            for j in range(len(cm_true_norm[i])):
+                ax2.text(x=j, y=i, s=cm_true_norm[i, j], va='center', ha='center')
 
         ax1.set_xlabel('Predicted', labelpad=10)
         ax1.set_ylabel('Actual', labelpad=10)
@@ -525,8 +525,8 @@ class Run3Model():
 
         fig2, ax2 = plt.subplots(figsize=(8,6))
         ax2.matshow(cm_pred_norm, cmap=plt.cm.Blues, alpha=0.6)
-        for i in range(cm_pred_norm.shape[0]):
-            for j in range(cm_pred_norm.shape[1]):
+        for i in range(len(cm_pred_norm)):
+            for j in range(len(cm_pred_norm[i])):
                 ax2.text(x=j, y=i, s=cm_pred_norm[i, j], va='center', ha='center')
 
         ax2.set_xlabel('Predicted', labelpad=10)
