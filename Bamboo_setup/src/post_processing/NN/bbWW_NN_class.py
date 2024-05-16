@@ -8,6 +8,7 @@ import os, sys
 from argparse import ArgumentParser
 import uproot
 from sklearn.inspection import permutation_importance
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
@@ -17,7 +18,6 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D, BatchNormalization, Dropout
 from tensorflow.keras.layers.experimental import preprocessing
-from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
 import yaml
 from typing import Union
 import tf2onnx
@@ -184,6 +184,19 @@ def update_model_metrics_csv(model_name: str, training_events: dict, output_metr
                 df.loc[df['name'] == model_name, class_auc_key] = output_metrics[class_auc_key]
 
     df.to_csv(csv_path, index=False)
+
+
+class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
+    def __init__(self, model):
+        self.model = model
+
+    def fit(self, X, y):
+        self.model.fit(X, y)
+        return self
+
+    def predict(self, X):
+        return self.model.predict(X)
+
 
 class Run3Model():
 
@@ -492,7 +505,7 @@ class Run3Model():
         fig.savefig(self.modeldir / 'confusion_matrix.pdf')
 
     def input_variable_ranking_shap(self, X_test, Y_test):
-        estimator = KerasRegressor(build_fn=self.model)
+        estimator = KerasRegressorWrapper(self.model)
         result = permutation_importance(estimator, X_test, Y_test, n_repeats=10, random_state=42)
         sorted_idx = result.importances_mean.argsort()      
         input_variables_list = X_test.columns.tolist()
