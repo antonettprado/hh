@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import os, sys
 from argparse import ArgumentParser
 import uproot
-from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
@@ -18,6 +17,7 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.layers import Input, Activation, Dense, Convolution2D, BatchNormalization, Dropout
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
 import yaml
 from typing import Union
 import tf2onnx
