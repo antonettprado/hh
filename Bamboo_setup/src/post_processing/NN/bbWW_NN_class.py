@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import os, sys
 from argparse import ArgumentParser
 import uproot
+from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
@@ -489,6 +490,28 @@ class Run3Model():
         plt.tight_layout()
         fig.savefig(self.modeldir / 'confusion_matrix.pdf')
 
+    def input_variable_ranking_shap(self, X_test, Y_test):
+        result = permutation_importance(self.model, X_test, Y_test, n_repeats=10, random_state=42)
+        sorted_idx = result.importances_mean.argsort()      
+        input_variables_list = X_test.columns.tolist()
+        input_variabless_ranked = []
+        for idx in sorted_idx:
+            input_variabless_ranked.append(input_variables_list[idx])
+        return input_variabless_ranked
+
+    def input_variable_ranking_gradient(self, X_test):
+        with tf.GradientTape() as tape:
+            tape.watch(X_test)
+            predictions = self.model(X_test)
+        grads = tape.gradient(predictions, X_test).numpy()
+        gradient_magnitudes = np.mean(np.abs(grads), axis=0)
+        variable_rank = np.argsort(gradient_magnitudes)[::-1]
+        input_variables_list = X_test.columns.tolist()
+        input_variabless_ranked = []
+        for idx in variable_rank:
+            input_variabless_ranked.append(input_variables_list[idx])
+        return input_variabless_ranked
+
 
 def main(workdir_path: str, n_bkg: int):
     global NNOUTDIR
@@ -537,6 +560,15 @@ def main(workdir_path: str, n_bkg: int):
             auc_dict = {class_name: values['auc'] for class_name, values in roc_metrics.items()}
             myModel.draw_multiclass_roc(fpr_dict, tpr_dict, auc_dict, myModel.modeldir, processes)
             myModel.generate_confusion_matrix(X_test_mod, Y_test_mod, processes)
+
+        input_variabless_ranked_shap = myModel.input_variable_ranking_shap(X_test_mod, Y_test_mod)
+        input_variabless_ranked_gradient = myModel.input_variable_ranking_gradient(X_test_mod)
+        print ("Ranked input variables: ")
+        print ("  Shapley    Gradients")
+        n_var = len(input_variabless_ranked_shap)
+        for i in range(0, n_var):
+            print ("  %s    %s"%(input_variabless_ranked_shap, input_variabless_ranked_gradient))
+        print ()
 
         myModel.save_model()
 
