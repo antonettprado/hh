@@ -484,25 +484,63 @@ class Run3Model():
         # Generate confusion matrix
         cm = confusion_matrix(Y_test_labels, Y_pred_labels)
 
-        # Display confusion matrix
-        fig, ax = plt.subplots(figsize=(8,6))
-        ax.matshow(cm, cmap=plt.cm.Blues, alpha=0.6)
-        for i in range(cm.shape[0]):
-            for j in range(cm.shape[1]):
-                ax.text(x=j, y=i, s=cm[i, j], va='center', ha='center')
+        # Display confusion matrix - true label normalized
+        cm_true_norm = []
+        for row in cm:
+            row_sum = sum(row)
+            row_norm = []
+            for c in row:
+                row_norm.append(c/row_sum)
+            cm_true_norm.append(row_norm)
 
-        ax.set_xlabel('Predicted', labelpad=10)
-        ax.set_ylabel('Actual', labelpad=10)
-        ax.set_title('Confusion Matrix')
-        ax.set_xticks(range(len(x_ticks)))
-        ax.set_yticks(range(len(y_ticks)))
-        ax.set_xticklabels(x_ticks, rotation=0)
-        ax.set_yticklabels(y_ticks)
+        fig1, ax1 = plt.subplots(figsize=(8,6))
+        ax1.matshow(cm_true_norm, cmap=plt.cm.Blues, alpha=0.6)
+        for i in range(cm_true_norm.shape[0]):
+            for j in range(cm_true_norm.shape[1]):
+                ax1.text(x=j, y=i, s=cm_true_norm[i, j], va='center', ha='center')
 
-        ax.xaxis.set_ticks_position('bottom')
-        ax.xaxis.set_label_position('bottom')
+        ax1.set_xlabel('Predicted', labelpad=10)
+        ax1.set_ylabel('Actual', labelpad=10)
+        ax1.set_title('Confusion Matrix')
+        ax1.set_xticks(range(len(x_ticks)))
+        ax1.set_yticks(range(len(y_ticks)))
+        ax1.set_xticklabels(x_ticks, rotation=0)
+        ax1.set_yticklabels(y_ticks)
+
+        ax1.xaxis.set_ticks_position('bottom')
+        ax1.xaxis.set_label_position('bottom')
         plt.tight_layout()
-        fig.savefig(self.modeldir / 'confusion_matrix.pdf')
+        fig1.savefig(self.modeldir / 'confusion_matrix_true_norm.pdf')
+
+        # Display confusion matrix - predicted label normalized
+        cm_pred_norm_transposed = []
+        cm_transposed = [[row[i] for row in cm] for i in range(len(cm[0]))]
+        for row in cm_transposed:
+            row_sum = sum(row)
+            row_norm = []
+            for c in row:
+                row_norm.append(c/row_sum)
+            cm_pred_norm_transposed.append(row_norm)
+        cm_pred_norm = [[row[i] for row in cm_pred_norm_transposed] for i in range(len(cm_pred_norm_transposed[0]))]
+
+        fig2, ax2 = plt.subplots(figsize=(8,6))
+        ax2.matshow(cm_pred_norm, cmap=plt.cm.Blues, alpha=0.6)
+        for i in range(cm_pred_norm.shape[0]):
+            for j in range(cm_pred_norm.shape[1]):
+                ax2.text(x=j, y=i, s=cm_pred_norm[i, j], va='center', ha='center')
+
+        ax2.set_xlabel('Predicted', labelpad=10)
+        ax2.set_ylabel('Actual', labelpad=10)
+        ax2.set_title('Confusion Matrix')
+        ax2.set_xticks(range(len(x_ticks)))
+        ax2.set_yticks(range(len(y_ticks)))
+        ax2.set_xticklabels(x_ticks, rotation=0)
+        ax2.set_yticklabels(y_ticks)
+
+        ax2.xaxis.set_ticks_position('bottom')
+        ax2.xaxis.set_label_position('bottom')
+        plt.tight_layout()
+        fig2.savefig(self.modeldir / 'confusion_matrix_pred_norm.pdf')
 
     def input_variable_ranking_shap(self, X_test, Y_test):
         estimator = KerasRegressorWrapper(self.model)
