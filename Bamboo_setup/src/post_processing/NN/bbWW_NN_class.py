@@ -516,7 +516,7 @@ class Run3Model():
 
     def input_variable_ranking_gradient(self, X_test):
         with tf.GradientTape() as tape:
-            tape.watch(X_test)
+            tape.watch(tf.constant(X_test.values))
             predictions = self.model(X_test)
         grads = tape.gradient(predictions, X_test).numpy()
         gradient_magnitudes = np.mean(np.abs(grads), axis=0)
