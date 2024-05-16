@@ -514,6 +514,7 @@ class Run3Model():
             input_variabless_ranked.append(input_variables_list[idx])
         return input_variabless_ranked
 
+    '''
     def input_variable_ranking_gradient(self, X_test):
         with tf.GradientTape() as tape:
             tape.watch(tf.constant(X_test.values))
@@ -526,6 +527,7 @@ class Run3Model():
         for idx in variable_rank:
             input_variabless_ranked.append(input_variables_list[idx])
         return input_variabless_ranked
+    '''
 
 
 def main(workdir_path: str, n_bkg: int):
@@ -577,12 +579,13 @@ def main(workdir_path: str, n_bkg: int):
             myModel.generate_confusion_matrix(X_test_mod, Y_test_mod, processes)
 
         input_variabless_ranked_shap = myModel.input_variable_ranking_shap(X_test_mod, Y_test_mod)
-        input_variabless_ranked_gradient = myModel.input_variable_ranking_gradient(X_test_mod)
+        #input_variabless_ranked_gradient = myModel.input_variable_ranking_gradient(X_test_mod)
         print ("Ranked input variables: ")
-        print ("  Shapley    Gradients")
+        #print ("  Shapley    Gradients")
         n_var = len(input_variabless_ranked_shap)
         for i in range(0, n_var):
-            print ("  %s    %s"%(input_variabless_ranked_shap, input_variabless_ranked_gradient))
+            #print ("  %s    %s"%(input_variabless_ranked_shap[i], input_variabless_ranked_gradient[i]))
+            print ("  %s"%(input_variabless_ranked_shap[i]))
         print ()
 
         myModel.save_model()
