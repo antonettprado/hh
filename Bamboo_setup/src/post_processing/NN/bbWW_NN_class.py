@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import os, sys
 from argparse import ArgumentParser
 import uproot
+from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
@@ -491,7 +492,8 @@ class Run3Model():
         fig.savefig(self.modeldir / 'confusion_matrix.pdf')
 
     def input_variable_ranking_shap(self, X_test, Y_test):
-        result = permutation_importance(self.model, X_test, Y_test, n_repeats=10, random_state=42)
+        estimator = KerasRegressor(build_fn=self.model)
+        result = permutation_importance(estimator, X_test, Y_test, n_repeats=10, random_state=42)
         sorted_idx = result.importances_mean.argsort()      
         input_variables_list = X_test.columns.tolist()
         input_variabless_ranked = []
