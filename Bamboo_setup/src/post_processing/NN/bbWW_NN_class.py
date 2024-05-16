@@ -543,7 +543,6 @@ def main(workdir_path: str, n_bkg: int):
     model_list = yaml_data['Models']
 
     csv_path = NNOUTDIR / 'models_performance.csv'
-    input_variable_ranking_file_path =  NNOUTDIR / 'models_input_variable_ranking.txt'
 
     for model_params in model_list:
         print(f"Model: {model_params['name']}")
@@ -579,6 +578,7 @@ def main(workdir_path: str, n_bkg: int):
             myModel.draw_multiclass_roc(fpr_dict, tpr_dict, auc_dict, myModel.modeldir, processes)
             myModel.generate_confusion_matrix(X_test_mod, Y_test_mod, processes)
 
+        input_variable_ranking_file_path =  myModel.modeldir / 'input_variable_ranking.txt'
         input_variable_ranking_file = open(input_variable_ranking_file_path, "w")
         input_variabless_ranked_shap = myModel.input_variable_ranking_shap(X_test_mod, Y_test_mod)
         #input_variabless_ranked_gradient = myModel.input_variable_ranking_gradient(X_test_mod)
