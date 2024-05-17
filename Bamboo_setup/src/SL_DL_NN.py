@@ -94,7 +94,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             data_s_over_b = {sel_name: data_s_over_b for sel_name in selections_s_over_b.keys()}
             dnn_scores["multi_s_over_b"].populate(data_s_over_b, selections_s_over_b)
 
-        return dnn_scores, n_output_nodes, processes
+        return dnn_scores, n_output_nodes, processes, selections_process
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -107,7 +107,8 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
         # DNN scores and Categorization
         sel_name = "SL_res_2b_x"
-        dnn_scores, n_output_nodes, processes = SL_DL_NN.get_dnn_score(self.args.NNdir, objects)
+        dnn_scores, n_output_nodes, processes, selections_process = SL_DL_NN.get_dnn_score(self.args.NNdir, objects)
+        selections.update(selections_process)
         if n_output_nodes == 1:
             dnn_score_binary = dnn_scores["binary"][sel_name]
         else:
