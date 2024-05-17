@@ -65,7 +65,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
         else:
             data_signal = 0
             data_background = 0
-            dnn_score_max_process = ""
+            dnn_score_max_process_index = -9999
             dnn_score_max = 0
             for i in range(0, n_output_nodes):
                 process = processes[i]
@@ -74,7 +74,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
                 else:
                     data_background += data[i]
                 dnn_score_max = op.switch(data[i] > dnn_score_max, data[i], dnn_score_max)
-                dnn_score_max_process = op.switch(data[i] > dnn_score_max, process, dnn_score_max_process)
+                dnn_score_max_process_index = op.switch(data[i] > dnn_score_max, i, dnn_score_max_process_index)
 
             for i in range(0, n_output_nodes):
                 process = processes[i]
@@ -83,7 +83,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
                 subcat_names_process = dnn_scores["multi_%s"%process].subcats
                 subcat_selections_process = {}
                 for cat in subcat_names_process:
-                    subcat_selections_process[cat] = selections[cat.split("_%s"%process)[0]].refine(cat, cut=(process == dnn_score_max_process))
+                    subcat_selections_process[cat] = selections[cat.split("_%s"%process)[0]].refine(cat, cut=(op.c_int(i) == dnn_score_max_process_index))
                 data_process = {sel_name: data_process for sel_name in subcat_selections_process.keys()}
                 dnn_scores["multi_%s"%process].populate(data_process, subcat_selections_process)
                 selections_process.update(subcat_selections_process)
