@@ -115,7 +115,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             dnn_score_process = {}
             for process in processes:
                 dnn_score_process[process] = dnn_scores["multi_%s"%process]["%s_%s"%(sel_name,process)]
-            
+                
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
