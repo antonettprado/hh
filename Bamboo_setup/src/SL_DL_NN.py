@@ -83,7 +83,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
                 subcat_names_process = dnn_scores["multi_%s"%process].subcats
                 subcat_selections_process = {}
                 for cat in subcat_names_process:
-                    subcat_selections_process[cat] = selections[cat.split("_%s"%process)[0]].refine(cat, cut=(op.c_int(i) == dnn_score_max_process_index))
+                    subcat_selections_process[cat] = selections[cat.split("_%s"%process)[0]].refine(cat, cut=(i == op.c_int(dnn_score_max_process_index)))
                 data_process = {sel_name: data_process for sel_name in subcat_selections_process.keys()}
                 dnn_scores["multi_%s"%process].populate(data_process, subcat_selections_process)
                 selections_process.update(subcat_selections_process)
