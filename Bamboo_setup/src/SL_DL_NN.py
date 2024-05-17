@@ -65,16 +65,13 @@ class SL_DL_NN(NanoBaseHHbbWW):
         else:
             data_signal = 0
             data_background = 0
-            dnn_score_max_process_index = -9999
-            dnn_score_max = 0
             for i in range(0, n_output_nodes):
                 process = processes[i]
                 if "HH" in process:
                     data_signal += data[i]
                 else:
                     data_background += data[i]
-                dnn_score_max = op.switch(data[i] > dnn_score_max, data[i], dnn_score_max)
-                dnn_score_max_process_index = op.rng_max_element_index(data, lambda score: score)
+            dnn_score_max_process_index = op.rng_max_element_index(data, lambda score: score)
 
             for i in range(0, n_output_nodes):
                 process = processes[i]
