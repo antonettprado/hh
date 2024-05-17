@@ -51,6 +51,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
         dnn_score = Variable1D("DNN_score")
         subcat_names = dnn_score.subcats
         selections = var_defs.get_selections_subset(subcat_names)
+        selections_process = {}
 
         model, input_vars_names, n_output_nodes, processes = SL_DL_NN.get_NN_model(NNdir)
         input_vars = SL_DL_NN.gather_input_vars(input_vars_names, objects, selections)
@@ -81,11 +82,12 @@ class SL_DL_NN(NanoBaseHHbbWW):
                 data_process = data[i]
                 dnn_scores["multi_%s"%process] = Variable1D("DNN_%s_score"%process)
                 subcat_names_process = dnn_scores["multi_%s"%process].subcats
-                selections_process = {}
+                subcat_selections_process = {}
                 for cat in subcat_names_process:
-                    selections_process[cat] = selections[cat.split("_%s"%process)[0]].refine(cat, cut=(process == dnn_score_max_process))
-                data_process = {sel_name: data_process for sel_name in selections_process.keys()}
-                dnn_scores["multi_%s"%process].populate(data_process, selections_process)
+                    subcat_selections_process[cat] = selections[cat.split("_%s"%process)[0]].refine(cat, cut=(process == dnn_score_max_process))
+                data_process = {sel_name: data_process for sel_name in subcat_selections_process.keys()}
+                dnn_scores["multi_%s"%process].populate(data_process, subcat_selections_process)
+                selections_process.update(subcat_selections_process)
         
             dnn_scores["multi_s_over_b"] = Variable1D("DNN_score_s_over_b")
             subcat_names_s_over_b = dnn_scores["multi_s_over_b"].subcats
