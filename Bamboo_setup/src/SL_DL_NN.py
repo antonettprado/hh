@@ -90,7 +90,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             dnn_scores["multi_s_over_b"] = Variable1D("DNN_score_s_over_b")
             subcat_names_s_over_b = dnn_scores["multi_s_over_b"].subcats
             selections_s_over_b = var_defs.get_selections_subset(subcat_names_s_over_b)
-            data_s_over_b = math.log10(data_signal/data_background)
+            data_s_over_b = op.log10(data_signal/data_background)
             data_s_over_b = {sel_name: data_s_over_b for sel_name in selections_s_over_b.keys()}
             dnn_scores["multi_s_over_b"].populate(data_s_over_b, selections_s_over_b)
 
