@@ -625,8 +625,8 @@ def main(workdir_path: str, n_bkg: int):
         input_variable_ranking_file.write("Number of input variables: %d\n\n"%n_var)
         input_variable_ranking_file.write("Ranked input variables using SHAP variables: \n\n")
         for i in range(0, n_var):
-            #print ("  %s    %s"%(input_variabless_ranked_shap[i], input_variabless_ranked_gradient[i]))
-            input_variable_ranking_file.write("  %s\n"%(input_variabless_ranked_shap[i]))
+            #print ("%d.  %s    %s"%(i, input_variabless_ranked_shap[i], input_variabless_ranked_gradient[i]))
+            input_variable_ranking_file.write("%d.  %s\n"%(i+1, input_variabless_ranked_shap[i]))
         input_variable_ranking_file.write("\n")
         input_variable_ranking_file.close()
 
