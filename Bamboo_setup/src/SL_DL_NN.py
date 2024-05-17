@@ -73,9 +73,8 @@ class SL_DL_NN(NanoBaseHHbbWW):
                     data_signal += data[i]
                 else:
                     data_background += data[i]
-                if data[i] > dnn_score_max:
-                    dnn_score_max = data[i]
-                    dnn_score_max_process = process
+                dnn_score_max = op.switch(data[i] > dnn_score_max, data[i], dnn_score_max)
+                dnn_score_max_process = op.switch(data[i] > dnn_score_max, process, dnn_score_max_process)
 
             for i in range(0, n_output_nodes):
                 process = processes[i]
