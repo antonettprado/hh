@@ -10,6 +10,33 @@
             "title": "DNN score",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
+        "DNN_score_s_over_b":
+        {
+            "nbins": 100,
+            "min": -6,
+            "max": 3,
+            "unit": "",
+            "title": "DNN score log(S/B)",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
+        "DNN_HH_score":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 1,
+            "unit": "",
+            "title": "DNN HH score",
+            "subcats": ["SL_res_1b_HH", "SL_res_2b_HH", "SL_res_2b_x_HH", "SL_boosted_HH", "DL_res_1b_HH", "DL_res_2b_HH", "DL_boosted_HH"]
+        },
+        "DNN_ttbar_score":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 1,
+            "unit": "",
+            "title": "DNN ttbar score",
+            "subcats": ["SL_res_1b_ttbar", "SL_res_2b_ttbar", "SL_res_2b_x_ttbar", "SL_boosted_ttbar", "DL_res_1b_ttbar", "DL_res_2b_ttbar", "DL_boosted_ttbar"]
+        },
         "bjets_mbb": 
         {
             "nbins": 125,
