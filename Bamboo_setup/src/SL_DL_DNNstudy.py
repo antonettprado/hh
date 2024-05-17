@@ -22,6 +22,7 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         super(SL_DL_DNNstudy, self).addArgs(parser)
         parser.add_argument("-cw", "--corr_workdir", action='store', help='The work directory where the correction file is')
         parser.add_argument("-nn", action='store', dest = "NNdir", help='Input NN model directory')
+        parser.add_argument("-rat", action='store', dest = "ratio", help='gen-level ttpair_pt ratio name (as in json file). Ex: -rat 0p50pt')
 
     def determine_weight_sf(self, sample, tree, noSel):
 
@@ -36,7 +37,7 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
             input_workdir = Path(self.args.corr_workdir)
             corr_file = input_workdir / 'results' / 'ttpair_pt_scaling.json'
             corr_file = corr_file.resolve()
-            weight_sf = get_correction(corr_file, 'ttpair_pt_ratio', params={"xaxis": ttpair_pt}, defineOnFirstUse=True, sel=sel)(None) 
+            weight_sf = get_correction(corr_file, self.args.ratio, params={"xaxis": ttpair_pt}, defineOnFirstUse=True, sel=sel)(None) 
         else:
             weight_sf = 1
 
@@ -116,8 +117,6 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         else:
             noSel = _noSel
 
-        
-
         self.yields.add(noSel, "noSel")
         self.noSel = noSel
 
@@ -161,7 +160,7 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
-
+        print(f"Running for {self.args.ratio} ratio")
         sel_name = "SL_res_2b_x"
 
         dnn_score = SL_DL_NN.get_dnn_score(self.args.NNdir, objects)

@@ -23,7 +23,7 @@ EQBIN_BJETS_PHI= EqBin(100, -4, 4)
 EQBIN_BJETS_PHI_ABS= EqBin(50, 0, 4)
 EQBIN_BJETS_DR = EqBin(100, 0, 7)
 EQBIN_BJETS_MBB = EqBin(125, 0, 500)
-EQBIN_TT_PT = EqBin(125, 0, 500)
+EQBIN_TT_PT = EqBin(250, 0, 1000)
 EQBIN_ALL_ST = EqBin(500, 0, 2000)
 EQBIN_ALL = EqBin(600, 0, 3000)
 
@@ -508,10 +508,18 @@ class SL_DL_vars_gen(NanoAODHistoModule):
                 Plot.make1D(tag+'topbar_pt', topbar.pt, sel, EQBIN_TT_PT),
                 Plot.make2D(tag+'topbar_pt_vs_top_pt', [top.pt, topbar.pt], sel, [EQBIN_TT_PT, EQBIN_TT_PT]),
                 Plot.make1D(tag+'ttpair_pt', ttpair_pt, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_0p50pt', ttpair_pt*0.50, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_0p80pt', ttpair_pt*0.80, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_0p85pt', ttpair_pt*0.85, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_0p90pt', ttpair_pt*0.90, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_0p95pt', ttpair_pt*0.95, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_1p05pt', ttpair_pt*1.05, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_1p10pt', ttpair_pt*1.10, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_1p15pt', ttpair_pt*1.15, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_1p20pt', ttpair_pt*1.20, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p25pt', ttpair_pt*1.25, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p30pt', ttpair_pt*1.30, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p50pt', ttpair_pt*1.50, sel, EQBIN_TT_PT),
             ])
 
         study_objs = dict(ttpair_pt=ttpair_pt)
@@ -583,7 +591,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         super(SL_DL_vars_gen, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        compare_subcategories(workdir, shape_only=False, no_type=False, custom=True)
+        # compare_subcategories(workdir, shape_only=False, no_type=False, custom=True)
 
         # file = os.path.join(self.args.output, 'results/TTbar_sl.root')
         # df = ROOT.RDataFrame("noSel", file)
@@ -602,45 +610,57 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         INTERPOLATION_SCALE_FACTOR_1D = 9
         DECIMAL_PLACES = 3
 
-        ref_pt = 'SL_res_2b_x_ttpair_pt'
-        ref_1p10pt = 'SL_res_2b_x_ttpair_1p10pt'
-        hist_pt = get_total_hist(ref_pt, BACKG_SAMPLES, normalized=False)
-        hist_1p10pt = get_total_hist(ref_1p10pt, BACKG_SAMPLES, normalized=False)
+        refs = []
+        for key in BACKG_SAMPLES[0].GetListOfKeys():
+            obj = key.ReadObj()
+            if 'SL_res_2b_x_ttpair' in obj.GetName() and 'ttpair_pt' not in obj.GetName():
+                refs.append(obj.GetName())
 
-        ratio_hist = hist_1p10pt.Clone()
-        ratio_hist.Divide(hist_pt)
+        ratio_plots_outdir = Path(workdir) / 'ratio_plots'
+        if not ratio_plots_outdir.exists(): ratio_plots_outdir.mkdir(exist_ok=True, parents=True)
 
-        ratio_file = ROOT.TFile(resultsdir + "/ttpair_pt_ratio.root", "RECREATE")
-        ratio_hist.Write()
-        ratio_file.Close()
-
-        canvas = ROOT.TCanvas('canvas', '', 200, 200)
-        canvas.SetGrid()
-        ratio_hist.SetStats(0)
-        ratio_hist.Draw("hist")
-        canvas.Update()
-        canvas.SaveAs( resultsdir + 'ratio.pdf')
-        canvas.Close()
-
+        ratios_file = ROOT.TFile(resultsdir + "/ttpair_pt_ratios.root", "RECREATE") 
         all_corrections = []
+        for ref in refs:
 
-        nbins= ratio_hist.GetNbinsX()
-        bin_edges = np.array([ratio_hist.GetBinLowEdge(i+1) for i in range(nbins+1)])
-        bin_contents = np.array([ratio_hist.GetBinContent(i+1) for i in range(nbins)])
+            compare_subcategories(workdir, shape_only=False, no_type=False, custom=True, extra=ref)
 
-        corr = cs.Correction(
-            name='ttpair_pt_ratio',
-            version=0,
-            inputs=[cs.Variable(name="xaxis", type="real")],
-            output=cs.Variable(name="", type="real", description=""),
-            data=cs.Binning(
-                nodetype="binning",
-                input="xaxis",
-                edges=list(np.round(bin_edges, DECIMAL_PLACES)),
-                content=list(np.round(bin_contents, DECIMAL_PLACES)),
-                flow="clamp"))
-        all_corrections.append(corr)
+            numerator = ref
+            denominator = 'SL_res_2b_x_ttpair_pt'
+            numerator_hist = get_total_hist(numerator, BACKG_SAMPLES, normalized=False)
+            denominator_hist = get_total_hist(denominator, BACKG_SAMPLES, normalized=False)
 
+            ratio_hist = numerator_hist.Clone()
+            ratio_hist.Divide(denominator_hist)
+            ratio_hist.Write()
+
+            canvas = ROOT.TCanvas('canvas', '', 200, 200)
+            canvas.SetGrid()
+            ratio_hist.SetStats(0)
+            ratio_hist.Draw("hist")
+            canvas.Update()
+            ttpair_scaledpt = ref.removeprefix('SL_res_2b_x_ttpair_')
+            print(ttpair_scaledpt)
+            canvas.SaveAs( str( ratio_plots_outdir / f'{ttpair_scaledpt}.pdf'))
+            canvas.Close()
+
+            nbins= ratio_hist.GetNbinsX()
+            bin_edges = np.array([ratio_hist.GetBinLowEdge(i+1) for i in range(nbins+1)])
+            bin_contents = np.array([ratio_hist.GetBinContent(i+1) for i in range(nbins)])
+            corr = cs.Correction(
+                name=ttpair_scaledpt,
+                version=0,
+                inputs=[cs.Variable(name="xaxis", type="real")],
+                output=cs.Variable(name="", type="real", description=""),
+                data=cs.Binning(
+                    nodetype="binning",
+                    input="xaxis",
+                    edges=list(np.round(bin_edges, DECIMAL_PLACES)),
+                    content=list(np.round(bin_contents, DECIMAL_PLACES)),
+                    flow="clamp"))
+            all_corrections.append(corr)
+
+        ratios_file.Close()
         cset = cs.CorrectionSet(schema_version=2, description=f"TTbar pt scaling", corrections=all_corrections) 
         output_llr_file = os.path.join(resultsdir, "ttpair_pt_scaling.json")
         with open(output_llr_file, "w") as outfile:

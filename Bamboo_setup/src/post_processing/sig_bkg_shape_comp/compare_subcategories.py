@@ -270,13 +270,13 @@ def draw1D_notype(hist_signal, hist_backg, outname, path: Path, shape_only:bool)
     canvas.SaveAs(str(path / (outname +'.pdf')))
     canvas.Close()
 
-def draw_ttpair_pts_for_DNNstudy(dirname):
+def draw_ttpair_pts_for_DNNstudy(dirname, ttpair_scaledpt: str):
 
     final_path = OUTPUT_PATH / dirname
     if not final_path.exists(): final_path.mkdir(parents=True, exist_ok=True)
 
     ttpair_pt = get_total_hist('SL_res_2b_x_ttpair_pt', BACKG_SAMPLES, normalized=False)
-    ttpair_1p10pt = get_total_hist('SL_res_2b_x_ttpair_1p10pt', BACKG_SAMPLES, normalized=False)
+    ttpair_1p10pt = get_total_hist(ttpair_scaledpt, BACKG_SAMPLES, normalized=False)
 
     ttpair_pt.SetLineColorAlpha(ROOT.kGreen, 0.5)
     ttpair_pt.SetLineWidth(3)
@@ -295,15 +295,17 @@ def draw_ttpair_pts_for_DNNstudy(dirname):
     ttpair_1p10pt.Draw("hist same")
 
     leg = ROOT.TLegend(0.55, 0.75, 0.9, 0.9)
+    leg.SetTextSize(0.025)
     leg.AddEntry(ttpair_pt, 'ttpair_pt', 'l')
-    leg.AddEntry(ttpair_1p10pt, 'ttpair_pt*1.10', 'l')
+    ttpair_scaledpt = ttpair_scaledpt.removeprefix('SL_res_2b_x_')
+    leg.AddEntry(ttpair_1p10pt, ttpair_scaledpt, 'l')
     leg.Draw()
 
     canvas.Update()
-    canvas.SaveAs(str(final_path / ('ttpair_pts' +'.pdf')))
+    canvas.SaveAs(str(final_path / (ttpair_scaledpt +'.pdf')))
     canvas.Close()
 
-def main(source_path: str, shape_only:bool=False, no_type: bool=False, custom:bool=False):
+def main(source_path: str, shape_only:bool=False, no_type: bool=False, custom:bool=False, extra=None):
     global SOURCE_PATH, SOURCE_DIR, OUTPUT_PATH, OUTPUT_DIR, SIGNAL_SAMPLES, BACKG_SAMPLES, FAILED_VARIABLES, PROBLEMATIC_VARIABLES
     SOURCE_PATH = Path(source_path)
     SOURCE_DIR = SOURCE_PATH.name
@@ -329,7 +331,7 @@ def main(source_path: str, shape_only:bool=False, no_type: bool=False, custom:bo
                 refs.append(obj.GetName())
 
     if custom:
-        draw_ttpair_pts_for_DNNstudy(dirname='custom')
+        draw_ttpair_pts_for_DNNstudy(dirname='custom', ttpair_scaledpt=extra)
     if no_type:
         for ref in refs:
             if 'yield' not in ref:
@@ -364,6 +366,7 @@ if __name__ == "__main__":
     parser.add_argument("-nt", "--no_type", action="store_true", default=False, help="No Variable type")
     parser.add_argument("-s", "--shape_only", action="store_true", help="Comparing shapes only")
     parser.add_argument("-c", "--custom", action="store_true", help="Custom plotting")
+    parser.add_argument("-e", "--extra", action="store", default=None, help="name of ref for ttpair_sclaedp" )
     args = parser.parse_args()
 
-    main(args.workdir, args.shape_only, args.no_type, args.custom)
+    main(args.workdir, args.shape_only, args.no_type, args.custom, args.extra)

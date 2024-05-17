@@ -638,8 +638,8 @@ def main(workdir_path: str, n_bkg: int):
         model_params['Training Events'] = {}
         model_params['Test Events'] = {}
         for process in processes:
-            model_params['Training Events'][process] = Y_train_mod[process].value_counts()[1.0]
-            model_params['Test Events'][process] = Y_test_mod[process].value_counts()[1.0]
+            model_params['Training Events'][process] = int(Y_train_mod[process].value_counts()[1])
+            model_params['Test Events'][process] = int(Y_test_mod[process].value_counts()[1])
         model_params['Output Metrics'] = {}
         if n_output_nodes == 1:
             model_params['Output Metrics'] = {
