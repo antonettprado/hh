@@ -7,8 +7,11 @@ Processes:
     samples: [TTbar_sl, TTbar_dl]
 
 Channels:
-  SL_res_2b_x: [
-    DNN_score
+  SL_res_2b_x_HH: [
+    DNN_HH_score
+  ]
+  SL_res_1b_HH: [
+    DNN_HH_score
   ]
 
 
