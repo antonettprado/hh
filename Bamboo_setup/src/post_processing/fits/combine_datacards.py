@@ -21,7 +21,7 @@ if __name__ == "__main__":
     with open(args.cat_disc_filename,'r') as yaml_file:
         cat_disc_yaml_data = yaml.safe_load(yaml_file)
     
-    combine_datacard_command = "python combineCards.py "
+    combine_datacard_command = "combineCards.py "
     combined_discriminants = ""
 
     for channel in cat_disc_yaml_data["Channels"]:
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         print ("    Discriminant: %s"%discriminant)
 
         discriminant_dir = channel_dir + "/" + discriminant
-        if combined_discriminants = "":
+        if combined_discriminants == "":
             combined_discriminants += discriminant
         else:
             combined_discriminants += "_" + discriminant
@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
     combine_datacard_command += " > %s/combined_datacard.txt"%output_dir
     os.system(combine_datacard_command)
+    print ()
 
         
 
