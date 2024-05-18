@@ -10,8 +10,8 @@ Channels:
   SL_res_2b_x_HH: [
     DNN_HH_score
   ]
-  SL_res_1b_HH: [
-    DNN_HH_score
+  SL_res_2b_x_ttbar: [
+    DNN_ttbar_score
   ]
 
 
