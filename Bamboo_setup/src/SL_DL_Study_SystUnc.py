@@ -14,14 +14,14 @@ import utils.variable_definition as var_defs
 from pathlib import Path
 import os
 
-class SL_DL_study_syst_unc(NanoAODHistoModule):
+class SL_DL_Study_SystUnc(NanoAODHistoModule):
     def __init__(self, args):
-        super(SL_DL_study_syst_unc, self).__init__(args)
+        super(SL_DL_Study_SystUnc, self).__init__(args)
         self.event_nr_sel = "odd"
         self.output_llr = False
 
     def addArgs(self, parser):
-        super(SL_DL_study_syst_unc, self).addArgs(parser)
+        super(SL_DL_Study_SystUnc, self).addArgs(parser)
         parser.add_argument("-rat", action='store', dest = "ratio", help='gen-level ttpair_pt ratio name (as in json file). Ex: -rat 0p50pt')
         parser.add_argument("-ttpair_cw", "--ttpair_corr_workdir", action='store', help='The work directory where the ttpair pt correction file is')
         parser.add_argument("-nn", action='store', dest = "NNdir", help='Input NN model directory')
@@ -73,7 +73,7 @@ class SL_DL_study_syst_unc(NanoAODHistoModule):
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
 
-        tree, _noSel, backend, lumiArgs = super(SL_DL_study_syst_unc, self).prepareTree(tree=tree,
+        tree, _noSel, backend, lumiArgs = super(SL_DL_Study_SystUnc, self).prepareTree(tree=tree,
                                                                                  sample=sample,
                                                                                  sampleCfg=sampleCfg,
                                                                                  description=getCUSTOMNanoAODDescription(),
@@ -143,7 +143,7 @@ class SL_DL_study_syst_unc(NanoAODHistoModule):
         return tree, baseSel, backend, lumiArgs
 
     def readCounters(self, resultsFile):
-        counters = super(SL_DL_study_syst_unc, self).readCounters(resultsFile)
+        counters = super(SL_DL_Study_SystUnc, self).readCounters(resultsFile)
         # Corrections to the generated sum "
         if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
             sample = os.path.basename(resultsFile.GetName())
@@ -201,7 +201,7 @@ class SL_DL_study_syst_unc(NanoAODHistoModule):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        super(SL_DL_study_syst_unc, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(SL_DL_Study_SystUnc, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
         compare_subcategories(workdir, shape_only=True)
