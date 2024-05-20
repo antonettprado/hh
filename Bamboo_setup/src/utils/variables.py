@@ -417,7 +417,7 @@ class Variable3D(Variable):
         return child
 
 # Definitions of the LLR binning for various dimensions of LLR
-lr_binning = { 
+llr_binning = { 
                1: { 'nbins':100, 'min':-3, 'max':3 },
                2: { 'nbins':100, 'min':-3, 'max':3 },
                3: { 'nbins':100, 'min':-4, 'max':4 },
@@ -436,7 +436,7 @@ class LikelihoodRatio(Variable):
     Variable subclass for (multidimensional) likelihood ratios.
 
     Attributes (on top of Variable super class):
-        dimensionality (int): the number of constituent LLRs, used to determin binning from lr_binning
+        dimensionality (int): the number of constituent LLRs, used to determin binning from llr_binning
         vars (dict[str:Variable]): dictionary of all the constituent variables
         subcats (list[str]): set intersection of all the constituent variable subcats
     '''
@@ -454,7 +454,7 @@ class LikelihoodRatio(Variable):
         self.vars.update({ name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D})
         self.vars.update({ name: Variable3D(name) for name in self.names if name in ALL_VARNAMES_3D})
         self.dimensionality = len(self.names)
-        self.update(**lr_binning[self.dimensionality])
+        self.update(**llr_binning[self.dimensionality])
         self.generate_eqbin()
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
@@ -463,7 +463,7 @@ class LikelihoodRatio(Variable):
         self.update(**kwargs)
 
     def generate_eqbin(self):
-        '''Generates the bamboo.plots.EquidistantBinning object from the dimensionality and lr_binning'''
+        '''Generates the bamboo.plots.EquidistantBinning object from the dimensionality and llr_binning'''
         if not all(item in self.__dict__ for item in ['nbins', 'min', 'max']):
             print(f"Could not generate ROOT EqBin for {self.name}. Check json file")
             return
