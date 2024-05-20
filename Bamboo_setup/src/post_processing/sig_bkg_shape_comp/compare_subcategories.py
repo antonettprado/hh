@@ -344,7 +344,7 @@ def main(source_path: str, shape_only:bool=False, no_type: bool=False, custom:bo
             elif isinstance(var, Variable2D) or isinstance(var, Variable3D):
                 draw2D(var, shape_only, dirname='2D')
             elif isinstance(var, LikelihoodRatio):
-                draw1D(var, shape_only, dirname='LR')
+                draw1D(var, shape_only, dirname='LLR')
             else:
                 FAILED_VARIABLES.append(var)
         if FAILED_VARIABLES:
