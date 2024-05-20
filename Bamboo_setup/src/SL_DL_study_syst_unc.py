@@ -7,22 +7,25 @@ import bamboo.treefunctions as op
 
 from SL_DL_vars_gen import SL_DL_vars_gen
 from SL_DL_vars_reco import SL_DL_vars_reco
-from SL_DL_NN import SL_DL_NN
+from SL_DL_NN_v2 import SL_DL_NN_v2
+from SL_DL_likelihood_ratio import SL_DL_likelihood_ratio
 import utils.variable_definition as var_defs
+
 from pathlib import Path
 import os
 
-class SL_DL_DNNstudy(NanoAODHistoModule):
+class SL_DL_study_syst_unc(NanoAODHistoModule):
     def __init__(self, args):
-        super(SL_DL_DNNstudy, self).__init__(args)
+        super(SL_DL_study_syst_unc, self).__init__(args)
         self.event_nr_sel = "odd"
         self.output_llr = False
 
     def addArgs(self, parser):
-        super(SL_DL_DNNstudy, self).addArgs(parser)
-        parser.add_argument("-cw", "--corr_workdir", action='store', help='The work directory where the correction file is')
-        parser.add_argument("-nn", action='store', dest = "NNdir", help='Input NN model directory')
+        super(SL_DL_study_syst_unc, self).addArgs(parser)
         parser.add_argument("-rat", action='store', dest = "ratio", help='gen-level ttpair_pt ratio name (as in json file). Ex: -rat 0p50pt')
+        parser.add_argument("-ttpair_cw", "--ttpair_corr_workdir", action='store', help='The work directory where the ttpair pt correction file is')
+        parser.add_argument("-nn", action='store', dest = "NNdir", help='Input NN model directory')
+        parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the llrs correction file is')
 
     def determine_weight_sf(self, sample, tree, noSel):
 
@@ -34,7 +37,7 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
             _, DNNstudy_objs = SL_DL_vars_gen.for_DNN_study(sel_name, gen_objects, selections)
             ttpair_pt = DNNstudy_objs['ttpair_pt']
 
-            input_workdir = Path(self.args.corr_workdir)
+            input_workdir = Path(self.args.ttpair_corr_workdir)
             corr_file = input_workdir / 'results' / 'ttpair_pt_scaling.json'
             corr_file = corr_file.resolve()
             weight_sf = get_correction(corr_file, self.args.ratio, params={"xaxis": ttpair_pt}, defineOnFirstUse=True, sel=sel)(None) 
@@ -70,7 +73,7 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
 
-        tree, _noSel, backend, lumiArgs = super(SL_DL_DNNstudy, self).prepareTree(tree=tree,
+        tree, _noSel, backend, lumiArgs = super(SL_DL_study_syst_unc, self).prepareTree(tree=tree,
                                                                                  sample=sample,
                                                                                  sampleCfg=sampleCfg,
                                                                                  description=getCUSTOMNanoAODDescription(),
@@ -140,7 +143,7 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         return tree, baseSel, backend, lumiArgs
 
     def readCounters(self, resultsFile):
-        counters = super(SL_DL_DNNstudy, self).readCounters(resultsFile)
+        counters = super(SL_DL_study_syst_unc, self).readCounters(resultsFile)
         # Corrections to the generated sum "
         if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
             sample = os.path.basename(resultsFile.GetName())
@@ -163,9 +166,21 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         print(f"Running for {self.args.ratio} ratio")
         sel_name = "SL_res_2b_x"
 
-        dnn_score = SL_DL_NN.get_dnn_score(self.args.NNdir, objects)
+        dnn_score = SL_DL_NN_v2.get_dnn_score(self.args.NNdir, objects)
         dnn_score = dnn_score[sel_name]
-        plots.append(Plot.make1D(dnn_score.ref, dnn_score.data, dnn_score.selection, dnn_score.eqbin, xTitle=dnn_score.full_title))
+
+        if not dnn_score.multiclass:
+            # ------------- Binary DNN -------------
+            plots.append(Plot.make1D(dnn_score.ref, dnn_score.data, dnn_score.selection, dnn_score.eqbin, xTitle=dnn_score.full_title))
+        else:
+            # ---------- Multiclass DNN ------------
+            for i, process in enumerate(dnn_score.processes):
+                plots.append(Plot.make1D('_'.join([dnn_score.ref,process]), dnn_score.data[i], dnn_score.selection, dnn_score.eqbin, xTitle=dnn_score.full_title))
+            # scores of signal / scores of background
+            plots.append(Plot.make1D(dnn_score.ref+'_s_over_b', op.log10(dnn_score.data[0]/dnn_score.data[1]), dnn_score.selection, EqBin(100, -6, 3), xTitle=dnn_score.full_title))
+
+        select_llrs = SL_DL_likelihood_ratio.get_select_llrs(self.args.llr_corr_workdir, objects)
+        plots.extend([Plot.make1D(subcat_llr.ref, subcat_llr.data, subcat_llr.selection, llr.eqbin) for llr in select_llrs for subcat_llr in llr if subcat_llr.subcat == sel_name])
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -181,12 +196,13 @@ class SL_DL_DNNstudy(NanoAODHistoModule):
         self.yields.add(selections['DL_boosted'], 'DL_boosted')
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
+        # self.yields = SL_DL_NN_v2.update_with_DNN_yields(self.yields, dnn_score, selections)
 
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        super(SL_DL_DNNstudy, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(SL_DL_study_syst_unc, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
         compare_subcategories(workdir, shape_only=True)
-        compare_subcategories(workdir)
+        compare_subcategories(workdir, shape_only=False)
