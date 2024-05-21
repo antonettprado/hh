@@ -166,9 +166,18 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         print(f"Running for {self.args.ratio} ratio")
         sel_name = "SL_res_2b_x"
 
+        gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
+        gen_selections = SL_DL_vars_gen.get_gen_selections(self.gen_objects, baseSel)
+        _, study_objs = SL_DL_vars_gen.for_DNN_study(sel_name, gen_objects, gen_selections)
+        gen_ttpair_pt = study_objs['gen_ttpair_pt']
+        plots.append(Plot.make1D('gen_ttpair_pt', gen_ttpair_pt, gen_selections[sel_name], SL_DL_vars_gen.EQBIN_TT_PT))
+
+        all_jets_HT = var_defs.get_all_jets_HT(objects, selections)
+        lep1_pt = var_defs.get_lep1_pt(objects, selections)
+        plots.extend([Plot.make1D(sc_var.ref, sc_var.data, sc_var.selection, sc_var.eqbin, xTitle=sc_var.full_title) for var in [all_jets_HT, lep1_pt] for sc_var in var if sc_var.subcat == sel_name])
+
         dnn_score = SL_DL_NN_v2.get_dnn_score(self.args.NNdir, objects)
         dnn_score = dnn_score[sel_name]
-
         if not dnn_score.multiclass:
             # ------------- Binary DNN -------------
             plots.append(Plot.make1D(dnn_score.ref, dnn_score.data, dnn_score.selection, dnn_score.eqbin, xTitle=dnn_score.full_title))

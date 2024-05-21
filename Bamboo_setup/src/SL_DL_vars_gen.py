@@ -481,7 +481,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return plots
 
     @staticmethod
-    def for_DNN_study(sel_name, objs, selections, plots=None):
+    def for_DNN_study(sel_name, objs, selections:dict, plots=None):
 
         sel, tag = SL_DL_vars_gen.get_selection_and_tags(sel_name, selections)
 
