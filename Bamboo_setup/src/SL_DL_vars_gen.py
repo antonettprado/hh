@@ -525,7 +525,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
         lep0_pt = op.switch(objs['genElectrons'][0].pt > objs['genMuons'][0].pt, objs['genElectrons'][0].pt, objs['genMuons'][0].pt)
 
-        study_objs = dict(ttpair_pt=ttpair_pt, lep0_pt=lep0_pt)
+        study_objs = dict(top=top, topbar=topbar, ttpair_pt=ttpair_pt, lep0_pt=lep0_pt)
 
         return plots, study_objs
 
