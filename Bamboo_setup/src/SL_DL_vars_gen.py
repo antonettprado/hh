@@ -126,7 +126,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         genJets = tree.GenJet
         genJetAK8s = tree.GenJetAK8
         genElectrons = op.select(genParts, lambda part: op.AND(op.abs(part.pdgId)==11, op.abs(part.genPartMother.pdgId)==24))
+        genElectrons = op.sort(genElectrons, lambda e: -e.pt)
         genMuons = op.select(genParts, lambda part: op.AND(op.abs(part.pdgId)==13, op.abs(part.genPartMother.pdgId)==24))
+        genMuons = op.sort(genMuons, lambda mu: -mu.pt)
         MET = tree.GenMET
 
         selected_genJets = op.select(genJets, lambda jet: jet.pt > 25)
@@ -145,8 +147,8 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             genParts=genParts,
             genJets=genJets,
             genJetAK8s=genJetAK8s,
-            electrons=genElectrons,
-            muons=genMuons,
+            genElectrons=genElectrons,
+            genMuons=genMuons,
             MET=MET,
             selected_genJets=selected_genJets,
             bJets=bJets,
@@ -164,25 +166,25 @@ class SL_DL_vars_gen(NanoAODHistoModule):
     @staticmethod
     def get_gen_selections(gen_objects, noSel):
 
-        SL = noSel.refine("SL", cut=[op.OR(
-            op.AND(op.rng_len(gen_objects['electrons']) == 1, op.rng_len(gen_objects['muons']) == 0),
-            op.AND(op.rng_len(gen_objects['electrons']) == 0, op.rng_len(gen_objects['muons']) == 1))])
-        DL = noSel.refine("DL", cut=[op.OR(
-            op.AND(op.rng_len(gen_objects['electrons'])==2, op.rng_len(gen_objects['muons']) == 0),
-            op.AND(op.rng_len(gen_objects['electrons'])==0, op.rng_len(gen_objects['muons']) == 2),
-            op.AND(op.rng_len(gen_objects['electrons'])==1, op.rng_len(gen_objects['muons']) == 1))])
+        SL = noSel.refine("gen_SL", cut=[op.OR(
+            op.AND(op.rng_len(gen_objects['genElectrons']) == 1, op.rng_len(gen_objects['genMuons']) == 0),
+            op.AND(op.rng_len(gen_objects['genElectrons']) == 0, op.rng_len(gen_objects['genMuons']) == 1))])
+        DL = noSel.refine("gen_DL", cut=[op.OR(
+            op.AND(op.rng_len(gen_objects['genElectrons'])==2, op.rng_len(gen_objects['genMuons']) == 0),
+            op.AND(op.rng_len(gen_objects['genElectrons'])==0, op.rng_len(gen_objects['genMuons']) == 2),
+            op.AND(op.rng_len(gen_objects['genElectrons'])==1, op.rng_len(gen_objects['genMuons']) == 1))])
 
-        SL_res_1b = SL.refine("Gen SL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        SL_res_2b = SL.refine("Gen SL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        SL_boosted = SL.refine("Gen SL boosted jet selection", cut=[ op.rng_len(gen_objects['bJetAK8s'])>= 1])
+        SL_res_1b = SL.refine("gen_SL_res_1b", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        SL_res_2b = SL.refine("gen_SL_res_2b", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        SL_boosted = SL.refine("gen_SL_boosted", cut=[ op.rng_len(gen_objects['bJetAK8s'])>= 1])
 
-        DL_res_1b = DL.refine("Gen DL resolved 1b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        DL_res_2b = DL.refine("Gen DL resolved 2b jet selection", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
-        DL_boosted = DL.refine("Gen DL boosteded jet selection", cut=[op.rng_len(gen_objects['bJetAK8s'])>= 1])
+        DL_res_1b = DL.refine("gen_DL_res_1b", cut=[op.AND(op.rng_len(gen_objects['bJets']) == 1, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        DL_res_2b = DL.refine("gen_DL_reS_2b", cut=[op.AND(op.rng_len(gen_objects['bJets']) >= 2, op.rng_len(gen_objects['bJetAK8s']) == 0)])
+        DL_boosted = DL.refine("gen_DL_boosted", cut=[op.rng_len(gen_objects['bJetAK8s'])>= 1])
 
         # Include extra selection of >=2 nonbjets for resolved selections only
-        SL_res_1b_x = SL_res_1b.refine("Gen Nonbjets>=2 for SL_res_1b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
-        SL_res_2b_x = SL_res_2b.refine("Gen Nonbjets>=2 for SL_res_2b_x", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
+        SL_res_1b_x = SL_res_1b.refine("gen_SL_resolved_1b_2nonbjets", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
+        SL_res_2b_x = SL_res_2b.refine("gen_SL_resolved_2b_2nonbjets", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
 
         selections=dict(
             noSel=noSel,
@@ -371,10 +373,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         t1_pt = b1_jj_combos_mjj_mW_pt[t1_combo_max_pt_mjj_mW_index]
         
         rest_bjets_max_pt_mjj_mW = op.select(objs['sorted_bjets'], lambda b: op.NOT(b.idx == b1_combo_max_pt_mjj_mW.idx))
-        if op.rng_len(objs['electrons'])==1 and op.rng_len(objs['muons'])==0:
-            lep = objs['electrons'][0]
-        if op.rng_len(objs['electrons'])==0 and op.rng_len(objs['muons'])==1:
-            lep = objs['muons'][0]
+        if op.rng_len(objs['genElectrons'])==1 and op.rng_len(objs['genMuons'])==0:
+            lep = objs['genElectrons'][0]
+        if op.rng_len(objs['genElectrons'])==0 and op.rng_len(objs['genMuons'])==1:
+            lep = objs['genMuons'][0]
         b2_lnu_combos_pt_for_max_pt_mjj_mW = op.map(rest_bjets_max_pt_mjj_mW, lambda b2: (b2.p4 + lep.p4 + objs['MET'].p4).Pt())
         t2_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b2_lnu_combos_pt_for_max_pt_mjj_mW, lambda blnu_pt: blnu_pt)
         b2_combo_max_pt_mjj_mW = rest_bjets_max_pt_mjj_mW[t2_combo_max_pt_mjj_mW_index]
@@ -407,13 +409,13 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
         total_vars = {}
 
-        total_e_pt = op.rng_sum(objs['electrons'], lambda el: el.pt)
-        total_mu_pt = op.rng_sum(objs['muons'], lambda mu: mu.pt)
+        total_e_pt = op.rng_sum(objs['genElectrons'], lambda el: el.pt)
+        total_mu_pt = op.rng_sum(objs['genMuons'], lambda mu: mu.pt)
         total_jet_pt = op.rng_sum(objs['selected_genJets'], lambda jet: jet.pt)
         all_sT = op.sum(total_e_pt, total_mu_pt, total_jet_pt, objs['MET'].pt)
 
-        e_pt_50 = op.select(objs['electrons'], lambda el: el.pt>50)
-        mu_pt_50 = op.select(objs['muons'], lambda mu: mu.pt>50)
+        e_pt_50 = op.select(objs['genElectrons'], lambda el: el.pt>50)
+        mu_pt_50 = op.select(objs['genMuons'], lambda mu: mu.pt>50)
         jet_pt_50 = op.select(objs['selected_genJets'], lambda jet: jet.pt>50)
         total_e_pt_50 = op.switch(op.rng_count(e_pt_50)>0, op.rng_sum(e_pt_50, lambda el: el.pt, start=op.c_float(0.)), op.c_float(0.))
         total_mu_pt_50 = op.switch(op.rng_count(mu_pt_50)>0, op.rng_sum(mu_pt_50, lambda mu: mu.pt, start=op.c_float(0.)), op.c_float(0.))
@@ -423,8 +425,8 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         all_sT_50_cut = op.switch(all_sT_50 == 0, -9999, all_sT_50)
 
         zero_p4 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
-        total_el_p4 = op.rng_sum(objs['electrons'], lambda el: el.p4, start=zero_p4)
-        total_mu_p4 = op.rng_sum(objs['muons'], lambda mu:mu.p4, start=zero_p4)
+        total_el_p4 = op.rng_sum(objs['genElectrons'], lambda el: el.p4, start=zero_p4)
+        total_mu_p4 = op.rng_sum(objs['genMuons'], lambda mu:mu.p4, start=zero_p4)
         total_jet_p4 = op.rng_sum(objs['selected_genJets'], lambda jet:jet.p4, start=zero_p4)
         
         all_mInv_noMET = (total_el_p4 + total_mu_p4 + total_jet_p4).M()
@@ -454,10 +456,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         SL_res_2b_x = self.selections['SL_res_2b_x']
 
         # Add gen level lepton variables to plots
-        arbitrary_lepton_pt = op.switch(op.rng_len(objs['electrons'])==1, objs['electrons'][0].pt, objs['muon'][0].pt)
-        arbitrary_lepton_eta = op.switch(op.rng_len(objs['electrons'])==1, objs['electrons'][0].eta, objs['muon'][0].eta)
-        SL_res_2b_x_e_only = SL_res_2b_x.refine('only electrons', cut=[op.rng_len(objs['electrons'])==1])
-        SL_res_2b_x_mu_only = SL_res_2b_x.refine('only muons', cut=[op.rng_len(objs['muon'])==1])
+        arbitrary_lepton_pt = op.switch(op.rng_len(objs['genElectrons'])==1, objs['genElectrons'][0].pt, objs['muon'][0].pt)
+        arbitrary_lepton_eta = op.switch(op.rng_len(objs['genElectrons'])==1, objs['genElectrons'][0].eta, objs['muon'][0].eta)
+        SL_res_2b_x_e_only = SL_res_2b_x.refine('only genElectrons', cut=[op.rng_len(objs['genElectrons'])==1])
+        SL_res_2b_x_mu_only = SL_res_2b_x.refine('only genMuons', cut=[op.rng_len(objs['muon'])==1])
         
         # mjj, gen level
         jj_combos = op.combine((objs['sorted_nonbJets']), N=2)
@@ -468,12 +470,12 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         # Add additional plots
         plots.extend([
             Plot.make1D("SL_res_2b_x_lepton_pT", arbitrary_lepton_pt, SL_res_2b_x, EqBin(250, 0, 250), xTitle="SL_res_2b_x lepton pT (GeV)" ),
-            Plot.make1D("SL_res_2b_x_electron_pT", objs['electrons'][0].pt, SL_res_2b_x_e_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x electron pT (GeV)"),
+            Plot.make1D("SL_res_2b_x_electron_pT", objs['genElectrons'][0].pt, SL_res_2b_x_e_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x electron pT (GeV)"),
             Plot.make1D("SL_res_2b_x_muon_pT", objs['muon'][0].pt, SL_res_2b_x_mu_only, EqBin(250, 0, 250), xTitle="SL_res_2b_x muon pT (GeV)" ),
             Plot.make1D("SL_res_2b_x_mjj", mjj, SL_res_2b_x, EqBin(200, 0, 200), xTitle="SL_res_2b_x mjj (GeV)" ),
             
             Plot.make2D("SL_res_2b_x_lepton_pT_vs_eta", (arbitrary_lepton_eta, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x lepton #eta', yTitle='SL_res_2b_x lepton pT (GeV)'),
-            Plot.make2D("SL_res_2b_x_electron_pT_vs_eta", (objs['electrons'][0].eta, objs['electrons'][0].pt), SL_res_2b_x_e_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x electron #eta', yTitle='SL_res_2b_x electron pT (GeV)'),
+            Plot.make2D("SL_res_2b_x_electron_pT_vs_eta", (objs['genElectrons'][0].eta, objs['genElectrons'][0].pt), SL_res_2b_x_e_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x electron #eta', yTitle='SL_res_2b_x electron pT (GeV)'),
             Plot.make2D("SL_res_2b_x_muon_pT_vs_eta", (objs['muon'][0].eta, objs['muon'][0].pt), SL_res_2b_x_mu_only, (EqBin(100, -3, 3), EqBin(250, 0, 250)), xTitle='SL_res_2b_x muon #eta', yTitle='SL_res_2b_x muon pT (GeV)'),
             Plot.make2D("SL_res_2b_x_lepton_pT_vs_mjj", (mjj, arbitrary_lepton_pt), SL_res_2b_x, (EqBin(200, 0, 200), EqBin(250, 0, 250)), xTitle='SL_res_2b_x mjj (GeV)', yTitle='SL_res_2b_x lepton pT (GeV)'),
         ])
@@ -481,9 +483,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return plots
 
     @staticmethod
-    def for_DNN_study(sel_name, objs, selections:dict, plots=None):
-
-        sel, tag = SL_DL_vars_gen.get_selection_and_tags(sel_name, selections)
+    def for_DNN_study(objs, sel_name=None, selections:dict=None, plots=None):
 
         b_from_top = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == 5, p.genPartMother.pdgId == 6))
         Wp_from_top = op.select(objs['genParts'], lambda p: op.AND(p.pdgId == 24, p.genPartMother.pdgId == 6))
@@ -495,6 +495,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         ttpair_pt = (top.p4 + topbar.p4).Pt()
 
         if plots is not None:
+            sel, tag = SL_DL_vars_gen.get_selection_and_tags(sel_name, selections)
             plots.extend([
                 Plot.make1D(tag+'n_b_from_top', op.rng_len(b_from_top), sel, EqBin(10,0,10)),
                 Plot.make1D(tag+'n_W_from_top', op.rng_len(Wp_from_top), sel, EqBin(10,0,10)),
@@ -522,7 +523,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
                 Plot.make1D(tag+'ttpair_1p50pt', ttpair_pt*1.50, sel, EQBIN_TT_PT),
             ])
 
-        study_objs = dict(ttpair_pt=ttpair_pt)
+        lep0_pt = op.switch(objs['genElectrons'][0].pt > objs['genMuons'][0].pt, objs['genElectrons'][0].pt, objs['genMuons'][0].pt)
+
+        study_objs = dict(ttpair_pt=ttpair_pt, lep0_pt=lep0_pt)
 
         return plots, study_objs
 
@@ -564,7 +567,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_MBB, EQBIN_TT_PT], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_PT, EQBIN_TT_PT], xTitle="pT of bb", yTitle="m_{inv} for t_{1}")])
 
-        plots, _ = SL_DL_vars_gen.for_DNN_study('SL_res_2b_x', self.gen_objects, self.selections, plots)
+        plots, _ = SL_DL_vars_gen.for_DNN_study(self.gen_objects, 'SL_res_2b_x', self.selections, plots)
 
         plots = self.get_skims('noSel', plots)
 
