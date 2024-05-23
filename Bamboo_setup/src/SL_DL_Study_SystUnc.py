@@ -101,13 +101,11 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
                     
                     input_workdir = Path(self.args.ttpair_corr_workdir)
                     corr_file = input_workdir / 'results' / 'ttpair_pt_scaling.json'
-                    weight_sf = get_correction(corr_file.resolve(), self.args.ratio, params={"xaxis": lambda ttpair_p4: ttpair_p4.Pt()}, defineOnFirstUse=True, sel=noSel)
+                    weight_sf = get_correction(corr_file.resolve(), self.args.ratio, params={"xaxis": lambda ttpair_pt: ttpair_pt}, defineOnFirstUse=True, sel=noSel)
 
                     _, DNNstudy_objs = SL_DL_vars_gen.for_DNN_study(self.gen_objects)
-                    top = DNNstudy_objs['top']
-                    topbar = DNNstudy_objs['topbar']
-                    ttpair_p4 = top.p4 + topbar.p4
-                    weight_sf_value = weight_sf(ttpair_p4)
+                    ttpair_pt = DNNstudy_objs['ttpair_pt']
+                    weight_sf_value = weight_sf(ttpair_pt)
                     noSel = noSel.refine('weight_scale_factors', weight=weight_sf_value)
             self.weight_sf_value = weight_sf_value
 
