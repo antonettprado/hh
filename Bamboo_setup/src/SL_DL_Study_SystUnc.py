@@ -95,7 +95,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
             self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
 
             # Determine weight scale factor depending on gen level infor ttpair_pt
-            weight_sf = op.c_float(1.0)
+            weight_sf = 1.0
             if sample in ['TTbar_sl', 'TTbar_dl']:  
                 if self.args.ratio != '1p00pt':
                     
@@ -108,7 +108,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
                     topbar = DNNstudy_objs['topbar']
                     ttpair_p4 = top.p4 + topbar.p4
                     noSel = noSel.refine('weight_scale_factors', weight=weight_sf(ttpair_p4))
-            self.weight_sf = weight_sf
+            self.weight_sf = op.c_float(weight_sf)
 
         else:
             noSel = _noSel
