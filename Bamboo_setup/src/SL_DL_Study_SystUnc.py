@@ -7,7 +7,7 @@ import bamboo.treefunctions as op
 
 from SL_DL_vars_gen import SL_DL_vars_gen
 from SL_DL_vars_reco import SL_DL_vars_reco
-from SL_DL_NN_v2 import SL_DL_NN_v2
+#from SL_DL_NN_v2 import SL_DL_NN_v2
 from SL_DL_likelihood_ratio import SL_DL_likelihood_ratio
 import utils.variable_definition as var_defs
 
@@ -26,24 +26,6 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         parser.add_argument("-ttpair_cw", "--ttpair_corr_workdir", action='store', help='The work directory where the ttpair pt correction file is')
         parser.add_argument("-nn", action='store', dest = "NNdir", help='Input NN model directory')
         parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the llrs correction file is')
-
-    def determine_weight_sf(self, sample, tree, noSel):
-
-        self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
-        if sample in ['TTbar_sl', 'TTbar_dl']:  
-            if self.args.ratio == '1p00pt':
-                weight_sf = 1
-            else:      
-                _, DNNstudy_objs = SL_DL_vars_gen.for_DNN_study(self.gen_objects)
-                ttpair_pt = DNNstudy_objs['ttpair_pt']
-
-                input_workdir = Path(self.args.ttpair_corr_workdir)
-                corr_file = input_workdir / 'results' / 'ttpair_pt_scaling.json'
-                weight_sf = get_correction(corr_file.resolve(), self.args.ratio, params={"xaxis": ttpair_pt}, defineOnFirstUse=True, sel=noSel)(None) 
-        else:
-            weight_sf = 1
-
-        return weight_sf
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, backend=None):
 
@@ -112,7 +94,6 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
             noSel = _noSel_genWeight
             self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
 
-            # ------------- CHECK CHECK CHECK CHECK ------------------------------------
             # Determine weight scale factor depending on gen level infor ttpair_pt
             if sample in ['TTbar_sl', 'TTbar_dl']:  
                 if self.args.ratio != '1p00pt':
@@ -122,7 +103,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
                     weight_sf = get_correction(corr_file.resolve(), self.args.ratio, params={"xaxis": lambda ttpair_pt: ttpair_pt}, defineOnFirstUse=True, sel=noSel)
 
                     _, DNNstudy_objs = SL_DL_vars_gen.for_DNN_study(self.gen_objects)
-                    ttpair_pt = DNNstudy_objs['ttpair_pt']
+                    ttpair_pt = op.c_float(DNNstudy_objs['ttpair_pt'])
                     noSel = noSel.refine('weight_scale_factors', weight=weight_sf(ttpair_pt))
             # --------------------------------------------------------------------------
 
@@ -178,8 +159,8 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         _, study_objs = SL_DL_vars_gen.for_DNN_study(self.gen_objects)
         gen_ttpair_pt = study_objs['ttpair_pt']
         gen_lep0_pt = study_objs['lep0_pt']
-        plots.append(Plot.make1D('baseSel_gen_ttpair_pt', gen_ttpair_pt, baseSel, EqBin(250, 0, 1000)))
-        plots.append(Plot.make1D('baseSel_gen_lep0_pt', gen_lep0_pt, baseSel, EqBin(125, 0, 500)))
+        plots.append(Plot.make1D('noSel_gen_ttpair_pt', gen_ttpair_pt, self.noSel, EqBin(250, 0, 1000)))
+        plots.append(Plot.make1D('noSel_gen_lep0_pt', gen_lep0_pt, self.noSel, EqBin(125, 0, 500)))
         plots.append(Plot.make1D('SL_res_2b_x_gen_ttpair_pt', gen_ttpair_pt, selections[sel_name], EqBin(250, 0, 1000)))
         plots.append(Plot.make1D('SL_res_2b_x_gen_lep0_pt', gen_lep0_pt, selections[sel_name], EqBin(125, 0, 500)))
 
@@ -188,6 +169,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         lep0_pt = var_defs.get_lep0_pt(objects)
         plots.extend([Plot.make1D(sc_var.ref, sc_var.data, sc_var.selection, sc_var.eqbin, xTitle=sc_var.full_title) for var in [all_jets_HT, lep0_pt] for sc_var in var if sc_var.subcat == sel_name])
 
+        '''
         # ================ DNN Score distribution ======================
         dnn_score = SL_DL_NN_v2.get_dnn_score(self.args.NNdir, objects)
         dnn_score = dnn_score[sel_name]
@@ -203,7 +185,8 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         # ========================== LLRs ==============================
         select_llrs = SL_DL_likelihood_ratio.get_select_llrs(self.args.llr_corr_workdir, objects)
         plots.extend([Plot.make1D(subcat_llr.ref, subcat_llr.data, subcat_llr.selection, llr.eqbin) for llr in select_llrs for subcat_llr in llr if subcat_llr.subcat == sel_name])
-
+        '''
+        
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
