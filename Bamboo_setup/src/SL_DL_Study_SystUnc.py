@@ -95,7 +95,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
             self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
 
             # Determine weight scale factor depending on gen level infor ttpair_pt
-            weight_sf = 1.0
+            weight_sf_value = op.c_float(1.0)
             if sample in ['TTbar_sl', 'TTbar_dl']:  
                 if self.args.ratio != '1p00pt':
                     
@@ -107,8 +107,9 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
                     top = DNNstudy_objs['top']
                     topbar = DNNstudy_objs['topbar']
                     ttpair_p4 = top.p4 + topbar.p4
-                    noSel = noSel.refine('weight_scale_factors', weight=weight_sf(ttpair_p4))
-            self.weight_sf = op.c_float(weight_sf)
+                    weight_sf_value = weight_sf(ttpair_p4)
+                    noSel = noSel.refine('weight_scale_factors', weight=weight_sf_value)
+            self.weight_sf_value = op.c_float(weight_sf_value)
 
         else:
             noSel = _noSel
@@ -166,14 +167,14 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         else:
             gen_ttpair_pt = op.c_float(1.0)
 
-        plots.append(Plot.make1D('noSel_weight_sf', self.weight_sf, self.noSel, EqBin(50, 0, 5)))
-        plots.append(Plot.make2D('noSel_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf], self.noSel, [EqBin(250, 0, 1000), EqBin(50, 0, 5)]))
+        plots.append(Plot.make1D('noSel_weight_sf', self.weight_sf_value, self.noSel, EqBin(50, 0, 5)))
+        plots.append(Plot.make2D('noSel_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], self.noSel, [EqBin(250, 0, 1000), EqBin(50, 0, 5)]))
         plots.append(Plot.make1D('noSel_gen_ttpair_pt', gen_ttpair_pt, self.noSel, EqBin(250, 0, 1000)))
         plots.append(Plot.make1D('noSel_gen_lep0_pt', gen_lep0_pt, self.noSel, EqBin(125, 0, 500)))
         plots.append(Plot.make1D('SL_res_2b_x_gen_ttpair_pt', gen_ttpair_pt, selections[sel_name], EqBin(250, 0, 1000)))
         plots.append(Plot.make1D('SL_res_2b_x_gen_lep0_pt', gen_lep0_pt, selections[sel_name], EqBin(125, 0, 500)))
-        plots.append(Plot.make1D('SL_res_2b_x_weight_sf', self.weight_sf, selections[sel_name], EqBin(50, 0, 5)))
-        plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf], selections[sel_name], [EqBin(250, 0, 1000), EqBin(50, 0, 5)]))
+        plots.append(Plot.make1D('SL_res_2b_x_weight_sf', self.weight_sf_value, selections[sel_name], EqBin(50, 0, 5)))
+        plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], selections[sel_name], [EqBin(250, 0, 1000), EqBin(50, 0, 5)]))
 
         # ===================== Variable1D =============================
         all_jets_HT = var_defs.get_all_jets_HT(objects)
