@@ -109,7 +109,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
                     ttpair_p4 = top.p4 + topbar.p4
                     weight_sf_value = weight_sf(ttpair_p4)
                     noSel = noSel.refine('weight_scale_factors', weight=weight_sf_value)
-            self.weight_sf_value = op.c_float(weight_sf_value)
+            self.weight_sf_value = weight_sf_value
 
         else:
             noSel = _noSel
