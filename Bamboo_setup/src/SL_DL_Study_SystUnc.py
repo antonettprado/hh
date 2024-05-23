@@ -170,7 +170,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         plots.append(Plot.make1D('noSel_weight_sf', self.weight_sf_value, self.noSel, EqBin(50, 0, 5)))
         plots.append(Plot.make2D('noSel_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], self.noSel, [EqBin(250, 0, 1000), EqBin(50, 0, 5)]))
         plots.append(Plot.make2D('noSel_weight_sf_vs_lep0_pt', [gen_lep0_pt, self.weight_sf_value], self.noSel, [EqBin(200, 0, 1000), EqBin(50, 0, 5)]))
-        plots.append(Plot.make2D('noSel_gen_ttpair_pt_vs_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], self.noSel, [EqBin(200, 0, 1000), EqBin(250, 0, 1000)]))
+        plots.append(Plot.make2D('noSel_gen_ttpair_pt_vs_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], self.noSel, [EqBin(20, 0, 200), EqBin(25, 0, 200)]))
         plots.append(Plot.make1D('noSel_gen_ttpair_pt', gen_ttpair_pt, self.noSel, EqBin(250, 0, 1000)))
         plots.append(Plot.make1D('noSel_gen_lep0_pt', gen_lep0_pt, self.noSel, EqBin(200, 0, 1000)))
         plots.append(Plot.make1D('SL_res_2b_x_gen_ttpair_pt', gen_ttpair_pt, selections[sel_name], EqBin(250, 0, 1000)))
@@ -178,7 +178,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         plots.append(Plot.make1D('SL_res_2b_x_weight_sf', self.weight_sf_value, selections[sel_name], EqBin(50, 0, 5)))
         plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], selections[sel_name], [EqBin(250, 0, 1000), EqBin(50, 0, 5)]))
         plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_lep0_pt', [gen_lep0_pt, self.weight_sf_value], selections[sel_name], [EqBin(200, 0, 1000), EqBin(50, 0, 5)]))
-        plots.append(Plot.make2D('SL_res_2b_x_gen_ttpair_pt_vs_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], selections[sel_name], [EqBin(200, 0, 1000), EqBin(250, 0, 1000)]))
+        plots.append(Plot.make2D('SL_res_2b_x_gen_ttpair_pt_vs_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], selections[sel_name], [EqBin(20, 0, 200), EqBin(25, 0, 200)]))
 
         # ===================== Variable1D =============================
         all_jets_HT = var_defs.get_all_jets_HT(objects)
