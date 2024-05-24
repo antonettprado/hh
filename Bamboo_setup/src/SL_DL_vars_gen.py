@@ -164,12 +164,12 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return gen_objects
 
     @staticmethod
-    def get_gen_selections(gen_objects, noSel):
+    def get_gen_selections(gen_objects, baseSel):
 
-        SL = noSel.refine("gen_SL", cut=[op.OR(
+        SL = baseSel.refine("gen_SL", cut=[op.OR(
             op.AND(op.rng_len(gen_objects['genElectrons']) == 1, op.rng_len(gen_objects['genMuons']) == 0),
             op.AND(op.rng_len(gen_objects['genElectrons']) == 0, op.rng_len(gen_objects['genMuons']) == 1))])
-        DL = noSel.refine("gen_DL", cut=[op.OR(
+        DL = baseSel.refine("gen_DL", cut=[op.OR(
             op.AND(op.rng_len(gen_objects['genElectrons'])==2, op.rng_len(gen_objects['genMuons']) == 0),
             op.AND(op.rng_len(gen_objects['genElectrons'])==0, op.rng_len(gen_objects['genMuons']) == 2),
             op.AND(op.rng_len(gen_objects['genElectrons'])==1, op.rng_len(gen_objects['genMuons']) == 1))])
@@ -187,7 +187,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         SL_res_2b_x = SL_res_2b.refine("gen_SL_resolved_2b_2nonbjets", cut=[op.rng_len(gen_objects['sorted_nonbJets'])>=2])
 
         selections=dict(
-            noSel=noSel,
+            baseSel=baseSel,
             SL=SL,
             DL=DL,
             SL_res_1b=SL_res_1b,
@@ -514,6 +514,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
                 Plot.make1D(tag+'ttpair_0p85pt', ttpair_pt*0.85, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_0p90pt', ttpair_pt*0.90, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_0p95pt', ttpair_pt*0.95, sel, EQBIN_TT_PT),
+                Plot.make1D(tag+'ttpair_1p00pt', ttpair_pt*1.00, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_1p05pt', ttpair_pt*1.05, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_1p10pt', ttpair_pt*1.10, sel, EQBIN_TT_PT),
                 Plot.make1D(tag+'ttpair_1p15pt', ttpair_pt*1.15, sel, EQBIN_TT_PT),
@@ -524,7 +525,6 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             ])
 
         lep0_pt = op.switch(objs['genElectrons'][0].pt > objs['genMuons'][0].pt, objs['genElectrons'][0].pt, objs['genMuons'][0].pt)
-
         study_objs = dict(top=top, topbar=topbar, ttpair_pt=ttpair_pt, lep0_pt=lep0_pt)
 
         return plots, study_objs
@@ -567,15 +567,15 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_MBB, EQBIN_TT_PT], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_PT, EQBIN_TT_PT], xTitle="pT of bb", yTitle="m_{inv} for t_{1}")])
 
-        plots, _ = SL_DL_vars_gen.for_DNN_study(self.gen_objects, 'SL_res_2b_x', self.selections, plots)
+        plots, _ = SL_DL_vars_gen.for_DNN_study(self.gen_objects, 'baseSel', self.selections, plots)
 
-        plots = self.get_skims('noSel', plots)
+        plots = self.get_skims('baseSel', plots)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
 
-        self.yields.add(self.selections['noSel'], 'noSel')
+        self.yields.add(self.selections['baseSel'], 'baseSel')
         self.yields.add(self.selections['SL_res_1b'], 'SL_res_1b')
         self.yields.add(self.selections['SL_res_1b_x'], 'SL_res_1b_x')
         self.yields.add(self.selections['SL_res_2b'], 'SL_res_2b')
@@ -616,7 +616,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         refs = []
         for key in BACKG_SAMPLES[0].GetListOfKeys():
             obj = key.ReadObj()
-            if 'SL_res_2b_x_ttpair' in obj.GetName() and 'ttpair_pt' not in obj.GetName():
+            if 'baseSel_ttpair' in obj.GetName() and 'ttpair_pt' not in obj.GetName():
                 refs.append(obj.GetName())
 
         ratio_plots_outdir = Path(workdir) / 'ratio_plots'
@@ -626,10 +626,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         all_corrections = []
         for ref in refs:
 
-            compare_subcategories(workdir, shape_only=False, no_type=False, custom=True, extra=ref)
+            compare_subcategories(workdir, custom=1, extra=ref)
 
             numerator = ref
-            denominator = 'SL_res_2b_x_ttpair_pt'
+            denominator = 'baseSel_ttpair_pt'
             numerator_hist = get_total_hist(numerator, BACKG_SAMPLES, normalized=False)
             denominator_hist = get_total_hist(denominator, BACKG_SAMPLES, normalized=False)
 
@@ -642,7 +642,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
             ratio_hist.SetStats(0)
             ratio_hist.Draw("hist")
             canvas.Update()
-            ttpair_scaledpt = ref.removeprefix('SL_res_2b_x_ttpair_')
+            ttpair_scaledpt = ref.removeprefix('baseSel_ttpair_')
             print(ttpair_scaledpt)
             canvas.SaveAs( str( ratio_plots_outdir / f'{ttpair_scaledpt}.pdf'))
             canvas.Close()

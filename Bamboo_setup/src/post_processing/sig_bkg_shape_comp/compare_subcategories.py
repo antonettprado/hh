@@ -275,7 +275,7 @@ def draw_ttpair_pts_for_DNNstudy(dirname, ttpair_scaledpt: str):
     final_path = OUTPUT_PATH / dirname
     if not final_path.exists(): final_path.mkdir(parents=True, exist_ok=True)
 
-    ttpair_pt = get_total_hist('SL_res_2b_x_ttpair_pt', BACKG_SAMPLES, normalized=False)
+    ttpair_pt = get_total_hist('baseSel_ttpair_pt', BACKG_SAMPLES, normalized=False)
     ttpair_1p10pt = get_total_hist(ttpair_scaledpt, BACKG_SAMPLES, normalized=False)
 
     ttpair_pt.SetLineColorAlpha(ROOT.kGreen, 0.5)
@@ -297,7 +297,7 @@ def draw_ttpair_pts_for_DNNstudy(dirname, ttpair_scaledpt: str):
     leg = ROOT.TLegend(0.55, 0.75, 0.9, 0.9)
     leg.SetTextSize(0.025)
     leg.AddEntry(ttpair_pt, 'ttpair_pt', 'l')
-    ttpair_scaledpt = ttpair_scaledpt.removeprefix('SL_res_2b_x_')
+    ttpair_scaledpt = ttpair_scaledpt.removeprefix('baseSel_')
     leg.AddEntry(ttpair_1p10pt, ttpair_scaledpt, 'l')
     leg.Draw()
 
@@ -331,7 +331,7 @@ def main(source_path: str, shape_only:bool=False, no_type: bool=False, custom:bo
                 refs.append(obj.GetName())
 
     if custom:
-        draw_ttpair_pts_for_DNNstudy(dirname='custom', ttpair_scaledpt=extra)
+        if custom == 1: draw_ttpair_pts_for_DNNstudy(dirname='custom', ttpair_scaledpt=extra)
     if no_type:
         for ref in refs:
             if 'yield' not in ref:
