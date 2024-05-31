@@ -70,12 +70,13 @@ def nearbyBtag(lep, jets, era, btag_WP):
             condition = jet.btagPNetB > btag_WP_cut
         return condition
 
-    return op.rng_any(
-        jets, lambda j: op.AND(
-            op.deltaR(lep.p4, j.p4) < 0.4,
-            get_btag_pass(j)
-        )            
-    )
+    return get_btag_pass(jets[lep.jet.idx])
+    #return op.rng_any(
+    #    jets, lambda j: op.AND(
+    #        op.deltaR(lep.p4, j.p4) < 0.4,
+    #        get_btag_pass(j)
+    #    )            
+    #)
 
 def find_subjets(fatjet, subjets):
     return op.sort(
@@ -113,7 +114,8 @@ def electron_loose_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=F
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
-        el.pfRelIso03_all < 0.4,
+        #el.pfRelIso03_all < 0.4,
+        el.miniPFRelIso_all < 0.4,
         el.lostHits <= 1,
         get_electron_id(el, era, 'loose')
         )
@@ -129,7 +131,8 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, era, use_mvaTT
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
-        el.pfRelIso03_all < 0.4,
+        #el.pfRelIso03_all < 0.4,
+        el.miniPFRelIso_all < 0.4,
         op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
         el.hoe < 0.10,
         el.eInvMinusPInv > -0.04,
@@ -139,7 +142,8 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, era, use_mvaTT
             op.AND(op.switch(el.mvaTTH > 0.3, get_electron_id(el, era, 'loose'), get_electron_id(el, era, 'tight')),
                 op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
                 op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, era, "M")), op.NOT(nearbyBtag(el, jets, era, "T")))),
-            op.AND(get_electron_id(el, era, 'loose'),op.NOT(nearbyBtag(el, jets, era, "M"))))
+            op.AND(get_electron_id(el, era, 'loose'),op.NOT(nearbyBtag(el, jets, era, "M")))
+            )
         ))
 
 def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
@@ -152,7 +156,8 @@ def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=F
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
-        el.pfRelIso03_all < 0.4,
+        #el.pfRelIso03_all < 0.4,
+        el.miniPFRelIso_all < 0.4,
         op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
         el.hoe < 0.10,
         el.eInvMinusPInv > -0.04,
@@ -176,7 +181,8 @@ def muon_loose_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
-        mu.pfRelIso03_all < 0.4,
+        #mu.pfRelIso03_all < 0.4,
+        mu.miniPFRelIso_all < 0.4,
         mu.looseId
         )
     )
@@ -191,12 +197,16 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
-        mu.pfRelIso03_all < 0.4,
+        #mu.pfRelIso03_all < 0.4,
+        mu.miniPFRelIso_all < 0.4,
         mu.looseId,
         op.switch(op.c_bool(use_mvaTTH), 
             op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
                 op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
-            op.NOT(nearbyBtag(mu, jets, era, "M")))
+            op.AND(op.switch(not mu.mediumPromptId, mu.jetRelIso < 0.8, 1),
+                op.switch(mu.mediumPromptId, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
+            #op.NOT(nearbyBtag(mu, jets, era, "M"))
+            )
         ))
 
 def muon_tight_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False): 
@@ -209,11 +219,19 @@ def muon_tight_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
-        mu.pfRelIso03_all < 0.4,
+        #mu.pfRelIso03_all < 0.4,
+        mu.miniPFRelIso_all < 0.4,
         mu.mediumId,
         op.NOT(nearbyBtag(mu, jets, era, "M")),
-        op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
+        op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, mu.mediumPromptId)
+        #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
         ))
+
+def electron_cleaning(electrons, muons, deltar_cut=0.3):
+    return op.select(electrons, lambda ele: op.NOT(
+        op.rng_any(muons, lambda mu: op.deltaR(mu.p4, ele.p4) < deltar_cut)
+        )
+    )
 
 def tau_selection(taus, era):
     def get_idDeepTau_cut(tau, era):
@@ -255,7 +273,7 @@ def ak4_vbf_jet_selection(jets):
         jet.jetId >= 2 # WP_T
         )
     )
-       
+
 def ak4_jet_cleaning(jets, leptons, deltar_cut=0.4):
     return op.select(jets, lambda jet: op.NOT(
         op.rng_any(leptons, lambda lep: jet.idx == lep.jet.idx)

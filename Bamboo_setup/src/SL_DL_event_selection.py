@@ -36,7 +36,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         muon_ConePt = object_defs.muConePt(tree.Muon, tree.Jet)
         muons = op.sort(muons, lambda mu: op.switch(op.c_bool(use_mvaTTH), -muon_ConePt[mu.idx], -mu.pt))
 
-        ## TO DO: do we need to clean electrons from muons?
+        # Clean pre-selected electrons 
+        electrons = object_defs.electron_cleaning(electrons, muons)
 
         # Select Loose Electrons
         loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet, era, use_mvaTTH)
@@ -59,6 +60,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         ak4_jets = op.sort(ak4_jets, lambda jet: -jet.pt)
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(ak4_jets, fakeable_electrons)
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_jets, fakeable_muons)
+        cleaned_ak4_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_jets, cleaned_taus)
 
         # Select AK4 b-tags
         if MC_bjets is True:
@@ -71,6 +73,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         ak8_jets = op.sort(ak8_jets, lambda jet: -jet.pt)
         cleaned_ak8_jets = object_defs.ak8_jet_cleaning(ak8_jets, fakeable_electrons, 0.8)
         cleaned_ak8_jets = object_defs.ak8_jet_cleaning(cleaned_ak8_jets, fakeable_muons, 0.8)
+        cleaned_ak8_jets = object_defs.ak8_jet_cleaning(cleaned_ak8_jets, cleaned_taus, 0.8)
 
         # Select AK8 b-tags
         cleaned_ak8_btags = object_defs.ak8_btag_selection(cleaned_ak8_jets, tree.SubJet, era)

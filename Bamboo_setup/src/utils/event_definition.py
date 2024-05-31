@@ -216,8 +216,8 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
 
 def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     electron_pt_cut = 30
-    if "2024" in era:
-        lepton_pt_cut = 15
+    if "2022" in era or "2023" in era or "2024" in era:
+        electron_pt_cut = 15
     return (op.AND(
         op.rng_len(electrons) == 1, 
         op.rng_len(muons) == 0,
@@ -235,7 +235,7 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
 
 def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
     muon_pt_cut = 25
-    if "2024" in era:
+    if "2022" in era or "2023" in era or "2024" in era:
         muon_pt_cut = 15
     return (op.AND(
         op.rng_len(muons) == 1, 
