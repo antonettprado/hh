@@ -94,8 +94,7 @@ class SL_L1_trigger_efficiency(SL_DL_event_selection):
         self.l1HT = op.rng_find(tree.L1EtSum, lambda l1sum: l1sum.etSumType == 1)  # Choose HT from L1_sums(HT has etSumType of 1)
         self.l1triggers = tree.L1
 
-        self.set_objects(tree, lep_pt_from_L1_or_HLT=self.args.lep_pt, use_mvaTTH=False)
-        objects = self.objects
+        objects = self.get_objects(tree, self.era, use_mvaTTH=False, lep_pt_from_L1_or_HLT=self.args.lep_pt)
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]
