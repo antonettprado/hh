@@ -414,6 +414,8 @@ class Run3Model():
             yaml.dump(self.params, file, sort_keys=False)
 
     def run(self):
+        print(f"Running model: {self.name}")
+        print(self.model)
         X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = split_and_shuffle(self.model_df)
         self.setup_model(X_train)
         self.train_model(X_train, Y_train, tw_train)
@@ -453,8 +455,6 @@ def main(workdir: str):
     for model_params in test_models:
         model_df = get_model_df(total_df, model_params['processes'], model_params['input_vars'])
         model_df = add_training_weights(model_df, model_params['processes'])
-        print(f"Model name: {model_params['name']}")
-        print(model_df)
         model = Run3Model(model_params, model_df)
         model_params, model_metrics = model.run()
         update_models_summary_csv(models_summary_path, model_params, model_metrics)
