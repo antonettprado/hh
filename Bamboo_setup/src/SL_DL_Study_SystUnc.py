@@ -7,7 +7,7 @@ import bamboo.treefunctions as op
 
 from SL_DL_vars_gen import SL_DL_vars_gen
 from SL_DL_vars_reco import SL_DL_vars_reco
-#from SL_DL_NN_v2 import SL_DL_NN_v2
+from SL_DL_NN_v2 import SL_DL_NN_v2
 from SL_DL_likelihood_ratio import SL_DL_likelihood_ratio
 import utils.variable_definition as var_defs
 
@@ -97,8 +97,6 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
             # Determine weight scale factor depending on gen level infor ttpair_pt
             weight_sf_value = op.c_float(1.0)
             if sample in ['TTbar_sl', 'TTbar_dl']:  
-                if self.args.ratio != '1p00pt':
-                    
                     input_workdir = Path(self.args.ttpair_corr_workdir)
                     corr_file = input_workdir / 'results' / 'ttpair_pt_scaling.json'
                     weight_sf = get_correction(corr_file.resolve(), self.args.ratio, params={"xaxis": lambda ttpair_pt: ttpair_pt}, defineOnFirstUse=True, sel=noSel)
@@ -166,24 +164,23 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
             gen_ttpair_pt = op.c_float(1.0)
 
         plots.append(Plot.make1D('noSel_weight_sf', self.weight_sf_value, self.noSel, EqBin(500, 0, 50)))
-        plots.append(Plot.make2D('noSel_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], self.noSel, [EqBin(250, 0, 1000), EqBin(500, 0, 50)]))
-        plots.append(Plot.make2D('noSel_weight_sf_vs_gen_lep0_pt', [gen_lep0_pt, self.weight_sf_value], self.noSel, [EqBin(200, 0, 1000), EqBin(500, 0, 50)]))
-        plots.append(Plot.make2D('noSel_gen_ttpair_pt_vs_gen_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], self.noSel, [EqBin(20, 0, 200), EqBin(25, 0, 200)]))
+        # plots.append(Plot.make2D('noSel_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], self.noSel, [EqBin(250, 0, 1000), EqBin(500, 0, 50)]))
+        # plots.append(Plot.make2D('noSel_weight_sf_vs_gen_lep0_pt', [gen_lep0_pt, self.weight_sf_value], self.noSel, [EqBin(200, 0, 1000), EqBin(500, 0, 50)]))
+        # plots.append(Plot.make2D('noSel_gen_ttpair_pt_vs_gen_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], self.noSel, [EqBin(20, 0, 200), EqBin(25, 0, 200)]))
         plots.append(Plot.make1D('noSel_gen_ttpair_pt', gen_ttpair_pt, self.noSel, EqBin(250, 0, 1000)))
         plots.append(Plot.make1D('noSel_gen_lep0_pt', gen_lep0_pt, self.noSel, EqBin(200, 0, 1000)))
         plots.append(Plot.make1D('SL_res_2b_x_gen_ttpair_pt', gen_ttpair_pt, selections[sel_name], EqBin(250, 0, 1000)))
         plots.append(Plot.make1D('SL_res_2b_x_gen_lep0_pt', gen_lep0_pt, selections[sel_name], EqBin(200, 0, 1000)))
         plots.append(Plot.make1D('SL_res_2b_x_weight_sf', self.weight_sf_value, selections[sel_name], EqBin(500, 0, 50)))
-        plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], selections[sel_name], [EqBin(250, 0, 1000), EqBin(500, 0, 50)]))
-        plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_gen_lep0_pt', [gen_lep0_pt, self.weight_sf_value], selections[sel_name], [EqBin(200, 0, 1000), EqBin(500, 0, 50)]))
-        plots.append(Plot.make2D('SL_res_2b_x_gen_ttpair_pt_vs_gen_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], selections[sel_name], [EqBin(20, 0, 200), EqBin(25, 0, 200)]))
+        # plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_gen_ttpair_pt', [gen_ttpair_pt, self.weight_sf_value], selections[sel_name], [EqBin(250, 0, 1000), EqBin(500, 0, 50)]))
+        # plots.append(Plot.make2D('SL_res_2b_x_weight_sf_vs_gen_lep0_pt', [gen_lep0_pt, self.weight_sf_value], selections[sel_name], [EqBin(200, 0, 1000), EqBin(500, 0, 50)]))
+        # plots.append(Plot.make2D('SL_res_2b_x_gen_ttpair_pt_vs_gen_lep0_pt', [gen_lep0_pt, gen_ttpair_pt], selections[sel_name], [EqBin(20, 0, 200), EqBin(25, 0, 200)]))
 
         # ===================== Variable1D =============================
         all_jets_HT = var_defs.get_all_jets_HT(objects)
         lep0_pt = var_defs.get_lep0_pt(objects)
         plots.extend([Plot.make1D(sc_var.ref, sc_var.data, sc_var.selection, sc_var.eqbin, xTitle=sc_var.full_title) for var in [all_jets_HT, lep0_pt] for sc_var in var if sc_var.subcat == sel_name])
 
-        '''
         # ================ DNN Score distribution ======================
         dnn_score = SL_DL_NN_v2.get_dnn_score(self.args.NNdir, objects)
         dnn_score = dnn_score[sel_name]
@@ -195,11 +192,10 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
             for i, process in enumerate(dnn_score.processes):
                 plots.append(Plot.make1D('_'.join([dnn_score.ref,process]), dnn_score.data[i], dnn_score.selection, dnn_score.eqbin, xTitle=dnn_score.full_title))
             plots.append(Plot.make1D(dnn_score.ref+'_s_over_b', op.log10(dnn_score.data[0]/dnn_score.data[1]), dnn_score.selection, EqBin(100, -6, 3), xTitle=dnn_score.full_title))
-        
+
         # ========================== LLRs ==============================
         select_llrs = SL_DL_likelihood_ratio.get_select_llrs(self.args.llr_corr_workdir, objects)
         plots.extend([Plot.make1D(subcat_llr.ref, subcat_llr.data, subcat_llr.selection, llr.eqbin) for llr in select_llrs for subcat_llr in llr if subcat_llr.subcat == sel_name])
-        '''
         
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -215,7 +211,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         self.yields.add(selections['DL_boosted'], 'DL_boosted')
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
-        # self.yields = SL_DL_NN_v2.update_with_DNN_yields(self.yields, dnn_score, selections)
+        self.yields = SL_DL_NN_v2.update_with_DNN_yields(self.yields, dnn_score, selections)
 
         return plots
 

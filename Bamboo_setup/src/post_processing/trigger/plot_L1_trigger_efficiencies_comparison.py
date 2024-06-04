@@ -61,7 +61,8 @@ def plot_effis(run_dir, seed_list):
         elif var == "HT_jets":
             canvas_mu.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
         canvas_mu.SetGrid()
-        legend_mu = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
+        legend_mu = ROOT.TLegend(0.4, 0.2, 0.85, 0.5)
+        legend_mu.SetTextSize(0.02)
         color_index = 1
         SL_mu_histo_dict["SL_mu"][var].Rebin(rebin_factor)
         
@@ -94,7 +95,8 @@ def plot_effis(run_dir, seed_list):
             canvas_e.DrawFrame(-3, 0, 3, 1.1, ";Electron #eta;Efficiency")
         elif var == "HT_jets":
             canvas_e.DrawFrame(0, 0, 1000, 1.1, ";HT (GeV);Efficiency")
-        legend_e = ROOT.TLegend(0.5, 0.2, 0.8, 0.5)
+        legend_e = ROOT.TLegend(0.4, 0.2, 0.85, 0.5)
+        legend_e.SetTextSize(0.02)
         color_index = 1
         SL_e_histo_dict["SL_e"][var].Rebin(rebin_factor)
 

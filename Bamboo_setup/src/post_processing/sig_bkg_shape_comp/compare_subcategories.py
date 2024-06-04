@@ -276,29 +276,38 @@ def draw_ttpair_pts_for_DNNstudy(dirname, ttpair_scaledpt: str):
     if not final_path.exists(): final_path.mkdir(parents=True, exist_ok=True)
 
     ttpair_pt = get_total_hist('baseSel_ttpair_pt', BACKG_SAMPLES, normalized=False)
-    ttpair_1p10pt = get_total_hist(ttpair_scaledpt, BACKG_SAMPLES, normalized=False)
+    ttpair_0p50pt = get_total_hist('baseSel_ttpair_0p50pt', BACKG_SAMPLES, normalized=False)
+    ttpair_pt_scaled = get_total_hist(ttpair_scaledpt, BACKG_SAMPLES, normalized=False)
 
-    ttpair_pt.SetLineColorAlpha(ROOT.kGreen, 0.5)
+    ttpair_pt.SetLineColorAlpha(ROOT.kGreen, 0.8)
     ttpair_pt.SetLineWidth(3)
     ttpair_pt.SetStats(0)
-    ttpair_1p10pt.SetLineColorAlpha(ROOT.kViolet, 0.5)
-    ttpair_1p10pt.SetLineWidth(3)
-    ttpair_1p10pt.SetStats(0)
+    ttpair_pt_scaled.SetLineColorAlpha(ROOT.kViolet, 0.8)
+    ttpair_pt_scaled.SetLineWidth(3)
+    ttpair_pt_scaled.SetStats(0)
+    ttpair_0p50pt.SetLineColorAlpha(ROOT.kCyan, 0.8)
+    ttpair_0p50pt.SetLineWidth(3)
+    ttpair_0p50pt.SetStats(0)
 
     ttpair_pt.SetMinimum(-1e-3)
-    ttpair_pt.SetMaximum(max(ttpair_pt.GetMaximum(), ttpair_1p10pt.GetMaximum())*1.1)
+    ttpair_pt.SetMaximum(max(ttpair_pt.GetMaximum(), ttpair_pt_scaled.GetMaximum(), ttpair_0p50pt.GetMaximum())*1.1)
     ttpair_pt.GetYaxis().SetTitle('events')
+    ttpair_pt.GetXaxis().SetTitle('t#bar{t} pT')
+
+    # Set the range for the x-axis
+    ttpair_pt.GetXaxis().SetRangeUser(0, 200)
 
     canvas = ROOT.TCanvas("canvas", '', 200, 200)
     canvas.SetGrid()
     ttpair_pt.Draw("hist")
-    ttpair_1p10pt.Draw("hist same")
+    ttpair_pt_scaled.Draw("hist same")
+    ttpair_0p50pt.Draw("hist same")
 
     leg = ROOT.TLegend(0.55, 0.75, 0.9, 0.9)
     leg.SetTextSize(0.025)
     leg.AddEntry(ttpair_pt, 'ttpair_pt', 'l')
-    ttpair_scaledpt = ttpair_scaledpt.removeprefix('baseSel_')
-    leg.AddEntry(ttpair_1p10pt, ttpair_scaledpt, 'l')
+    leg.AddEntry(ttpair_0p50pt, 'ttpair_0p50pt', 'l')
+    leg.AddEntry(ttpair_pt_scaled, ttpair_scaledpt.removeprefix('baseSel_'), 'l')
     leg.Draw()
 
     canvas.Update()
@@ -331,7 +340,7 @@ def main(source_path: str, shape_only:bool=False, no_type: bool=False, custom:bo
                 refs.append(obj.GetName())
 
     if custom:
-        if custom == 1: draw_ttpair_pts_for_DNNstudy(dirname='custom', ttpair_scaledpt=extra)
+        if custom == 1: draw_ttpair_pts_for_DNNstudy(dirname='custom_shorterx', ttpair_scaledpt=extra)
     if no_type:
         for ref in refs:
             if 'yield' not in ref:
@@ -365,7 +374,7 @@ if __name__ == "__main__":
     # --no_type currently only working for shape_only
     parser.add_argument("-nt", "--no_type", action="store_true", default=False, help="No Variable type")
     parser.add_argument("-s", "--shape_only", action="store_true", help="Comparing shapes only")
-    parser.add_argument("-c", "--custom", action="store_true", help="Custom plotting")
+    parser.add_argument("-c", "--custom", action="store", type=int, help="Custom plotting")
     parser.add_argument("-e", "--extra", action="store", default=None, help="name of ref for ttpair_sclaedp" )
     args = parser.parse_args()
 
