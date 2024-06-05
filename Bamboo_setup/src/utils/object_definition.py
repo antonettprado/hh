@@ -203,7 +203,7 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         op.switch(op.c_bool(use_mvaTTH), 
             op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
                 op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
-            op.AND(op.switch(not mu.mediumPromptId, mu.jetRelIso < 0.8, 1),
+            op.AND(op.switch(op.NOT(mu.mediumPromptId), mu.jetRelIso < 0.8, 1),
                 op.switch(mu.mediumPromptId, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
             #op.NOT(nearbyBtag(mu, jets, era, "M"))
             )
