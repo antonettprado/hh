@@ -23,130 +23,129 @@ from typing import Union
 import tf2onnx
 
 NNDIR = Path(__file__).parent
-NNOUTDIR = None
+BAMBOO_SETUP = NNDIR.parents[2]
+WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
+PROCESSES = dict(
+    HH=['bbWW_sl', 'bbWW_dl'],
+    ttbar=['TTbar_sl', 'TTbar_dl'],
+    tbarWplus=['tbarWplus_sl', 'tbarWplus_dl']
+    # DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J']
+    )
 
-def load_data(workdir: Path, n_bkg: int, verbose=False) -> pd.DataFrame:
-    
-    resultsdir = workdir / 'results'
-    signal_hh_name = resultsdir / "bbWW_sl.root"
-    background_ttbar_name = resultsdir / "TTbar_sl.root"
-    up_signal_hh = uproot.open(signal_hh_name)
-    up_backg_ttbar = uproot.open(background_ttbar_name)
+def set_global_vars(workdir: str) -> Path:
+    # Verify Bamboo_setup location - ONLY FOR LOCAL testing
+    assert BAMBOO_SETUP.name == 'Bamboo_setup'
+    global WORKDIR, NNOUTDIR, MODELS_SUMMARY
+    WORKDIR = Path(workdir)
+    NNOUTDIR = WORKDIR / 'Neural_Nets_v2_notpreshuffled'
+    MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
-    sel_names = ['SL_res_2b_x']
-    for sel_name in sel_names:
-        signal_hh_df = up_signal_hh[sel_name].arrays(library="pd")
-        backg_ttbar_df = up_backg_ttbar[sel_name].arrays(library="pd")
+def get_test_models():
+    models_file = NNDIR / 'NN_test_models.yml'
+    with open(models_file, 'r') as file:
+        yaml_data = yaml.safe_load(file)
+        test_models = yaml_data['Models']
 
-    # Adding isSignal variable
-    signal_hh_df["isSignal"] = np.ones(len(signal_hh_df))
-    backg_ttbar_df["isSignal"] = np.zeros(len(backg_ttbar_df))
+    # Assert all models have different names
+    model_names = [model['name'] for model in test_models]
+    assert len(model_names) == len(set(model_names)), "Model names must be unique"
 
-    # Adding columns for each process
-    signal_hh_df["HH"] = np.ones(len(signal_hh_df))
-    signal_hh_df["ttbar"] = np.zeros(len(signal_hh_df))
-    backg_ttbar_df["HH"] = np.zeros(len(backg_ttbar_df))
-    backg_ttbar_df["ttbar"] = np.ones(len(backg_ttbar_df))
+    # Assert allowed processes only (those in PROCESSES)
+    model_processes = [model['processes'] for model in test_models]
+    return test_models
 
-    # Cutting away most background events
-    #backg_ttbar_df = backg_ttbar_df.iloc[:len(signal_hh_df)]
-    if n_bkg <= len(backg_ttbar_df):
-        backg_ttbar_df = backg_ttbar_df.iloc[:n_bkg]
+def load_data() -> dict[str: pd.DataFrame]:
+    # Returns a dictionary whose values are the process names
+    # and keys are the process dataframes loaded from the root files
+    # as grouped by the PROCESSES dictionary
+    resultsdir = WORKDIR / 'results'
+    sel_name = 'SL_res_2b_x'
+    df_dict = {}
+    for process_name, process_files in PROCESSES.items():
+        for file in process_files:
+            if '_sl' in file:       # <----- Excludes all DY samples <-----
+                filepath = resultsdir / (file + '.root')
+                upfile = uproot.open(filepath)
+                process_df = upfile[sel_name].arrays(library="pd")
+                # process_df['isSignal'] = np.ones(len(process_df)) if process_name == 'HH' else np.zeros(len(process_df))
+                if process_name == 'ttbar': process_df = process_df.iloc[:500000]
+                process_df['Process'] = process_name
+                df_dict[process_name] = process_df
+                print(f'Number of events for {process_name}: {len(process_df)}')
 
-    print ()
-    print (f"Total HH Signal Events: {len(signal_hh_df)}")
-    print (f"Total ttbar Background Events used: {len(backg_ttbar_df)}")
-    print ()
+    return df_dict
 
-    total_df = pd.concat([signal_hh_df, backg_ttbar_df], ignore_index=True)
-
-    return total_df 
-
-def preprocess_data(total_df) -> pd.DataFrame:
-
-    # Remove events with negative gen_weight
+def preprocess_data(df_dict: dict) -> pd.DataFrame:
+    # Returns the combined dataframe of all dataframes loaded
+    total_df = pd.concat([df for df in df_dict.values()], ignore_index=True)
+    # Apply one-hot encoding
+    total_df = pd.get_dummies(total_df, columns=['Process'])
+    # new_column_names = {col: col.removeprefix('Process_') for col in total_df.columns if col.startswith('Process_')}
+    # total_df.rename(columns=new_column_names, inplace=True)
+    # Remove events with negative genWeights
     total_df = total_df[total_df.gen_Weight > 0].copy()
-
-    # Calculating training weights
-    total_df["training_weight"] = total_df["gen_Weight"].copy()
     
-    for isSignal in total_df.isSignal.unique():
-        mask = total_df["isSignal"] == isSignal
-        total_sum = total_df[mask]["gen_Weight"].sum()
-        total_df.loc[mask, "training_weight"] *= total_df.shape[0] / total_sum
+    return total_df
+    
+def get_model_df(df, processes, features):
 
-    # Randomize for training
-    total_df = total_df.sample(frac=1)
+    # ---------------------------- Model Input Variables ----------------------------
+    if features != 'All':
+        columns_to_keep = ['event','gen_Weight']
+        columns_to_keep.extend(col for col in df.columns if col.startswith('Process_'))
+        df = df[features + columns_to_keep]
+    # Resolve: If feature names not found in dataframe  <<<<<=========
+    # --------------------------- Keep relevant processes ---------------------------
+    # Consider a binary DNN with background as a label for all backgrounds (not just ttbar)
+    if processes == ['isSignal']:
+        # Remove rows where that are neither HH or ttbar events
+        df = df[(df['Process_HH'] == 1)|(df['Process_ttbar'] == 1)]
+        df['Process_isSignal'] = 0
+        df.loc[df['Process_HH']==1, 'Process_isSignal'] = 1
+        columns_to_drop = [col for col in df.columns if col.startswith('Process_') and col != 'Process_isSignal']
+        df = df.drop(columns=columns_to_drop)
+    else:
+        columns_to_drop = [col for col in df.columns if col.startswith('Process_') and not any(proc in col for proc in processes)]
+        for col in columns_to_drop:
+            df = df[df[col] != 1]
+        df = df.drop(columns=columns_to_drop)
+    return df
+
+def add_training_weights(total_df, processes):
+
+    total_df["training_weight"] = total_df['gen_Weight'].copy()
+
+    if processes == ['isSignal']:
+        for isSignal in total_df.Process_isSignal.unique():
+            mask = total_df["Process_isSignal"] == isSignal
+            total_sum = total_df[mask]["gen_Weight"].sum()
+            total_df.loc[mask, "training_weight"] *= total_df.shape[0] / total_sum
+    else:
+        for proc in processes:
+            process_mask = total_df['Process_'+proc] == 1
+            process_total_sum = total_df[process_mask]['gen_Weight'].sum()
+            total_df.loc[process_mask, "training_weight"] *= total_df.shape[0] / process_total_sum
 
     return total_df
 
-def split_data(total_df, processes) -> dict[str: Union[pd.DataFrame, pd.Series]]:
-    ## Dividing the data into testing and training datasets
-    drop_before_split =  ["isSignal", "HH", "ttbar", "gen_Weight"]
-    X_df = total_df.drop(columns=drop_before_split)
-    Y_df = total_df[processes]
+def split_and_shuffle(total_df):
+
+    # total_df = total_df.sample(frac=1)
+
+    processes_in_df = total_df.filter(like='Process_').columns
+    columns_to_drop = ["event", "gen_Weight", "training_weight"]
+    columns_to_drop.extend(processes_in_df)
+    X_df = total_df.drop(columns=columns_to_drop)
+    Y_df_columns = [proc for proc in total_df.columns if proc.startswith('Process_')]
+    Y_df = total_df[Y_df_columns]
 
     test_size = 0.2
-    X_train, X_test, Y_train, Y_test = train_test_split(X_df, Y_df, test_size=test_size, random_state=7)
-    
-    events_train = X_train["event"]
-    events_test = X_test["event"]
-    training_weights = X_train["training_weight"]
-    X_train = X_train.drop(columns=["event", "training_weight"])
-    X_test = X_test.drop(columns=["event", "training_weight"])
+    X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, total_df["event"], total_df["training_weight"], test_size=test_size, random_state=7)
 
-    print ()
-    print(f"The testing size is: %.2f"%test_size)
-    print(f"Number of training events: %d"%len(X_train))
-    for process in processes:
-        print(f"  Number of %s training events: %d"%(process, Y_train[process].value_counts()[1.0]))
-    print(f"Number of test events: %d"%len(X_test))
-    for process in processes:
-        print(f"  Number of %s test events: %d"%(process, Y_test[process].value_counts()[1.0]))
-    print ()
+    print(f"Number of training events: {len(evs_train)}")
+    print(f"Number of test events: {len(evs_test)}")
 
-    return training_weights, events_train, X_train, Y_train, events_test, X_test, Y_test
-
-def pick_num_train_events(X_train, Y_train, events_train, n_events: dict):
-    n_signal, n_backg = n_events['signal'], n_events['background']
-    assert X_train.index.equals(Y_train.index)
-    signal_X_train = X_train[Y_train==1]
-    signal_Y_train = Y_train[Y_train==1]
-    signal_events_train = events_train[Y_train==1]
-    backg_X_train = X_train[Y_train==0]
-    backg_Y_train = Y_train[Y_train==0]
-    backg_events_train = events_train[Y_train==0]
-    if isinstance(n_backg, str):
-        factor = int(n_backg.strip('s'))
-        desired_backg_n = int(len(signal_X_train) * factor)
-        if len(backg_X_train) >  desired_backg_n:
-            backg_X_train = backg_X_train.sample(n=desired_backg_n, random_state=42)
-            backg_Y_train = backg_Y_train.loc[backg_X_train.index]
-            backg_events_train = backg_events_train.loc[backg_X_train.index]
-        X_train = pd.concat([signal_X_train, backg_X_train])
-        Y_train = pd.concat([signal_Y_train, backg_Y_train])
-        events_train = pd.concat([signal_events_train, backg_events_train])
-    elif isinstance(n_backg, int):
-        desired_backg_n = n_backg
-        if len(backg_X_train) >  desired_backg_n:
-            backg_X_train = backg_X_train.sample(n=desired_backg_n, random_state=42)
-            backg_Y_train = backg_Y_train.loc[backg_X_train.index]
-            backg_events_train = backg_events_train.loc[backg_X_train.index]
-        X_train = pd.concat([signal_X_train, backg_X_train])
-        Y_train = pd.concat([signal_Y_train, backg_Y_train])
-        events_train = pd.concat([signal_events_train, backg_events_train])
-    
-    X_train = X_train.sample(frac=1, random_state=42).reset_index(drop=True)
-    Y_train = Y_train.sample(frac=1, random_state=42).reset_index(drop=True)    
-
-    return X_train, Y_train, events_train, len(X_train), len(Y_train)
-
-def pick_features(X_train, X_test, feature_names: list = None) -> tuple[pd.DataFrame, pd.DataFrame]:
-    if feature_names is not None:
-        X_train = X_train[feature_names]
-        X_test = X_test[feature_names]
-        # Resolve: If feature names not found in dataframe
-        return X_train, X_test
+    return X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test
 
 def get_optimizer(config: dict):
     optimizer_name = config['optimizer'].lower()
@@ -159,33 +158,7 @@ def get_optimizer(config: dict):
             return optimizer_class()
     else:
         raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
-
-def update_model_metrics_csv(model_name: str, training_events: dict, output_metrics: dict, csv_path:Path, is_multiclass:bool=False, classes:list=None):
-    if csv_path.exists():
-        df = pd.read_csv(csv_path)
-    else:
-        columns = ['name'] + list(training_events.keys()) + list(output_metrics.keys())
-        df = pd.DataFrame(columns=columns)
     
-    if model_name in df['name'].values:
-        idx = df[df['name']==model_name].index
-        for key, value in {**training_events, **output_metrics}.items():
-            df.loc[idx, key] = value
-    else:
-        new_model = {'name': model_name, **training_events, **output_metrics}
-        df = df._append(new_model, ignore_index=True)
-
-    if is_multiclass and classes:
-        for class_name in classes:
-            class_auc_key = f'{class_name}_AUC'
-            if class_auc_key not in df.columns:
-                df[class_auc_key] = np.nan
-            if class_auc_key in output_metrics:
-                df.loc[df['name'] == model_name, class_auc_key] = output_metrics[class_auc_key]
-
-    df.to_csv(csv_path, index=False)
-
-
 class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
     def __init__(self, model):
         self.model = model
@@ -196,18 +169,17 @@ class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
 
     def predict(self, X):
         return self.model.predict(X)
-
-
+    
 class Run3Model():
 
-    def __init__(self, name: str, X_train: pd.DataFrame, Y_train: pd.DataFrame, processes: list):
-        self.name = name
-        self.X_train = X_train
-        self.Y_train = Y_train
-        self.processes = processes
-        self.ndim = len(X_train.columns)
+    def __init__(self, params: dict, model_df: pd.DataFrame):
+        self.name = params['name']
+        self.params = params
+        self.model_df = model_df
+        self.type = 'binary' if params['processes'] == ['isSignal'] else 'multiclass'
+        self.processes = params['processes']
 
-        self.modeldir = NNOUTDIR / name
+        self.modeldir = NNOUTDIR / self.name
         if not self.modeldir.exists(): 
             self.modeldir.mkdir(parents=True, exist_ok=True)
 
@@ -244,21 +216,22 @@ class Run3Model():
         
         return [early_stopping, reduce_plateau]
 
-    def setup_model(self, params):
+    def setup_model(self, X_train):
 
         # Input Layer
-        inputs = Input(shape=(self.ndim,), name="input")
+        ndim = len(X_train.columns)
+        inputs = Input(shape=(ndim,), name="input")
 
         # Preprocessing layer
         normalizer   = preprocessing.Normalization(
-            mean     = self.X_train.mean(axis=0).to_numpy(),
-            variance = self.X_train.var(axis=0).to_numpy(),
+            mean     = X_train.mean(axis=0).to_numpy(),
+            variance = X_train.var(axis=0).to_numpy(),
             name     = 'Normalization')(inputs)
 
         x = normalizer
 
         # Hidden Layers
-        for layer in params['layers']:
+        for layer in self.params['layers']:
             if layer['type'] == 'Dense':
                 x = Dense(
                     units=layer['units'], 
@@ -268,7 +241,7 @@ class Run3Model():
 
         # Output Layer
         outputs = []
-        for layer in params['outputs']:
+        for layer in self.params['outputs']:
             if layer['type'] == 'Dense':
                 output = Dense(
                     units=layer['units'],
@@ -278,400 +251,229 @@ class Run3Model():
                     name = layer['name'])(x)
                 outputs.append(output)
         
-        model = Model(inputs=inputs, outputs=outputs, name=params['name'])
+        model = Model(inputs=inputs, outputs=outputs, name=self.params['name'])
         model.compile(
-            optimizer = get_optimizer(params['compiler']),
-            loss      = params['compiler']['loss'], # Loss function to minimize fpr binary ANN
+            optimizer = get_optimizer(self.params['compiler']),
+            loss      = self.params['compiler']['loss'], # Loss function to minimize fpr binary ANN
             #metrics   = ["accuracy"]
             metrics   = [BinaryAccuracy(), AUC(), Precision(), Recall()],
             weighted_metrics = [])
         
         self.model = model
-        tf.keras.utils.plot_model(model, to_file=self.modeldir/'model_plot.pdf')
+        # tf.keras.utils.plot_model(model, to_file=self.modeldir/'model_plot.pdf')
 
-    def train_model(self, params, training_weights):
+    def train_model(self, X_train, Y_train, training_weights):
         if self.model == None: raise ValueError('self.model is None. Set up the model first')
 
         history = self.model.fit(
-            self.X_train, # features (or independent variables)
-            self.Y_train, # labels (or dependent variables)
+            X_train, # features (or independent variables)
+            Y_train, # labels (or dependent variables)
             verbose = 0,
-            batch_size = params['fit']['batch_size'], # Number of samples that will be propagated through the network at once
-            epochs = params['fit']['epochs'], # An epoch is one complete pass through the entire training dataset
+            batch_size = self.params['fit']['batch_size'], # Number of samples that will be propagated through the network at once
+            epochs = self.params['fit']['epochs'], # An epoch is one complete pass through the entire training dataset
             sample_weight = training_weights,
-            validation_split = params['fit']['validation_split'],  # 25% of X_train_val and Y_train will be used to evaluate the model's performance
+            validation_split = self.params['fit']['validation_split'],  # 25% of X_train_val and Y_train will be used to evaluate the model's performance
             callbacks = self.get_callbacks())
 
         self.history = history
 
-    def save_model(self):
+    def save_model(self, features):
         model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
         # Writing the list of input variables
-        input_names = self.X_train.columns.tolist()
+        input_names = features.tolist()
         input_vars_file = self.modeldir /'input_variables.txt'
         with open(input_vars_file, 'w') as file:
             for name in input_names:
                 file.write(name + '\n')
 
     def final_output(self, X_test, Y_test, events_test) -> pd.DataFrame:
+        
+        # Use evaluate() to get the performance metrics
+        loss, binary_accuracy, auc, precision, recall = self.model.evaluate(X_test, Y_test, verbose=0)
+        model_metrics = dict(name=self.name, loss=loss, binary_accuracy=binary_accuracy, auc=auc, precision=precision, recall=recall)
+        # Get predictions for further analysis
         events_test = events_test.reset_index(drop=True)
         Y_test = Y_test.reset_index(drop=True)
-        Y_pred_score = self.model.predict(X_test)
+        Y_pred_score = self.model.predict(X_test)  # numpy array
         output_df = pd.concat([events_test, Y_test], axis=1)
-        for (i, process) in enumerate(self.processes):
-            score = Y_pred_score[:,i]
-            if process == "isSignal":
-                name = "Prediction Score"
-            else:
-                name = f"{process} Prediction Score"
-            score = pd.Series(score.flatten(), name=name).reset_index(drop=True)
-            output_df = pd.concat([output_df, score], axis=1)       
-        if len(self.processes) > 1:
-            output_df["S"] = output_df["HH Prediction Score"]
-            output_df["S+B"] = np.zeros(len(output_df))
-            output_df["B"] = np.zeros(len(output_df))
-            for (i, process) in enumerate(self.processes):
-                output_df["S+B"] += output_df[f"{process} Prediction Score"]
-                if process != "HH":
-                    output_df["B"] += output_df[f"{process} Prediction Score"]
-            output_df["S/(S+B)"] = output_df["S"]/output_df["S+B"]
-            output_df["S/B"] = output_df["S"]/output_df["B"]
-            output_df["log_S/B"] = np.log10(output_df["S/B"])
+        for i, proc in enumerate(Y_test.columns):
+            column_name = proc.removeprefix('Process_') + ' Score'
+            score = Y_pred_score[:, i]
+            proc_score = pd.Series(score.flatten(), name=column_name).reset_index(drop=True)
+            output_df = pd.concat([output_df, proc_score], axis=1)
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
-        return output_df
-    
-    @staticmethod
-    def draw_score_dist(output_df, modeldir, processes):
-        color_map = {
-            0: 'blue',
-            1: 'red',
-            2: 'black',
-            3: 'green'
-        }
-        # DNN Score Distribution on test set
-        for (i, process) in enumerate(processes): 
-            fig, ax = plt.subplots()
-            ax.set_xlim(0, 1)
-            if process == "isSignal":
-                name = "Prediction Score"
-            else:
-                name = f"{process} Prediction Score"
-            for (j, process_2) in enumerate(processes):
-                label = process_2
-                if process == "isSignal":
-                    label = "Signal"
-                ax.hist(output_df.loc[output_df[process_2] == 1.0, name], bins=50, color=color_map[j], label=label, histtype='step', density=True)
-                if process_2 == "isSignal":
-                    ax.hist(output_df.loc[output_df[process_2] == 0.0, name], bins=50, color=color_map[1], label="Background", histtype='step', density=True)
-            ax.legend()
-            ax.set_xlabel('DNN score')
-            ax.set_ylabel('Normalized number of events')
-            if process == "isSignal":
-                filename = "dnn_score_test_distribution.pdf"
-            else:
-                filename = "%s_dnn_score_test_distribution.pdf"%process
-            fig.savefig(modeldir / filename)
-
-        if len(processes) > 1:
-            fig1, ax1 = plt.subplots()
-            ax1.set_xlim(0, 1)
-            for (i, process) in enumerate(processes):
-                label = process
-                ax1.hist(output_df.loc[output_df[process] == 1.0, 'S/(S+B)'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
-            ax1.legend()
-            ax1.set_xlabel('S/(S+B)')
-            ax1.set_ylabel('Normalized number of events')
-            fig1.savefig(modeldir / "dnn_score_ratio_s_sb_test_distribution.pdf")
-
-            fig2, ax2 = plt.subplots()
-            #ax2.set_xlim(0, 1)
-            for (i, process) in enumerate(processes):
-                label = process
-                ax2.hist(output_df.loc[output_df[process] == 1.0, 'log_S/B'], bins=50, color=color_map[i], label=label, histtype='step', density=True)
-            ax2.legend()
-            ax2.set_xlabel('log(S/B)')
-            ax2.set_ylabel('Normalized number of events')
-            fig2.savefig(modeldir / "dnn_score_ratio_s_b_test_distribution.pdf")
-
-    def output_metrics(self, output_df):
-        fpr, tpr, thresholds = roc_curve(output_df['isSignal'], output_df['Prediction Score'])
-        optimal_idx = np.argmax(tpr - fpr)
-        optimal_threshold = thresholds[optimal_idx]
-        cut_output = output_df.loc[output_df['Prediction Score'] > optimal_threshold]
-        signal = cut_output.loc[output_df['isSignal']==1.0] 
-        backg = cut_output.loc[output_df['isSignal']==0.0]
-        sensitivity = len(signal)/len(backg)
-        return fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity
-
-    @staticmethod
-    def draw_roc(fpr, tpr, modeldir, optimal_idx=None):
-        # Plot ROC
-        roc_auc = auc(fpr, tpr)
-        fig, ax = plt.subplots()
-        ax.plot(fpr, tpr, lw=2, color='cyan', label= "auc = %.3f" % (roc_auc))
-        ax.plot([0,1], [0,1], linestyle="--", lw=2, color="k", label="random chance")
-        if optimal_idx is not None:
-            ax.scatter(fpr[optimal_idx], tpr[optimal_idx], color='red')  # mark the optimal point
-        ax.set_xlim([0, 1.0])
-        ax.set_ylim([0, 1.0])
-        ax.set_xlabel("false positive rate")
-        ax.set_ylabel("true positive rate")
-        ax.set_title("ROC")
-        ax.legend(loc="lower right")
-        fig.savefig(modeldir / "dnn_roc.pdf")
-
-    def output_multiclass_metrics(self, output_df, classes):
-
-        n_classes = len(classes)
-        # Prepare a dictionary for each class in a multiclass classification scenario
-        roc_metrics = {class_name: {} for class_name in classes}
-        fpr_dict, tpr_dict, auc_dict = {}, {}, {}
-
-        # Loop through each class and calculate ROC curve
-        for i, class_name in enumerate(classes):
-            true_binary_labels = output_df[class_name]
-            pred_scores = output_df[f"{class_name} Prediction Score"]
-
-            fpr, tpr, thresholds = roc_curve(true_binary_labels, pred_scores)
-            auc_value = auc(fpr, tpr)
-
-            fpr_dict[class_name] = fpr
-            tpr_dict[class_name] = tpr
-            auc_dict[class_name] = auc_value
-            roc_metrics[class_name] = {
-                "fpr": fpr,
-                "tpr": tpr,
-                "thresholds": thresholds,
-                "auc": auc_value}
-            
-        return roc_metrics
-
-    @staticmethod
-    def draw_multiclass_roc(fpr_dict, tpr_dict, auc_dict, modeldir, classes):
-        fig, ax = plt.subplots()
-        for class_name in classes:
-            fpr = fpr_dict[class_name]
-            tpr = tpr_dict[class_name]
-            auc_value = auc_dict[class_name]
-
-            ax.plot(fpr, tpr, lw=2, label=f"{class_name} (AUC = {auc_value:.3f})")
-
-        ax.plot([0,1], [0,1], linestyle='--', lw=2, color="k", label="random chance")
-        ax.set_xlim([0, 1.0])
-        ax.set_ylim([0, 1.0])
-        ax.set_xlabel("False Positive Rate")
-        ax.set_title("ROC Curves - Multiclass")
-        ax.legend(loc="lower right")
-        fig.savefig(modeldir/ "multiclass_roc.pdf")
-
-    def generate_confusion_matrix(self, X_test, Y_test, processes, binary_classifier_threshold=None):
-
-        # Predict class probabilities
-        Y_pred_probs = self.model.predict(X_test)
-
-        if len(processes) == 1 and binary_classifier_threshold is not None:
-            # Binary classifier
-            Y_pred_labels = (Y_pred_probs >= binary_classifier_threshold).astype(int).flatten()
-            Y_test_labels = Y_test.values.flatten()
-            # Map processes to specific labels
-            binary_labels = ["Background", "Signal"]
-            x_ticks = y_ticks = binary_labels
-        else:
-            Y_pred_labels = np.argmax(Y_pred_probs, axis=1)
-            Y_test_labels = np.argmax(Y_test.to_numpy(), axis=1)
-            x_ticks = y_ticks = processes
-
-        # Generate confusion matrix
-        cm = confusion_matrix(Y_test_labels, Y_pred_labels)
-
-        # Display confusion matrix - true label normalized
-        cm_true_norm = []
-        for row in cm:
-            row_sum = sum(row)
-            row_norm = []
-            for c in row:
-                row_norm.append(c/row_sum)
-            cm_true_norm.append(row_norm)
-
-        fig1, ax1 = plt.subplots(figsize=(8,6))
-        ax1.matshow(cm_true_norm, cmap="plasma", alpha=0.6)
-        for i in range(len(cm_true_norm)):
-            for j in range(len(cm_true_norm[i])):
-                ax1.text(x=j, y=i, s="%.2f"%cm_true_norm[i][j], va='center', ha='center')
-
-        ax1.set_xlabel('Predicted Label', labelpad=10)
-        ax1.set_ylabel('True Label (normalized)', labelpad=10)
-        ax1.set_title('Confusion Matrix')
-        ax1.set_xticks(range(len(x_ticks)))
-        ax1.set_yticks(range(len(y_ticks)))
-        ax1.set_xticklabels(x_ticks, rotation=0)
-        ax1.set_yticklabels(y_ticks)
-
-        ax1.xaxis.set_ticks_position('bottom')
-        ax1.xaxis.set_label_position('bottom')
-        plt.tight_layout()
-        fig1.savefig(self.modeldir / 'confusion_matrix_true_norm.pdf')
-
-        # Display confusion matrix - predicted label normalized
-        cm_pred_norm_transposed = []
-        cm_transposed = [[row[i] for row in cm] for i in range(len(cm[0]))]
-        for row in cm_transposed:
-            row_sum = sum(row)
-            row_norm = []
-            for c in row:
-                row_norm.append(c/row_sum)
-            cm_pred_norm_transposed.append(row_norm)
-        cm_pred_norm = [[row[i] for row in cm_pred_norm_transposed] for i in range(len(cm_pred_norm_transposed[0]))]
-
-        fig2, ax2 = plt.subplots(figsize=(8,6))
-        ax2.matshow(cm_pred_norm, cmap="plasma", alpha=0.6)
-        for i in range(len(cm_pred_norm)):
-            for j in range(len(cm_pred_norm[i])):
-                ax2.text(x=j, y=i, s="%.2f"%cm_pred_norm[i][j], va='center', ha='center')
-
-        ax2.set_xlabel('Predicted Label (normalized)', labelpad=10)
-        ax2.set_ylabel('True Label', labelpad=10)
-        ax2.set_title('Confusion Matrix')
-        ax2.set_xticks(range(len(x_ticks)))
-        ax2.set_yticks(range(len(y_ticks)))
-        ax2.set_xticklabels(x_ticks, rotation=0)
-        ax2.set_yticklabels(y_ticks)
-
-        ax2.xaxis.set_ticks_position('bottom')
-        ax2.xaxis.set_label_position('bottom')
-        plt.tight_layout()
-        fig2.savefig(self.modeldir / 'confusion_matrix_pred_norm.pdf')
-
-    def input_variable_ranking_shap(self, X_test, Y_test):
+        return output_df, model_metrics
+   
+    def feature_ranking(self, X_test, Y_test):
         estimator = KerasRegressorWrapper(self.model)
         result = permutation_importance(estimator, X_test, Y_test, n_repeats=10, random_state=42)
-        sorted_idx = result.importances_mean.argsort()      
-        input_variables_list = X_test.columns.tolist()
-        input_variabless_ranked = []
-        for idx in sorted_idx:
-            input_variabless_ranked.append(input_variables_list[idx])
-        return input_variabless_ranked
+        sorted_idx = result.importances_mean.argsort()
+        features_list = X_test.columns.tolist()
+        features_ranked = [features_list[idx] for idx in sorted_idx]
 
-    '''
-    def input_variable_ranking_gradient(self, X_test):
-        with tf.GradientTape() as tape:
-            tape.watch(tf.constant(X_test.values))
-            predictions = self.model(X_test)
-        grads = tape.gradient(predictions, tf.constant(X_test.values)).numpy()
-        gradient_magnitudes = np.mean(np.abs(grads), axis=0)
-        variable_rank = np.argsort(gradient_magnitudes)[::-1]
-        input_variables_list = X_test.columns.tolist()
-        input_variabless_ranked = []
-        for idx in variable_rank:
-            input_variabless_ranked.append(input_variables_list[idx])
-        return input_variabless_ranked
-    '''
+        features_ranking_file = self.modeldir / "features_ranking.txt"
+        with open(features_ranking_file, 'w') as file:
+            file.write(f"Number of features: {len(features_list)}\n")
+            file.write(f"Ranking: \n")
+            for i, ranked_f in enumerate(features_ranked):
+                file.write(f"{i+1}. {ranked_f}\n")
 
+    def draw_score_distribution(self, output_df):
+        get_color = {'HH':'blue', 'ttbar':'red', 'tbarWplus':'green', 'others':'black'}
+        score_procs = [col for col in output_df.columns if col.endswith('Score')]
+        true_procs = [col for col in output_df.columns if col.startswith('Process_')]
+        if self.type == 'binary':
+            fig, ax = plt.subplots(figsize=(8, 6))
+            ax.set_xlim(0, 1)
+            ax.set_ylabel('Normalized Number of Events')
+            ax.hist(output_df.loc[output_df[true_procs[0]] == 1, score_procs[0]], bins=50, color=get_color['HH'], label='HH', histtype='step', density=True)
+            ax.hist(output_df.loc[output_df[true_procs[0]] == 0, score_procs[0]], bins=50, color=get_color['ttbar'], label='ttbar', histtype='step', density=True)
+            ax.legend()
+            ax.set_xlabel(score_procs[0])
+            fig.savefig(self.modeldir/('_'.join(['dist', score_procs[0].split(' ')[0], 'score.pdf'])))
+        elif self.type == 'multiclass':
+            for score_proc in score_procs:
+                fig, ax = plt.subplots(figsize=(8, 6))
+                ax.set_xlim(0, 1)
+                ax.set_ylabel('Normalized Number of Events')
+                for true_proc in true_procs:
+                    label = true_proc.removeprefix('Process_')
+                    ax.hist(output_df.loc[output_df[true_proc] == 1, score_proc], bins=50, color=get_color[label], label=label, histtype='step', density=True)
+                ax.legend()
+                ax.set_xlabel(score_proc)
+                fig.savefig(self.modeldir/('_'.join(['dist', score_proc.split(' ')[0], 'score.pdf'])))
 
-def main(workdir_path: str, n_bkg: int):
-    global NNOUTDIR
-    WORKDIR = Path(workdir_path)
-    NNOUTDIR = WORKDIR / 'Neural_Nets'
-    total_df=load_data(WORKDIR, n_bkg)
-    total_df=preprocess_data(total_df)
+    def draw_roc_curve(self, output_df) -> dict:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        self.process_auc = {}
+        for i, proc in enumerate(self.processes):
+            true_class = output_df['Process_'+proc]
+            pred_class = output_df[f"{proc} Score"]
+            fpr, tpr, thresholds = roc_curve(true_class, pred_class)
+            auc_value = auc(fpr, tpr)
+            self.process_auc[proc] = round(auc_value,3)
+            ax.plot(fpr, tpr, lw=2, label=f"{proc} (AUC = {auc_value:.3f})")
+            if proc == 'isSignal' and len(self.processes)==1:
+                optimal_idx = np.argmax(tpr-fpr)
+                self.binary_optimal_threshold = thresholds[optimal_idx]
+                ax.scatter(fpr[optimal_idx], tpr[optimal_idx], color='red')
+        ax.plot([0,1],[0,1], linestyle='--', lw=2, color='k', label='random chance')
+        ax.set_xlim([0,1.0])
+        ax.set_ylim([0,1.0])
+        ax.set_xlabel('False Positive Rate (FPR)')
+        ax.set_ylabel('True Positive Rate (TPR)')
+        ax.set_title('ROC Curve(s)')
+        ax.legend(loc='lower right')
+        fig.savefig(self.modeldir/'roc_curve.pdf')
 
-    test_models = NNDIR / 'NN_test_models.yml'
-    with open(test_models, 'r') as file:
-        yaml_data = yaml.safe_load(file)
-    model_list = yaml_data['Models']
+    def draw_confusion_matrix(self, output_df):
+        if self.type == 'binary':
+            true_class = output_df['Process_isSignal'].values.flatten()
+            pred_class = (output_df['isSignal Score'] >= self.binary_optimal_threshold).astype(int)
+            x_ticks = y_ticks = ["Background", "Signal"]
+        elif self.type == 'multiclass':
+            true_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Process_')]].to_numpy(), axis=1)
+            pred_class = np.argmax(output_df[[col for col in output_df.columns if col.endswith(' Score')]].to_numpy(), axis=1)
+            x_ticks = y_ticks = self.processes
 
-    csv_path = NNOUTDIR / 'models_performance.csv'
+        cm = confusion_matrix(true_class, pred_class)
+        cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
-    for model_params in model_list:
-        print(f"Model: {model_params['name']}")
-        n_output_nodes = model_params['n_output_nodes']
-        processes = model_params['processes']
-        print (f"Output nodes ({n_output_nodes}): {processes}")
-        total_df_mod = total_df.copy(deep=True)
+        fig, ax = plt.subplots(figsize=(8,6))
+        im = ax.imshow(cm_normalized, interpolation='nearest', cmap=plt.cm.Blues)
+        plt.colorbar(im)
+        fmt = '.2f'
+        thresh = cm_normalized.max()/2
+        for i in range(cm_normalized.shape[0]):
+            for j in range(cm_normalized.shape[1]):
+                ax.text(j, i, format(cm_normalized[i, j], fmt),
+                        ha='center', va='center', 
+                        color='white' if cm_normalized[i,j] > thresh else "black")
 
-        training_weights, events_train, X_train_mod, Y_train_mod, events_test, X_test_mod, Y_test_mod = split_data(total_df_mod, processes)
-        print ()
+        ax.set_xlabel('Predicted', labelpad=10)
+        ax.set_ylabel('Actual', labelpad=10)
+        ax.set_title('Confusion Matrix')
+        ax.set_xticks(range(len(x_ticks)))
+        ax.set_yticks(range(len(y_ticks)))
+        ax.set_xticklabels(x_ticks, rotation=0)
+        ax.set_yticklabels(y_ticks)
 
-        if model_params['input_vars'] != 'All':
-            X_train_mod, X_test_mod = pick_features(X_train_mod, X_test_mod, model_params['input_vars'])
+        ax.xaxis.set_ticks_position('bottom')
+        ax.xaxis.set_label_position('bottom')
+        plt.tight_layout()
+        fig.savefig(self.modeldir / 'confusion_matrix.pdf')
 
-        myModel = Run3Model(model_params['name'], X_train_mod, Y_train_mod, processes)
+    def save_model_info(self, output_df, Y_train, Y_test):
+        self.params['Training Events'] = {'Total': len(Y_train)}
+        self.params['Testing Events'] = {'Total': len(Y_test)}
+        for proc in self.processes:
+            self.params['Training Events'][proc] = int(Y_train['Process_'+proc].value_counts()[1])
+            self.params['Testing Events'][proc] = int(Y_test['Process_'+proc].value_counts()[1])
+        self.params[f'Trained on'] = WORKDIR.name
 
-        myModel.setup_model(model_params)
-        myModel.model.summary()
-        myModel.train_model(model_params, training_weights)
-        output_df = myModel.final_output(X_test_mod, Y_test_mod, events_test)
-        myModel.draw_score_dist(output_df, myModel.modeldir, myModel.processes)
-        if n_output_nodes == 1:
-            # Binary classification
-            fpr, tpr, thresholds, optimal_idx, optimal_threshold, sensitivity = myModel.output_metrics(output_df)
-            myModel.draw_roc(fpr, tpr, myModel.modeldir, optimal_idx)
-            myModel.generate_confusion_matrix(X_test_mod, Y_test_mod, processes, optimal_threshold)
-        else:
-            # Multiclass classification
-            roc_metrics = myModel.output_multiclass_metrics(output_df, processes)
-            fpr_dict = {class_name: values['fpr'] for class_name, values in roc_metrics.items()}
-            tpr_dict = {class_name: values['tpr'] for class_name, values in roc_metrics.items()}
-            auc_dict = {class_name: values['auc'] for class_name, values in roc_metrics.items()}
-            myModel.draw_multiclass_roc(fpr_dict, tpr_dict, auc_dict, myModel.modeldir, processes)
-            myModel.generate_confusion_matrix(X_test_mod, Y_test_mod, processes)
-
-        input_variable_ranking_file_path =  myModel.modeldir / 'input_variable_ranking.txt'
-        input_variable_ranking_file = open(input_variable_ranking_file_path, "w")
-        input_variabless_ranked_shap = myModel.input_variable_ranking_shap(X_test_mod, Y_test_mod)
-        #input_variabless_ranked_gradient = myModel.input_variable_ranking_gradient(X_test_mod)
-        #print ("  Shapley    Gradients")
-        n_var = len(input_variabless_ranked_shap)
-        input_variable_ranking_file.write("Number of input variables: %d\n\n"%n_var)
-        input_variable_ranking_file.write("Ranked input variables using SHAP variables: \n\n")
-        for i in range(0, n_var):
-            #print ("%d.  %s    %s"%(i, input_variabless_ranked_shap[i], input_variabless_ranked_gradient[i]))
-            input_variable_ranking_file.write("%d.  %s\n"%(i+1, input_variabless_ranked_shap[i]))
-        input_variable_ranking_file.write("\n")
-        input_variable_ranking_file.close()
-
-        myModel.save_model()
-
-        # ----------- Logging model info -------------------
-        model_params['Total Training Events'] = len(X_train_mod)
-        model_params['Total Test Events'] = len(X_test_mod)
-        model_params['Training Events'] = {}
-        model_params['Test Events'] = {}
-        for process in processes:
-            model_params['Training Events'][process] = int(Y_train_mod[process].value_counts()[1])
-            model_params['Test Events'][process] = int(Y_test_mod[process].value_counts()[1])
-        model_params['Output Metrics'] = {}
-        if n_output_nodes == 1:
-            model_params['Output Metrics'] = {
-                'Optimal threshold': round(float(optimal_threshold), 3),
-                'Signal Efficiency': round(float(tpr[optimal_idx]), 3),
-                'Background Rejection': round(float(1 - fpr[optimal_idx]), 3),
-                'Sensitivity (S/B)': round(sensitivity, 3)
-            }
-        model_params['Trained on'] = WORKDIR.name
-
-        out_yml = myModel.modeldir / 'model_info.yml'
+        out_yml = self.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
-            yaml.dump(model_params, file, sort_keys=False)
+            yaml.dump(self.params, file, sort_keys=False)
 
-        is_multiclass = n_output_nodes > 1
-        update_model_metrics_csv(
-            model_name = model_params['name'], 
-            training_events = model_params['Training Events'], 
-            output_metrics = model_params['Output Metrics'], 
-            csv_path = csv_path,
-            is_multiclass = is_multiclass,
-            classes=processes if is_multiclass else None)
+    def run(self):
+        print(f"Running model: {self.name}")
+        print(self.model_df)
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = split_and_shuffle(self.model_df)
+        self.setup_model(X_train)
+        self.train_model(X_train, Y_train, tw_train)
+        self.save_model(X_train.columns)
+        output_df, model_metrics = self.final_output(X_test, Y_test, evs_test)
+        # self.feature_ranking(X_test, Y_test)
+        self.draw_score_distribution(output_df)
+        self.draw_roc_curve(output_df)
+        self.draw_confusion_matrix(output_df)
+        self.save_model_info(output_df, Y_train, Y_test)
+        return self.params, model_metrics
 
-        print(f"The DNN models tested were saved to {WORKDIR} \n\n")
+def update_models_summary_csv(csv_path: Path, model_params: dict, model_metrics: dict):
+    if csv_path.exists():
+        df = pd.read_csv(csv_path)
+    else:
+        df = pd.DataFrame(columns=model_metrics.keys())
+
+    if model_metrics['name'] in df['name'].values:
+        index = df.index[df['name'] == model_metrics['name']]
+        for key, value in model_metrics.items():
+            if isinstance(value, float): value = round(value, 3)
+            df.at[index[0], key] = value
+    else:
+        df = df._append(model_metrics, ignore_index=True)
+
+    df.to_csv(csv_path, index=False)
+
+def main(workdir: str):
+    set_global_vars(workdir)
+    test_models = get_test_models()
+    df_dict=load_data()
+    total_df = preprocess_data(df_dict)
+    print(total_df)
+
+    models_summary_path = NNOUTDIR / 'models_summary.csv'
+    for model_params in test_models:
+        model_df = get_model_df(total_df, model_params['processes'], model_params['input_vars'])
+        model_df = add_training_weights(model_df, model_params['processes'])
+        model = Run3Model(model_params, model_df)
+        model_params, model_metrics = model.run()
+        update_models_summary_csv(models_summary_path, model_params, model_metrics)
+
+    print(f"The DNN models tested were saved in {NNOUTDIR.resolve()} \n\n")
 
 if __name__ == '__main__':
-
-    # The root files in the given workdir must have skims
     parser = ArgumentParser()
-    parser.add_argument("-w", "--workdir", action="store", help="Ex: Z_OUTPUT/TOTAL_VarsReco_LLR")
-    parser.add_argument("-n", "--n_bkg", action="store", default = 500000, help="n_bkg = number of background events to be used for training")
+    parser.add_argument("-w", "--workdir", action="store", help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
     args = parser.parse_args()
 
-    main(args.workdir, int(args.n_bkg))
+    print(f"Bamboo_setup dir = {BAMBOO_SETUP.resolve()}")
+
+    main(args.workdir)
+
+    '''
+    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/TOTAL_VarsReco_2022_ttbar_tW_DY
+    '''
+
 
