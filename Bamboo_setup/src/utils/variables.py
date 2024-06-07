@@ -24,7 +24,10 @@ with open(VARPATH, 'r') as f:
 with open(CFGPATH, "r") as yaml_file:
     yaml_data = yaml.safe_load(yaml_file)
     LUMINOSITY: float = yaml_data['eras']['2022']['luminosity']
-    CROSS_SECTIONS: 'dict[str, float]' = { sample_name: sample_data['cross-section'] for sample_name, sample_data in yaml_data['samples'].items() }
+    CROSS_SECTIONS: 'dict[str, float]' = { 
+        sample_name: sample_data['cross-section'] if sample_data['type'] == 'mc' else 0
+        for sample_name, sample_data in yaml_data['samples'].items() 
+    }
 
 # Helper utility function for getting the weights stored in root files
 SUM_WEIGHTS = {}
@@ -171,7 +174,10 @@ class Variable():
             raise KeyError(f"'{hist_name}' not found in {sample_name}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
         
         # Scale the histogram
-        scale_factor = CROSS_SECTIONS[sample_name] * LUMINOSITY / SUM_WEIGHTS[sample_name]
+        if CROSS_SECTIONS[sample_name] != 0:
+            scale_factor = CROSS_SECTIONS[sample_name] * LUMINOSITY / SUM_WEIGHTS[sample_name]
+        else:
+            scale_factor = 1.0
         hist.Scale(scale_factor)
         return hist
 
