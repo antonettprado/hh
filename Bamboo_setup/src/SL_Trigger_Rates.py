@@ -35,7 +35,7 @@ class SL_Trigger_Rates(NanoAODHistoModule):
         plots = []
 
         # For run 380963: lumis in range [137, 591] have an avg. lumi > 19 x 10^33 
-        sel = noSel.refine('right_lumis', cut=op.AND(137<=tree.luminosityBlock, tree.luminosityBlock <= 591))
+        sel = noSel.refine('right_lumis', cut=op.AND(137<=tree.luminosityBlock, tree.luminosityBlock <= 591, tree.run==380963))
 
         plots.extend([
             Plot.make1D('HLT_Mu12', tree.HLT.Mu12_IsoVVL_PFHT150_PNetBTag0p53, noSel, EqBin(4, -2, 2)),
