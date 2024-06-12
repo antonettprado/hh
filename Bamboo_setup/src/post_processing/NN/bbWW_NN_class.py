@@ -78,8 +78,8 @@ def load_data() -> dict[str: pd.DataFrame]:
             # process_df['isSignal'] = np.ones(len(process_df)) if process_name == 'HH' else np.zeros(len(process_df))
             if process_name == 'ttbar': process_df = process_df.iloc[:500000]
             process_df['Process'] = process_name
-            df_dict[process_name] = process_df
-            print(f'Number of events for {process_name}: {len(process_df)}')
+            df_dict[process_name + "_" + file] = process_df
+            print(f'Number of events for {process_name}, {file}: {len(process_df)}')
 
     return df_dict
 
@@ -467,11 +467,13 @@ def main(workdir: str):
 
     models_summary_path = NNOUTDIR / 'models_summary.csv'
     for model_params in test_models:
+        print ("Model: %s"%model_params['name'])
         model_df = get_model_df(total_df, model_params['training_processes'], model_params['output_processes'], model_params['input_vars'])
         model_df = add_training_weights(model_df, model_params['training_processes'], model_params['output_processes'])
         model = Run3Model(model_params, model_df)
         model_params, model_metrics = model.run()
         update_models_summary_csv(models_summary_path, model_params, model_metrics)
+        print ("\n")
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()} \n\n")
 
