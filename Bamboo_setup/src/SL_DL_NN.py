@@ -34,10 +34,12 @@ class SL_DL_NN(NanoBaseHHbbWW):
         model_info_file = NNdir / 'model_info.yml'
         with open(model_info_file, 'r') as file:
             model_info_data = yaml.safe_load(file)
-        n_output_nodes = model_info_data['n_output_nodes']
-        processes = model_info_data['processes']
+        n_output_nodes = len(model_info_data['output_processes'])
+        
+        model_info_data['n_output_nodes']
+        output_processes = model_info_data['output_processes']
 
-        return model, input_vars_names, n_output_nodes, processes
+        return model, input_vars_names, n_output_nodes, output_processes
 
     @staticmethod
     def gather_input_vars(input_vars_names, objects, selections):
@@ -53,7 +55,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
         selections = var_defs.get_selections_subset(subcat_names)
         selections_process = {}
 
-        model, input_vars_names, n_output_nodes, processes = SL_DL_NN.get_NN_model(NNdir)
+        model, input_vars_names, n_output_nodes, output_processes = SL_DL_NN.get_NN_model(NNdir)
         input_vars = SL_DL_NN.gather_input_vars(input_vars_names, objects, selections)
         data = model(*input_vars)
 
@@ -66,7 +68,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             data_signal = 0
             data_background = 0
             for i in range(0, n_output_nodes):
-                process = processes[i]
+                process = output_processes[i]
                 if "HH" in process:
                     data_signal += data[i]
                 else:
@@ -74,7 +76,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             dnn_score_max_process_index = op.rng_max_element_index(data, lambda score: score)
 
             for i in range(0, n_output_nodes):
-                process = processes[i]
+                process = output_processes[i]
                 data_process = data[i]
                 dnn_scores["multi_%s"%process] = Variable1D("DNN_%s_score"%process)
                 subcat_names_process = dnn_scores["multi_%s"%process].subcats
@@ -92,7 +94,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             data_s_over_b = {sel_name: data_s_over_b for sel_name in selections_s_over_b.keys()}
             dnn_scores["multi_s_over_b"].populate(data_s_over_b, selections_s_over_b)
 
-        return dnn_scores, n_output_nodes, processes, selections_process
+        return dnn_scores, n_output_nodes, output_processes, selections_process
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -105,14 +107,14 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
         # DNN scores and Categorization
         sel_name = "SL_res_2b_x"
-        dnn_scores, n_output_nodes, processes, selections_process = SL_DL_NN.get_dnn_score(self.args.NNdir, objects)
+        dnn_scores, n_output_nodes, output_processes, selections_process = SL_DL_NN.get_dnn_score(self.args.NNdir, objects)
         selections.update(selections_process)
         if n_output_nodes == 1:
             dnn_score_binary = dnn_scores["binary"][sel_name]
         else:
             dnn_score_multi_s_over_b = dnn_scores["multi_s_over_b"][sel_name]
             dnn_score_process = {}
-            for process in processes:
+            for process in output_processes:
                 dnn_score_process[process] = dnn_scores["multi_%s"%process]["%s_%s"%(sel_name,process)]
 
         # ===============================================================================
@@ -123,7 +125,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             plots.append(Plot.make1D(dnn_score_binary.ref, dnn_score_binary.data, dnn_score_binary.selection, dnn_score_binary.eqbin, xTitle=dnn_score_binary.full_title))
         else:
             plots.append(Plot.make1D(dnn_score_multi_s_over_b.ref, dnn_score_multi_s_over_b.data, dnn_score_multi_s_over_b.selection, dnn_score_multi_s_over_b.eqbin, xTitle=dnn_score_multi_s_over_b.full_title))
-            for process in processes:
+            for process in output_processes:
                 plots.append(Plot.make1D(dnn_score_process[process].ref, dnn_score_process[process].data, dnn_score_process[process].selection, dnn_score_process[process].eqbin, xTitle=dnn_score_process[process].full_title))
 
         # ===============================================================================
@@ -142,7 +144,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
         self.yields.add(selections['DL'], 'DL')
 
         if n_output_nodes > 1:
-            for process in processes:
+            for process in output_processes:
                 self.yields.add(selections["%s_%s"%(sel_name,process)], "%s_%s"%(sel_name,process))
 
         return plots

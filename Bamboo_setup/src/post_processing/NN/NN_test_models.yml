@@ -1,20 +1,7 @@
 Models:
-  - name: 'default'
-    n_output_nodes: 1
-    processes: ["isSignal"]
-    input_vars: ['lep0_pt', 'lep0_phi', 'ak4_jet0_pt', 'ak4_jet1_pt', 'bjets_mbb', 'trijet_mInv']
-    layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-    outputs: 
-      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
-    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
-  
-  - name: 'default_Allvars'
-    n_output_nodes: 1
-    processes: ["isSignal"]
+  - name: 'binary_train_HH_ttbar'
+    training_processes: ["HH", "ttbar"]
+    output_processes: ["isSignal"]
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -25,25 +12,53 @@ Models:
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-  - name: 'default_Allvars_lr0p0001'
-    n_output_nodes: 1
-    processes: ["isSignal"]
-    input_vars: 'All'
-    layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-    outputs: 
-      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy', lr: 0.0001}
-    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+  #- name: 'binary_train_HH_ttbar_lr0p0001'
+  #  training_processes: ["HH", "ttbar"]
+  #  output_processes: ["isSignal"]
+  #  input_vars: 'All'
+  #  layers: 
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #  outputs: 
+  #    - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
+  #  compiler: {optimizer: 'adam', loss: 'binary_crossentropy', lr: 0.0001}
+  #  fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-  - name: 'default_Allvars_4layers'
-    n_output_nodes: 1
-    processes: ["isSignal"]
+  #- name: 'binary_train_HH_ttbar_4layers'
+  #  training_processes: ["HH", "ttbar"]
+  #  output_processes: ["isSignal"]
+  #  input_vars: 'All'
+  #  layers: 
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #  outputs: 
+  #    - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
+  #  compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+  #  fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  #- name: 'binary_train_HH_ttbar_5layers'
+  #  training_processes: ["HH", "ttbar"]
+  #  output_processes: ["isSignal"]
+  #  input_vars: 'All'
+  #  layers: 
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #  outputs: 
+  #    - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
+  #  compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+  #  fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'binary_train_HH_ttbar_tW'
+    training_processes: ["HH", "ttbar", "tW"]
+    output_processes: ["isSignal"]
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -52,24 +67,9 @@ Models:
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-  - name: 'default_Allvars_5layers'
-    n_output_nodes: 1
-    processes: ["isSignal"]
-    input_vars: 'All'
-    layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-    outputs: 
-      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
-    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
-
-  - name: 'default_Allvars_2outputs'
-    n_output_nodes: 2
-    processes: ["HH", "ttbar"]
+  - name: 'binary_train_HH_ttbar_2outputs'
+    training_processes: ["HH", "ttbar"]
+    output_processes: ["HH", "ttbar"]
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -80,9 +80,9 @@ Models:
     compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  - name: 'default_Allvars_3outputs'
-    n_output_nodes: 3
-    processes: ["HH", "ttbar", "tbarWplus"]
+  - name: 'binary_train_HH_ttbar_tW_3outputs'
+    training_processes: ["HH", "ttbar", "tW"]
+    output_processes: ["HH", "ttbar", "tW"]
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
@@ -93,51 +93,51 @@ Models:
     compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  - name: 'default_Allvars_3outputs_4layers'
-    n_output_nodes: 3
-    processes: ["HH", "ttbar", "tbarWplus"]
-    input_vars: 'All'
-    layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-    outputs: 
-      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
-    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+  #- name: 'binary_train_HH_ttbar_tW_3outputs_4layers'
+  #  training_processes: ["HH", "ttbar", "tW"]
+  #  output_processes: ["HH", "ttbar", "tW"]
+  #  input_vars: 'All'
+  #  layers: 
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #  outputs: 
+  #    - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
+  #  compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+  #  fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  - name: 'default_Allvars_3outputs_5layers'
-    n_output_nodes: 3
-    processes: ["HH", "ttbar", "tbarWplus"]
-    input_vars: 'All'
-    layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-    outputs: 
-      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
-    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+  #- name: 'binary_train_HH_ttbar_tW_3outputs_5layers'
+  #  training_processes: ["HH", "ttbar", "tW"]
+  #  output_processes: ["HH", "ttbar", "tW"]
+  #  input_vars: 'All'
+  #  layers: 
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #  outputs: 
+  #    - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
+  #  compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+  #  fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  - name: 'default_Allvars_3outputs_10layers'
-    n_output_nodes: 3
-    processes: ["HH", "ttbar", "tbarWplus"]
-    input_vars: 'All'
-    layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-    outputs: 
-      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
-    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+  #- name: 'binary_train_HH_ttbar_tW_3outputs_10layers'
+  #  training_processes: ["HH", "ttbar", "tW"]
+  #  output_processes: ["HH", "ttbar", "tW"]
+  #  input_vars: 'All'
+  #  layers: 
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #    - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+  #  outputs: 
+  #    - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
+  #  compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+  #  fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}

@@ -28,7 +28,7 @@ WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
 PROCESSES = dict(
     HH=['bbWW_sl', 'bbWW_dl'],
     ttbar=['TTbar_sl', 'TTbar_dl'],
-    tbarWplus=['tbarWplus_sl', 'tbarWplus_dl']
+    tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl']
     # DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J']
     )
 
@@ -37,7 +37,7 @@ def set_global_vars(workdir: str) -> Path:
     assert BAMBOO_SETUP.name == 'Bamboo_setup'
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    NNOUTDIR = WORKDIR / 'Neural_Nets_v2_notpreshuffled'
+    NNOUTDIR = WORKDIR / 'Neural_Nets'
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
 def get_test_models():
@@ -51,7 +51,15 @@ def get_test_models():
     assert len(model_names) == len(set(model_names)), "Model names must be unique"
 
     # Assert allowed processes only (those in PROCESSES)
-    model_processes = [model['processes'] for model in test_models]
+    for model in test_models:
+        training_processes = model['training_processes'] 
+        output_processes = model['output_processes']
+        for process in training_processes:
+            assert process in PROCESSES
+        for process in output_processes:
+            if process != "isSignal":
+                assert process in training_processes
+    
     return test_models
 
 def load_data() -> dict[str: pd.DataFrame]:
@@ -63,15 +71,15 @@ def load_data() -> dict[str: pd.DataFrame]:
     df_dict = {}
     for process_name, process_files in PROCESSES.items():
         for file in process_files:
-            if '_sl' in file:       # <----- Excludes all DY samples <-----
-                filepath = resultsdir / (file + '.root')
-                upfile = uproot.open(filepath)
-                process_df = upfile[sel_name].arrays(library="pd")
-                # process_df['isSignal'] = np.ones(len(process_df)) if process_name == 'HH' else np.zeros(len(process_df))
-                if process_name == 'ttbar': process_df = process_df.iloc[:500000]
-                process_df['Process'] = process_name
-                df_dict[process_name] = process_df
-                print(f'Number of events for {process_name}: {len(process_df)}')
+            #if '_sl' in file:       # <----- Excludes all DY samples <-----
+            filepath = resultsdir / (file + '.root')
+            upfile = uproot.open(filepath)
+            process_df = upfile[sel_name].arrays(library="pd")
+            # process_df['isSignal'] = np.ones(len(process_df)) if process_name == 'HH' else np.zeros(len(process_df))
+            if process_name == 'ttbar': process_df = process_df.iloc[:500000]
+            process_df['Process'] = process_name
+            df_dict[process_name] = process_df
+            print(f'Number of events for {process_name}: {len(process_df)}')
 
     return df_dict
 
@@ -87,7 +95,7 @@ def preprocess_data(df_dict: dict) -> pd.DataFrame:
     
     return total_df
     
-def get_model_df(df, processes, features):
+def get_model_df(df, training_processes, output_processes, features):
 
     # ---------------------------- Model Input Variables ----------------------------
     if features != 'All':
@@ -95,33 +103,37 @@ def get_model_df(df, processes, features):
         columns_to_keep.extend(col for col in df.columns if col.startswith('Process_'))
         df = df[features + columns_to_keep]
     # Resolve: If feature names not found in dataframe  <<<<<=========
+
     # --------------------------- Keep relevant processes ---------------------------
+    condition = False
+    for process in training_processes:
+        condition |= (df['Process_%s'%process] == 1)
+    df = df[condition]
+
     # Consider a binary DNN with background as a label for all backgrounds (not just ttbar)
-    if processes == ['isSignal']:
-        # Remove rows where that are neither HH or ttbar events
-        df = df[(df['Process_HH'] == 1)|(df['Process_ttbar'] == 1)]
+    if output_processes == ['isSignal']:       
         df['Process_isSignal'] = 0
         df.loc[df['Process_HH']==1, 'Process_isSignal'] = 1
         columns_to_drop = [col for col in df.columns if col.startswith('Process_') and col != 'Process_isSignal']
         df = df.drop(columns=columns_to_drop)
     else:
-        columns_to_drop = [col for col in df.columns if col.startswith('Process_') and not any(proc in col for proc in processes)]
-        for col in columns_to_drop:
-            df = df[df[col] != 1]
+        columns_to_drop = [col for col in df.columns if col.startswith('Process_') and not any(proc in col for proc in output_processes)]
+        #for col in columns_to_drop:
+        #    df = df[df[col] != 1]
         df = df.drop(columns=columns_to_drop)
     return df
 
-def add_training_weights(total_df, processes):
+def add_training_weights(total_df, training_processes, output_processes):
 
     total_df["training_weight"] = total_df['gen_Weight'].copy()
 
-    if processes == ['isSignal']:
+    if output_processes == ['isSignal']:
         for isSignal in total_df.Process_isSignal.unique():
             mask = total_df["Process_isSignal"] == isSignal
             total_sum = total_df[mask]["gen_Weight"].sum()
             total_df.loc[mask, "training_weight"] *= total_df.shape[0] / total_sum
     else:
-        for proc in processes:
+        for proc in output_processes:
             process_mask = total_df['Process_'+proc] == 1
             process_total_sum = total_df[process_mask]['gen_Weight'].sum()
             total_df.loc[process_mask, "training_weight"] *= total_df.shape[0] / process_total_sum
@@ -176,8 +188,8 @@ class Run3Model():
         self.name = params['name']
         self.params = params
         self.model_df = model_df
-        self.type = 'binary' if params['processes'] == ['isSignal'] else 'multiclass'
-        self.processes = params['processes']
+        self.type = 'binary' if params['output_processes'] == ['isSignal'] else 'multiclass'
+        self.output_processes = params['output_processes']
 
         self.modeldir = NNOUTDIR / self.name
         if not self.modeldir.exists(): 
@@ -319,7 +331,7 @@ class Run3Model():
                 file.write(f"{i+1}. {ranked_f}\n")
 
     def draw_score_distribution(self, output_df):
-        get_color = {'HH':'blue', 'ttbar':'red', 'tbarWplus':'green', 'others':'black'}
+        get_color = {'HH':'blue', 'ttbar':'red', 'tW':'green', 'others':'black'}
         score_procs = [col for col in output_df.columns if col.endswith('Score')]
         true_procs = [col for col in output_df.columns if col.startswith('Process_')]
         if self.type == 'binary':
@@ -346,14 +358,14 @@ class Run3Model():
     def draw_roc_curve(self, output_df) -> dict:
         fig, ax = plt.subplots(figsize=(8, 6))
         self.process_auc = {}
-        for i, proc in enumerate(self.processes):
+        for i, proc in enumerate(self.output_processes):
             true_class = output_df['Process_'+proc]
             pred_class = output_df[f"{proc} Score"]
             fpr, tpr, thresholds = roc_curve(true_class, pred_class)
             auc_value = auc(fpr, tpr)
             self.process_auc[proc] = round(auc_value,3)
             ax.plot(fpr, tpr, lw=2, label=f"{proc} (AUC = {auc_value:.3f})")
-            if proc == 'isSignal' and len(self.processes)==1:
+            if proc == 'isSignal' and len(self.output_processes)==1:
                 optimal_idx = np.argmax(tpr-fpr)
                 self.binary_optimal_threshold = thresholds[optimal_idx]
                 ax.scatter(fpr[optimal_idx], tpr[optimal_idx], color='red')
@@ -374,7 +386,7 @@ class Run3Model():
         elif self.type == 'multiclass':
             true_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Process_')]].to_numpy(), axis=1)
             pred_class = np.argmax(output_df[[col for col in output_df.columns if col.endswith(' Score')]].to_numpy(), axis=1)
-            x_ticks = y_ticks = self.processes
+            x_ticks = y_ticks = self.output_processes
 
         cm = confusion_matrix(true_class, pred_class)
         cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -406,7 +418,7 @@ class Run3Model():
     def save_model_info(self, output_df, Y_train, Y_test):
         self.params['Training Events'] = {'Total': len(Y_train)}
         self.params['Testing Events'] = {'Total': len(Y_test)}
-        for proc in self.processes:
+        for proc in self.output_processes:
             self.params['Training Events'][proc] = int(Y_train['Process_'+proc].value_counts()[1])
             self.params['Testing Events'][proc] = int(Y_test['Process_'+proc].value_counts()[1])
         self.params[f'Trained on'] = WORKDIR.name
@@ -449,14 +461,14 @@ def update_models_summary_csv(csv_path: Path, model_params: dict, model_metrics:
 def main(workdir: str):
     set_global_vars(workdir)
     test_models = get_test_models()
-    df_dict=load_data()
+    df_dict = load_data()
     total_df = preprocess_data(df_dict)
     print(total_df)
 
     models_summary_path = NNOUTDIR / 'models_summary.csv'
     for model_params in test_models:
-        model_df = get_model_df(total_df, model_params['processes'], model_params['input_vars'])
-        model_df = add_training_weights(model_df, model_params['processes'])
+        model_df = get_model_df(total_df, model_params['training_processes'], model_params['output_processes'], model_params['input_vars'])
+        model_df = add_training_weights(model_df, model_params['training_processes'], model_params['output_processes'])
         model = Run3Model(model_params, model_df)
         model_params, model_metrics = model.run()
         update_models_summary_csv(models_summary_path, model_params, model_metrics)
