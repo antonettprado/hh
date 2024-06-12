@@ -389,31 +389,34 @@ class Run3Model():
             x_ticks = y_ticks = self.output_processes
 
         cm = confusion_matrix(true_class, pred_class)
-        cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm_normalized_by_row = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm_normalized_by_column = cm.astype('float') / cm.sum(axis=0)[np.newaxis, :]
 
-        fig, ax = plt.subplots(figsize=(8,6))
-        im = ax.imshow(cm_normalized, interpolation='nearest', cmap=plt.cm.Blues)
-        plt.colorbar(im)
-        fmt = '.2f'
-        thresh = cm_normalized.max()/2
-        for i in range(cm_normalized.shape[0]):
-            for j in range(cm_normalized.shape[1]):
-                ax.text(j, i, format(cm_normalized[i, j], fmt),
-                        ha='center', va='center', 
-                        color='white' if cm_normalized[i,j] > thresh else "black")
+        def plot_confusion_matrix(cm, title, filename):
+            fig, ax = plt.subplots(figsize=(8,6))
+            im = ax.imshow(cm, interpolation='nearest', cmap="plasma", alpha=0.5)
+            plt.colorbar(im)
+            thresh = cm.max()/2
+            for i in range(cm.shape[0]):
+                for j in range(cm.shape[1]):
+                    ax.text(j, i, f"{cm[i, j]:.3f}", ha='center', va='center')
 
-        ax.set_xlabel('Predicted', labelpad=10)
-        ax.set_ylabel('Actual', labelpad=10)
-        ax.set_title('Confusion Matrix')
-        ax.set_xticks(range(len(x_ticks)))
-        ax.set_yticks(range(len(y_ticks)))
-        ax.set_xticklabels(x_ticks, rotation=0)
-        ax.set_yticklabels(y_ticks)
+            ax.set_xlabel('Predicted', labelpad=10)
+            ax.set_ylabel('Actual', labelpad=10)
+            ax.set_title(title)
+            ax.set_xticks(range(len(x_ticks)))
+            ax.set_yticks(range(len(y_ticks)))
+            ax.set_xticklabels(x_ticks, rotation=0)
+            ax.set_yticklabels(y_ticks)
 
-        ax.xaxis.set_ticks_position('bottom')
-        ax.xaxis.set_label_position('bottom')
-        plt.tight_layout()
-        fig.savefig(self.modeldir / 'confusion_matrix.pdf')
+            ax.xaxis.set_ticks_position('bottom')
+            ax.xaxis.set_label_position('bottom')
+            plt.tight_layout()
+            fig.savefig(self.modeldir / filename)
+
+        plot_confusion_matrix(cm_normalized_by_row, 'Confusion Matrix (Normalized by Predicted)', 'confusion_matrix_norm_pred.pdf')
+        plot_confusion_matrix(cm_normalized_by_column, 'Confusion Matrix (Normalized by Actual)', 'confusion_matrix_norm_act.pdf')
+        plot_confusion_matrix(cm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf')
 
     def save_model_info(self, output_df, Y_train, Y_test):
         self.params['Training Events'] = {'Total': len(Y_train)}
@@ -435,7 +438,7 @@ class Run3Model():
         self.train_model(X_train, Y_train, tw_train)
         self.save_model(X_train.columns)
         output_df, model_metrics = self.final_output(X_test, Y_test, evs_test)
-        self.feature_ranking(X_test, Y_test)
+        # self.feature_ranking(X_test, Y_test)
         self.draw_score_distribution(output_df)
         self.draw_roc_curve(output_df)
         self.draw_confusion_matrix(output_df)
@@ -488,7 +491,7 @@ if __name__ == '__main__':
     main(args.workdir)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/TOTAL_VarsReco_2022_ttbar_tW_DY
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/TOTAL_VarsReco_2022_ttbar_tW_DY
     '''
 
 
