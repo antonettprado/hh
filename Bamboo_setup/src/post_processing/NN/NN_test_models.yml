@@ -67,7 +67,7 @@ Models:
     compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
-  - name: 'binary_train_HH_ttbar_2outputs'
+  - name: 'multi_train_HH_ttbar_2outputs'
     training_processes: ["HH", "ttbar"]
     output_processes: ["HH", "ttbar"]
     input_vars: 'All'
@@ -80,7 +80,7 @@ Models:
     compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  - name: 'binary_train_HH_ttbar_tW_3outputs'
+  - name: 'multi_train_HH_ttbar_tW_3outputs'
     training_processes: ["HH", "ttbar", "tW"]
     output_processes: ["HH", "ttbar", "tW"]
     input_vars: 'All'
@@ -93,7 +93,7 @@ Models:
     compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  #- name: 'binary_train_HH_ttbar_tW_3outputs_4layers'
+  #- name: 'multi_train_HH_ttbar_tW_3outputs_4layers'
   #  training_processes: ["HH", "ttbar", "tW"]
   #  output_processes: ["HH", "ttbar", "tW"]
   #  input_vars: 'All'
@@ -107,7 +107,7 @@ Models:
   #  compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
   #  fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  #- name: 'binary_train_HH_ttbar_tW_3outputs_5layers'
+  #- name: 'multi_train_HH_ttbar_tW_3outputs_5layers'
   #  training_processes: ["HH", "ttbar", "tW"]
   #  output_processes: ["HH", "ttbar", "tW"]
   #  input_vars: 'All'
@@ -122,7 +122,7 @@ Models:
   #  compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
   #  fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
-  #- name: 'binary_train_HH_ttbar_tW_3outputs_10layers'
+  #- name: 'multi_train_HH_ttbar_tW_3outputs_10layers'
   #  training_processes: ["HH", "ttbar", "tW"]
   #  output_processes: ["HH", "ttbar", "tW"]
   #  input_vars: 'All'
