@@ -438,7 +438,7 @@ class Run3Model():
         self.train_model(X_train, Y_train, tw_train)
         self.save_model(X_train.columns)
         output_df, model_metrics = self.final_output(X_test, Y_test, evs_test)
-        # self.feature_ranking(X_test, Y_test)
+        self.feature_ranking(X_test, Y_test)
         self.draw_score_distribution(output_df)
         self.draw_roc_curve(output_df)
         self.draw_confusion_matrix(output_df)
