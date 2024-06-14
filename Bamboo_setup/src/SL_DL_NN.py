@@ -35,8 +35,6 @@ class SL_DL_NN(NanoBaseHHbbWW):
         with open(model_info_file, 'r') as file:
             model_info_data = yaml.safe_load(file)
         n_output_nodes = len(model_info_data['output_processes'])
-        
-        model_info_data['n_output_nodes']
         output_processes = model_info_data['output_processes']
 
         return model, input_vars_names, n_output_nodes, output_processes
