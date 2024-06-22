@@ -108,7 +108,7 @@
 
         "bjets_pt_bb":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
@@ -118,7 +118,7 @@
 
         "bjet0_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
@@ -128,7 +128,7 @@
 
         "bjet1_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
@@ -138,7 +138,7 @@
 
         "bjets_mean_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
@@ -178,7 +178,7 @@
         
         "trijet_pt":
         {
-            "nbins": 125,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
@@ -198,7 +198,7 @@
 
         "blnu_pt":
         {
-            "nbins": 125,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
@@ -248,7 +248,7 @@
 
         "all_pt":
         {
-            "nbins": 1000,
+            "nbins": 300,
             "min": 0,
             "max": 1500,
             "unit": "GeV",
@@ -358,9 +358,9 @@
 
         "lep0_pt":
         {
-            "nbins": 100,
+            "nbins": 40,
             "min": 0,
-            "max": 100,
+            "max": 200,
             "unit": "GeV",
             "title": "Lepton0 pt",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
@@ -388,9 +388,9 @@
 
         "lep1_pt":
         {
-            "nbins": 100,
+            "nbins": 40,
             "min": 0,
-            "max": 100,
+            "max": 200,
             "unit": "GeV",
             "title": "Lepton1 pt",
             "subcats": [ "DL_res_1b", "DL_res_2b", "DL_boosted"]
@@ -418,7 +418,7 @@
 
         "ak4_jet0_pt":
         {
-            "nbins": 500,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
@@ -448,9 +448,9 @@
 
         "ak4_jet1_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
-            "max": 250,
+            "max": 500,
             "unit": "GeV",
             "title": "AK4_1 pt",
             "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
@@ -478,9 +478,9 @@
 
         "ak4_jet2_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
-            "max": 250,
+            "max": 500,
             "unit": "GeV",
             "title": "AK4_1 pt",
             "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
@@ -508,9 +508,9 @@
 
         "ak4_btag0_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
-            "max": 250,
+            "max": 500,
             "unit": "GeV",
             "title": "AK4_btag0 pt",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
@@ -539,9 +539,9 @@
 
         "ak4_btag1_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
-            "max": 250,
+            "max": 500,
             "unit": "GeV",
             "title": "AK4_btag1 pt",
             "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
@@ -569,9 +569,9 @@
 
         "ak8_btag0_pt":
         {
-            "nbins": 250,
+            "nbins": 100,
             "min": 0,
-            "max": 250,
+            "max": 500,
             "unit": "GeV",
             "title": "AK8_0 pt",
             "subcats": ["SL_boosted", "DL_boosted"]
@@ -599,7 +599,7 @@
 
         "met_pt":
         {
-            "nbins": 500,
+            "nbins": 100,
             "min": 0,
             "max": 500,
             "unit": "GeV",
