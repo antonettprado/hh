@@ -131,9 +131,10 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        compare_subcategories(workdir, shape_only=True)
-        compare_subcategories(workdir)
+        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter.Draw_Processes(normalization='unity')
+        myPlotter.Draw_Processes(normalization='lumi')
 
         if self.output_llr:
             from post_processing import plotting

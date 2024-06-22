@@ -449,7 +449,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         supercat_names = ["SL", "DL"]
         self.supercat_selections = {
             "SL": selections["SL"]["SL"],
-            "DL": selections["SL"]["SL"]}
+            "DL": selections["DL"]["DL"]}
 
         lep_subcat_names = ["SL_e", "SL_mu", "DL_ee", "DL_mumu", "DL_emu_e0", "DL_emu_mu0"]
         self.lep_subcats = {}
@@ -717,3 +717,12 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 plots.append(SummedPlot(name, [e0_plot, mu0_plot]))
 
         return plots
+
+    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
+
+        super(SL_DL_event_selection, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+
+        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter.Draw_Processes(normalization='unity')
+        myPlotter.Draw_Processes(normalization='lumi')

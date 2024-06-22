@@ -281,9 +281,10 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
 
         super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        compare_subcategories(workdir, shape_only=True)
-        compare_subcategories(workdir)
+        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter.Draw_Processes(normalization='unity')
+        myPlotter.Draw_Processes(normalization='lumi')
 
         from post_processing.cut_based_sel.cut_based_selections import main as cut_based_selections
         cut_based_selections(workdir)

@@ -151,6 +151,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
         super(SL_DL_NN, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        compare_subcategories(workdir, shape_only=False, no_type=True)
-        compare_subcategories(workdir, shape_only=True, no_type=True)
+        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter.Draw_Processes(normalization='unity')
+        myPlotter.Draw_Processes(normalization='lumi')
