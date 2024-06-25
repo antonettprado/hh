@@ -52,8 +52,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
             lr = LikelihoodRatio(var.name)
             lr_data = {}
             for subcat_var in var:
-                if subcat_var.subcat != "SL_res_2b_x":
-                    continue
+                #if subcat_var.subcat != "SL_res_2b_x":
+                #    continue
                 subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
                 subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
                 subcat_var_lr = SL_DL_likelihood_ratio.get_var_llr(llr_corr_workdir, [subcat_var_data], lr[subcat_var.subcat].ref, subcat_var.selection)
@@ -70,8 +70,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
             lr = LikelihoodRatio(var.name)
             lr_data = {}
             for subcat_var in var:
-                if subcat_var.subcat != "SL_res_2b_x":
-                    continue
+                #if subcat_var.subcat != "SL_res_2b_x":
+                #    continue
                 subcat_var_xdata = op.switch(subcat_var.xdata < var.xmin, var.xmin + 0.0001*abs(var.xmin), subcat_var.xdata)
                 subcat_var_xdata = op.switch(subcat_var.xdata > var.xmax, var.xmax - 0.0001*abs(var.xmax), subcat_var.xdata)
                 subcat_var_ydata = op.switch(subcat_var.ydata < var.ymin, var.ymin + 0.0001*abs(var.ymin), subcat_var.ydata)
@@ -90,8 +90,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
             lr = LikelihoodRatio(var.name)
             lr_data = {}
             for subcat_var in var:
-                if subcat_var.subcat != "SL_res_2b_x":
-                    continue
+                #if subcat_var.subcat != "SL_res_2b_x":
+                #    continue
                 subcat_var_xdata = op.switch(subcat_var.xdata < var.xmin, var.xmin + 0.0001*abs(var.xmin), subcat_var.xdata)
                 subcat_var_xdata = op.switch(subcat_var.xdata > var.xmax, var.xmax - 0.0001*abs(var.xmax), subcat_var.xdata)
                 subcat_var_ydata = op.switch(subcat_var.ydata < var.ymin, var.ymin + 0.0001*abs(var.ymin), subcat_var.ydata)
