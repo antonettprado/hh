@@ -191,7 +191,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
                                 flow="clamp",
                             )
                         elif isinstance(var, Variable3D):
-                            bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+                            bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
                             bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
                             inputs = [cs.Variable(name="xaxis", type="real", description=""),
                                     cs.Variable(name="yaxis", type="real", description=""),
