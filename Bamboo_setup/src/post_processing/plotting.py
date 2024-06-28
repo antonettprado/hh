@@ -32,7 +32,7 @@ def interpolate_2d_root_histogram(root_hist, scale_factor):
 
     return [x_interp_bin_edges, y_interp_bin_edges], interp_bin_contents
 
-def interpolate_3d_root_histogram(self, root_hist, scale_factor):
+def interpolate_3d_root_histogram(root_hist, scale_factor):
     bin_contents = np.log([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
     x_seed_data, x_interp_bin_centers, x_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
     y_seed_data, y_interp_bin_centers, y_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
