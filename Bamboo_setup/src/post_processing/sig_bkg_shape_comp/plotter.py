@@ -12,6 +12,10 @@ import math
 from typing import Union
 import pandas as pd
 import json, yaml
+#======================================
+import sys, os
+sys.path.append(os.path.abspath('src'))
+#======================================
 from utils import variables
 from post_processing import References as Refs
 #======================================
@@ -19,7 +23,6 @@ from post_processing import References as Refs
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
 ROOT.gErrorIgnoreLevel = ROOT.kError
-
 
 ALL_PROCESS_FILES = {file for process_files in Refs.PROCESSES_FILES.values() for file in process_files}
 
@@ -87,37 +90,44 @@ class BasePlotter:
         Returns:
             list[ROOT.TFile]: the opened files
         '''
-
-        # Open the files
-        files = [ TFile.Open(str(resultsdir / name), 'read') 
-                for name in names if (resultsdir / name).exists() ]
-        
-        # Read the weights from the files
-        for file in files:
-            sample_name = Path(file.GetName()).stem
-            yld_hist = file.Get('yields_genEventSumWeight')
-            sumw = yld_hist.Integral() # The histogram is a signle bin, this is just a fast way to get the bin height
-
-            # Save SUM_WEIGHTS as a global variable to be used in the Variable class
-            self.SUM_WEIGHTS[sample_name] = sumw     
+        files = []
+        try:
+            for name in names:
+                if (resultsdir / name).exists():
+                    file = TFile.Open(str(resultsdir / name), 'read')
+                    if file:
+                        files.append(file)
             
-        # Return the open files
+            for file in files:
+                sample_name = Path(file.GetName()).stem
+                yld_hist = file.Get('yields_genEventSumWeight')
+                if yld_hist:
+                    sumw = yld_hist.Integral()
+                    self.SUM_WEIGHTS[sample_name] = sumw
+                else:
+                    print(f"Warning: yields_genEventSumWeight not found in {file.GetName()}")
+        except Exception as e:
+            print(f"Error opening files: {e}")
         return files
 
     def get_hist_from_file(self, ref: str, file: TFile):
         sample_name = Path(file.GetName()).stem
         try:
             hist = file.Get(ref)
-            hist.SetDirectory(0)
+            if hist:
+                hist.SetDirectory(0)
+            else:
+                raise KeyError(f"'{ref}' not found in {sample_name}")
         except AttributeError as err:
             raise KeyError(f"'{ref}' not found in {sample_name}") from err
-        # Scale the histogram
+        
         if self.CROSS_SECTIONS[sample_name] != 0:
             scale_factor = self.CROSS_SECTIONS[sample_name] * self.LUMINOSITY / self.SUM_WEIGHTS[sample_name]
         else:
             scale_factor = 1.0
         hist.Scale(scale_factor)
-        return  hist
+        
+        return hist
 
 
 class Plotter(BasePlotter):
@@ -125,7 +135,7 @@ class Plotter(BasePlotter):
     def __init__(self, dir: str, configFile: str, era=None):
         super().__init__(dir, configFile, era, dirtype='workdir')
         self.resultsdir = self.dir / 'results'
-        self.dirprocesses = set([proc for proc, files in Refs.PROCESSES_FILES.items() for f in self.resultsdir.iterdir() if f.stem in files ])
+        self.dirprocesses = Refs._find_processes(self.resultsdir)
         self.SUM_WEIGHTS = {}
         super()._set_refs_file_and_refs(ref_workdir=self.dir)
         super()._set_configFile_info(Path(configFile))
@@ -149,12 +159,22 @@ class Plotter(BasePlotter):
                 total_hist.Scale(1/total_hist.Integral())
         return total_hist
 
-    def get_max_sensitivity_line(self, ref, hist_signal, hist_backg):
+    def get_signal_and_backg_hists(self, ref, hist_list, legend_list):
+        hist_list = [h.Clone(f"{ref}_{i}") for i, h in enumerate(hist_list)]        
+        HH_idx = legend_list.index('HH')
+        hist_signal = hist_list[HH_idx]
+        hist_backs = [hist for i, hist in enumerate(hist_list) if i != HH_idx]
+        hist_background = hist_backs[0]
+        for i_hist in hist_backs[1:]:
+            hist_background.Add(i_hist)
+        return hist_signal, hist_background
+
+    def get_sensitivity_info(self, ref, hist_signal, hist_background):  
         try:
             hist_s_sqrt_b = ROOT.TH1F(f"sb{ref}", ";;sensitivity", hist_signal.GetNbinsX(), hist_signal.GetXaxis().GetXmin(), hist_signal.GetXaxis().GetXmax())
             for i_bin in range(1, hist_signal.GetNbinsX()+1):
                 i_signal = hist_signal.GetBinContent(i_bin)
-                i_backg = hist_backg.GetBinContent(i_bin)
+                i_backg = hist_background.GetBinContent(i_bin)
                 if i_backg == 0: 
                     i_backg = i_backg + 0.000001
                 i_sens = i_signal/math.sqrt(i_backg)
@@ -170,7 +190,7 @@ class Plotter(BasePlotter):
             hist_s_sqrt_b.SetStats(0)
 
             max_sen_bin_x_center = hist_s_sqrt_b.GetBinCenter(max_sen_bin)
-            max_sen_line_height = max(hist_signal.GetMaximum(), hist_backg.GetMaximum())*100
+            max_sen_line_height = max(hist_signal.GetMaximum(), hist_background.GetMaximum())*100
             max_sen_line = ROOT.TLine(max_sen_bin_x_center, 0, max_sen_bin_x_center, max_sen_line_height)
             max_sen_line.SetLineColor(ROOT.kMagenta)
             max_sen_line.SetLineWidth(2)
@@ -179,7 +199,7 @@ class Plotter(BasePlotter):
         except ValueError:
             print(f'Sensitivity calculation for {ref} failed')
             # PROBLEMATIC_VARIABLES.append([ss_var.ref, i_bin, i_signal, i_backg])
-            return None, None, None
+        return None, None, None
 
     def _get_ref_outdir(self, ref, normalization):
         '''
@@ -209,7 +229,6 @@ class Plotter(BasePlotter):
         return ref_outdir, dist_name
 
     def _draw_1Dhists_on_one_canvas(self, ref, dist_name, ref_outdir:Path, hist_list: list, legend_list: list, normalization='lumi'):
-
         canvas = ROOT.TCanvas(f'canvas{ref}', ref, 200, 200)
         leg = ROOT.TLegend(0.55, 0.75, 0.9, 0.9)
         canvas.SetGrid()
@@ -242,26 +261,22 @@ class Plotter(BasePlotter):
         else: 
             xlabel = dist_name
             
+        sen_info = False
         if normalization == 'lumi':
             canvas.SetLogy()
             maximum = 100*max(*[hist_i.GetMaximum() for hist_i in hist_list])
+            # maximum = 1e6
             minimum = 1e-5
             ylabel = 'events'
-            hist_signal, hist_backg = None, None
-            for leg_name, hist in zip(legend_list, hist_list):
-                if leg_name != 'HH':
-                    if hist_backg is None:
-                        hist_backg = hist
-                    else:
-                        hist_backg.Add(hist)
-                else:
-                    hist_signal = hist
-            max_sen_line, max_sen, hist_s_sqrt_b = self.get_max_sensitivity_line(ref, hist_signal, hist_backg)
+            # To plot sensitivity info, there must be 'HH' and at least one backgorund process
+            if 'HH' in legend_list and len(legend_list)>2:
+                hist_signal, hist_background = self.get_signal_and_backg_hists(ref, hist_list, legend_list)   
+                max_sen_line, max_sen, hist_s_sqrt_b = self.get_sensitivity_info(ref, hist_signal, hist_background)
+                sen_info = True
         elif normalization == 'unity':
             maximum = 1.1*max(*[hist_i.GetMaximum() for hist_i in hist_list])
             minimum = min(*[hist_i.GetMinimum() for hist_i in hist_list])
             ylabel = 'normalized events'
-            max_sen_line = None
 
         # Loop through histogram list and draw each one
         for i, hist_i in enumerate(hist_list):
@@ -270,12 +285,13 @@ class Plotter(BasePlotter):
                 hist_i.SetMinimum(minimum)
                 hist_i.GetYaxis().SetTitle(ylabel)
                 hist_i.GetXaxis().SetTitle(xlabel)
+                hist_i.Draw("hist")
             hist_i.SetLineWidth(3)
             hist_i.SetStats(0)
-            hist_i.Draw("hist" if i==0 else "hist same")
+            hist_i.Draw("hist same")
             leg.AddEntry(hist_i, legend_list[i], 'l')
 
-        if max_sen_line is not None:
+        if sen_info:
             hist_s_sqrt_b.Draw('hist same')
             leg.AddEntry(hist_s_sqrt_b, 'S/sqrt(B)', 'l')
             max_sen_line.Draw("same")
@@ -312,13 +328,12 @@ class Plotter(BasePlotter):
         canvas.SaveAs(str(ref_outdir / ref_outfilename))
         canvas.Close()
 
-    # self.dirtype must be 'workdir' (default)
-    def Draw_Processes(self, refs:list = None, normalization='lumi'):
+    def Draw_Processes(self, refs:list = None, normalization='lumi', combine_backs=False):
         '''
         Args: 
             normalization: either 'lumi' or 'unity
+            combine_backs: combines bacground processes
         '''
-        assert self.dirtype == 'workdir', f"Class instance must be initialized with dirtype 'workdir'"
         process_tfiles = self.get_process_tfiles()
         if refs is None: 
             refs = self.refs
@@ -333,6 +348,7 @@ class Plotter(BasePlotter):
                 legend_list.append(process)
 
             ref_outdir, dist_name = self._get_ref_outdir(ref, normalization)
+
             if isinstance(hist_list[0], ROOT.TH1) and not isinstance(hist_list[0], ROOT.TH2) and not isinstance(hist_list[0], ROOT.TH3):      
                 self._draw_1Dhists_on_one_canvas(ref=ref, dist_name=dist_name, ref_outdir=ref_outdir, hist_list=hist_list, legend_list=legend_list, normalization=normalization)
             if isinstance(hist_list[0], ROOT.TH2):
@@ -355,34 +371,32 @@ class SuperPlotter(BasePlotter):
         super().__set_refs_file_and_refs(ref_workdir=self.workdirs[0])
         super().__set_configFile_info(Path(configFile))
 
-
-#     def compare_refs_from_single_process_across_superworkdir(self, refs:list, process):
-#         # assert refs exist in all workdirs
-#         hist_list, legend_list = [], []
-#         for ref in refs:
-#             for workdir in self.workdirs:
-#                 hist_list.append(self._get_ref_hist_for_process(ref, process, workdir))
-#                 legend_list.append(workdir.name)
-#             outfilepath = ref
-#             self._draw_hists_in_one_canvas(outfilepath, hist_list, legend_list)
+    def compare_refs_from_single_process_across_superworkdir(self, refs:list, process):
+        # assert refs exist in all workdirs
+        hist_list, legend_list = [], []
+        for ref in refs:
+            for workdir in self.workdirs:
+                hist_list.append(self._get_ref_hist_for_process(ref, process, workdir))
+                legend_list.append(workdir.name)
+            outfilepath = ref
+            self._draw_hists_in_one_canvas(outfilepath, hist_list, legend_list)
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-i", "--inputdir", action="store", help="work directory. Ex: Z_OUTPUT/Local_VarsReco")
-    # parser.add_argument("-dt", "--dirtype", default='workdir', help="type of input directory: workdir or superworkdir")
-    parser.add_argument("-cf", "--configFile", default='config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
+    parser.add_argument("-c", "--configFile", default='config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
     parser.add_argument("-e", "--era", default=None, help="Era year; else default will be the first option under 'eras' in configFile")
     args = parser.parse_args()
 
     '''
     python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_EventSelection_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml -e 2022
 
-    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml -e 2022
+    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022_3backs -c config/analysis_2022_3backs.yml -e 2022
 
     Local command:
-    python3 src/post_processing/sig_bkg_shape_comp/plotter_v2.py -i Z_OUTPUT/TOTAL_VarsReco_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml
+    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i Z_OUTPUT/TOTAL_VarsReco_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml
     '''
 
     myPlotter = Plotter(args.inputdir, args.configFile, args.era)
@@ -396,7 +410,7 @@ if __name__ == "__main__":
         myPlotter.Draw_Processes(normalization='lumi')
 
     Example of use from command line:
-        python3 src/post_processing/sig_bkg_shape_comp/plotter_v2.py -i Z_OUTPUT/TOTAL_VarsReco_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml
+        python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022_3backs -c config/analysis_2022_3backs.yml
     '''
 
 
