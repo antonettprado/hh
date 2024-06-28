@@ -218,6 +218,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(SL_DL_Study_SystUnc, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        compare_subcategories(workdir, shape_only=True)
-        compare_subcategories(workdir, shape_only=False)
+        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter.Draw_Processes(normalization='unity')
+        myPlotter.Draw_Processes(normalization='lumi')
