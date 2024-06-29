@@ -778,8 +778,6 @@ class SL_Trigger_Rates(NanoAODHistoModule):
         print(f'Total time = {time}\n')
 
         import uproot
-        # upfile = uproot.open(Path(resultsdir)/'EGamma_Run2024E.root')
-        upfile = uproot.open(Path(resultsdir)/'Muon_Run2024E.root')
 
         if 'Muon_Run2024E' in config['samples'].keys():
             upfile = uproot.open(Path(resultsdir)/'Muon_Run2024E.root')
