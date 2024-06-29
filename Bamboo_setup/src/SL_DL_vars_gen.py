@@ -593,8 +593,10 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
         super(SL_DL_vars_gen, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.compare_subcategories import main as compare_subcategories
-        # compare_subcategories(workdir, shape_only=False, no_type=False, custom=True)
+        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
+        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
         # file = os.path.join(self.args.output, 'results/TTbar_sl.root')
         # df = ROOT.RDataFrame("noSel", file)

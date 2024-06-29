@@ -283,8 +283,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
-        myPlotter.Draw_Processes(normalization='unity')
-        myPlotter.Draw_Processes(normalization='lumi')
+        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
+        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
         from post_processing.cut_based_sel.cut_based_selections import main as cut_based_selections
         cut_based_selections(workdir)
