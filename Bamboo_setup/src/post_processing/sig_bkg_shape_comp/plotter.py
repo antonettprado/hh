@@ -285,8 +285,8 @@ class Plotter(BasePlotter):
         elif normalization == 'unity':
             for hist in hist_dict.values():
                 integral = hist.Integral()
-                if hist != 0.0:
-                    hist.Scale(1/hist.Integral())
+                if integral != 0.0:
+                    hist.Scale(1/integral)
             maximum = 1.1*max(*[hist_i.GetMaximum() for hist_i in hist_dict.values()])
             minimum = min(*[hist_i.GetMinimum() for hist_i in hist_dict.values()])
             ylabel = 'normalized events'
@@ -352,8 +352,9 @@ class Plotter(BasePlotter):
         process_tfiles = self.get_process_tfiles()
         if refs is None: 
             refs = self.refs
-        for i, ref in enumerate(refs):
-            print(ref)
+
+        for i, ref in enumerate(refs[idx:]):
+            print(f"Ref: {ref}")
             process_hist_dict = {}
             for process in self.dirprocesses:
                 process_hist = self.get_process_hist(ref, process_tfiles[process])
@@ -419,7 +420,7 @@ if __name__ == "__main__":
     '''
     python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_EventSelection_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml -e 2022
 
-    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022_3backs -c config/analysis_2022_3backs.yml -e 2022
+    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/Vars_2022_NEW_All -c config/analysis_2022_all.yml -e 2022
 
     Local command:
     python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i Z_OUTPUT/TOTAL_VarsReco_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml
