@@ -151,7 +151,7 @@ samples:
     type: mc
     cross-section: 19.307618 # xsec(TW) / 2 (since t and tbar is included) x BR(W->l nu) x BR(W->qq) x 2 (since there are two W bosons) = 87.9 / 2 x 0.3259 x 0.6741
     generated-events: genEventSumw
-    split: 20
+    split: 30
 
   tbarWplus_dl:
     era: "2022"
