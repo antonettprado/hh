@@ -353,7 +353,7 @@ class Plotter(BasePlotter):
         if refs is None: 
             refs = self.refs
 
-        for i, ref in enumerate(refs[idx:]):
+        for i, ref in enumerate(refs):
             print(f"Ref: {ref}")
             process_hist_dict = {}
             for process in self.dirprocesses:
