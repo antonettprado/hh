@@ -70,7 +70,7 @@ def get_test_models():
         classes = [class_i for class_i in model['categorization'].keys()]
         processes = [proc for proc_list in model['categorization'].values() for proc in proc_list]
         for process in processes:
-            assert process in Refs.PROCESSES, f"{proc} is not a valid process"
+            assert process in Refs.PROCESSES_FILES.values(), f"{proc} is not a valid process"
 
     return test_models
 
@@ -461,7 +461,7 @@ class MulticlassModel(BaseNNModel):
             fig, ax = super()._get_score_distribution_fig(class_score)
             for true_proc in classes_true:
                 label = true_proc.removeprefix('Class_')
-                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=50, color=Refs.NN_CLASSES_COLOR_MAP[label], label=label, histtype='step', density=True)
+                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=50, color=Refs._get_color_for(label, ROOT_b=False), label=label, histtype='step', density=True)
             ax.legend()
             fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
 

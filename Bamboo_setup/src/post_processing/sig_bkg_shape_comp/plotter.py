@@ -30,14 +30,14 @@ BAMBOO_SETUP = Path(__file__).parents[3]
 
 class BasePlotter:
 
-    def __init__(self, dir: str, configFile: str, era:str, dirtype: str):
+    def __init__(self, dir: str, configFile: str, era:str, outdir:str,  dirtype: str):
         assert Path(dir).exists(), f"{dir} does not exist"
         assert Path(configFile).exists(), f"{configFile} does not exist"
         assert dirtype in ['workdir', 'superworkdir']
 
         self.dir = Path(dir)
         self.dirtype = dirtype
-        self.plotterdir = self.dir / 'plotter'
+        self.plotterdir = self.dir / outdir
         self.era = era
 
         self.refs_file = None
@@ -132,17 +132,28 @@ class BasePlotter:
 
 class Plotter(BasePlotter):
 
-    def __init__(self, dir: str, configFile: str, era=None):
-        super().__init__(dir, configFile, era, dirtype='workdir')
+    def __init__(self, dir: str, configFile: str, era=None, outdir:str='plotter'):
+        super().__init__(dir, configFile, era, outdir, dirtype='workdir')
         self.resultsdir = self.dir / 'results'
         self.dirprocesses = Refs._find_processes(self.resultsdir)
         self.SUM_WEIGHTS = {}
         super()._set_refs_file_and_refs(ref_workdir=self.dir)
         super()._set_configFile_info(Path(configFile))
 
-    def get_process_tfiles(self) -> dict[str, list[TFile]]:
+    def decide_processes_to_run_on(self, which_processes):
+        if which_processes == 'All':
+            processes_to_run_on = self.dirprocesses
+        else:
+            assert isinstance(which_processes, list)
+            for proc in which_processes:
+                assert proc in Refs.PROCESSES_FILES.keys()
+            processes_to_run_on = [proc for proc in which_processes if proc in self.dirprocesses]
+        return processes_to_run_on
+
+    def get_process_tfiles(self, processes_to_run_on:list) -> dict[str, list[TFile]]:
+
         process_tfiles = {}
-        for process in self.dirprocesses:
+        for process in processes_to_run_on:
             process_filenames = [file.name for file in self.resultsdir.iterdir() if file.stem in Refs.PROCESSES_FILES[process]]
             process_tfiles[process] = super().open_root_files(self.resultsdir, process_filenames)
 
@@ -342,23 +353,26 @@ class Plotter(BasePlotter):
         canvas.SaveAs(str(ref_outdir / ref_outfilename))
         canvas.Close()
 
-    def Draw_Processes(self, refs:list = None, normalization='lumi', combine_backs=False, sen_info=True):
+    def Draw_Processes(self, refs:list = None, normalization='lumi', combine_backs=False, sen_info=True, which_processes: list='All', refs_endingwith=None):
         '''
         Args: 
             normalization: either 'lumi' or 'unity
             combine_backs: combines bacground processes
             sen_info: plots s/sqrt(b) histogram and max-sensitivity 
         '''
-        process_tfiles = self.get_process_tfiles()
-        if refs is None: 
+        processes_to_run_on = self.decide_processes_to_run_on(which_processes)
+        process_tfiles = self.get_process_tfiles(processes_to_run_on)
+        if refs is None and refs_endingwith is None: 
             refs = self.refs
+        elif refs is None and refs_endingwith is not None:
+            refs = [ref for ref in self.refs if ref.endswith(refs_endingwith)]
 
         for i, ref in enumerate(refs):
             print(f"Ref: {ref}")
             process_hist_dict = {}
-            for process in self.dirprocesses:
+            for process in processes_to_run_on:
                 process_hist = self.get_process_hist(ref, process_tfiles[process])
-                process_hist.SetLineColor(Refs.PROCESSES_KCOLOR_MAP[process])
+                process_hist.SetLineColor(Refs._get_color_for(process, ROOT_b=True))
                 process_hist_dict.update({process: process_hist})
 
             hist_dict, line_dict = {}, {}
@@ -415,6 +429,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--inputdir", action="store", help="work directory. Ex: Z_OUTPUT/Local_VarsReco")
     parser.add_argument("-c", "--configFile", default='config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
     parser.add_argument("-e", "--era", default=None, help="Era year; else default will be the first option under 'eras' in configFile")
+    parser.add_argument("-o", "--outdir", default=None, help="Output directory name. Default: 'plotter'")
     args = parser.parse_args()
 
     '''
@@ -426,7 +441,7 @@ if __name__ == "__main__":
     python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i Z_OUTPUT/TOTAL_VarsReco_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml
     '''
 
-    myPlotter = Plotter(args.inputdir, args.configFile, args.era)
+    myPlotter = Plotter(args.inputdir, args.configFile, args.era, args.outdir)
     myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
     myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 

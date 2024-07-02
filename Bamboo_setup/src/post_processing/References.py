@@ -4,9 +4,6 @@ import ROOT
 SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_res_1b', 'SL_res_2b', 'SL_res_2b_x', 'SL_boosted', 'DL_res_1b', 'DL_res_2b', 'DL_boosted']
 SELECTIONS.sort(key=len, reverse=True)
 
-NN_CLASSES = ['isSignal', 'HH', 'ttbar', 'tW', 'Others']
-PROCESSES = ['HH', 'ttbar', 'DY', 'VV', 'WJets', 'tW']
-
 PROCESSES_FILES = dict(
     HH=['bbWW_sl', 'bbWW_dl'],
     ttbar=['TTbar_sl', 'TTbar_dl'],
@@ -16,37 +13,19 @@ PROCESSES_FILES = dict(
     tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl']
     )
 
-NN_CLASSES_COLOR_MAP = dict(
-    HH='blue', 
-    ttbar='red', 
-    tW='green', 
-    Others='black')
-
-NN_CLASSES_KCOLOR_MAP = dict(
-    HH=ROOT.kBlue, 
-    ttbar=ROOT.kRed, 
-    tW=ROOT.kGreen, 
-    Others=ROOT.kBlack)
-
-
-PROCESSES_COLOR_MAP = dict(
-    HH='blue', 
-    ttbar='red', 
-    tW='green', 
-    DY='magenta',
-    VV='orange',
-    WJets='cyan')
-
-PROCESSES_KCOLOR_MAP = dict(
-    HH=ROOT.kBlue, 
-    ttbar=ROOT.kRed, 
-    tW=ROOT.kGreen, 
-    DY=ROOT.kMagenta,
-    VV=ROOT.kOrange,
-    WJets=ROOT.kCyan)
+COLOR_MAP = dict(
+    HH=['blue', ROOT.kBlue], 
+    ttbar=['red', ROOT.kRed], 
+    tW=['green', ROOT.kGreen], 
+    DY=['magenta', ROOT.kMagenta],
+    VV=['orange', ROOT.kOrange],
+    WJets=['cyan', ROOT.kCyan],
+    Others=['black', ROOT.kBlack])
 
 
 _find_processes = lambda resultsdir: sorted(list(set([proc for proc, files in PROCESSES_FILES.items() for f in resultsdir.iterdir() if f.stem in files ])))
 
 _find_root_files = lambda resultsdir: [file for file in resultsdir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
+
+_get_color_for = lambda cat, ROOT_b : COLOR_MAP[cat][1] if ROOT_b else COLOR_MAP[cat][0]
     
