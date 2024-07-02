@@ -15,38 +15,13 @@ from tensorflow.keras.metrics import BinaryAccuracy, AUC, Precision, Recall
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization
 import yaml
-# import tf2onnx
-#======================================
-import sys, os
-sys.path.append(os.path.abspath('src'))
-#======================================
+import tf2onnx
 from post_processing import References as Refs
 
 NNDIR = Path(__file__).parent
 BAMBOO_SETUP = NNDIR.parents[2]
 WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
 
-
-def get_test_models():
-    models_file = NNDIR / 'NN_test_models_v2.yml'
-    with open(models_file, 'r') as file:
-        yaml_data = yaml.safe_load(file)
-        test_models = yaml_data['Models']
-
-    model_names = [model['name'] for model in test_models]
-    assert len(model_names) == len(set(model_names)), "Model names must be unique"
-
-    for model in test_models:
-        training_processes = model['training_processes']
-        classes = model['classes']
-        for process in training_processes:
-            assert process in Refs.PROCESSES
-        for cls_i in classes:
-            assert cls_i in Refs.NN_CLASSES
-        if 'isSignal' in classes and len(classes)>1:
-            raise ValueError(f"Unsupported list of classes: 'isSignal' cannot be a class in a multiclass model ")
-    
-    return test_models
 
 def load_and_preprocess_data() -> list[pd.DataFrame]:
     resultsdir = WORKDIR / 'results'
@@ -62,7 +37,7 @@ def load_and_preprocess_data() -> list[pd.DataFrame]:
         for file in process_files:
             upfile = uproot.open(file)
             upfile_df = upfile[sel_name].arrays(library="pd")[:500000]
-            print(f'Number of events in {file.stem}: {len(upfile_df)}')
+            print(f'Number of events read from {file.stem}: {len(upfile_df)}')
             process_df = pd.concat([process_df, upfile_df], ignore_index=True)
             process_df['Process'] = process
         df_list.append(process_df)
@@ -72,9 +47,33 @@ def load_and_preprocess_data() -> list[pd.DataFrame]:
 
     # Removing events with negative weights
     total_df = total_df[total_df.gen_Weight > 0].copy()
+
+    print(f"After preprocessing:")
+    for col in total_df.columns:
+        if col.startswith('Process_'):
+            ones = total_df[col].value_counts().get(1)
+            print(f"Number of events in process {col}: {ones}")
     
     return total_df
-    
+
+def get_test_models():
+    models_file = NNDIR / 'NN_test_models_v2.yml'
+    with open(models_file, 'r') as file:
+        yaml_data = yaml.safe_load(file)
+        test_models = yaml_data['Models']
+
+    model_names = [model['name'] for model in test_models]
+    assert len(model_names) == len(set(model_names)), "Model names must be unique"
+
+    for model in test_models:
+        categorization = model['categorization']
+        classes = [class_i for class_i in model['categorization'].keys()]
+        processes = [proc for proc_list in model['categorization'].values() for proc in proc_list]
+        for process in processes:
+            assert process in Refs.PROCESSES, f"{proc} is not a valid process"
+
+    return test_models
+
 class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
     def __init__(self, model):
         self.model = model
@@ -90,20 +89,25 @@ class BaseNNModel:
     def __init__(self, params: dict, total_df: pd.DataFrame):
         self.name = params['name']
         self.params = params
-        self.classes = params['classes']
+        self.categorization = params['categorization']
+        self.classes = [class_i for class_i in params['categorization'].keys()]
+        self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
+        for proc in self.processes:
+            assert f"Process_{proc}" in total_df.columns
 
         self.modeldir = NNOUTDIR / self.name
         if not self.modeldir.exists(): 
             self.modeldir.mkdir(parents=True, exist_ok=True)
 
-    def _pick_features_and_events(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+        print(f"\n\nModel: {self.name}")
+        print(f"\tClasses: {self.classes}")
+        print(f"\tProcesses: {self.processes}")
+
+    def _pick_features_and_processes_events(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
 
         model_df = total_df.copy()
 
         input_vars = params['input_vars']
-        training_processes = params['training_processes']
-        classes = params['classes']
-        
         if input_vars != 'All':
             # To do: Resolve if input_vars not found  in df
             columns_to_keep = ['event', 'gen_Weight']
@@ -112,7 +116,7 @@ class BaseNNModel:
             
         # Keep only events corresponding to any of the training processes indicated
         condition = False
-        for process in training_processes:
+        for process in self.processes:
             condition |= (model_df[f'Process_{process}'] == 1)
         model_df = model_df[condition]
 
@@ -216,9 +220,9 @@ class BaseNNModel:
 
         self.params['Training Events'] = {'Total': len(Y_train)}
         self.params['Testing Events'] = {'Total': len(Y_test)}
-        for proc in self.classes:
-            self.params['Training Events'][proc] = int(Y_train['Process_'+proc].value_counts()[1])
-            self.params['Testing Events'][proc] = int(Y_test['Process_'+proc].value_counts()[1])
+        for cls_i in self.classes:
+            self.params['Training Events'][cls_i] = int(Y_train['Class_'+cls_i].value_counts()[1])
+            self.params['Testing Events'][cls_i] = int(Y_test['Class_'+cls_i].value_counts()[1])
         self.params[f'Trained on'] = WORKDIR.name
 
         out_yml = self.modeldir / 'model_info.yml'
@@ -228,15 +232,16 @@ class BaseNNModel:
     def evaluate_and_predict(self, X_test, Y_test, events_test) -> pd.DataFrame:
         print(f"\tEvaluating model and predicting ...")
         metrics = self.model.evaluate(X_test, Y_test, verbose=0)
-        model_metrics = {name: value for name, value in zip(self.model.metrics_names, metrics)}
-        model_metrics['name'] = self.name
+        model_metrics = {'name': self.name}
+        model_metrics.update({name: value for name, value in zip(self.model.metrics_names, metrics)})
+        model_metrics = self.standardize_metric_names(model_metrics)
 
         events_test = events_test.reset_index(drop=True)
         Y_test = Y_test.reset_index(drop=True)
         Y_pred_score = self.model.predict(X_test)
         output_df = pd.concat([events_test, Y_test], axis=1)
         for i, cls in enumerate(Y_test.columns):
-            column_name = 'Score_' + cls.removeprefix('Process_')
+            column_name = 'Score_' + cls.removeprefix('Class_')
             score = Y_pred_score[:, i]
             cls_score = pd.Series(score.flatten(), name=column_name).reset_index(drop=True)
             output_df = pd.concat([output_df, cls_score], axis=1)
@@ -297,7 +302,7 @@ class BaseNNModel:
         fig.savefig(self.modeldir / filename)
 
     def Run(self, cv_method='none', n_splits=5):
-        print(f"Running model: {self.name}")
+        print(self.model_df)
         if cv_method == 'kfold':
             return self.cross_validate(StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42))
         elif cv_method == 'shuffle':
@@ -306,12 +311,12 @@ class BaseNNModel:
             return self.train_and_evaluate()
 
     def cross_validate(self, cv):
-        X = self.model_df.drop(columns=['event', 'gen_Weight', 'training_weight'] + [col for col in self.model_df.columns if col.startswith('Process_')])
-        y = self.model_df[[col for col in self.model_df.columns if col.startswith('Process_')]]
+        X = self.model_df.drop(columns=['event', 'gen_Weight', 'training_weight'] + [col for col in self.model_df.columns if col.startswith('Class_')])
+        y = self.model_df[[col for col in self.model_df.columns if col.startswith('Class_')]]
         
         y_single = y.idxmax(axis=1)
 
-        all_metrics = []
+        all_folds_metrics = []
 
         for fold, (train_index, test_index) in enumerate(cv.split(X, y_single)):
             print(f"Running fold {fold+1}/{cv.get_n_splits()}")
@@ -324,14 +329,23 @@ class BaseNNModel:
 
             self.setup_model(X_train)
             self.train_model(X_train, Y_train, tw_train)
-            output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
-            standardized_metrics = self.standardize_metric_names(model_metrics)
-            print(f"\tModel Metrics: {model_metrics}")
-            all_metrics.append(model_metrics)
+            output_df, fold_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
+            print(f"\tFold Metrics: {fold_metrics}")
+            all_folds_metrics.append(fold_metrics)
 
-        average_metrics = {metric: np.mean([m[metric] for m in all_metrics]) for metric in all_metrics[0]}
+        average_metrics = {'name': self.model.name}
+        average_metrics.update({metric_name: np.mean([fold_metrics[metric_name] for fold_metrics in all_folds_metrics]) for metric_name in all_folds_metrics[0] if metric_name != 'name'})
         print(f"Avg. metrics: {average_metrics}")
         return self.params, average_metrics
+
+    def standardize_metric_names(self, metrics):
+        standardized_metrics = {}
+        for key, value in metrics.items():
+            if key.startswith('auc'):           standardized_metrics['auc'] = value
+            elif key.startswith('precision'):   standardized_metrics['precision'] = value
+            elif key.startswith('recall'):      standardized_metrics['recall'] = value
+            else:                               standardized_metrics[key] = value
+        return standardized_metrics
 
     def train_and_evaluate(self):
         X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = self.split_and_shuffle(self.model_df)
@@ -339,25 +353,22 @@ class BaseNNModel:
         self.train_model(X_train, Y_train, tw_train)
         self.save_model_info(X_train.columns, Y_train, Y_test)
         output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
-        # self.feature_ranking(X_test, Y_test)
+        # # self.feature_ranking(X_test, Y_test)
         self.draw_score_distribution(output_df)
         self.draw_roc_curve(output_df)
         self.draw_confusion_matrix(output_df)
         return self.params, model_metrics
 
     def split_and_shuffle(self, model_df):
-        processes_in_df = model_df.filter(like='Process_').columns
+        classes_in_df = model_df.filter(like='Class_').columns
         columns_to_drop = ["event", "gen_Weight", "training_weight"]
-        columns_to_drop.extend(processes_in_df)
+        columns_to_drop.extend(classes_in_df)
         X_df = model_df.drop(columns=columns_to_drop)
-        classes = [proc for proc in model_df.columns if proc.startswith('Process_')]
+        classes = [cls_i for cls_i in model_df.columns if cls_i.startswith('Class_')]
         Y_df = model_df[classes]
 
         test_size = 0.2
         X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["training_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
-
-        print(f"Number of training events: {len(evs_train)}")
-        print(f"Number of test events: {len(evs_test)}")
 
         return X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test
 
@@ -368,16 +379,16 @@ class BinaryModel(BaseNNModel):
         self.model_df = self.get_model(total_df, params)
 
     def get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
-        model_df  = super()._pick_features_and_events(total_df, params)
-        model_df = model_df.assign(Process_isSignal=0)
-        model_df.loc[model_df['Process_HH'] == 1, 'Process_isSignal'] = 1
-        columns_to_drop = [col for col in model_df.columns if col.startswith('Process_') and col != 'Process_isSignal']
+        model_df  = super()._pick_features_and_processes_events(total_df, params)
+        model_df = model_df.assign(Class_isSignal=0)
+        model_df.loc[model_df['Process_HH'] == 1, 'Class_isSignal'] = 1
+        columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
         model_df = model_df.drop(columns=columns_to_drop)
 
         # Adding training weights
         model_df["training_weight"] = model_df['gen_Weight'].copy()
-        for isSignal in model_df['Process_isSignal'].unique():
-            mask = model_df['Process_isSignal'] == isSignal
+        for isSignal in model_df['Class_isSignal'].unique():
+            mask = model_df['Class_isSignal'] == isSignal
             total_sum = model_df[mask]["gen_Weight"].sum()
             model_df.loc[mask, "training_weight"] *= model_df.shape[0] / total_sum
 
@@ -385,7 +396,7 @@ class BinaryModel(BaseNNModel):
 
     def draw_score_distribution(self, output_df):
         class_score = [col for col in output_df.columns if col.startswith('Score_')][0]
-        class_true = [col for col in output_df.columns if col.startswith('Process_')][0]
+        class_true = [col for col in output_df.columns if col.startswith('Class_')][0]
         fig, ax = super()._get_score_distribution_fig(class_score)
         ax.hist(output_df.loc[output_df[class_true] == 1, class_score], bins=50, color='blue', label='HH', histtype='step', density=True)
         ax.hist(output_df.loc[output_df[class_true] == 0, class_score], bins=50, color='red', label='Background', histtype='step', density=True)
@@ -394,7 +405,7 @@ class BinaryModel(BaseNNModel):
 
     def draw_roc_curve(self, output_df) -> dict:
         fig, ax = super()._get_roc_curve_fig()
-        true_class = output_df['Process_isSignal']
+        true_class = output_df['Class_isSignal']
         pred_class = output_df['Score_isSignal']
         fpr, tpr, thresholds = roc_curve(true_class, pred_class)
         auc_value = auc(fpr, tpr)
@@ -406,7 +417,7 @@ class BinaryModel(BaseNNModel):
         fig.savefig(self.modeldir/'roc_curve.pdf')
 
     def draw_confusion_matrix(self, output_df):
-        true_class = output_df['Process_isSignal'].values.flatten()
+        true_class = output_df['Class_isSignal'].values.flatten()
         pred_class = (output_df['Score_isSignal'] >= self.binary_optimal_threshold).astype(int)
         xy_ticks = ["Background", "Signal"]
 
@@ -425,34 +436,31 @@ class MulticlassModel(BaseNNModel):
         self.model_df = self.get_model(total_df, params)
 
     def get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
-        model_df  = super()._pick_features_and_events(total_df, params)
-        training_processes = params['training_processes']
-        classes = params['classes']
-        Others_processes = ['DY', 'VV', 'WJets']
-        existing_Others_processes = [f"Process_{proc}" for proc in Others_processes if proc in training_processes]
-        print(f"\texisting other processes: {existing_Others_processes}")
-        if existing_Others_processes:
-            model_df['Process_Others'] = model_df[existing_Others_processes].max(axis=1)
-            model_df.drop(columns=existing_Others_processes, inplace=True)
-        columns_to_drop = [col for col in model_df.columns if col.startswith('Process_') and col.removeprefix('Process_') not in classes]
-        model_df.drop(columns=columns_to_drop, inplace=True)
+        model_df  = super()._pick_features_and_processes_events(total_df, params)
+        for class_i, class_i_processes in self.categorization.items():
+            model_df[f"Class_{class_i}"] = 0
+            for proc in class_i_processes:
+                model_df.loc[model_df[f"Process_{proc}"] == 1, f"Class_{class_i}"] = 1
         
+        columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
+        model_df.drop(columns=columns_to_drop, inplace=True)
+
         # Adding training weights
         model_df["training_weight"] = model_df['gen_Weight'].copy()  
-        for cls in classes:
-            process_mask = model_df['Process_'+cls] == 1
-            process_total_sum = model_df[process_mask]['gen_Weight'].sum()
-            model_df.loc[process_mask, "training_weight"] *= model_df.shape[0] / process_total_sum
+        for class_i in self.classes:
+            class_mask = model_df[f"Class_{class_i}"] == 1
+            class_total_sum = model_df[class_mask]['gen_Weight'].sum()
+            model_df.loc[class_mask, "training_weight"] *= model_df.shape[0] / class_total_sum
 
         return model_df
 
     def draw_score_distribution(self, output_df):
         classes_score = [col for col in output_df.columns if col.startswith('Score_')]
-        classes_true = [col for col in output_df.columns if col.startswith('Process_')]
+        classes_true = [col for col in output_df.columns if col.startswith('Class_')]
         for class_score in classes_score:
             fig, ax = super()._get_score_distribution_fig(class_score)
             for true_proc in classes_true:
-                label = true_proc.removeprefix('Process_')
+                label = true_proc.removeprefix('Class_')
                 ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=50, color=Refs.NN_CLASSES_COLOR_MAP[label], label=label, histtype='step', density=True)
             ax.legend()
             fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
@@ -460,17 +468,17 @@ class MulticlassModel(BaseNNModel):
     def draw_roc_curve(self, output_df) -> dict:
         fig, ax = super()._get_roc_curve_fig()
         self.classes_auc = {}
-        for i, cls in enumerate(self.classes):
-            true_class = output_df[f"Process_{cls}"]
-            pred_class = output_df[f"Score_{cls}"]
+        for i, cls_i in enumerate(self.classes):
+            true_class = output_df[f"Class_{cls_i}"]
+            pred_class = output_df[f"Score_{cls_i}"]
             fpr, tpr, thresholds = roc_curve(true_class, pred_class)
             auc_value = auc(fpr, tpr)
-            self.classes_auc[cls] = round(auc_value,3)
-            ax.plot(fpr, tpr, lw=2, label=f"{cls} (AUC = {auc_value:.3f})")
+            self.classes_auc[cls_i] = round(auc_value,3)
+            ax.plot(fpr, tpr, lw=2, label=f"{cls_i} (AUC = {auc_value:.3f})")
         fig.savefig(self.modeldir/'roc_curve.pdf')
 
     def draw_confusion_matrix(self, output_df):
-        true_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Process_')]].to_numpy(), axis=1)
+        true_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Class_')]].to_numpy(), axis=1)
         pred_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Score_')]].to_numpy(), axis=1)
         xy_ticks = self.classes
 
@@ -501,20 +509,19 @@ def update_models_summary_csv(model_metrics: dict):
 def main(workdir: str, cv_method='none', n_splits=5):
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    NNOUTDIR = WORKDIR / 'Neural_Nets_shuffle'
+    NNOUTDIR = WORKDIR / 'Neural_Nets_v2'
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
-    total_df = load_and_preprocess_data()
     test_models = get_test_models()
+    total_df = load_and_preprocess_data()
+    print(f"Total_df: {total_df}")
 
     for model_params in test_models:
-
-        if model_params['classes'] == ['isSignal']: 
+        if list(model_params['categorization'].keys()) == ['isSignal']: 
           NNModel = BinaryModel(model_params, total_df)
         else:                                       
           NNModel = MulticlassModel(model_params, total_df)
     
-        print(NNModel.model_df)
         model_params, model_metrics = NNModel.Run(cv_method=cv_method, n_splits=n_splits)
 
         update_models_summary_csv(model_metrics)
@@ -532,5 +539,5 @@ if __name__ == '__main__':
     main(args.workdir, cv_method=args.cv_method, n_splits=args.n_splits)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w Z_OUTPUT/TOTAL_VarsReco_2022 --cn_method kfold
+    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/Vars_2022_NEW_All --cv_method shuffle
     '''
