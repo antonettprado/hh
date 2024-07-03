@@ -70,7 +70,7 @@ def get_test_models():
         classes = [class_i for class_i in model['categorization'].keys()]
         processes = [proc for proc_list in model['categorization'].values() for proc in proc_list]
         for process in processes:
-            assert process in Refs.PROCESSES_FILES.values(), f"{proc} is not a valid process"
+            assert process in Refs.PROCESSES_FILES.keys(), f"{process} is not a valid process"
 
     return test_models
 
@@ -93,7 +93,7 @@ class BaseNNModel:
         self.classes = [class_i for class_i in params['categorization'].keys()]
         self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
         for proc in self.processes:
-            assert f"Process_{proc}" in total_df.columns
+            assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
 
         self.modeldir = NNOUTDIR / self.name
         if not self.modeldir.exists(): 
@@ -539,5 +539,5 @@ if __name__ == '__main__':
     main(args.workdir, cv_method=args.cv_method, n_splits=args.n_splits)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/Vars_2022_NEW_All --cv_method shuffle
+    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/TOTAL_VarsReco_2022_HH_ttbar --cv_method shuffle
     '''
