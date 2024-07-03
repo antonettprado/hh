@@ -12,13 +12,8 @@ import math
 from typing import Union
 import pandas as pd
 import json, yaml
-#======================================
-import sys, os
-sys.path.append(os.path.abspath('src'))
-#======================================
 from utils import variables
 from post_processing import References as Refs
-#======================================
 
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
