@@ -164,29 +164,32 @@ class Plotter(BasePlotter):
 
     def get_signal_and_backg_hists(self, ref, process_hist_dict):
         hist_dict = {proc: hist.Clone(f"{ref}_{proc}") for proc, hist in process_hist_dict.items()}
-        try:    
+        sig_back_dict = {}
+
+        if 'HH' in hist_dict.keys():
             hist_signal = hist_dict['HH']
             hist_signal.SetLineColor(ROOT.kBlue)
+            sig_back_dict.update({'Signal': hist_signal})
+
+        any_backgrounds = not all(proc == 'HH' for proc in hist_dict.keys())
+        if any_backgrounds:
             hist_backs = [hist for proc, hist in hist_dict.items() if proc != 'HH']
             hist_background = hist_backs[0]
             hist_background.SetLineColor(ROOT.kRed)
             for i_hist in hist_backs[1:]:
                 hist_background.Add(i_hist)
-            sig_back_dict = {'Signal': hist_signal, 'Background': hist_background}
-        except ValueError:
-            hist_backs =  list(hist_dict.values())
-            hist_background = hist_backs[0]
-            hist_background.SetLineColor(ROOT.kRed)
-            for i_hist in hist_backs[1:]:
-                hist_background.Add(i_hist)
-            sig_back_dict = {'Background': hist_background}
-
+            sig_back_dict.update({'Background': hist_background})
+        
         return sig_back_dict
 
     def get_sensitivity_dict(self, ref, sig_back_dict):
-        hist_signal = sig_back_dict['Signal']
-        hist_background = sig_back_dict['Background']
         hist_sen_dict, line_maxsen_dict = {}, {}
+        try:
+            hist_signal = sig_back_dict['Signal']
+            hist_background = sig_back_dict['Background']
+        except KeyError:
+            print(f"Sensitivity info will not be shown - Either Signal or Background hist is not available")
+            return hist_sen_dict, line_maxsen_dict
         try:
             hist_s_sqrt_b = ROOT.TH1F(f"sb{ref}", ";;sensitivity", hist_signal.GetNbinsX(), hist_signal.GetXaxis().GetXmin(), hist_signal.GetXaxis().GetXmax())
             for i_bin in range(1, hist_signal.GetNbinsX()+1):
@@ -284,7 +287,7 @@ class Plotter(BasePlotter):
             
         if normalization == 'lumi':
             canvas.SetLogy()
-            maximum = 100*max(*[hist_i.GetMaximum() for hist_i in hist_dict.values()])
+            maximum = 100*max([hist_i.GetMaximum() for hist_i in hist_dict.values()])
             # maximum = 1e6
             minimum = 1e-5
             ylabel = 'events'
@@ -293,8 +296,8 @@ class Plotter(BasePlotter):
                 integral = hist.Integral()
                 if integral != 0.0:
                     hist.Scale(1/integral)
-            maximum = 1.1*max(*[hist_i.GetMaximum() for hist_i in hist_dict.values()])
-            minimum = min(*[hist_i.GetMinimum() for hist_i in hist_dict.values()])
+            maximum = 1.1*max([hist_i.GetMaximum() for hist_i in hist_dict.values()])
+            minimum = min([hist_i.GetMinimum() for hist_i in hist_dict.values()])
             ylabel = 'normalized events'
             for line in line_dict.values():
                 line.SetY2(maximum)
