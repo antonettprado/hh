@@ -153,7 +153,7 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
 
-        # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory called 'plotter_custom'
+        # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory
         print("In postprocessing")
         for dnn_var in self.dnn_vars_list:   
             print(f"{dnn_var.model_name}") 
