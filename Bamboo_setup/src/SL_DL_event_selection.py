@@ -143,8 +143,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         mllSel = baseSel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
 
         # Apply Common Weights
-        genWeight = op.switch(is_MC, tree.genWeight, op.c_float(1.0))
-
+        genWeight = op.c_float(1.0)
+        if is_MC:
+            genWeight = tree.genWeight
         pileupWeight, top_pt_weight = op.c_float(1.0), op.c_float(1.0)
         #mllSel, pileupWeight, top_pt_weight = sf_weights.apply_common_SF(tree, mllSel, is_MC, era, sample)
 
