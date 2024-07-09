@@ -20,7 +20,8 @@ COLOR_MAP = dict(
     DY=['magenta', ROOT.kMagenta],
     VV=['orange', ROOT.kOrange],
     WJets=['cyan', ROOT.kCyan],
-    Others=['black', ROOT.kBlack])
+    Others=['black', ROOT.kBlack],
+    Top=['pink', ROOT.kPink])
 
 
 _find_processes = lambda resultsdir: sorted(list(set([proc for proc, files in PROCESSES_FILES.items() for f in resultsdir.iterdir() if f.stem in files ])))
