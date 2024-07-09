@@ -157,17 +157,16 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
-        myPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True)
-        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
+        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
+        myPlotter.Draw_Processes(normalization='unity', combine_backs=True, sen_info=False)
 
 
         # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory
-        print("In postprocessing")
         for dnn_var in self.dnn_vars_list:   
             print(f"{dnn_var.model_name}") 
-            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/separate_processes/{dnn_var.model_name}')
+            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/{dnn_var.model_name}')
             customPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
-            customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
+            customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
 
         # for dnn_var in self.dnn_vars_list:   
         #     print(f"{dnn_var.model_name}") 
