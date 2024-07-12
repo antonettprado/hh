@@ -22,6 +22,10 @@ NNDIR = Path(__file__).parent
 BAMBOO_SETUP = NNDIR.parents[2]
 WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
 
+# Setting global seeds for tensorflow and numpy libraries
+seed_value = 42
+tf.random.set_seed(seed_value)
+np.random.seed(seed_value)
 
 def load_and_preprocess_data() -> list[pd.DataFrame]:
     resultsdir = WORKDIR / 'results'
