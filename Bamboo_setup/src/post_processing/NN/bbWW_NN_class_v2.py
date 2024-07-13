@@ -17,7 +17,17 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 import yaml
 import tf2onnx
 from post_processing import References as Refs
-import random
+import random, os
+
+# Set seeds for reproducibility
+seed_value = 42
+os.environ['PYTHONHASHSEED'] = str(seed_value)
+random.seed(seed_value)
+np.random.seed(seed_value)
+tf.random.set_seed(seed_value)
+
+# Set TensorFlow to use deterministic operations
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 NNDIR = Path(__file__).parent
 BAMBOO_SETUP = NNDIR.parents[2]
@@ -518,31 +528,22 @@ def update_models_summary_csv(model_metrics: dict):
 def main(workdir: str, cv_method='none', n_splits=5):
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    NNOUTDIR = WORKDIR / 'Neural_Nets_setSeed2'
+    NNOUTDIR = WORKDIR / 'Neural_Nets_v2'
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
     test_models = get_test_models()
     total_df = load_and_preprocess_data()
     print(f"Total_df: {total_df}")
 
-    # for model_params in test_models:
-    #     if list(model_params['categorization'].keys()) == ['isSignal']: 
-    #       NNModel = BinaryModel(model_params, total_df)
-    #     else:                                       
-    #       NNModel = MulticlassModel(model_params, total_df)
+    for model_params in test_models:
+        if list(model_params['categorization'].keys()) == ['isSignal']: 
+          NNModel = BinaryModel(model_params, total_df)
+        else:                                       
+          NNModel = MulticlassModel(model_params, total_df)
 
-    #     model_params, model_metrics = NNModel.Run(cv_method=cv_method, n_splits=n_splits)
-
-    #     update_models_summary_csv(model_metrics)
-
-    model_params_list = [test_models[0], test_models[1]]
-    metrics_df = pd.DataFrame()
-    for model_params in model_params_list: 
-        for i in range(2):
-            NNModel = BinaryModel(params = model_params, total_df = total_df, modeldir=f"{model_params['name']}_{i}")
-            model_params, model_metrics = NNModel.Run()
-            metrics_df = metrics_df._append(model_metrics, ignore_index=True)
-            print(metrics_df)
+        model_params, model_metrics = NNModel.Run(cv_method=cv_method, n_splits=n_splits)
+        print(model_metrics)
+        update_models_summary_csv(model_metrics)
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()}")
 
@@ -557,5 +558,5 @@ if __name__ == '__main__':
     main(args.workdir, cv_method=args.cv_method, n_splits=args.n_splits)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/2022_Vars_NEW --cv_method shuffle
+    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/2022_Vars_NEW_ODD --cv_method shuffle
     '''
