@@ -17,15 +17,11 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 import yaml
 import tf2onnx
 from post_processing import References as Refs
+import random
 
 NNDIR = Path(__file__).parent
 BAMBOO_SETUP = NNDIR.parents[2]
 WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
-
-# Setting global seeds for tensorflow and numpy libraries
-seed_value = 42
-tf.random.set_seed(seed_value)
-np.random.seed(seed_value)
 
 def load_and_preprocess_data() -> list[pd.DataFrame]:
     resultsdir = WORKDIR / 'results'
@@ -90,7 +86,7 @@ class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
         return self.model.predict(X)
 
 class BaseNNModel:
-    def __init__(self, params: dict, total_df: pd.DataFrame):
+    def __init__(self, params: dict, total_df: pd.DataFrame, modeldir:str):
         self.name = params['name']
         self.params = params
         self.categorization = params['categorization']
@@ -99,7 +95,7 @@ class BaseNNModel:
         for proc in self.processes:
             assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
 
-        self.modeldir = NNOUTDIR / self.name
+        self.modeldir = NNOUTDIR / self.name if modeldir is None else NNOUTDIR/modeldir
         if not self.modeldir.exists(): 
             self.modeldir.mkdir(parents=True, exist_ok=True)
 
@@ -145,7 +141,7 @@ class BaseNNModel:
             monitor='val_loss', 
             min_delta=0.001, 
             patience=20,
-            verbose=1,
+            verbose=0,
             mode='min',
             restore_best_weights=True)
 
@@ -153,7 +149,7 @@ class BaseNNModel:
             monitor='val_loss',
             factor=0.1,
             min_delta=0.001, 
-            patience=8,
+            patience=0,
             min_lr=1e-8,
             verbose=2,
             mode='min')
@@ -174,6 +170,13 @@ class BaseNNModel:
 
     def setup_model(self, X_train):
         print(f"\tSetting up model ...")
+
+        # Set seeds for reproducibility
+        seed_value = 42
+        tf.random.set_seed(seed_value)
+        np.random.seed(seed_value)
+        random.seed(seed_value)
+
         ndim = len(X_train.columns)
         inputs = Input(shape=(ndim,), name="input")
 
@@ -392,8 +395,8 @@ class BaseNNModel:
 
 class BinaryModel(BaseNNModel):
 
-    def __init__(self, params: dict, total_df: pd.DataFrame):
-        super().__init__(params, total_df)
+    def __init__(self, params: dict, total_df: pd.DataFrame, modeldir: str = None):
+        super().__init__(params, total_df, modeldir)
         self.model_df = self._get_model(total_df, params)
 
     def _get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
@@ -443,8 +446,8 @@ class BinaryModel(BaseNNModel):
 
 class MulticlassModel(BaseNNModel):
 
-    def __init__(self, params: dict, total_df: pd.DataFrame):
-        super().__init__(params, total_df)
+    def __init__(self, params: dict, total_df: pd.DataFrame,  modeldir: str = None):
+        super().__init__(params, total_df, modeldir)
         self.model_df = self._get_model(total_df, params)
 
     def _get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
@@ -515,22 +518,31 @@ def update_models_summary_csv(model_metrics: dict):
 def main(workdir: str, cv_method='none', n_splits=5):
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    NNOUTDIR = WORKDIR / 'Neural_Nets_processNorm'
+    NNOUTDIR = WORKDIR / 'Neural_Nets_setSeed2'
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
     test_models = get_test_models()
     total_df = load_and_preprocess_data()
     print(f"Total_df: {total_df}")
 
-    for model_params in test_models:
-        if list(model_params['categorization'].keys()) == ['isSignal']: 
-          NNModel = BinaryModel(model_params, total_df)
-        else:                                       
-          NNModel = MulticlassModel(model_params, total_df)
+    # for model_params in test_models:
+    #     if list(model_params['categorization'].keys()) == ['isSignal']: 
+    #       NNModel = BinaryModel(model_params, total_df)
+    #     else:                                       
+    #       NNModel = MulticlassModel(model_params, total_df)
 
-        model_params, model_metrics = NNModel.Run(cv_method=cv_method, n_splits=n_splits)
+    #     model_params, model_metrics = NNModel.Run(cv_method=cv_method, n_splits=n_splits)
 
-        update_models_summary_csv(model_metrics)
+    #     update_models_summary_csv(model_metrics)
+
+    model_params_list = [test_models[0], test_models[1]]
+    metrics_df = pd.DataFrame()
+    for model_params in model_params_list: 
+        for i in range(2):
+            NNModel = BinaryModel(params = model_params, total_df = total_df, modeldir=f"{model_params['name']}_{i}")
+            model_params, model_metrics = NNModel.Run()
+            metrics_df = metrics_df._append(model_metrics, ignore_index=True)
+            print(metrics_df)
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()}")
 
@@ -545,5 +557,5 @@ if __name__ == '__main__':
     main(args.workdir, cv_method=args.cv_method, n_splits=args.n_splits)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/2022_NN_NEW_All --cv_method shuffle
+    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/2022_Vars_NEW --cv_method shuffle
     '''
