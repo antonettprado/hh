@@ -353,7 +353,17 @@
             "max": 200,
             "unit": "GeV",
             "title": "m_{WW}",
-            "subcats": ["SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "WW_pt":
+        {
+            "nbins": 150,
+            "min": 50,
+            "max": 200,
+            "unit": "GeV",
+            "title": "WW p_T",
+            "subcats": ["SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "lep0_pt":
@@ -615,6 +625,16 @@
             "unit": "GeV",
             "title": "MET #phi",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
+
+        "mll":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 400,
+            "unit": "GeV",
+            "title": "m_{ll}",
+            "subcats": ["DL_res_1b", "DL_res_2b"]
         }
     },
 
