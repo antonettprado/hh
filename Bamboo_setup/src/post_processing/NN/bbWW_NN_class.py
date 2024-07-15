@@ -21,6 +21,17 @@ from tensorflow.keras.layers.experimental import preprocessing
 import yaml
 from typing import Union
 import tf2onnx
+import random
+
+# Set seeds for reproducibility
+seed_value = 42
+os.environ['PYTHONHASHSEED'] = str(seed_value)
+random.seed(seed_value)
+np.random.seed(seed_value)
+tf.random.set_seed(seed_value)
+
+# Set TensorFlow to use deterministic operations
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 NNDIR = Path(__file__).parent
 BAMBOO_SETUP = NNDIR.parents[2]
@@ -28,7 +39,7 @@ WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
 PROCESSES = dict(
     HH=['bbWW_sl', 'bbWW_dl'],
     ttbar=['TTbar_sl', 'TTbar_dl'],
-    tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl']
+    # tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl']
     # DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J']
     )
 
@@ -37,7 +48,7 @@ def set_global_vars(workdir: str) -> Path:
     assert BAMBOO_SETUP.name == 'Bamboo_setup'
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    NNOUTDIR = WORKDIR / 'Neural_Nets'
+    NNOUTDIR = WORKDIR / 'Neural_Nets_v1_synctest'
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
 def get_test_models():
@@ -88,71 +99,64 @@ def preprocess_data(df_dict: dict) -> pd.DataFrame:
     total_df = pd.concat([df for df in df_dict.values()], ignore_index=True)
     # Apply one-hot encoding
     total_df = pd.get_dummies(total_df, columns=['Process'])
-    # new_column_names = {col: col.removeprefix('Process_') for col in total_df.columns if col.startswith('Process_')}
-    # total_df.rename(columns=new_column_names, inplace=True)
+
     # Remove events with negative genWeights
     total_df = total_df[total_df.gen_Weight > 0].copy()
+
+    total_df.sort_values(by='event', inplace=True)
     
     return total_df
     
-def get_model_df(df, training_processes, output_processes, features):
+def get_model_df(total_df, training_processes, output_processes, features):
 
+
+    model_df = total_df.copy()
+    
     # ---------------------------- Model Input Variables ----------------------------
     if features != 'All':
         columns_to_keep = ['event','gen_Weight']
-        columns_to_keep.extend(col for col in df.columns if col.startswith('Process_'))
-        df = df[features + columns_to_keep]
+        columns_to_keep.extend(col for col in model_df.columns if col.startswith('Process_'))
+        model_df = model_df[features + columns_to_keep]
     # Resolve: If feature names not found in dataframe  <<<<<=========
 
     # --------------------------- Keep relevant processes ---------------------------
     condition = False
     for process in training_processes:
-        condition |= (df['Process_%s'%process] == 1)
-    df = df[condition]
+        condition |= (model_df['Process_%s'%process] == 1)
+    model_df = model_df[condition]
 
-    # Consider a binary DNN with background as a label for all backgrounds (not just ttbar)
-    if output_processes == ['isSignal']:       
-        df['Process_isSignal'] = 0
-        df.loc[df['Process_HH']==1, 'Process_isSignal'] = 1
-        columns_to_drop = [col for col in df.columns if col.startswith('Process_') and col != 'Process_isSignal']
-        df = df.drop(columns=columns_to_drop)
-    else:
-        columns_to_drop = [col for col in df.columns if col.startswith('Process_') and not any(proc in col for proc in output_processes)]
-        #for col in columns_to_drop:
-        #    df = df[df[col] != 1]
-        df = df.drop(columns=columns_to_drop)
-    return df
-
-def add_training_weights(total_df, training_processes, output_processes):
-
-    total_df["training_weight"] = total_df['gen_Weight'].copy()
+    model_df["training_weight"] = model_df['gen_Weight'].copy()
+    for process in training_processes:
+        process_mask = (model_df[f"Process_{process}"] == 1)
+        process_total_sum = model_df[process_mask]["gen_Weight"].sum()
+        model_df.loc[process_mask, "training_weight"] *= model_df.shape[0] / process_total_sum
 
     if output_processes == ['isSignal']:
-        for isSignal in total_df.Process_isSignal.unique():
-            mask = total_df["Process_isSignal"] == isSignal
-            total_sum = total_df[mask]["gen_Weight"].sum()
-            total_df.loc[mask, "training_weight"] *= total_df.shape[0] / total_sum
+        model_df = model_df.assign(Class_isSignal=0)
+        model_df.loc[model_df['Process_HH'] == 1, 'Class_isSignal'] = 1
     else:
-        for proc in output_processes:
-            process_mask = total_df['Process_'+proc] == 1
-            process_total_sum = total_df[process_mask]['gen_Weight'].sum()
-            total_df.loc[process_mask, "training_weight"] *= total_df.shape[0] / process_total_sum
+        for output_process in output_processes:
+            model_df[f"Class_{output_process}"] = 0
+            model_df.loc[model_df[f"Process_{output_process}"] == 1, f"Class_{output_process}"] = 1
+        
+    columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
+    model_df.drop(columns=columns_to_drop, inplace=True)
 
-    return total_df
+    return model_df
 
-def split_and_shuffle(total_df):
+def split_and_shuffle(model_df):
 
-    # total_df = total_df.sample(frac=1)
+    # model_df = model_df.sample(frac=1)
 
-    processes_in_df = total_df.filter(like='Process_').columns
+    processes_in_df = model_df.filter(like='Class_').columns
     columns_to_drop = ["event", "gen_Weight", "training_weight"]
     columns_to_drop.extend(processes_in_df)
-    X_df = total_df.drop(columns=columns_to_drop)
-    Y_df_columns = [proc for proc in total_df.columns if proc.startswith('Process_')]
-    Y_df = total_df[Y_df_columns]
+    X_df = model_df.drop(columns=columns_to_drop)
+    Y_df_columns = [proc for proc in model_df.columns if proc.startswith('Class_')]
+    Y_df = model_df[Y_df_columns]
 
     test_size = 0.2
-    X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, total_df["event"], total_df["training_weight"], test_size=test_size, random_state=7)
+    X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["training_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
 
     print(f"Number of training events: {len(evs_train)}")
     print(f"Number of test events: {len(evs_test)}")
@@ -220,7 +224,7 @@ class Run3Model():
             monitor   = 'val_loss',
             factor    = 0.1,
             min_delta = 0.001, 
-            patience  = 8,
+            patience  = 0,
             min_lr    = 1e-8,
             verbose   = 2,
             mode      = 'min'
@@ -229,6 +233,12 @@ class Run3Model():
         return [early_stopping, reduce_plateau]
 
     def setup_model(self, X_train):
+
+        # Set seeds for reproducibility
+        seed_value = 42
+        tf.random.set_seed(seed_value)
+        np.random.seed(seed_value)
+        random.seed(seed_value)
 
         # Input Layer
         ndim = len(X_train.columns)
@@ -309,7 +319,7 @@ class Run3Model():
         Y_pred_score = self.model.predict(X_test)  # numpy array
         output_df = pd.concat([events_test, Y_test], axis=1)
         for i, proc in enumerate(Y_test.columns):
-            column_name = proc.removeprefix('Process_') + ' Score'
+            column_name = proc.removeprefix('Class_') + ' Score'
             score = Y_pred_score[:, i]
             proc_score = pd.Series(score.flatten(), name=column_name).reset_index(drop=True)
             output_df = pd.concat([output_df, proc_score], axis=1)
@@ -333,7 +343,7 @@ class Run3Model():
     def draw_score_distribution(self, output_df):
         get_color = {'HH':'blue', 'ttbar':'red', 'tW':'green', 'others':'black'}
         score_procs = [col for col in output_df.columns if col.endswith('Score')]
-        true_procs = [col for col in output_df.columns if col.startswith('Process_')]
+        true_procs = [col for col in output_df.columns if col.startswith('Class_')]
         if self.type == 'binary':
             fig, ax = plt.subplots(figsize=(8, 6))
             ax.set_xlim(0, 1)
@@ -349,7 +359,7 @@ class Run3Model():
                 ax.set_xlim(0, 1)
                 ax.set_ylabel('Normalized Number of Events')
                 for true_proc in true_procs:
-                    label = true_proc.removeprefix('Process_')
+                    label = true_proc.removeprefix('Class_')
                     ax.hist(output_df.loc[output_df[true_proc] == 1, score_proc], bins=50, color=get_color[label], label=label, histtype='step', density=True)
                 ax.legend()
                 ax.set_xlabel(score_proc)
@@ -359,7 +369,7 @@ class Run3Model():
         fig, ax = plt.subplots(figsize=(8, 6))
         self.process_auc = {}
         for i, proc in enumerate(self.output_processes):
-            true_class = output_df['Process_'+proc]
+            true_class = output_df['Class_'+proc]
             pred_class = output_df[f"{proc} Score"]
             fpr, tpr, thresholds = roc_curve(true_class, pred_class)
             auc_value = auc(fpr, tpr)
@@ -380,11 +390,11 @@ class Run3Model():
 
     def draw_confusion_matrix(self, output_df):
         if self.type == 'binary':
-            true_class = output_df['Process_isSignal'].values.flatten()
+            true_class = output_df['Class_isSignal'].values.flatten()
             pred_class = (output_df['isSignal Score'] >= self.binary_optimal_threshold).astype(int)
             x_ticks = y_ticks = ["Background", "Signal"]
         elif self.type == 'multiclass':
-            true_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Process_')]].to_numpy(), axis=1)
+            true_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Class_')]].to_numpy(), axis=1)
             pred_class = np.argmax(output_df[[col for col in output_df.columns if col.endswith(' Score')]].to_numpy(), axis=1)
             x_ticks = y_ticks = self.output_processes
 
@@ -422,8 +432,8 @@ class Run3Model():
         self.params['Training Events'] = {'Total': len(Y_train)}
         self.params['Testing Events'] = {'Total': len(Y_test)}
         for proc in self.output_processes:
-            self.params['Training Events'][proc] = int(Y_train['Process_'+proc].value_counts()[1])
-            self.params['Testing Events'][proc] = int(Y_test['Process_'+proc].value_counts()[1])
+            self.params['Training Events'][proc] = int(Y_train['Class_'+proc].value_counts()[1])
+            self.params['Testing Events'][proc] = int(Y_test['Class_'+proc].value_counts()[1])
         self.params[f'Trained on'] = WORKDIR.name
 
         out_yml = self.modeldir / 'model_info.yml'
@@ -438,7 +448,7 @@ class Run3Model():
         self.train_model(X_train, Y_train, tw_train)
         self.save_model(X_train.columns)
         output_df, model_metrics = self.final_output(X_test, Y_test, evs_test)
-        self.feature_ranking(X_test, Y_test)
+        # self.feature_ranking(X_test, Y_test)
         self.draw_score_distribution(output_df)
         self.draw_roc_curve(output_df)
         self.draw_confusion_matrix(output_df)
@@ -473,9 +483,11 @@ def main(workdir: str):
     for model_params in test_models:
         print ("Model: %s"%model_params['name'])
         model_df = get_model_df(total_df, model_params['training_processes'], model_params['output_processes'], model_params['input_vars'])
-        model_df = add_training_weights(model_df, model_params['training_processes'], model_params['output_processes'])
+
         model = Run3Model(model_params, model_df)
         model_params, model_metrics = model.run()
+        print(model_metrics)
+
         update_models_summary_csv(models_summary_path, model_params, model_metrics)
         print ("\n")
 
@@ -491,7 +503,7 @@ if __name__ == '__main__':
     main(args.workdir)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/TOTAL_VarsReco_2022_ttbar_tW_DY
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Vars_NEW_ODD
     '''
 
 
