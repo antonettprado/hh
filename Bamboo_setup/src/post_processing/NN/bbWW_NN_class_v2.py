@@ -17,11 +17,21 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 import yaml
 import tf2onnx
 from post_processing import References as Refs
+import random, os
+
+# Set seeds for reproducibility
+seed_value = 42
+os.environ['PYTHONHASHSEED'] = str(seed_value)
+random.seed(seed_value)
+np.random.seed(seed_value)
+tf.random.set_seed(seed_value)
+
+# Set TensorFlow to use deterministic operations
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 NNDIR = Path(__file__).parent
 BAMBOO_SETUP = NNDIR.parents[2]
 WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
-
 
 def load_and_preprocess_data() -> list[pd.DataFrame]:
     resultsdir = WORKDIR / 'results'
@@ -86,7 +96,7 @@ class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
         return self.model.predict(X)
 
 class BaseNNModel:
-    def __init__(self, params: dict, total_df: pd.DataFrame):
+    def __init__(self, params: dict, total_df: pd.DataFrame, modeldir:str):
         self.name = params['name']
         self.params = params
         self.categorization = params['categorization']
@@ -95,7 +105,7 @@ class BaseNNModel:
         for proc in self.processes:
             assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
 
-        self.modeldir = NNOUTDIR / self.name
+        self.modeldir = NNOUTDIR / self.name if modeldir is None else NNOUTDIR/modeldir
         if not self.modeldir.exists(): 
             self.modeldir.mkdir(parents=True, exist_ok=True)
 
@@ -103,7 +113,13 @@ class BaseNNModel:
         print(f"\tClasses: {self.classes}")
         print(f"\tProcesses: {self.processes}")
 
-    def _pick_features_and_processes_events(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    def _sculpt_dataframe(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+        '''
+        This function does the following: 
+            - Picks only the features (or input variables) noted in 'input_vars'
+            - Keeps only the events corresponding to all training processes
+            - Adds a training weight to each event normalized by the process it corresponds to
+        '''
 
         model_df = total_df.copy()
 
@@ -120,6 +136,14 @@ class BaseNNModel:
             condition |= (model_df[f'Process_{process}'] == 1)
         model_df = model_df[condition]
 
+        # Adding training weights (normalized per process) - If different for binary and multiclass,
+        # implement this step in the corresponding classes
+        model_df["training_weight"] = model_df['gen_Weight'].copy()
+        for process in self.processes:
+            process_mask = (model_df[f"Process_{process}"] == 1)
+            process_total_sum = model_df[process_mask]["gen_Weight"].sum()
+            model_df.loc[process_mask, "training_weight"] *= model_df.shape[0] / process_total_sum
+
         return model_df
     
     def get_callbacks(self):
@@ -127,7 +151,7 @@ class BaseNNModel:
             monitor='val_loss', 
             min_delta=0.001, 
             patience=20,
-            verbose=1,
+            verbose=0,
             mode='min',
             restore_best_weights=True)
 
@@ -135,7 +159,7 @@ class BaseNNModel:
             monitor='val_loss',
             factor=0.1,
             min_delta=0.001, 
-            patience=8,
+            patience=0,
             min_lr=1e-8,
             verbose=2,
             mode='min')
@@ -156,6 +180,13 @@ class BaseNNModel:
 
     def setup_model(self, X_train):
         print(f"\tSetting up model ...")
+
+        # Set seeds for reproducibility
+        seed_value = 42
+        tf.random.set_seed(seed_value)
+        np.random.seed(seed_value)
+        random.seed(seed_value)
+
         ndim = len(X_train.columns)
         inputs = Input(shape=(ndim,), name="input")
 
@@ -374,23 +405,17 @@ class BaseNNModel:
 
 class BinaryModel(BaseNNModel):
 
-    def __init__(self, params: dict, total_df: pd.DataFrame):
-        super().__init__(params, total_df)
-        self.model_df = self.get_model(total_df, params)
+    def __init__(self, params: dict, total_df: pd.DataFrame, modeldir: str = None):
+        super().__init__(params, total_df, modeldir)
+        self.model_df = self._get_model(total_df, params)
 
-    def get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
-        model_df  = super()._pick_features_and_processes_events(total_df, params)
+    def _get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+        model_df  = super()._sculpt_dataframe(total_df, params)
+
         model_df = model_df.assign(Class_isSignal=0)
         model_df.loc[model_df['Process_HH'] == 1, 'Class_isSignal'] = 1
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
         model_df = model_df.drop(columns=columns_to_drop)
-
-        # Adding training weights
-        model_df["training_weight"] = model_df['gen_Weight'].copy()
-        for isSignal in model_df['Class_isSignal'].unique():
-            mask = model_df['Class_isSignal'] == isSignal
-            total_sum = model_df[mask]["gen_Weight"].sum()
-            model_df.loc[mask, "training_weight"] *= model_df.shape[0] / total_sum
 
         return model_df
 
@@ -431,12 +456,13 @@ class BinaryModel(BaseNNModel):
 
 class MulticlassModel(BaseNNModel):
 
-    def __init__(self, params: dict, total_df: pd.DataFrame):
-        super().__init__(params, total_df)
-        self.model_df = self.get_model(total_df, params)
+    def __init__(self, params: dict, total_df: pd.DataFrame,  modeldir: str = None):
+        super().__init__(params, total_df, modeldir)
+        self.model_df = self._get_model(total_df, params)
 
-    def get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
-        model_df  = super()._pick_features_and_processes_events(total_df, params)
+    def _get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+        model_df  = super()._sculpt_dataframe(total_df, params)
+
         for class_i, class_i_processes in self.categorization.items():
             model_df[f"Class_{class_i}"] = 0
             for proc in class_i_processes:
@@ -444,13 +470,6 @@ class MulticlassModel(BaseNNModel):
         
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
         model_df.drop(columns=columns_to_drop, inplace=True)
-
-        # Adding training weights
-        model_df["training_weight"] = model_df['gen_Weight'].copy()  
-        for class_i in self.classes:
-            class_mask = model_df[f"Class_{class_i}"] == 1
-            class_total_sum = model_df[class_mask]['gen_Weight'].sum()
-            model_df.loc[class_mask, "training_weight"] *= model_df.shape[0] / class_total_sum
 
         return model_df
 
@@ -521,9 +540,9 @@ def main(workdir: str, cv_method='none', n_splits=5):
           NNModel = BinaryModel(model_params, total_df)
         else:                                       
           NNModel = MulticlassModel(model_params, total_df)
-    
-        model_params, model_metrics = NNModel.Run(cv_method=cv_method, n_splits=n_splits)
 
+        model_params, model_metrics = NNModel.Run(cv_method=cv_method, n_splits=n_splits)
+        print(model_metrics)
         update_models_summary_csv(model_metrics)
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()}")
@@ -539,5 +558,5 @@ if __name__ == '__main__':
     main(args.workdir, cv_method=args.cv_method, n_splits=args.n_splits)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/TOTAL_VarsReco_2022_HH_ttbar --cv_method shuffle
+    python3 src/post_processing/NN/bbWW_NN_class_v2.py -w $Z_OUTPUT_eos/2022_Vars_NEW_ODD --cv_method shuffle
     '''

@@ -1,7 +1,7 @@
 {
     "1D": 
     {
-        "DNN_score":
+        "DNN":
         {
             "nbins": 50,
             "min": 0,

@@ -217,7 +217,7 @@ class Plotter(BasePlotter):
             max_sen_line.SetLineStyle(2)
 
             hist_sen_dict = {'S/sqrt(B)': hist_s_sqrt_b}
-            line_maxsen_dict = {f'Max Sensitivity: {max_sen:.3f}': max_sen_line}
+            line_maxsen_dict = {f'Max Sensitivity: {max_sen:.5f}': max_sen_line}
             return hist_sen_dict, line_maxsen_dict
 
         except ValueError:

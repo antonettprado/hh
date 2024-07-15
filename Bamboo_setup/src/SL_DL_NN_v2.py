@@ -52,38 +52,38 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
 
     @staticmethod
     def get_dnn_score(NNdir:str, objects):
-        dnn_score = Variable1D("DNN_score")
-        subcat_names = dnn_score.subcats
+        DNN = Variable1D("DNN")
+        subcat_names = DNN.subcats
         selections = var_defs.get_selections_subset(subcat_names)
 
         model, model_name, input_vars_names, classes, processes = SL_DL_NN_v2.get_NN_model(NNdir)
         input_vars = SL_DL_NN_v2.gather_input_vars(input_vars_names, objects, selections)
         data = model(*input_vars)
         data = {sel_name: data for sel_name in selections.keys()}
-        dnn_score.populate(data, selections)
+        DNN.populate(data, selections)
 
         multiclass = True if len(classes)>1 else False
-        dnn_score.update(model_name = model_name, classes=classes, multiclass=multiclass, processes=processes)
+        DNN.update(model_name = model_name, classes=classes, multiclass=multiclass, processes=processes)
 
-        print(f"Model Name: {dnn_score.model_name}")
-        print(f"\tMulticlass: {dnn_score.multiclass}")
-        print(f"\tClasses: {dnn_score.classes}")
-        print(f"\tProcesses: {dnn_score.processes}")
+        print(f"Model Name: {DNN.model_name}")
+        print(f"\tMulticlass: {DNN.multiclass}")
+        print(f"\tClasses: {DNN.classes}")
+        print(f"\tProcesses: {DNN.processes}")
         
-        return dnn_score
+        return DNN
 
-    def output_skims(self, dnn_score, selection, plots):
-        branches = {"event": None, "dnn_score": dnn_score.data}
+    def output_skims(self, DNN, selection, plots):
+        branches = {"event": None, "DNN": DNN.data}
         plots.append(Skim('SL_res_2b_x', branches, selection))
         return plots
 
     @staticmethod
-    def update_with_DNN_yields(yields, dnn_score, selections:dict):
-        scores = dnn_score.data
+    def update_with_DNN_yields(yields, DNN, selections:dict):
+        scores = DNN.data
         max_score_index = op.rng_max_element_index(scores, lambda score: score)
         sel_name = 'SL_res_2b_x'
         sel = selections[sel_name]
-        for i, process in enumerate(dnn_score.classes):
+        for i, process in enumerate(DNN.classes):
             new_sel_name = '_'.join([sel_name, process])
             process_sel = sel.refine(new_sel_name, cut = (i == max_score_index))
             selections[new_sel_name] = process_sel
@@ -113,13 +113,22 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
 
         self.dnn_vars_list = []
         for NNdir in NNdir_list:
-            dnn_score = SL_DL_NN_v2.get_dnn_score(NNdir, objects)
-            dnn_score = dnn_score[sel_name]
+            DNN = SL_DL_NN_v2.get_dnn_score(NNdir, objects)
+            DNN = DNN[sel_name]
 
-            for i, class_i in enumerate(dnn_score.classes):
-                plots.append(Plot.make1D('_'.join([dnn_score.ref, class_i, dnn_score.model_name]), dnn_score.data[i], dnn_score.selection, dnn_score.eqbin, xTitle=dnn_score.full_title))
+            scores = DNN.data
+            max_score_index = op.rng_max_element_index(scores, lambda score: score)
 
-            self.dnn_vars_list.append(dnn_score)
+            for i, class_i in enumerate(DNN.classes):
+                # Total distribution
+                plots.append(Plot.make1D('_'.join([DNN.ref, 'Whole', 'Score'+class_i, 'Model'+DNN.model_name]), DNN.data[i], DNN.selection, DNN.eqbin, xTitle=DNN.full_title))
+                # Cut
+                sel_NNclass_name = '_'.join([sel_name, class_i, DNN.model_name])
+                sel_NNclass = (DNN.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
+                plots.append(Plot.make1D('_'.join([DNN.ref, class_i, 'Score'+class_i, 'Model'+DNN.model_name]), DNN.data[i], sel_NNclass, DNN.eqbin, xTitle=DNN.full_title))
+                self.yields.add(sel_NNclass, sel_NNclass_name) 
+
+            self.dnn_vars_list.append(DNN)
             
 
         # ===============================================================================
@@ -136,10 +145,9 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
         self.yields.add(selections['DL_boosted'], 'DL_boosted')
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
-        self.yields = SL_DL_NN_v2.update_with_DNN_yields(self.yields, dnn_score, selections)
 
         if not self.args.no_skim:
-            plots = self.output_skims(dnn_score, selections['SL_res_2b_x'], plots)
+            plots = self.output_skims(DNN, selections['SL_res_2b_x'], plots)
 
         return plots
 
@@ -149,20 +157,19 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
-        myPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True)
-        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
+        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
+        myPlotter.Draw_Processes(normalization='unity', combine_backs=True, sen_info=False)
 
 
         # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory
-        print("In postprocessing")
         for dnn_var in self.dnn_vars_list:   
             print(f"{dnn_var.model_name}") 
-            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/separate_processes/{dnn_var.model_name}')
+            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/{dnn_var.model_name}')
             customPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
-            customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
+            customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
 
-        for dnn_var in self.dnn_vars_list:   
-            print(f"{dnn_var.model_name}") 
-            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/combined_processes/{dnn_var.model_name}')
-            customPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
-            customPlotter.Draw_Processes(normalization='unity', combine_backs=True, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
+        # for dnn_var in self.dnn_vars_list:   
+        #     print(f"{dnn_var.model_name}") 
+        #     customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/combined_processes/{dnn_var.model_name}')
+        #     customPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
+        #     customPlotter.Draw_Processes(normalization='unity', combine_backs=True, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
