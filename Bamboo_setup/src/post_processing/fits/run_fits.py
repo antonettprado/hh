@@ -101,13 +101,13 @@ if __name__ == "__main__":
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("Normalizations: \n")
             for process_name in normalizations:
-                print ("%s: \n"%process_name)
-                print ("  pre_fit: %.4f\n"%normalizations[process_name]["prefit"])
-                print ("  S+B fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["s"], normalizations[process_name]["s"]/normalizations[process_name]["prefit"])) 
-                print ("  B-only fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["b"], normalizations[process_name]["b"]/normalizations[process_name]["prefit"])) 
+                fit_results_file.write("%s: \n"%process_name)
+                fit_results_file.write("  pre_fit: %.4f\n"%normalizations[process_name]["prefit"])
+                fit_results_file.write("  S+B fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["s"], normalizations[process_name]["s"]/normalizations[process_name]["prefit"])) 
+                fit_results_file.write("  B-only fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["b"], normalizations[process_name]["b"]/normalizations[process_name]["prefit"])) 
             fit_results_file.write("\n\n")
             fit_results_file.close()
-            fit_file_unblinded.Close()
+            fit_file_blinded.Close()
             os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_blinded_fit.root"%output_dir)
 
             # Fit Results and Normalization for Unblinded Fit
@@ -141,10 +141,10 @@ if __name__ == "__main__":
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("Normalizations: \n")
             for process_name in normalizations:
-                print ("%s: \n"%process_name)
-                print ("  pre_fit: %.4f\n"%normalizations[process_name]["prefit"])
-                print ("  S+B fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["s"], normalizations[process_name]["s"]/normalizations[process_name]["prefit"])) 
-                print ("  B-only fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["b"], normalizations[process_name]["b"]/normalizations[process_name]["prefit"])) 
+                fit_results_file.write("%s: \n"%process_name)
+                fit_results_file.write("  pre_fit: %.4f\n"%normalizations[process_name]["prefit"])
+                fit_results_file.write("  S+B fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["s"], normalizations[process_name]["s"]/normalizations[process_name]["prefit"])) 
+                fit_results_file.write("  B-only fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["b"], normalizations[process_name]["b"]/normalizations[process_name]["prefit"])) 
             fit_results_file.write("\n\n")
             fit_results_file.close()
             fit_file_unblinded.Close()
