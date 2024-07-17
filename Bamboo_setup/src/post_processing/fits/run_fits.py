@@ -57,7 +57,7 @@ if __name__ == "__main__":
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
-            os.system("mv higgsCombineTest.AsymptoticLimits.mH125.root %s/higgsCombineTest.AsymptoticLimits.mH125_blinded_fit.root"%output_dir)
+            os.system("mv higgsCombineTest.AsymptoticLimits.mH125.root %s/higgsCombineTest.AsymptoticLimits.mH125_blinded_fit.root"%output_dir_sel_cat_disc)
 
             # Expected and Observed Asymptotic Limits for Unblinded Fit
             fit_results_file = open(fit_results_filename, "a")
@@ -68,7 +68,7 @@ if __name__ == "__main__":
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
-            os.system("mv higgsCombineTest.AsymptoticLimits.mH125.root %s/higgsCombineTest.AsymptoticLimits.mH125_unblinded_fit.root"%output_dir)
+            os.system("mv higgsCombineTest.AsymptoticLimits.mH125.root %s/higgsCombineTest.AsymptoticLimits.mH125_unblinded_fit.root"%output_dir_sel_cat_disc)
 
             # Fit Results and Normalization for Blinded Fit
             fit_results_file = open(fit_results_filename, "a")
@@ -93,6 +93,8 @@ if __name__ == "__main__":
                 norm_b = fit_norm_b.find(norm_s.GetName())
                 norm_p = fit_norm_prefit.find(norm_s.GetName())
                 process_name   = norm_s.GetName().split("/")[1]
+                if "total" in process_name:
+                    continue
                 if process_name not in normalizations:
                     normalizations[process_name] = {}
                 normalizations[process_name]["prefit"] = norm_p.getVal()
@@ -108,7 +110,7 @@ if __name__ == "__main__":
             fit_results_file.write("\n\n")
             fit_results_file.close()
             fit_file_blinded.Close()
-            os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_blinded_fit.root"%output_dir)
+            os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_blinded_fit.root"%output_dir_sel_cat_disc)
 
             # Fit Results and Normalization for Unblinded Fit
             fit_results_file = open(fit_results_filename, "a")
@@ -133,6 +135,8 @@ if __name__ == "__main__":
                 norm_b = fit_norm_b.find(norm_s.GetName())
                 norm_p = fit_norm_prefit.find(norm_s.GetName())
                 process_name   = norm_s.GetName().split("/")[1]
+                if "total" in process_name:
+                    continue
                 if process_name not in normalizations:
                     normalizations[process_name] = {}
                 normalizations[process_name]["prefit"] = norm_p.getVal()
@@ -148,7 +152,7 @@ if __name__ == "__main__":
             fit_results_file.write("\n\n")
             fit_results_file.close()
             fit_file_unblinded.Close()
-            os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_unblinded_fit.root"%output_dir)
+            os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_unblinded_fit.root"%output_dir_sel_cat_disc)
 
 
 
