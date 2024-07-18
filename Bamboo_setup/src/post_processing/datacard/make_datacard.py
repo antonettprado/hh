@@ -76,7 +76,7 @@ if __name__ == "__main__":
             for discriminant in discriminant_list:
                 process_data[process]["shapes"][channel][discriminant]["total_histogram"] = process_data[process]["shapes"][channel][discriminant]["sample_histogram"][0].Clone("%s__%s"%(channel, process))
                 for i in range(1,len(process_data[process]["shapes"][channel][discriminant]["sample_histogram"])):
-                    process_data[process]["shapes"][channel][discriminant]["total_histogram"].Add(process_data[process]["shapes"][channel][discriminant]["sample_histogram"][1])
+                    process_data[process]["shapes"][channel][discriminant]["total_histogram"].Add(process_data[process]["shapes"][channel][discriminant]["sample_histogram"][i])
                 process_data[process]["shapes"][channel][discriminant]["rate"] = process_data[process]["shapes"][channel][discriminant]["total_histogram"].Integral()
 
     # Creating Asimov histogram
