@@ -20,7 +20,7 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
         super(SL_DL_NN_v2, self).addArgs(parser)
         parser.add_argument("-NN", "--NNdirs", action="store", dest="NNdirs", nargs="+", help="List of dirs where NN models are in (Ex: -NN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model1 Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model2 ", default=None)
         parser.add_argument("-SNN", "--superNNdir", action="store", dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
-        parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
+        parser.add_argument("-s", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
 
     @staticmethod
     def get_NN_model(NNdir: str):
@@ -118,8 +118,13 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
 
             scores = DNN.data
             max_score_index = op.rng_max_element_index(scores, lambda score: score)
-
+            score_signal = 0
+            score_background = 0
             for i, class_i in enumerate(DNN.classes):
+                if "HH" in class_i:
+                    score_signal += scores[i]
+                else:
+                    score_background += scores[i]
                 # Total distribution
                 plots.append(Plot.make1D('_'.join([DNN.ref, 'Whole', 'Score'+class_i, 'Model'+DNN.model_name]), DNN.data[i], DNN.selection, DNN.eqbin, xTitle=DNN.full_title))
                 # Cut
@@ -130,6 +135,16 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
 
             self.dnn_vars_list.append(DNN)
             
+            if DNN.multiclass:
+                DNN_multi_s_over_b = Variable1D("DNN_score_s_over_b")
+                subcat_names_s_over_b = DNN_multi_s_over_b.subcats
+                selections_s_over_b = var_defs.get_selections_subset(subcat_names_s_over_b)
+                data_s_over_b = op.log10(score_signal/score_background)
+                data_s_over_b = {selection_name: data_s_over_b for selection_name in selections_s_over_b.keys()}
+                DNN_multi_s_over_b.populate(data_s_over_b, selections_s_over_b)
+                DNN_multi_s_over_b = DNN_multi_s_over_b[sel_name]
+                # Plot S_node/Sum of B_nodes
+                plots.append(Plot.make1D('_'.join([DNN_multi_s_over_b.ref, 'Model'+DNN.model_name]), DNN_multi_s_over_b.data, DNN_multi_s_over_b.selection, DNN_multi_s_over_b.eqbin, xTitle=DNN_multi_s_over_b.full_title))
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -146,7 +161,7 @@ class SL_DL_NN_v2(NanoBaseHHbbWW):
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
 
-        if not self.args.no_skim:
+        if self.args.skim:
             plots = self.output_skims(DNN, selections['SL_res_2b_x'], plots)
 
         return plots
