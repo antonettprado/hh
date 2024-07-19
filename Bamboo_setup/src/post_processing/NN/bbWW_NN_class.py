@@ -17,7 +17,7 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 import yaml
 import tf2onnx
 from post_processing import References as Refs
-import random, os, sys
+import random, os, sys, math
 
 # Set seeds for reproducibility
 seed_value = 42
@@ -423,9 +423,10 @@ class BinaryModel(BaseNNModel):
     def draw_score_distribution(self, output_df):
         class_score = [col for col in output_df.columns if col.startswith('Score_')][0]
         class_true = [col for col in output_df.columns if col.startswith('Class_')][0]
+        nbins = 50
         fig, ax = super()._get_score_distribution_fig(class_score)
-        ax.hist(output_df.loc[output_df[class_true] == 1, class_score], bins=50, color='blue', label='HH', histtype='step', density=True)
-        ax.hist(output_df.loc[output_df[class_true] == 0, class_score], bins=50, color='red', label='Background', histtype='step', density=True)
+        ax.hist(output_df.loc[output_df[class_true] == 1, class_score], bins=nbins, color='blue', label='HH', histtype='step', density=True)
+        ax.hist(output_df.loc[output_df[class_true] == 0, class_score], bins=nbins, color='red', label='Background', histtype='step', density=True)
         ax.legend()
         fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
 
@@ -477,11 +478,12 @@ class MulticlassModel(BaseNNModel):
     def draw_score_distribution(self, output_df):
         classes_score = [col for col in output_df.columns if col.startswith('Score_')]
         classes_true = [col for col in output_df.columns if col.startswith('Class_')]
+        nbins = 50
         for class_score in classes_score:
             fig, ax = super()._get_score_distribution_fig(class_score)
             for true_proc in classes_true:
                 label = true_proc.removeprefix('Class_')
-                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=50, color=Refs._get_color_for(label, ROOT_b=False), label=label, histtype='step', density=True)
+                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=nbins, color=Refs._get_color_for(label, ROOT_b=False), label=label, histtype='step', density=True)
             ax.legend()
             fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
 
