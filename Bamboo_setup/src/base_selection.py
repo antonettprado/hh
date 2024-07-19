@@ -158,7 +158,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             cut = ()
             if self.event_nr_sel == 'all':
                 print ("Select all event numbers")
-                cut = ()
+                cut = (op.OR(tree.event % 2 == 0, tree.event % 2 == 1))
             elif self.event_nr_sel == 'even':
                 print ("Select even event numbers")
                 cut = (tree.event % 2 == 0)
