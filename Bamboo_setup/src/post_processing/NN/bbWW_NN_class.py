@@ -64,6 +64,8 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
             ones = total_df[col].value_counts().get(1)
             print(f"Number of events in process {col}: {ones}")
     
+    total_df.sort_values(by='event', inplace=True)
+    
     return total_df
 
 def get_test_models():
@@ -174,9 +176,6 @@ class BaseNNModel:
             return optimizer_class(learning_rate=config.get('lr', 0.001))
         else:
             raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
-
-    def get_metrics(self):
-        raise NotImplementedError("Subclasses should implement this method.")
 
     def setup_model(self, X_train):
         print(f"\tSetting up model ...")
