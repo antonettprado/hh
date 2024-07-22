@@ -5,7 +5,8 @@ SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_res_1b', 'SL_res_2b', 'SL_res_2b
 SELECTIONS.sort(key=len, reverse=True)
 
 PROCESSES_FILES = dict(
-    HH=['bbWW_sl', 'bbWW_dl'],
+    HH_bbWW=['bbWW_sl', 'bbWW_dl'],
+    HH_bbtautau=[],
     ttbar=['TTbar_sl', 'TTbar_dl'],
     DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J'],
     VV=['WW', 'WZ_TuneCP5_13p6TeV_pythia8', 'ZZ'],
@@ -14,7 +15,8 @@ PROCESSES_FILES = dict(
     )
 
 COLOR_MAP = dict(
-    HH=['blue', ROOT.kBlue], 
+    HH_bbWW=['blue', ROOT.kBlue], 
+    HH_bbtautau = [],
     ttbar=['red', ROOT.kRed], 
     tW=['green', ROOT.kGreen], 
     DY=['magenta', ROOT.kMagenta],
