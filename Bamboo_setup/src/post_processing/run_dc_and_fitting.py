@@ -155,7 +155,7 @@ if __name__ == "__main__":
     '''
     To run this, you must have already run cut_based_selections.py, since this script uses the csv file of the cuts produced
     Example1:
-    $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_NN_NEW -nni $Z_OUTPUT_eos/2022_Vars_NEW/Neural_Nets -p both
+    $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_NN_NEW_nnv2seedSet -nni $Z_OUTPUT_eos/2022_Vars_NEW/Neural_Nets_v2_seedSet -p both
     '''
 
     main(args.workdir, args.nndir, args.processes, args.asimov_only, args.rate_only)
