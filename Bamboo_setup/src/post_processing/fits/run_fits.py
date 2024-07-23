@@ -39,7 +39,7 @@ if __name__ == "__main__":
             datacard_file = glob.glob("%s/*.txt"%discriminant_dir)[0]
             fit_results_filename = output_dir_sel_cat_disc + "/" + datacard_file.split("/")[-1].split(".txt")[0] + "_fit_results.txt"
             fit_results_file = open(fit_results_filename, "w")
-            fit_results_file.write("Fit results for Channel: %s, Discirminant: %s, Datacard: %s\n\n"%(channel, discriminant, datacard_file))
+            fit_results_file.write("Fit results for Channel: %s, Discriminant: %s, Datacard: %s\n\n"%(channel, discriminant, datacard_file))
             fit_results_file.close()
             print ("      Running for datacard: %s\n"%datacard_file)
 
