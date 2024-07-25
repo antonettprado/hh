@@ -316,15 +316,15 @@ class BaseNNModel:
         plt.colorbar(im)
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
-                ax.text(j, i, f"{cm[i, j]:.3f}", ha='center', va='center')
+                ax.text(j, i, f"{cm[i, j]:.3f}", ha='center', va='center', fontsize=14)
 
-        ax.set_xlabel('Predicted', labelpad=10)
-        ax.set_ylabel('Actual', labelpad=10)
-        ax.set_title(title)
+        ax.set_xlabel('Predicted', labelpad=10, fontsize=12)
+        ax.set_ylabel('Actual', labelpad=10, fontsize=12)
+        ax.set_title(title, fontsize=16)
         ax.set_xticks(range(len(xy_ticks)))
         ax.set_yticks(range(len(xy_ticks)))
-        ax.set_xticklabels(xy_ticks, rotation=0)
-        ax.set_yticklabels(xy_ticks)
+        ax.set_xticklabels(xy_ticks, rotation=0, fontsize=12)
+        ax.set_yticklabels(xy_ticks, fontsize=12)
 
         ax.xaxis.set_ticks_position('bottom')
         ax.xaxis.set_label_position('bottom')
@@ -414,7 +414,7 @@ class BinaryModel(BaseNNModel):
 
         model_df = model_df.assign(Class_isSignal=0)
         model_df.loc[model_df['Process_HH_bbWW'] == 1, 'Class_isSignal'] = 1
-        model_df.loc[model_df['Process_HH_bbtautau'] == 1, 'Class_isSignal'] = 1
+        # model_df.loc[model_df['Process_HH_bbtautau'] == 1, 'Class_isSignal'] = 1
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
         model_df = model_df.drop(columns=columns_to_drop)
 
@@ -531,7 +531,7 @@ def update_models_summary_csv(model_metrics: dict):
 def main(workdir: str, sel_name: str, do_input_feature_ranking: bool, cv_method='none', n_splits=5):
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    nnoutdir_name = 'Neural_Nets_%s'%sel_name
+    nnoutdir_name = 'Neural_Nets_%s_rand2'%sel_name
     NNOUTDIR = WORKDIR / nnoutdir_name
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
@@ -568,5 +568,5 @@ if __name__ == '__main__':
     main(args.workdir, args.sel_name, do_input_feature_ranking=args.do_input_feature_ranking, cv_method=args.cv_method, n_splits=args.n_splits)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Vars_NEW_ODD -c SL_res_2b_x -r --cv_method shuffle
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Vars_NEW -c SL_res_2b_x -r --cv_method shuffle
     '''
