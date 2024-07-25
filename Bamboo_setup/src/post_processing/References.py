@@ -16,6 +16,8 @@ PROCESSES_FILES = dict(
 
 COLOR_MAP = dict(
     HH=['blue', ROOT.kBlue], 
+    HH_bbWW=['blue', ROOT.kBlue],
+    HH_bbtautau=['blue', ROOT.kBlue],
     ttbar=['red', ROOT.kRed], 
     tW=['green', ROOT.kGreen], 
     DY=['magenta', ROOT.kMagenta],
