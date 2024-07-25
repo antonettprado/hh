@@ -531,7 +531,7 @@ def update_models_summary_csv(model_metrics: dict):
 def main(workdir: str, sel_name: str, do_input_feature_ranking: bool, cv_method='none', n_splits=5):
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    nnoutdir_name = 'Neural_Nets_%s_rand2'%sel_name
+    nnoutdir_name = 'Neural_Nets_%s'%sel_name
     NNOUTDIR = WORKDIR / nnoutdir_name
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
 
