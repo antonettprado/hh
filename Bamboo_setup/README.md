@@ -18,14 +18,17 @@ result = subprocess.check_output(["condor_submit", "-spool", cmdFile]).decode()
 
 and from
 ```bash
+chCmdArgs = [
+    "condor_history", f"{self.clusterId}.{self.commandList.index(command):d}",
+    "-af", "CommittedTime", "CommittedSuspensionTime"]
 elapsed, suspended = subprocess.check_output(chCmdArgs).decode().strip().split()
 ```
 to
 ```bash
+#chCmdArgs = [
+#    "condor_history", f"{self.clusterId}.{self.commandList.index(command):d}",
+#    "-af", "CommittedTime", "CommittedSuspensionTime"]
 elapsed, suspended = 0, 0
-condor_history_output = subprocess.check_output(chCmdArgs).decode().strip().split()
-if len(condor_history_output) != 0:
-    elapsed, suspended = condor_history_output
 ```
 
 And then resinstall bamboo using:
