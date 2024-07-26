@@ -21,7 +21,7 @@ to
 elapsed, suspended = 0, 0
 ```
 
-Also make some minor changes if you want to save output of jobs to eos area through HT condor - modify the lines in bamboo/bamboo/batch_htcondor.py:
+Also make some minor changes if you want to save output of jobs to eos area through HT condor (OPTIONAL and NOT RECOMMENDED at the moment) - modify the lines in bamboo/bamboo/batch_htcondor.py:
 
 From
 ```bash
