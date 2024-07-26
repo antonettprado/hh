@@ -64,7 +64,14 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
             ones = total_df[col].value_counts().get(1)
             print(f"Number of events in process {col}: {ones}")
     
-    total_df.sort_values(by='event', inplace=True)
+    # Reset the index to make it a column
+    total_df.reset_index(inplace=True)
+
+    # Sort by 'event' and the index column
+    total_df.sort_values(by=['event', 'index'], inplace=True)
+
+    # Drop the index column
+    total_df.drop(columns='index', inplace=True)
     
     return total_df
 
