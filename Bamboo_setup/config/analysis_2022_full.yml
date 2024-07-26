@@ -44,23 +44,23 @@ samples:
     generated-events: genEventSumw
     split: -1
 
-  #bbtautau_2022:
-  #  group: "HH_bbtautau"
-  #  era: "2022"
-  #  db: das:
-  #  type: signal
-  #  cross-section: 0.0022695357
-  #  generated-events: genEventSumw
-  #  split: -1
+  bbtautau_2022:
+   group: "HH_bbtautau"
+   era: "2022"
+   db: das:/GluGlutoHHto2B2Tau_kl-1p00_kt-1p00_c2-0p00_LHEweights_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+   type: signal
+   cross-section: 0.0022695357
+   generated-events: genEventSumw
+   split: -1
 
-  #bbtautau_2022EE:
-  #  group: "HH_bbtautau"
-  #  era: "2022EE"
-  #  db: das:
-  #  type: signal
-  #  cross-section: 0.0022695357
-  #  generated-events: genEventSumw
-  #  split: -1
+  bbtautau_2022EE:
+   group: "HH_bbtautau"
+   era: "2022EE"
+   db: das:/GluGlutoHHto2B2Tau_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v3/NANOAODSIM
+   type: signal
+   cross-section: 0.0022695357
+   generated-events: genEventSumw
+   split: -1
 
   # Background MC 
   TTbar_sl_2022:
@@ -388,160 +388,160 @@ samples:
     split: -1
 
 
-# Data
+# # Data
 
-  Muon_Run2022C:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/Muon/Run2022C-22Sep2023-v1/NANOAOD
-    run_range: &runs_22C [355794, 357486]
-    certified_lumi_file: &lumi_cert_22 https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json
-    split: -1
+#   Muon_Run2022C:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/Muon/Run2022C-22Sep2023-v1/NANOAOD
+#     run_range: &runs_22C [355794, 357486]
+#     certified_lumi_file: &lumi_cert_22 https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json
+#     split: -1
 
-  Muon_Run2022D:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/Muon/Run2022D-22Sep2023-v1/NANOAOD
-    run_range: &runs_22D [357487, 357733]
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   Muon_Run2022D:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/Muon/Run2022D-22Sep2023-v1/NANOAOD
+#     run_range: &runs_22D [357487, 357733]
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  Muon_Run2022E:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/Muon/Run2022E-22Sep2023-v1/NANOAOD
-    run_range: &runs_22E [359022, 360331]
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   Muon_Run2022E:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/Muon/Run2022E-22Sep2023-v1/NANOAOD
+#     run_range: &runs_22E [359022, 360331]
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  Muon_Run2022F:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/Muon/Run2022F-22Sep2023-v2/NANOAOD
-    run_range: &runs_22F [360332, 362180]
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   Muon_Run2022F:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/Muon/Run2022F-22Sep2023-v2/NANOAOD
+#     run_range: &runs_22F [360332, 362180]
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  Muon_Run2022G:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/Muon/Run2022G-22Sep2023-v1/NANOAOD
-    run_range: &runs_22G [362350, 362760]
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   Muon_Run2022G:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/Muon/Run2022G-22Sep2023-v1/NANOAOD
+#     run_range: &runs_22G [362350, 362760]
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  EGamma_Run2022C:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/EGamma/Run2022C-22Sep2023-v1/NANOAOD
-    run_range: *runs_22C
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   EGamma_Run2022C:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/EGamma/Run2022C-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22C
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  EGamma_Run2022D:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/EGamma/Run2022D-22Sep2023-v1/NANOAOD
-    run_range: *runs_22D
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   EGamma_Run2022D:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/EGamma/Run2022D-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22D
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  EGamma_Run2022E:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/EGamma/Run2022E-22Sep2023-v1/NANOAOD
-    run_range: *runs_22E
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   EGamma_Run2022E:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/EGamma/Run2022E-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22E
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  EGamma_Run2022F:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/EGamma/Run2022F-22Sep2023-v1/NANOAOD
-    run_range: *runs_22F
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   EGamma_Run2022F:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/EGamma/Run2022F-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22F
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  EGamma_Run2022G:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/EGamma/Run2022G-22Sep2023-v2/NANOAOD
-    run_range: *runs_22G
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   EGamma_Run2022G:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/EGamma/Run2022G-22Sep2023-v2/NANOAOD
+#     run_range: *runs_22G
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  MuonEG_Run2022C:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/MuonEG/Run2022C-22Sep2023-v1/NANOAOD
-    run_range: *runs_22C
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   MuonEG_Run2022C:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/MuonEG/Run2022C-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22C
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  MuonEG_Run2022D:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/MuonEG/Run2022D-22Sep2023-v1/NANOAOD
-    run_range: *runs_22D
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   MuonEG_Run2022D:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/MuonEG/Run2022D-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22D
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  MuonEG_Run2022E:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/MuonEG/Run2022E-22Sep2023-v1/NANOAOD
-    run_range: *runs_22E
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   MuonEG_Run2022E:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/MuonEG/Run2022E-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22E
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  MuonEG_Run2022F:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/MuonEG/Run2022F-22Sep2023-v1/NANOAOD
-    run_range: *runs_22F
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   MuonEG_Run2022F:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/MuonEG/Run2022F-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22F
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  MuonEG_Run2022G:
-    group: data
-    era: "2022EE"
-    type: data
-    db: das:/MuonEG/Run2022G-22Sep2023-v1/NANOAOD
-    run_range: *runs_22G
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   MuonEG_Run2022G:
+#     group: data
+#     era: "2022EE"
+#     type: data
+#     db: das:/MuonEG/Run2022G-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22G
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  DoubleMuon_Run2022C:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/DoubleMuon/Run2022C-22Sep2023-v1/NANOAOD
-    run_range: *runs_22C
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   DoubleMuon_Run2022C:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/DoubleMuon/Run2022C-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22C
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
-  SingleMuon_Run2022C:
-    group: data
-    era: "2022"
-    type: data
-    db: das:/SingleMuon/Run2022C-22Sep2023-v1/NANOAOD
-    run_range: *runs_22C
-    certified_lumi_file: *lumi_cert_22
-    split: -1
+#   SingleMuon_Run2022C:
+#     group: data
+#     era: "2022"
+#     type: data
+#     db: das:/SingleMuon/Run2022C-22Sep2023-v1/NANOAOD
+#     run_range: *runs_22C
+#     certified_lumi_file: *lumi_cert_22
+#     split: -1
 
 
 # Plotting configuration parameters ====================================================
