@@ -1,7 +1,7 @@
 Models:
   # # ==================== Binary Models ====================
   - name: 'binary_HH_ttbar'
-    categorization: {"isSignal": ["HH", ttbar]}
+    categorization: {"isSignal": ["HH", "ttbar"]}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}

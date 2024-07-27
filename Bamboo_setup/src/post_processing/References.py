@@ -7,8 +7,6 @@ SELECTIONS.sort(key=len, reverse=True)
 PROCESSES_FILES = dict(
     HH=['bbWW_sl', 'bbWW_dl'],
     #HH=['bbWW_sl', 'bbWW_dl', 'bbtautau'],
-    #HH_bbWW=['bbWW_sl', 'bbWW_dl'],
-    #HH_bbtautau=[],
     ttbar=['TTbar_sl', 'TTbar_dl'],
     tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
     WJets=['Wjets_0J', 'Wjets_1J', 'Wjets_2J'],
@@ -26,8 +24,6 @@ PROCESSES_FILES = dict(
 
 COLOR_MAP = dict(
     HH=['blue', ROOT.kBlue], 
-    #HH_bbWW=['blue', ROOT.kBlue],
-    #HH_bbtautau=['blue', ROOT.kBlue],
     ttbar=['red', ROOT.kRed], 
     tW=['green', ROOT.kGreen], 
     WJets=['cyan', ROOT.kCyan],

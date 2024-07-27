@@ -421,8 +421,6 @@ class BinaryModel(BaseNNModel):
 
         model_df = model_df.assign(Class_isSignal=0)
         model_df.loc[model_df['Process_HH'] == 1, 'Class_isSignal'] = 1
-        #model_df.loc[model_df['Process_HH_bbWW'] == 1, 'Class_isSignal'] = 1
-        #model_df.loc[model_df['Process_HH_bbtautau'] == 1, 'Class_isSignal'] = 1
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
         model_df = model_df.drop(columns=columns_to_drop)
 
