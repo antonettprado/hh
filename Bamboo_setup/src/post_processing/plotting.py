@@ -50,3 +50,27 @@ def interpolate_3d_root_histogram(root_hist, scale_factor):
     interp_bin_contents = interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers))).flatten()
 
     return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
+
+
+def custom_pretty_print_json(input_file, output_file, indent=4):
+    print(f"Prettifying {input_file}")
+    def format_list(obj, level=0):
+        if isinstance(obj, list):
+            if all(isinstance(i, (int, float, str)) for i in obj):
+                return json.dumps(obj)  # Single line for simple lists
+            else:
+                return '[\n' + ',\n'.join(' ' * (level + indent) + format_list(e, level + indent) for e in obj) + '\n' + ' ' * level + ']'
+        elif isinstance(obj, dict):
+            items = []
+            for k, v in obj.items():
+                items.append(f'{" " * (level + indent)}"{k}": {format_list(v, level + indent)}')
+            return '{\n' + ',\n'.join(items) + '\n' + ' ' * level + '}'
+        else:
+            return json.dumps(obj)
+
+    with open(input_file, 'r') as f:
+        data = json.load(f)
+
+    with open(output_file, 'w') as f:
+        f.write(format_list(data))
+

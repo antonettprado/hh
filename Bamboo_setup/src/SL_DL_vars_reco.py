@@ -141,10 +141,14 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             # Check llr_backgrounds contains valid processes' names:
             if self.args.llr_backgrounds == 'All': 
                 which_processes = 'All'
+                postfix = which_processes
             else:
                 processes_available = myPlotter.dirprocesses
                 assert all(llr_back in processes_available for llr_back in self.args.llr_backgrounds), f"Refer to References.py for allowed processes' names"
                 which_processes = ['HH'] + self.args.llr_backgrounds
+                postfix = ''.join(self.args.llr_backgrounds)
+
+            print(f"The processes for the ratio calculation are: {which_processes}")
 
             vars = variables.parse_vars_from_refs(myPlotter.refs)
 
@@ -205,6 +209,8 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
                     all_corrections.append(corr)
 
             cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-            output_llr_file = os.path.join(resultsdir, "corrections_llr.json")
+            output_llr_file = os.path.join(resultsdir, "corrections_llr_" + postfix +".json")
             with open(output_llr_file, "w") as outfile:
                 outfile.write(cset.json(exclude_unset=False))
+
+            custom_pretty_print_json(output_llr_file, output_llr_file)
