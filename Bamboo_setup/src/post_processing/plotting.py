@@ -1,6 +1,11 @@
 import numpy as np
 import scipy.interpolate
 
+INTERPOLATION_SCALE_FACTOR_1D = 9
+INTERPOLATION_SCALE_FACTOR_2D = 3
+INTERPOLATION_SCALE_FACTOR_3D = 3
+DECIMAL_PLACES = 3
+
 def _get_interpolated_axis_data( root_axis, scale_factor):
         bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
         hbw = (bin_centers[1] - bin_centers[0]) / 2

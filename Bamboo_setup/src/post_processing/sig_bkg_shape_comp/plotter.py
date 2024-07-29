@@ -141,7 +141,7 @@ class Plotter(BasePlotter):
         else:
             assert isinstance(which_processes, list)
             for proc in which_processes:
-                assert proc in Refs.PROCESSES_FILES.keys()
+                assert proc in Refs.PROCESSES_FILES.keys(), f"{proc} is not in Refs.PROCESSES_FILES.keys()"
             processes_to_run_on = [proc for proc in which_processes if proc in self.dirprocesses]
         return processes_to_run_on
 
@@ -159,26 +159,30 @@ class Plotter(BasePlotter):
         total_hist = self.get_hist_from_file(ref, tfiles[0])
         for i_file in tfiles[1:]:
             total_hist.Add(self.get_hist_from_file(ref, i_file))
-        
+           
         return total_hist
 
     def get_signal_and_backg_hists(self, ref, process_hist_dict):
         hist_dict = {proc: hist.Clone(f"{ref}_{proc}") for proc, hist in process_hist_dict.items()}
         sig_back_dict = {}
 
-        if 'HH' in hist_dict.keys():
-            hist_signal = hist_dict['HH']
-            hist_signal.SetLineColor(ROOT.kBlue)
-            sig_back_dict.update({'Signal': hist_signal})
-
-        any_backgrounds = not all(proc == 'HH' for proc in hist_dict.keys())
+        any_signal = any('HH' in proc for proc in hist_dict.keys())
+        if any_signal:
+            signal_hists = [hist for proc, hist in hist_dict.items() if 'HH' in proc]
+            total_signal = signal_hists[0]
+            total_signal.SetLineColor(ROOT.kBlue)
+            for i_hist in signal_hists[1:]:
+                total_signal.Add(i_hist)
+            sig_back_dict.update({'Signal': total_signal})
+            
+        any_backgrounds = not all('HH' in proc for proc in hist_dict.keys())
         if any_backgrounds:
-            hist_backs = [hist for proc, hist in hist_dict.items() if proc != 'HH']
-            hist_background = hist_backs[0]
-            hist_background.SetLineColor(ROOT.kRed)
-            for i_hist in hist_backs[1:]:
-                hist_background.Add(i_hist)
-            sig_back_dict.update({'Background': hist_background})
+            backg_hists = [hist for proc, hist in hist_dict.items() if 'HH' not in proc]
+            total_background = backg_hists[0]
+            total_background.SetLineColor(ROOT.kRed)
+            for i_hist in backg_hists[1:]:
+                total_background.Add(i_hist)
+            sig_back_dict.update({'Background': total_background})
         
         return sig_back_dict
 
@@ -373,9 +377,9 @@ class Plotter(BasePlotter):
                 process_hist.SetLineColor(Refs._get_color_for(process, ROOT_b=True))
                 process_hist_dict.update({process: process_hist})
 
-            hist_dict, line_dict = {}, {}
-
-            sig_back_dict = self.get_signal_and_backg_hists(ref, process_hist_dict)   
+            sig_back_dict = self.get_signal_and_backg_hists(ref, process_hist_dict)
+            
+            hist_dict, line_dict = {}, {} 
             if combine_backs:
                 hist_dict =  sig_back_dict
             else:
@@ -396,6 +400,24 @@ class Plotter(BasePlotter):
                     self._draw_2D_hist_on_one_canvas(ref=ref, dist_name=dist_name, ref_outdir=ref_outdir, hist=hist_i, leg=leg_i)
 
         return
+
+    def Get_Signal_Background_for_ref(self, ref:str, which_processes:str='All', normalized:bool=True):
+        processes_to_run_on = self.decide_processes_to_run_on(which_processes)
+        process_tfiles = self.get_process_tfiles(processes_to_run_on)
+        process_hist_dict = {}
+        for process in processes_to_run_on:
+            process_hist = self.get_process_hist(ref, process_tfiles[process])
+            process_hist.SetLineColor(Refs._get_color_for(process, ROOT_b=True))
+            process_hist_dict.update({process: process_hist})
+
+        sig_back_dict = self.get_signal_and_backg_hists(ref, process_hist_dict)
+
+        if normalized:
+            for hist in sig_back_dict.values():
+                integral = hist.Integral()
+                hist.Scale(1/integral)
+                
+        return sig_back_dict
 
 
 # ==== SuperPlotter class NOT YET COMPLETED =====================
