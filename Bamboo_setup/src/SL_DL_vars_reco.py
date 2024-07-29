@@ -180,19 +180,19 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
                             content=np.round(bin_contents, plotting.DECIMAL_PLACES).tolist(),
                             flow="clamp",
                         )
-                    # elif isinstance(var, Variable3D):
-                    #     bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_3D)
-                    #     bin_edges = [ np.round(axis, plotting.DECIMAL_PLACES).tolist() for axis in bin_edges ]
-                    #     inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                    #             cs.Variable(name="yaxis", type="real", description=""),
-                    #             cs.Variable(name="zaxis", type="real", description="")]
-                    #     data = cs.MultiBinning(
-                    #         nodetype="multibinning",
-                    #         inputs=["xaxis","yaxis", "zaxis"],
-                    #         edges=bin_edges,
-                    #         content=np.round(bin_contents, plotting.DECIMAL_PLACES).tolist(),
-                    #         flow="clamp",
-                    #     )
+                    elif isinstance(var, Variable3D):
+                        bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_3D)
+                        bin_edges = [ np.round(axis, plotting.DECIMAL_PLACES).tolist() for axis in bin_edges ]
+                        inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                                cs.Variable(name="yaxis", type="real", description=""),
+                                cs.Variable(name="zaxis", type="real", description="")]
+                        data = cs.MultiBinning(
+                            nodetype="multibinning",
+                            inputs=["xaxis","yaxis", "zaxis"],
+                            edges=bin_edges,
+                            content=np.round(bin_contents, plotting.DECIMAL_PLACES).tolist(),
+                            flow="clamp",
+                        )
 
                     corr = cs.Correction(
                         name=subcat_var.ref + '_llr',
