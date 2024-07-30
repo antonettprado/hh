@@ -54,8 +54,9 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
             upfile = uproot.open(file)
             upfile_df = upfile[sel_name].arrays(library="pd")
             n_events = len(upfile_df)
-            if n_events > 500000:
-                upfile_df = upfile_df.sample(n=500000, random_state=1)
+            n_ttbar = 500000
+            if n_events > n_ttbar:
+                upfile_df = upfile_df.sample(n=n_ttbar, random_state=1)
             print(f'Number of events read from {file.stem}: {len(upfile_df)}')
             process_df = pd.concat([process_df, upfile_df], ignore_index=True)
             process_df['Process'] = process
