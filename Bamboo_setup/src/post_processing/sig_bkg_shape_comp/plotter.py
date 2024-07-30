@@ -262,11 +262,11 @@ class Plotter(BasePlotter):
         canvas.SetGrid()
         leg.SetTextSize(0.025)
 
-        if dist_name.endswith('_llr'):
+        if 'llr' in dist_name:
             dist_name = dist_name.replace('_llr', '')
             varnames = dist_name.split('_x_')
             var = variables.LikelihoodRatio(varnames)
-            xlabel = var.full_title
+            xlabel = 'Log-likelihood Ratio'
             max_bin_list, min_bin_list = [], []
             for leg_i, hist_i in hist_dict.items():
                 max_bin = 0
@@ -282,10 +282,12 @@ class Plotter(BasePlotter):
                 min_bin_list.append(min_bin)
             max_bin = min(var.nbins, max(*[max_bin_j + right_padding for max_bin_j in max_bin_list]))
             min_bin = max(1, min(*[min_bin_j - left_padding for min_bin_j in min_bin_list]))
-            hist_dict[0].GetXaxis().SetRange(min_bin, max_bin)
+            list(hist_dict.values())[0].GetXaxis().SetRange(min_bin, max_bin)
         elif dist_name in variables.ALL_VARNAMES_1D:
             var = variables.Variable1D(dist_name)
             xlabel = var.full_title
+        elif 'isSignal' in dist_name:
+            xlabel = 'DNN Score'
         else: 
             xlabel = dist_name
             
@@ -453,18 +455,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     '''
-    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_EventSelection_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml -e 2022
+    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022_LLR_products7to11 -c config/analysis_2022.yml -e 2022 -o Official
 
     python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/Vars_2022_NEW_All -c config/analysis_2022_all.yml -e 2022
-
-    Local command:
-    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i Z_OUTPUT/TOTAL_VarsReco_2022 -c config/analysis_2022_HH_ttbar_tW_DY.yml
     '''
 
     myPlotter = Plotter(args.inputdir, args.configFile, args.era, args.outdir)
     myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
     myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
-
+    # myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, which_processes=['HH', 'ttbar'])
     '''
     Examples of use from script:
         myPlotter = Plotter(dir=Z_OUTPUT/TOTAL_VarsReco_2022, dirtype='workdir', configFile=config/analysis_2022.yml, era='2022)
