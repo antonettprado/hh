@@ -6,22 +6,40 @@ SELECTIONS.sort(key=len, reverse=True)
 
 PROCESSES_FILES = dict(
     HH=['bbWW_sl', 'bbWW_dl'],
+    #HH=['bbWW_sl', 'bbWW_dl', 'bbtautau'],
     ttbar=['TTbar_sl', 'TTbar_dl'],
-    DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J'],
-    VV=['WW', 'WZ_TuneCP5_13p6TeV_pythia8', 'ZZ'],
+    tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
     WJets=['Wjets_0J', 'Wjets_1J', 'Wjets_2J'],
-    tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl']
+    DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J'],
+    VV=['WW', 'WZ', 'ZZ']
+    #VVV=[]
+    #ttW=[]
+    #ttZ=[]
+    #ttVV=[]
+    #H=[]
+    #tH=[]
+    #Others=[]
+    #Fakes=[]
     )
 
 COLOR_MAP = dict(
     HH=['blue', ROOT.kBlue], 
     ttbar=['red', ROOT.kRed], 
     tW=['green', ROOT.kGreen], 
+    WJets=['cyan', ROOT.kCyan],
     DY=['magenta', ROOT.kMagenta],
     VV=['orange', ROOT.kOrange],
-    WJets=['cyan', ROOT.kCyan],
+    #VVV=[]
+    #ttW=[]
+    #ttZ=[]
+    #ttVV=[]
+    #H=[]
+    #tH=[]
+    #Others=[]
+    #Fakes=[]
     Others=['black', ROOT.kBlack],
-    Top=['pink', ROOT.kPink])
+    Top=['pink', ROOT.kPink]
+    )
 
 
 _find_processes = lambda resultsdir: sorted(list(set([proc for proc, files in PROCESSES_FILES.items() for f in resultsdir.iterdir() if f.stem in files ])))

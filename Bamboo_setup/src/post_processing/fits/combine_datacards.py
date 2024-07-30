@@ -42,7 +42,7 @@ if __name__ == "__main__":
             combined_discriminants += "_" + discriminant
         
         datacard_file = glob.glob("%s/*.txt"%discriminant_dir)[0]
-        combine_datacard_command += datacard_file + " "
+        combine_datacard_command += channel + "=" + datacard_file + " "
 
     output_dir += "/" + combined_discriminants
     if not os.path.exists(output_dir):

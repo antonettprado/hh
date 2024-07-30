@@ -7,7 +7,7 @@ import bamboo.treefunctions as op
 
 from SL_DL_vars_gen import SL_DL_vars_gen
 from SL_DL_vars_reco import SL_DL_vars_reco
-from SL_DL_NN_v2 import SL_DL_NN_v2
+from SL_DL_NN import SL_DL_NN
 from SL_DL_likelihood_ratio import SL_DL_likelihood_ratio
 import utils.variable_definition as var_defs
 
@@ -182,7 +182,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         plots.extend([Plot.make1D(sc_var.ref, sc_var.data, sc_var.selection, sc_var.eqbin, xTitle=sc_var.full_title) for var in [all_jets_HT, lep0_pt] for sc_var in var if sc_var.subcat == sel_name])
 
         # ================ DNN Score distribution ======================
-        dnn_score = SL_DL_NN_v2.get_dnn_score(self.args.NNdir, objects)
+        dnn_score = SL_DL_NN.get_dnn_score(self.args.NNdir, objects)
         dnn_score = dnn_score[sel_name]
         if not dnn_score.multiclass:
             # Binary DNN 
@@ -211,7 +211,7 @@ class SL_DL_Study_SystUnc(NanoAODHistoModule):
         self.yields.add(selections['DL_boosted'], 'DL_boosted')
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
-        self.yields = SL_DL_NN_v2.update_with_DNN_yields(self.yields, dnn_score, selections)
+        self.yields = SL_DL_NN.update_with_DNN_yields(sel_name, self.yields, dnn_score, selections)
 
         return plots
 

@@ -15,9 +15,6 @@ import ROOT
 import numpy as np
 import scipy.interpolate
 
-ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
-ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
-
 class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     def __init__(self, args):
@@ -32,6 +29,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
     def addArgs(self, parser):
         super(SL_DL_vars_reco, self).addArgs(parser)
         parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
+        parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in References.py) to go into LLR denominator. Default is All")
 
     @staticmethod
     def get_objects(tree, era):
@@ -133,88 +131,86 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
-        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
-        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
+        # myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
+        # myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
         if self.output_llr:
-            from post_processing import plotting
             print("------------------ Calculating Likelihood Ratios --------------------")
-            files_in_resultsdir = os.listdir(resultsdir)
-            PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
-            PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
-            SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
-            BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
-            INTERPOLATION_SCALE_FACTOR_1D = 9
-            INTERPOLATION_SCALE_FACTOR_2D = 3
-            INTERPOLATION_SCALE_FACTOR_3D = 3
-            DECIMAL_PLACES = 3
+            from post_processing import plotting
 
-            file = SIGNAL_SAMPLES[0]
-            refs = []
-            for key in file.GetListOfKeys():
-                obj = key.ReadObj()
-                refs.append(obj.GetName())
+            # Check llr_backgrounds contains valid processes' names:
+            if self.args.llr_backgrounds == 'All': 
+                which_processes = 'All'
+                postfix = which_processes
+            else:
+                processes_available = myPlotter.dirprocesses
+                assert all(llr_back in processes_available for llr_back in self.args.llr_backgrounds), f"Refer to References.py for allowed processes' names"
+                which_processes = ['HH'] + self.args.llr_backgrounds
+                postfix = ''.join(self.args.llr_backgrounds)
 
-            vars = variables.parse_vars_from_refs(refs)
+            print(f"The processes for the ratio calculation are: {which_processes}")
+
+            vars = variables.parse_vars_from_refs(myPlotter.refs)
 
             all_corrections = []
             for var in vars:
                 print(var.name)
                 for subcat_var in var:
-                        print('\t', subcat_var.ref)
-                        signal_total_hist = subcat_var.get_total_hist(SIGNAL_SAMPLES, normalized=True)
-                        backg_total_hist  = subcat_var.get_total_hist(BACKG_SAMPLES, normalized=True)
-                        
-                        ratio_hist = signal_total_hist.Clone()
-                        ratio_hist.Divide(backg_total_hist)
+                    print(f"\t{subcat_var.ref}")
+                    sig_back_dict = myPlotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, which_processes=which_processes, normalized=True)
+                    
+                    ratio_hist = sig_back_dict['Signal'].Clone()
+                    ratio_hist.Divide(sig_back_dict['Background'])
 
-                        if isinstance(var, Variable1D):
-                            bin_edges, bin_contents = plotting.interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
-                            inputs = [cs.Variable(name="xaxis", type="real", description="")]
-                            data = cs.Binning(
-                                nodetype="binning",
-                                input="xaxis",
-                                edges=list(np.round(bin_edges, DECIMAL_PLACES)),
-                                content=list(np.round(bin_contents, DECIMAL_PLACES)),
-                                flow="clamp",
-                            )
-                        elif isinstance(var, Variable2D):
-                            bin_edges, bin_contents = plotting.interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-                            bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
-                            inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                                    cs.Variable(name="yaxis", type="real", description="")]
-                            data = cs.MultiBinning(
-                                nodetype="multibinning",
-                                inputs=["xaxis","yaxis"],
-                                edges=bin_edges,
-                                content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
-                                flow="clamp",
-                            )
-                        elif isinstance(var, Variable3D):
-                            bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
-                            bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
-                            inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                                    cs.Variable(name="yaxis", type="real", description=""),
-                                    cs.Variable(name="zaxis", type="real", description="")]
-                            data = cs.MultiBinning(
-                                nodetype="multibinning",
-                                inputs=["xaxis","yaxis", "zaxis"],
-                                edges=bin_edges,
-                                content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
-                                flow="clamp",
-                            )
-
-                        corr = cs.Correction(
-                            name=subcat_var.ref + '_llr',
-                            # description = f'llr for {subcat_var.ref}'
-                            version=0,
-                            inputs=inputs,
-                            output=cs.Variable(name="", type="real", description=""),
-                            data=data
+                    if isinstance(var, Variable1D):
+                        bin_edges, bin_contents = plotting.interpolate_1d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_1D)
+                        inputs = [cs.Variable(name="xaxis", type="real", description="")]
+                        data = cs.Binning(
+                            nodetype="binning",
+                            input="xaxis",
+                            edges=list(np.round(bin_edges, plotting.DECIMAL_PLACES)),
+                            content=list(np.round(bin_contents, plotting.DECIMAL_PLACES)),
+                            flow="clamp",
                         )
-                        all_corrections.append(corr)
+                    elif isinstance(var, Variable2D):
+                        bin_edges, bin_contents = plotting.interpolate_2d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_2D)
+                        bin_edges = [ np.round(axis, plotting.DECIMAL_PLACES).tolist() for axis in bin_edges ]
+                        inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                                cs.Variable(name="yaxis", type="real", description="")]
+                        data = cs.MultiBinning(
+                            nodetype="multibinning",
+                            inputs=["xaxis","yaxis"],
+                            edges=bin_edges,
+                            content=np.round(bin_contents, plotting.DECIMAL_PLACES).tolist(),
+                            flow="clamp",
+                        )
+                    elif isinstance(var, Variable3D):
+                        bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_3D)
+                        bin_edges = [ np.round(axis, plotting.DECIMAL_PLACES).tolist() for axis in bin_edges ]
+                        inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                                cs.Variable(name="yaxis", type="real", description=""),
+                                cs.Variable(name="zaxis", type="real", description="")]
+                        data = cs.MultiBinning(
+                            nodetype="multibinning",
+                            inputs=["xaxis","yaxis", "zaxis"],
+                            edges=bin_edges,
+                            content=np.round(bin_contents, plotting.DECIMAL_PLACES).tolist(),
+                            flow="clamp",
+                        )
+
+                    corr = cs.Correction(
+                        name=subcat_var.ref + '_llr',
+                        # description = f'llr for {subcat_var.ref}'
+                        version=0,
+                        inputs=inputs,
+                        output=cs.Variable(name="", type="real", description=""),
+                        data=data)
+
+                    all_corrections.append(corr)
 
             cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-            output_llr_file = os.path.join(resultsdir, "corrections_llr.json")
+            output_llr_file = os.path.join(resultsdir, "corrections_llr_" + postfix +".json")
             with open(output_llr_file, "w") as outfile:
                 outfile.write(cset.json(exclude_unset=False))
+
+            custom_pretty_print_json(output_llr_file, output_llr_file)

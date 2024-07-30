@@ -39,7 +39,7 @@ if __name__ == "__main__":
             datacard_file = glob.glob("%s/*.txt"%discriminant_dir)[0]
             fit_results_filename = output_dir_sel_cat_disc + "/" + datacard_file.split("/")[-1].split(".txt")[0] + "_fit_results.txt"
             fit_results_file = open(fit_results_filename, "w")
-            fit_results_file.write("Fit results for Channel: %s, Discirminant: %s, Datacard: %s\n\n"%(channel, discriminant, datacard_file))
+            fit_results_file.write("Fit results for Channel: %s, Discriminant: %s, Datacard: %s\n\n"%(channel, discriminant, datacard_file))
             fit_results_file.close()
             print ("      Running for datacard: %s\n"%datacard_file)
 
@@ -57,6 +57,7 @@ if __name__ == "__main__":
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
+            os.system("mv higgsCombineTest.AsymptoticLimits.mH125.root %s/higgsCombineTest.AsymptoticLimits.mH125_blinded_fit.root"%output_dir_sel_cat_disc)
 
             # Expected and Observed Asymptotic Limits for Unblinded Fit
             fit_results_file = open(fit_results_filename, "a")
@@ -67,6 +68,106 @@ if __name__ == "__main__":
             fit_results_file = open(fit_results_filename, "a")
             fit_results_file.write("\n\n")
             fit_results_file.close()
+            os.system("mv higgsCombineTest.AsymptoticLimits.mH125.root %s/higgsCombineTest.AsymptoticLimits.mH125_unblinded_fit.root"%output_dir_sel_cat_disc)
+
+            # Fit Results and Normalization for Blinded Fit
+            fit_results_file = open(fit_results_filename, "a")
+            fit_results_file.write("Calculating Fit Results and Normalization for Blinded Fit\n\n")
+            fit_results_file.close()
+            print ("        Calculating Fit Results and Normalization for Blinded Fit ")
+            os.system("combine -M FitDiagnostics --mass 125 --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --saveNormalization --setParameters r=1 --setParameterRanges r=-100,100 -t -1 %s >> %s"%(workspace_file, fit_results_filename)) 
+            fit_results_file = open(fit_results_filename, "a")
+            fit_results_file.write("\n\n")
+            fit_results_file.close()
+
+            fit_file_blinded = ROOT.TFile("fitDiagnosticsTest.root")
+            fit_norm_prefit = fit_file_blinded.Get("norm_prefit")
+            fit_norm_s = fit_file_blinded.Get("norm_fit_s")
+            fit_norm_b = fit_file_blinded.Get("norm_fit_b")
+            iter = fit_norm_s.createIterator()
+            normalizations = {}
+            while True:
+                norm_s = iter.Next()
+                if norm_s == None: 
+                    break
+                norm_b = fit_norm_b.find(norm_s.GetName())
+                norm_p = fit_norm_prefit.find(norm_s.GetName())
+                process_name   = norm_s.GetName().split("/")[1]
+                if "total" in process_name:
+                    continue
+                if process_name not in normalizations:
+                    normalizations[process_name] = {}
+                normalizations[process_name]["prefit"] = norm_p.getVal()
+                normalizations[process_name]["s"] = norm_s.getVal()
+                normalizations[process_name]["b"] = norm_b.getVal()
+            fit_results_file = open(fit_results_filename, "a")
+            fit_results_file.write("Normalizations: \n")
+            for process_name in normalizations:
+                fit_results_file.write("%s: \n"%process_name)
+                fit_results_file.write("  pre_fit: %.4f\n"%normalizations[process_name]["prefit"])
+                fit_results_file.write("  S+B fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["s"], normalizations[process_name]["s"]/normalizations[process_name]["prefit"])) 
+                fit_results_file.write("  B-only fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["b"], normalizations[process_name]["b"]/normalizations[process_name]["prefit"])) 
+            fit_results_file.write("\n\n")
+            fit_results_file.close()
+            fit_file_blinded.Close()
+            os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_blinded_fit.root"%output_dir_sel_cat_disc)
+
+            # Fit Results and Normalization for Unblinded Fit
+            fit_results_file = open(fit_results_filename, "a")
+            fit_results_file.write("Calculating Fit Results and Normalization for Unblinded Fit\n\n")
+            fit_results_file.close()
+            print ("        Calculating Fit Results and Normalization for Unblinded Fit ")
+            os.system("combine -M FitDiagnostics --mass 125 --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --saveNormalization --setParameters r=1 --setParameterRanges r=-100,100 %s >> %s"%(workspace_file, fit_results_filename)) 
+            fit_results_file = open(fit_results_filename, "a")
+            fit_results_file.write("\n\n")
+            fit_results_file.close()
+
+            fit_file_unblinded = ROOT.TFile("fitDiagnosticsTest.root")
+            fit_norm_prefit = fit_file_unblinded.Get("norm_prefit")
+            fit_norm_s = fit_file_unblinded.Get("norm_fit_s")
+            fit_norm_b = fit_file_unblinded.Get("norm_fit_b")
+            iter = fit_norm_s.createIterator()
+            normalizations = {}
+            while True:
+                norm_s = iter.Next()
+                if norm_s == None: 
+                    break
+                norm_b = fit_norm_b.find(norm_s.GetName())
+                norm_p = fit_norm_prefit.find(norm_s.GetName())
+                process_name   = norm_s.GetName().split("/")[1]
+                if "total" in process_name:
+                    continue
+                if process_name not in normalizations:
+                    normalizations[process_name] = {}
+                normalizations[process_name]["prefit"] = norm_p.getVal()
+                normalizations[process_name]["s"] = norm_s.getVal()
+                normalizations[process_name]["b"] = norm_b.getVal()
+            fit_results_file = open(fit_results_filename, "a")
+            fit_results_file.write("Normalizations: \n")
+            for process_name in normalizations:
+                fit_results_file.write("%s: \n"%process_name)
+                fit_results_file.write("  pre_fit: %.4f\n"%normalizations[process_name]["prefit"])
+                fit_results_file.write("  S+B fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["s"], normalizations[process_name]["s"]/normalizations[process_name]["prefit"])) 
+                fit_results_file.write("  B-only fit: %.4f, mu: %.4f\n"%(normalizations[process_name]["b"], normalizations[process_name]["b"]/normalizations[process_name]["prefit"])) 
+            fit_results_file.write("\n\n")
+            fit_results_file.close()
+            fit_file_unblinded.Close()
+            os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_unblinded_fit.root"%output_dir_sel_cat_disc)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
 
