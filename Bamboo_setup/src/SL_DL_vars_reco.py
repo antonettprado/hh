@@ -99,13 +99,13 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
         plots.extend(hists_1D)
 
-        reco_2D_vars = var_defs.gather_all_2D_variables(objects)
-        hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
-        plots.extend(hists_2D)
+        # reco_2D_vars = var_defs.gather_all_2D_variables(objects)
+        # hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
+        # plots.extend(hists_2D)
 
-        reco_3D_vars = var_defs.gather_all_3D_variables(objects)
-        hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
-        plots.extend(hists_3D)
+        # reco_3D_vars = var_defs.gather_all_3D_variables(objects)
+        # hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
+        # plots.extend(hists_3D)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -122,8 +122,8 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
 
-        if not self.args.no_skim:
-            plots = SL_DL_vars_reco.get_skims(objects, selections, plots)
+        # if not self.args.no_skim:
+        #     plots = SL_DL_vars_reco.get_skims(objects, selections, plots)
 
         return plots
 

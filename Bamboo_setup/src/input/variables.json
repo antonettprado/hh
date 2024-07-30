@@ -635,6 +635,46 @@
             "unit": "GeV",
             "title": "m_{ll}",
             "subcats": ["DL_res_1b", "DL_res_2b"]
+        },
+
+        "ll_dR":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 7,
+            "unit": "",
+            "title": "#DeltaR(l,l)",
+            "subcats": ["DL_res_1b", "DL_res_2b"]
+        },
+
+        "ll_dPhi":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 7,
+            "unit": "",
+            "title": "#Delta#Phi(l,l)",
+            "subcats": ["DL_res_1b", "DL_res_2b"]
+        },
+
+        "ll_dEta":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 7,
+            "unit": "",
+            "title": "#Delta#Eta(l,l)",
+            "subcats": ["DL_res_1b", "DL_res_2b"]
+        },
+
+        "ll_pt":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 400,
+            "unit": "",
+            "title": "ll p_T",
+            "subcats": ["DL_res_1b", "DL_res_2b"]
         }
     },
 

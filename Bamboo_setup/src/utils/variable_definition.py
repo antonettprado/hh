@@ -310,7 +310,7 @@ def get_trijet_pt_rat(objects) -> Variable1D:
     j0, j1, bjet = _get_trijet_data(objects)
     trijet = j0.p4 + j1.p4 + bjet.p4
     data = trijet.Pt() / (j0.pt + j1.pt + bjet.pt)
-    data = { 'SL_res_2b_x':data }
+    data = { 'SL_res_2b_x': data }
     trijet_pt_rat.populate(data, selections)
     return trijet_pt_rat
 
@@ -552,12 +552,26 @@ def get_WW_mInv(objects) -> Variable1D:
     jj_W = _get_jj_W(objects)
     j0, j1 = jj_W[0], jj_W[1]
     lep0_p4, lep1_p4 = _get_leptons_p4(objects)
-    # print(type(j0), type(j1), type(lep0), type(lep1), type(met))
     sl_data = (j0.p4 + j1.p4 + lep0_p4 + met.p4).M()
     dl_data = (lep0_p4 + lep1_p4 + met.p4).M()
-    data = { 'SL_res_2b_x':sl_data, 'DL_res_2b':dl_data }
+    data = { 'SL_res_2b_x':sl_data, 'DL_res_1b':dl_data, 'DL_res_2b':dl_data }
     WW_mInv.populate(data, selections)
     return WW_mInv
+
+def get_WW_pt(objects) -> Variable1D:
+    WW_pt = Variable1D('WW_pt')
+    subcat_names = WW_pt.subcats
+    selections = get_selections_subset(subcat_names)
+
+    met = objects['met']
+    jj_W = _get_jj_W(objects)
+    j0, j1 = jj_W[0], jj_W[1]
+    lep0_p4, lep1_p4 = _get_leptons_p4(objects)
+    sl_data = (j0.p4 + j1.p4 + lep0_p4 + met.p4).Pt()
+    dl_data = (lep0_p4 + lep1_p4 + met.p4).Pt()
+    data = { 'SL_res_2b_x':sl_data, 'DL_res_1b':dl_data, 'DL_res_2b':dl_data }
+    WW_pt.populate(data, selections)
+    return WW_pt
         
 def gather_misc_vars(objects) -> list[Variable1D]:
     vars = [
@@ -938,11 +952,75 @@ def gather_object_vars(objects) -> list[Variable1D]:
     ]
     return object_vars
 
+# ========================= ll variables ============================
+def get_mll(objects) -> Variable1D:
+    mll = Variable1D('mll')
+    subcat_names = mll.subcats
+    selections = get_selections_subset(subcat_names)
+
+    lep0_p4, lep1_p4 = _get_leptons_p4(objects)
+    data = op.invariant_mass(lep0_p4, lep1_p4)
+    data = { sel_name: data for sel_name in selections.keys() }
+    mll.populate(data, selections)
+    return mll
+
+def get_ll_dR(objects) -> Variable1D:
+    ll_dR = Variable1D('ll_dR')
+    subcat_names = ll_dR.subcats
+    selections = get_selections_subset(subcat_names)
+
+    lep0_p4, lep1_p4 = _get_leptons_p4(objects)
+    data = op.deltaR(lep0_p4, lep1_p4)
+    data = { sel_name: data for sel_name in selections.keys() }
+    ll_dR.populate(data, selections)
+    return ll_dR
+
+def get_ll_dPhi(objects) -> Variable1D:
+    ll_dPhi = Variable1D('ll_dPhi')
+    subcat_names = ll_dPhi.subcats
+    selections = get_selections_subset(subcat_names)
+
+    lep0_p4, lep1_p4 = _get_leptons_p4(objects)
+    data = op.deltaPhi(lep0_p4, lep1_p4)
+    data = { sel_name: data for sel_name in selections.keys() }
+    ll_dPhi.populate(data, selections)
+    return ll_dPhi
+
+def get_ll_dEta(objects) -> Variable1D:
+    ll_dEta = Variable1D('ll_dEta')
+    subcat_names = ll_dEta.subcats
+    selections = get_selections_subset(subcat_names)
+
+    lep0_p4, lep1_p4 = _get_leptons_p4(objects)
+    data = lep0_p4.Eta()-lep1_p4.Eta()
+    data = { sel_name: data for sel_name in selections.keys() }
+    ll_dEta.populate(data, selections)
+    return ll_dEta
+
+def get_ll_pt(objects) -> Variable1D:
+    ll_pt = Variable1D('ll_pt')
+    subcat_names = ll_pt.subcats
+    selections = get_selections_subset(subcat_names)
+
+    lep0_p4, lep1_p4 = _get_leptons_p4(objects)
+    data = (lep0_p4 + lep1_p4).Pt()
+    data = { sel_name: data for sel_name in selections.keys() }
+    ll_pt.populate(data, selections)
+    return ll_pt
+
+def gather_ll_vars(objects) -> list[Variable1D]:
+    ll_vars = [
+        get_mll(objects),
+        get_ll_dR(objects),
+        get_ll_dPhi(objects),
+        get_ll_dEta(objects),
+        get_ll_pt(objects)
+    ]
+    return ll_vars
 
 def gather_all_1D_variables(objects) -> list[Variable1D]:
-    vars = gather_object_vars(objects) + gather_bjet_vars(objects) + gather_top_vars(objects) + gather_total_vars(objects) + gather_misc_vars(objects)
+    vars = gather_object_vars(objects) + gather_bjet_vars(objects) + gather_top_vars(objects) + gather_total_vars(objects) + gather_misc_vars(objects) + gather_ll_vars(objects)
     return vars
-
 
 def gather_all_2D_variables(objects) -> list[Variable2D]:
     vars1D = gather_all_1D_variables(objects)
