@@ -19,21 +19,24 @@ import tf2onnx
 from post_processing import References as Refs
 import random, os, sys, math
 
-# Set seeds for reproducibility
-seed_value = 42
-os.environ['PYTHONHASHSEED'] = str(seed_value)
-random.seed(seed_value)
-np.random.seed(seed_value)
-tf.random.set_seed(seed_value)
+FIXED_RANDOM_SEED = True
 
-# Set TensorFlow to use deterministic operations
-os.environ['TF_DETERMINISTIC_OPS'] = '1'
-os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
-os.environ['TF_NUM_INTEROP_THREADS'] = '1'
-tf.config.threading.set_intra_op_parallelism_threads(1)
-tf.config.threading.set_inter_op_parallelism_threads(1)
+if FIXED_RANDOM_SEED:
+    # Set seeds for reproducibility
+    seed_value = 42
+    os.environ['PYTHONHASHSEED'] = str(seed_value)
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    tf.random.set_seed(seed_value)
+
+    # Set TensorFlow to use deterministic operations
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
+    os.environ['TF_NUM_INTEROP_THREADS'] = '1'
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
 
 NNDIR = Path(__file__).parent
 BAMBOO_SETUP = NNDIR.parents[2]
