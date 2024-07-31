@@ -20,6 +20,8 @@ from post_processing import References as Refs
 import random, os, sys, math
 
 FIXED_RANDOM_SEED = True
+N_MAX_TRAINING = 1000000
+N_MAX_HH_TRAINING = -1 # -1 for using all available events
 
 if FIXED_RANDOM_SEED:
     # Set seeds for reproducibility
@@ -56,10 +58,11 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
         for file in process_files:
             upfile = uproot.open(file)
             upfile_df = upfile[sel_name].arrays(library="pd")
-            n_events = len(upfile_df)
-            n_ttbar = 500000
-            if n_events > n_ttbar:
-                upfile_df = upfile_df.sample(n=n_ttbar, random_state=1)
+            if process == "HH" and N_MAX_HH_TRAINING != -1:
+                if len(upfile_df) > N_MAX_HH_TRAINING:
+                    upfile_df = upfile_df.sample(n=N_MAX_HH_TRAINING, random_state=1)
+            if len(upfile_df) > N_MAX_TRAINING:
+                upfile_df = upfile_df.sample(n=N_MAX_TRAINING, random_state=1)
             print(f'Number of events read from {file.stem}: {len(upfile_df)}')
             process_df = pd.concat([process_df, upfile_df], ignore_index=True)
             process_df['Process'] = process
