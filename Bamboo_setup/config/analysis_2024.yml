@@ -15,6 +15,28 @@ samples:
     generated-events: genEventSumw
     split: -1
 
+  ####################################################################################################################
+  ####################################################################################################################
+  ####################################################################################################################
+  # Data:
+  Muon_Run2024E:
+    group: data
+    era: "2024"
+    type: data
+    db: [das:/Muon0/Run2024E-PromptReco-v1/NANOAOD, das:/Muon1/Run2024E-PromptReco-v1/NANOAOD]
+    # run_range: [380963]
+    # certified_lumi_file: &lumi_cert_22 https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json
+    split: -1
+
+  EGamma_Run2024E:
+    group: data
+    era: "2024"
+    type: data
+    db: [das:/EGamma0/Run2024E-PromptReco-v1/NANOAOD, das:/EGamma1/Run2024E-PromptReco-v1/NANOAOD]
+    # run_range: [380963]
+    # certified_lumi_file: &lumi_cert_22 https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions22/Cert_Collisions2022_355100_362760_Golden.json
+    split: -1
+
 # Plotting configuration parameters ====================================================
 
 plotIt:
