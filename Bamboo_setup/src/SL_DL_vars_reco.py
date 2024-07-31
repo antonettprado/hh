@@ -213,4 +213,4 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             with open(output_llr_file, "w") as outfile:
                 outfile.write(cset.json(exclude_unset=False))
 
-            custom_pretty_print_json(output_llr_file, output_llr_file)
+            plotting.custom_pretty_print_json(output_llr_file, output_llr_file)
