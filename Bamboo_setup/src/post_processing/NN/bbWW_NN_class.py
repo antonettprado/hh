@@ -200,11 +200,12 @@ class BaseNNModel:
     def setup_model(self, X_train):
         print(f"\tSetting up model ...")
 
-        # Set seeds for reproducibility
-        seed_value = 42
-        tf.random.set_seed(seed_value)
-        np.random.seed(seed_value)
-        random.seed(seed_value)
+        if FIXED_RANDOM_SEED:
+            # Set seeds for reproducibility
+            seed_value = 42
+            tf.random.set_seed(seed_value)
+            np.random.seed(seed_value)
+            random.seed(seed_value)
 
         ndim = len(X_train.columns)
         inputs = Input(shape=(ndim,), name="input")
