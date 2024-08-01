@@ -83,7 +83,7 @@
         {
             "nbins": 50,
             "min": 0,
-            "max": 350,
+            "max": 500,
             "unit": "GeV",
             "title": "p_{T}^{bb}",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
@@ -91,9 +91,9 @@
 
         "bjet0_pt":
         {
-            "nbins": 30,
+            "nbins": 50,
             "min": 0,
-            "max": 300,
+            "max": 500,
             "unit": "GeV",
             "title": "leading b-jet p_{T}",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
@@ -141,7 +141,7 @@
 
         "trijet_mInv":
         {
-            "nbins": 100,
+            "nbins": 50,
             "min": 0,
             "max": 1000,
             "unit": "GeV",
@@ -151,9 +151,9 @@
         
         "trijet_pt":
         {
-            "nbins": 40,
+            "nbins": 50,
             "min": 0,
-            "max": 400,
+            "max": 500,
             "unit": "GeV",
             "title": "hadronic top p_{T}",
             "subcats": ["SL_res_2b_x"]
@@ -161,7 +161,7 @@
 
         "blnu_mT":
         {
-            "nbins": 100,
+            "nbins": 50,
             "min": 0,
             "max": 1000,
             "unit": "GeV",
@@ -191,7 +191,7 @@
 
         "all_sT":
         {
-            "nbins": 100,
+            "nbins": 50,
             "min": 0,
             "max": 1000,
             "unit": "GeV",
@@ -201,9 +201,9 @@
 
         "all_mInv":
         {
-            "nbins": 150,
-            "min": 0,
-            "max": 1500,
+            "nbins": 90,
+            "min": 200,
+            "max": 2000,
             "unit": "GeV",
             "title": "all_mInv",
             "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
@@ -211,9 +211,9 @@
 
         "all_mT":
         {
-            "nbins": 150,
-            "min": 0,
-            "max": 1500,
+            "nbins": 90,
+            "min": 200,
+            "max": 2000,
             "unit": "GeV",
             "title": "all_mT",
             "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
@@ -231,7 +231,7 @@
 
         "all_jets_HT":
         {
-            "nbins": 150,
+            "nbins": 75,
             "min": 0,
             "max": 1500,
             "unit": "GeV",
@@ -293,7 +293,7 @@
         {
             "nbins": 50,
             "min": 0,
-            "max": 7,
+            "max": 5.5,
             "unit": "",
             "title": "#DeltaR(b, jj)",
             "subcats": ["SL_res_2b_x"]
@@ -321,9 +321,9 @@
 
         "WW_mInv":
         {
-            "nbins": 50,
+            "nbins": 100,
             "min": 0,
-            "max": 500,
+            "max": 1000,
             "unit": "GeV",
             "title": "m_{WW}",
             "subcats": ["SL_res_2b_x", "DL_res_2b"]
