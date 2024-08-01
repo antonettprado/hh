@@ -131,8 +131,8 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
-        # myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
-        # myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
+        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
+        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
         if self.output_llr:
             print("------------------ Calculating Likelihood Ratios --------------------")
