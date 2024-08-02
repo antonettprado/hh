@@ -455,7 +455,7 @@
             "min": 0,
             "max": 500,
             "unit": "GeV",
-            "title": "AK4_1 pt",
+            "title": "AK4_2 pt",
             "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         }, 
 
@@ -465,7 +465,7 @@
             "min": -4,
             "max": 4,
             "unit": "",
-            "title": "AK4_1 #eta",
+            "title": "AK4_2 #eta",
             "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
@@ -475,7 +475,7 @@
             "min": -4,
             "max": 4,
             "unit": "",
-            "title": "AK4_1 #phi",
+            "title": "AK4_2 #phi",
             "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
