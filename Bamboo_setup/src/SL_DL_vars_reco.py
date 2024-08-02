@@ -39,7 +39,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         ak4_btags = objects["cleaned_ak4_btags"]
         ak8_btags = objects["cleaned_ak8_btags"]
         objects['ak4_nonbtags'] = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
-        objects['sorted_ak4_btags'] = op.sort(ak4_btags, lambda jet: -jet.pt)
+        objects['sorted_ak4_btags'] = op.sort(ak4_btags, lambda jet: -jet.btagPNetB)
         objects['sorted_ak4_nonbtags'] = op.sort(objects['ak4_nonbtags'], lambda jet: -jet.pt)
         objects['sorted_ak8_btags'] = op.sort(ak8_btags, lambda jet: -jet.pt)
 
