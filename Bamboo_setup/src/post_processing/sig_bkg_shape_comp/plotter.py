@@ -157,9 +157,16 @@ class Plotter(BasePlotter):
     def get_process_hist(self, ref:str, tfiles: list[TFile]):
 
         total_hist = self.get_hist_from_file(ref, tfiles[0])
-        for i_file in tfiles[1:]:
-            total_hist.Add(self.get_hist_from_file(ref, i_file))
-           
+        if total_hist:
+            for i_file in tfiles[1:]:
+                hist = self.get_hist_from_file(ref, i_file)
+                if hist:
+                    total_hist.Add(hist)
+                else:
+                    print(f"Warning: Histogram for file {i_file.GetName()} and ref {ref} is None")
+        else:
+            print(f"Warning: Initial histogram for ref {ref} is None")
+            
         return total_hist
 
     def get_signal_and_backg_hists(self, ref, process_hist_dict):
@@ -417,8 +424,11 @@ class Plotter(BasePlotter):
         if normalized:
             for hist in sig_back_dict.values():
                 integral = hist.Integral()
-                hist.Scale(1/integral)
-                
+                if integral != 0.0:  # Avoid division by zero
+                    hist.Scale(1/integral)
+                else:
+                    print(f"Warning: Integral for {hist.GetName()} is zero.")
+
         return sig_back_dict
 
 
