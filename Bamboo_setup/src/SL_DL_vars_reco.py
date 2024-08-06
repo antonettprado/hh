@@ -34,7 +34,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         tree, baseSel, backend, lumiArgs = super(SL_DL_vars_reco, self).prepareTree(tree=tree,
                                                                                     sample=sample,
                                                                                     sampleCfg=sampleCfg,
-                                                                                    description=getNanoAODDescription(),
+                                                                                    description=description,
                                                                                     backend=backend)
         if self.is_MC:
             cut = (tree.event % 10 == 0)
