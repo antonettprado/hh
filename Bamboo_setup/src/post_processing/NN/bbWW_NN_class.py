@@ -9,15 +9,16 @@ from sklearn.inspection import permutation_importance
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split, StratifiedKFold, StratifiedShuffleSplit
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras import Model, regularizers
-from tensorflow.keras.metrics import BinaryAccuracy, AUC, Precision, Recall
-from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall
+# import tensorflow_addons.metrics as tfa
 import yaml
+import random, os, sys, math
 import tf2onnx
 from post_processing import References as Refs
-import random, os, sys, math
 
 FIXED_RANDOM_SEED = True
 N_MAX_TRAINING = 1000000
@@ -40,9 +41,10 @@ if FIXED_RANDOM_SEED:
     tf.config.threading.set_intra_op_parallelism_threads(1)
     tf.config.threading.set_inter_op_parallelism_threads(1)
 
-NNDIR = Path(__file__).parent
-BAMBOO_SETUP = NNDIR.parents[2]
+POSTPROCESSING_NN_FOLDER = Path(__file__).parent
+BAMBOO_SETUP = POSTPROCESSING_NN_FOLDER.parents[2]
 WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
+assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
 
 def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
     resultsdir = WORKDIR / 'results'
@@ -91,8 +93,10 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
     
     return total_df
 
-def get_test_models():
-    models_file = NNDIR / 'NN_test_models.yml'
+def get_test_models(filename: str):
+    # Maybe add model validation here?
+    # i.e. Check allowed model types, processes, inputs, etc
+    models_file = POSTPROCESSING_NN_FOLDER / filename
     with open(models_file, 'r') as file:
         yaml_data = yaml.safe_load(file)
         test_models = yaml_data['Models']
@@ -100,14 +104,57 @@ def get_test_models():
     model_names = [model['name'] for model in test_models]
     assert len(model_names) == len(set(model_names)), "Model names must be unique"
 
-    for model in test_models:
-        categorization = model['categorization']
-        classes = [class_i for class_i in model['categorization'].keys()]
-        processes = [proc for proc_list in model['categorization'].values() for proc in proc_list]
+    for model_i in test_models:
+        if model_i['type'] == 'binary':
+            processes = model_i['processes']
+        elif model_i['type'] == 'multi':
+            categorization = model_i['categorization']
+            processes = [proc for proc_list in model_i['categorization'].values() for proc in proc_list]
+        else: 
+            raise Exception(f"Model {model_i['name']} is of invalid type")
+
         for process in processes:
             assert process in Refs.PROCESSES_FILES.keys(), f"{process} is not a valid process"
 
     return test_models
+
+def load_model(dir: str):
+    import onnx
+    from onnx_tf.backend import backend
+    NNdir = Path(dir)
+    # Load onnx model
+    onnx_model_path = NNdir / 'dnn_model.onnx'
+    onnx_model = onnx.load(NNdir)
+    # Convert onnx model to Tensorflow model
+    tf_rep = prepare(onnx_model)
+    tf_model = tf_rep.tf_module
+
+    model_info_file = NNdir / 'model_info.yml'
+    with open(model_info_file, 'r') as file:
+        model_info = yaml.safe_load(file)
+        
+    return tf_model, model_info
+
+def update_models_summary_csv(model_name: str, model_metrics: dict):
+    if MODELS_SUMMARY.exists():
+        df = pd.read_csv(MODELS_SUMMARY)
+    else:
+        df = pd.DataFrame(columns=['name'] + list(model_metrics.keys()))
+
+    if model_name in df['name'].values:
+        # Update existing row
+        for key, value in model_metrics.items():
+            if key not in df.columns:
+                df[key] = None
+            df.loc[df['name'] == model_name, key] = value
+    else:
+        # Append a new row
+        new_row = {'name': model_name}
+        new_row.update(model_metrics)
+        df = df._append(new_row, ignore_index=True)
+
+    df.to_csv(MODELS_SUMMARY, index=False)
+    print(df)
 
 class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
     def __init__(self, model):
@@ -121,23 +168,18 @@ class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
         return self.model.predict(X)
 
 class BaseNNModel:
-    def __init__(self, params: dict, total_df: pd.DataFrame, modeldir:str):
+    def __init__(self, params: dict, modeldir:str):
         self.name = params['name']
         self.params = params
-        self.categorization = params['categorization']
-        self.classes = [class_i for class_i in params['categorization'].keys()]
-        self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
-        for proc in self.processes:
-            assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
-
+        self.classes = None
+        self.processes = None
+        self.model = None
+        self.type = None
+        self.history = None
         self.modeldir = NNOUTDIR / self.name if modeldir is None else NNOUTDIR/modeldir
         if not self.modeldir.exists(): 
             self.modeldir.mkdir(parents=True, exist_ok=True)
-
-        print(f"\n\nModel: {self.name}")
-        print(f"\tClasses: {self.classes}")
-        print(f"\tProcesses: {self.processes}")
-
+    
     def _sculpt_dataframe(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
         '''
         This function does the following: 
@@ -163,11 +205,11 @@ class BaseNNModel:
 
         # Adding training weights (normalized per process) - If different for binary and multiclass,
         # implement this step in the corresponding classes
-        model_df["training_weight"] = model_df['gen_Weight'].copy()
+        model_df["sample_weight"] = model_df['gen_Weight'].copy()
         for process in self.processes:
             process_mask = (model_df[f"Process_{process}"] == 1)
             process_total_sum = model_df[process_mask]["gen_Weight"].sum()
-            model_df.loc[process_mask, "training_weight"] *= model_df.shape[0] / process_total_sum
+            model_df.loc[process_mask, "sample_weight"] *= model_df.shape[0] / process_total_sum
 
         return model_df
     
@@ -186,7 +228,7 @@ class BaseNNModel:
             min_delta=0.001, 
             patience=0,
             min_lr=1e-8,
-            verbose=2,
+            verbose=0,
             mode='min')
         
         return [early_stopping, reduce_plateau]
@@ -240,16 +282,17 @@ class BaseNNModel:
                 outputs.append(output)
         
         model = Model(inputs=inputs, outputs=outputs, name=self.params['name'])
+
         model.compile(
             optimizer=self.get_optimizer(self.params['compiler']),
             loss=self.params['compiler']['loss'],
-            metrics   = [BinaryAccuracy(), AUC(), Precision(), Recall()],
+            metrics = self._get_metrics(),
             weighted_metrics = []
         )
         
         self.model = model
 
-    def train_model(self, X_train, Y_train, training_weights):
+    def train_model(self, X_train, Y_train, sample_weight):
         print(f"\tTraining model ...")
         history = self.model.fit(
             X_train, 
@@ -257,7 +300,7 @@ class BaseNNModel:
             verbose=0,
             batch_size=self.params['fit']['batch_size'], 
             epochs=self.params['fit']['epochs'], 
-            sample_weight=training_weights,
+            sample_weight=sample_weight,
             validation_split=self.params['fit']['validation_split'],  
             callbacks=self.get_callbacks())
 
@@ -265,7 +308,7 @@ class BaseNNModel:
 
     def save_model_info(self, features, Y_train, Y_test):
         print(f"\tSaving model info ...")
-        model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
+        # model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
         input_names = features.tolist()
         input_vars_file = self.modeldir /'input_variables.txt'
         with open(input_vars_file, 'w') as file:
@@ -283,17 +326,77 @@ class BaseNNModel:
         with open(out_yml, 'w') as file:
             yaml.dump(self.params, file, sort_keys=False)
 
+    def output_training_curves(self):
+        training_curves_dir = self.modeldir / 'Training_curves'
+        if not training_curves_dir.exists():
+            training_curves_dir.mkdir(parents=True, exist_ok=True)
+
+        epochs = self.history.epoch
+        history_dict = self.history.history
+
+        metric_types = []
+        for metric in history_dict.keys():
+            if metric.startswith('val_'):
+                continue
+            if metric.startswith('auc'):
+                metric_type = '_'.join(metric.split('_')[:2])
+            else:
+                metric_type = metric.split('_')[0]
+            if metric_type not in metric_types:
+                metric_types.append(metric_type)
+
+        # Create individual figures for each metric type
+        for metric_type in metric_types:
+            plt.figure(figsize=(6, 4))
+            for metric in history_dict.keys():
+                if metric.startswith(metric_type):
+                    plt.plot(epochs, history_dict[metric], label=f'{metric}')
+                    if f'val_{metric}' in history_dict.keys():
+                        plt.plot(epochs, history_dict[f'val_{metric}'], lw=2, label=f'val_{metric}')
+            plt.title(f"{metric_type} vs epochs")
+            plt.xlabel('Epochs')
+            plt.ylabel(metric_type)
+            plt.legend(loc='best')
+            plt.tight_layout()
+            plt.savefig(training_curves_dir / f'{metric_type}_curve.pdf')
+            plt.close()
+
+        # Create a combined figure with all metrics as subplots in two columns
+        num_metrics = len(metric_types)
+        num_cols = 2
+        num_rows = (num_metrics + 1) // num_cols  # Calculate the number of rows needed
+
+        fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 4 * num_rows))
+        axes = axes.flatten()  # Flatten the axes array for easy indexing
+
+        for i, metric_type in enumerate(metric_types):
+            ax = axes[i]
+            for metric in history_dict.keys():
+                if metric.startswith(metric_type):
+                    ax.plot(epochs, history_dict[metric], label=f'{metric}')
+                    if f'val_{metric}' in history_dict.keys():
+                        ax.plot(epochs, history_dict[f'val_{metric}'], lw=2, label=f'val_{metric}')
+            ax.set_title(f"{metric_type} vs epochs")
+            ax.set_xlabel('Epochs')
+            ax.set_ylabel(metric_type)
+            ax.legend(loc='best')
+
+        # Remove any unused subplots
+        for i in range(len(metric_types), len(axes)):
+            fig.delaxes(axes[i])
+
+        plt.tight_layout()
+        fig.savefig(training_curves_dir / 'all_metrics_curves.pdf')
+        plt.close()
+
     def evaluate_and_predict(self, X_test, Y_test, events_test) -> pd.DataFrame:
         print(f"\tEvaluating model and predicting ...")
-        metrics = self.model.evaluate(X_test, Y_test, verbose=0)
-        model_metrics = {'name': self.name}
-        model_metrics.update({name: value for name, value in zip(self.model.metrics_names, metrics)})
-        model_metrics = self.standardize_metric_names(model_metrics)
+        model_metrics = self.model.evaluate(X_test, Y_test, verbose=0, return_dict=True)   
 
-        events_test = events_test.reset_index(drop=True)
-        Y_test = Y_test.reset_index(drop=True)
-        Y_pred_score = self.model.predict(X_test)
+        events_test.reset_index(drop=True, inplace=True)
+        Y_test.reset_index(drop=True, inplace=True)
         output_df = pd.concat([events_test, Y_test], axis=1)
+        Y_pred_score = self.model.predict(X_test)
         for i, cls in enumerate(Y_test.columns):
             column_name = 'Score_' + cls.removeprefix('Class_')
             score = Y_pred_score[:, i]
@@ -317,14 +420,14 @@ class BaseNNModel:
             for i, ranked_f in enumerate(features_ranked):
                 file.write(f"{i+1}. {ranked_f}\n")
 
-    def _get_score_distribution_fig(self, class_score):
+    def _draw_score_distribution(self, class_score):
         fig, ax = plt.subplots(figsize=(8, 6))
         ax.set_xlim(0, 1)
         ax.set_ylabel('Normalized Number of Events')
         ax.set_xlabel(class_score.removeprefix('Score_'))
         return fig, ax
 
-    def _get_roc_curve_fig(self):
+    def _draw_roc_curve(self):
         fig, ax = plt.subplots(figsize=(8, 6))
         ax.plot([0,1],[0,1], linestyle='--', lw=2, color='k', label='random chance')
         ax.set_xlim([0,1.0])
@@ -343,7 +446,7 @@ class BaseNNModel:
                 ax.text(j, i, f"{cm[i, j]:.3f}", ha='center', va='center', fontsize=14)
 
         ax.set_xlabel('Predicted', labelpad=10, fontsize=12)
-        ax.set_ylabel('Actual', labelpad=10, fontsize=12)
+        ax.set_ylabel('True', labelpad=10, fontsize=12)
         ax.set_title(title, fontsize=16)
         ax.set_xticks(range(len(xy_ticks)))
         ax.set_yticks(range(len(xy_ticks)))
@@ -355,17 +458,39 @@ class BaseNNModel:
         plt.tight_layout()
         fig.savefig(self.modeldir / filename)
 
-    def Run(self, do_input_feature_ranking, cv_method='none', n_splits=5):
-        print(self.model_df)
-        if cv_method == 'kfold':
-            return self.cross_validate(StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42))
-        elif cv_method == 'shuffle':
-            return self.cross_validate(StratifiedShuffleSplit(n_splits=n_splits, test_size=0.2, random_state=42))
-        else:
-            return self.train_and_evaluate(do_input_feature_ranking)
+    def _standardize_metric_names(self, metrics):
+        standardized_metrics = {}
+        for key, value in metrics.items():
+            if key.startswith('auc'):           standardized_metrics['auc'] = value
+            elif key.startswith('precision'):   standardized_metrics['precision'] = value
+            elif key.startswith('recall'):      standardized_metrics['recall'] = value
+            else:                               standardized_metrics[key] = value
+        return standardized_metrics
 
-    def cross_validate(self, cv):
-        X = self.model_df.drop(columns=['event', 'gen_Weight', 'training_weight'] + [col for col in self.model_df.columns if col.startswith('Class_')])
+    def Train(self):
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = self._split_and_shuffle(self.model_df)
+        self.setup_model(X_train)
+        self.train_model(X_train, Y_train, tw_train)
+        self.save_model_info(X_train.columns, Y_train, Y_test)
+        self.output_training_curves()
+        return X_test, Y_test, evs_test
+
+    def Evaluate(self, X_test, Y_test, evs_test, do_input_feature_ranking):
+        output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
+        self.draw_score_distribution(output_df)
+        self.draw_roc_curve(output_df)
+        self.draw_confusion_matrix(output_df)
+        if do_input_feature_ranking:
+            self.feature_ranking(X_test, Y_test)
+        return model_metrics
+
+    def Cross_Validate(self, cv_method, n_splits):
+        if cv_method == 'kfold':
+            cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+        elif cv_method == 'shuffle':
+            cv = StratifiedShuffleSplit(n_splits, test_size=0.2, random_state=42)
+
+        X = self.model_df.drop(columns=['event', 'gen_Weight', 'sample_weight'] + [col for col in self.model_df.columns if col.startswith('Class_')])
         y = self.model_df[[col for col in self.model_df.columns if col.startswith('Class_')]]
         
         y_single = y.idxmax(axis=1)
@@ -376,8 +501,8 @@ class BaseNNModel:
             print(f"Running fold {fold+1}/{cv.get_n_splits()}")
             X_train, X_test = X.iloc[train_index], X.iloc[test_index]
             Y_train, Y_test = y.iloc[train_index], y.iloc[test_index]
-            tw_train = self.model_df['training_weight'].iloc[train_index]
-            tw_test = self.model_df['training_weight'].iloc[test_index]
+            tw_train = self.model_df['sample_weight'].iloc[train_index]
+            tw_test = self.model_df['sample_weight'].iloc[test_index]
             evs_train = self.model_df['event'].iloc[train_index]
             evs_test = self.model_df['event'].iloc[test_index]
 
@@ -392,48 +517,32 @@ class BaseNNModel:
         print(f"Avg. metrics: {average_metrics}")
         return self.params, average_metrics
 
-    def standardize_metric_names(self, metrics):
-        standardized_metrics = {}
-        for key, value in metrics.items():
-            if key.startswith('auc'):           standardized_metrics['auc'] = value
-            elif key.startswith('precision'):   standardized_metrics['precision'] = value
-            elif key.startswith('recall'):      standardized_metrics['recall'] = value
-            else:                               standardized_metrics[key] = value
-        return standardized_metrics
-
-    def train_and_evaluate(self, do_input_feature_ranking):
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = self.split_and_shuffle(self.model_df)
-        self.setup_model(X_train)
-        self.train_model(X_train, Y_train, tw_train)
-        self.save_model_info(X_train.columns, Y_train, Y_test)
-        output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
-        if do_input_feature_ranking:
-            self.feature_ranking(X_test, Y_test)
-        self.draw_score_distribution(output_df)
-        self.draw_roc_curve(output_df)
-        self.draw_confusion_matrix(output_df)
-        return self.params, model_metrics
-
-    def split_and_shuffle(self, model_df):
+    def _split_and_shuffle(self, model_df):
         classes_in_df = model_df.filter(like='Class_').columns
-        columns_to_drop = ["event", "gen_Weight", "training_weight"]
+        columns_to_drop = ["event", "gen_Weight", "sample_weight"]
         columns_to_drop.extend(classes_in_df)
         X_df = model_df.drop(columns=columns_to_drop)
         classes = [cls_i for cls_i in model_df.columns if cls_i.startswith('Class_')]
         Y_df = model_df[classes]
 
         test_size = 0.2
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["training_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["sample_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
 
         return X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test
 
 class BinaryModel(BaseNNModel):
 
-    def __init__(self, params: dict, total_df: pd.DataFrame, modeldir: str = None):
-        super().__init__(params, total_df, modeldir)
-        self.model_df = self._get_model(total_df, params)
+    def __init__(self, params: dict, modeldir: str = None, total_df: pd.DataFrame = None):
+        super().__init__(params, modeldir)
+        self.type = 'binary'
+        self.classes = ["isSignal"]
+        self.processes = params['processes']
+        if total_df is not None:
+            self.model_df = self._get_model_df(total_df, params)
+            print(f"Model: {self.name}")
+            print(self.model_df)
 
-    def _get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    def _get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
         model_df  = super()._sculpt_dataframe(total_df, params)
 
         model_df = model_df.assign(Class_isSignal=0)
@@ -443,18 +552,31 @@ class BinaryModel(BaseNNModel):
 
         return model_df
 
+    def _get_metrics(self):
+            '''
+            Global metrics are the same as per-class metrics for bianry models
+            '''
+            metrics = [BinaryAccuracy(name='accuracy'), 
+                        Precision(name='precision'), 
+                        Recall(name='recall'), 
+                        AUC(name='auc_pr', curve='PR'), 
+                        AUC(name='auc_roc', curve='ROC')
+                    #    F1Score(name='f1_score')
+                       ]
+            return metrics
+
     def draw_score_distribution(self, output_df):
         class_score = [col for col in output_df.columns if col.startswith('Score_')][0]
         class_true = [col for col in output_df.columns if col.startswith('Class_')][0]
         nbins = 50
-        fig, ax = super()._get_score_distribution_fig(class_score)
+        fig, ax = super()._draw_score_distribution(class_score)
         ax.hist(output_df.loc[output_df[class_true] == 1, class_score], bins=nbins, color='blue', label='HH', histtype='step', density=True)
         ax.hist(output_df.loc[output_df[class_true] == 0, class_score], bins=nbins, color='red', label='Background', histtype='step', density=True)
         ax.legend()
         fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
 
     def draw_roc_curve(self, output_df) -> dict:
-        fig, ax = super()._get_roc_curve_fig()
+        fig, ax = super()._draw_roc_curve()
         true_class = output_df['Class_isSignal']
         pred_class = output_df['Score_isSignal']
         fpr, tpr, thresholds = roc_curve(true_class, pred_class)
@@ -471,21 +593,30 @@ class BinaryModel(BaseNNModel):
         pred_class = (output_df['Score_isSignal'] >= self.binary_optimal_threshold).astype(int)
         xy_ticks = ["Background", "Signal"]
 
-        cm = confusion_matrix(true_class, pred_class)
-        cm_norm_by_row = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        cm_norm_by_column = cm.astype('float') / cm.sum(axis=0)[np.newaxis, :]
+        cm_unnorm = confusion_matrix(true_class, pred_class)
+        cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
+        cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
 
-        #super()._draw_confusion_matrix(cm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_by_row, 'Confusion Matrix (Normalized by Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_by_column, 'Confusion Matrix (Normalized by Actual)', 'confusion_matrix_norm_act.pdf', xy_ticks)
+        super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
+        super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
+        super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
 class MulticlassModel(BaseNNModel):
 
-    def __init__(self, params: dict, total_df: pd.DataFrame,  modeldir: str = None):
-        super().__init__(params, total_df, modeldir)
-        self.model_df = self._get_model(total_df, params)
+    def __init__(self, params: dict, modeldir: str = None, total_df: pd.DataFrame = None):
+        super().__init__(params, modeldir)
+        self.type = 'multi'
+        self.categorization = params['categorization']
+        self.classes = [class_i for class_i in params['categorization'].keys()]
+        self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
+        for proc in self.processes:
+            assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
+        if total_df is not None:
+            self.model_df = self._get_model_df(total_df, params)
+            print(f"Model: {self.name}")
+            print(self.model_df)
 
-    def _get_model(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    def _get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
         model_df  = super()._sculpt_dataframe(total_df, params)
 
         for class_i, class_i_processes in self.categorization.items():
@@ -498,12 +629,37 @@ class MulticlassModel(BaseNNModel):
 
         return model_df
 
+    def _get_metrics(self):
+            '''
+            Global metrics:
+                - Accuracy: ratio of correctly predicted instances to total instances (does not need averaging)
+                - Precision, Recall, F1-Score: Macro-averaged by default (i.e. each class's metric is calculated separately, and then the average is taken)
+            '''
+            metrics = [CategoricalAccuracy(name='accuracy'), 
+                        Precision(name='precision'), 
+                        Recall(name='recall'), 
+                        AUC(name='auc_roc', curve='ROC'), 
+                        AUC(name='auc_pr', curve='PR')
+                    #    F1Score(name='f1_score')
+                       ]
+            '''
+            Per-class metrics:
+            '''
+            for i, cls_i in enumerate(self.classes):
+                # metrics.append(Accuracy(name=f'accuracy_{cls_i}', class_id=i))
+                metrics.append(Precision(name=f'precision_{cls_i}', class_id=i))
+                metrics.append(Recall(name=f'recall_{cls_i}', class_id=i))
+                # metrics.append(AUC(name=f'auc_roc_{cls_i}', class_id=i))
+                # metrics.append(AUC(name=f'auc_pr_{cls_i}', class_id=i))
+                # metrics.append(F1Score(name=f'f1_score_{cls_i}', class_id=i))
+            return metrics
+
     def draw_score_distribution(self, output_df):
         classes_score = [col for col in output_df.columns if col.startswith('Score_')]
         classes_true = [col for col in output_df.columns if col.startswith('Class_')]
         nbins = 50
         for class_score in classes_score:
-            fig, ax = super()._get_score_distribution_fig(class_score)
+            fig, ax = super()._draw_score_distribution(class_score)
             for true_proc in classes_true:
                 label = true_proc.removeprefix('Class_')
                 ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=nbins, color=Refs._get_color_for(label, ROOT_b=False), label=label, histtype='step', density=True)
@@ -511,7 +667,7 @@ class MulticlassModel(BaseNNModel):
             fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
 
     def draw_roc_curve(self, output_df) -> dict:
-        fig, ax = super()._get_roc_curve_fig()
+        fig, ax = super()._draw_roc_curve()
         self.classes_auc = {}
         for i, cls_i in enumerate(self.classes):
             true_class = output_df[f"Class_{cls_i}"]
@@ -520,6 +676,7 @@ class MulticlassModel(BaseNNModel):
             auc_value = auc(fpr, tpr)
             self.classes_auc[cls_i] = round(auc_value,3)
             ax.plot(fpr, tpr, lw=2, label=f"{cls_i} (AUC = {auc_value:.3f})")
+            ax.legend(loc='lower right')
         fig.savefig(self.modeldir/'roc_curve.pdf')
 
     def draw_confusion_matrix(self, output_df):
@@ -527,69 +684,78 @@ class MulticlassModel(BaseNNModel):
         pred_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Score_')]].to_numpy(), axis=1)
         xy_ticks = self.classes
 
-        cm = confusion_matrix(true_class, pred_class)
-        cm_norm_by_row = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        cm_norm_by_column = cm.astype('float') / cm.sum(axis=0)[np.newaxis, :]
+        cm_unnorm = confusion_matrix(true_class, pred_class)
+        cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
+        cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
 
-        #super()._draw_confusion_matrix(cm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_by_row, 'Confusion Matrix (Normalized by Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_by_column, 'Confusion Matrix (Normalized by Actual)', 'confusion_matrix_norm_act.pdf', xy_ticks)
+        super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
+        super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
+        super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
-def update_models_summary_csv(model_metrics: dict):
-    if MODELS_SUMMARY.exists():
-        df = pd.read_csv(MODELS_SUMMARY)
-    else:
-        df = pd.DataFrame(columns=model_metrics.keys())
-
-    if model_metrics['name'] in df['name'].values:
-        index = df.index[df['name'] == model_metrics['name']]
-        for key, value in model_metrics.items():
-            if isinstance(value, float): value = round(value, 3)
-            df.at[index[0], key] = value
-    else:
-        df = df._append(model_metrics, ignore_index=True)
-
-    df.to_csv(MODELS_SUMMARY, index=False)
-
-def main(workdir: str, sel_name: str, do_input_feature_ranking: bool, cv_method='none', n_splits=5):
+def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, cv_method=None, n_splits=5):
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    nnoutdir_name = 'Neural_Nets_%s'%sel_name
+    nnoutdir_name = 'Neural_Nets_%s_0805'%sel_name
     NNOUTDIR = WORKDIR / nnoutdir_name
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
-
-    test_models = get_test_models()
+    DNN_models_params = get_test_models('NN_test_models.yml')
     total_df = load_and_preprocess_data(sel_name)
-    print(f"Total_df: {total_df}")
+    print(f"Total_df:\n{total_df}")
 
-    for model_params in test_models:
-        if list(model_params['categorization'].keys()) == ['isSignal']: 
-          NNModel = BinaryModel(model_params, total_df)
-        else:                                       
-          NNModel = MulticlassModel(model_params, total_df)
+    if mode == 'train_eval':
+        for model_info in DNN_models_params:
+            if model_info['type'] == 'binary': 
+                DNN = BinaryModel(params=model_info, total_df=total_df)
+            elif model_info['type'] == 'multi':             
+                DNN = MulticlassModel(params=model_info, total_df=total_df)
+            X_test, Y_test, evs_test = DNN.Train()
+            model_metrics = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
+            update_models_summary_csv(model_info['name'], model_metrics)
 
-        model_params, model_metrics = NNModel.Run(do_input_feature_ranking=do_input_feature_ranking, cv_method=cv_method, n_splits=n_splits)
-        print(model_metrics)
-        update_models_summary_csv(model_metrics)
+    elif mode == 'eval':
+        tf_model, model_info = load_model(NNdir)
+        if model_info['type'] == 'binary':
+            DNN = BinaryModel(params=model_info, total_df=total_df)
+        elif model_info['type'] == 'multi':
+            DNN = MulticlassModel(params=model_info, total_df=total_df)
+
+        DNN.model = tf_model
+        DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
+
+    elif mode == 'cv':
+        for model_i in NN_test_models:
+            if model_i['type'] == 'binary': 
+                DNN = BinaryModel(params=model_i, total_df=total_df)
+            elif model_i['type'] == 'multi':             
+                DNN = MulticlassModel(params=model_i, total_df=total_df)
+
+            DNN.Cross_Validate(cv_method, n_splits)
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()}")
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", action="store", help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
-    parser.add_argument("-c", "--sel_name", action="store", help="Ex: SL_res_2b_x")
-    parser.add_argument("-r", "--do_input_feature_ranking", action="store_true", help="set to get input feature ranking")
-    parser.add_argument("--cv_method", choices=['none', 'kfold', 'shuffle'], default='none', help="Cross-validation method")
-    parser.add_argument("--n_splits", type=int, default=5, help="Number of splits for cross-validation")
+    parser.add_argument("-c", "--sel_name", action="store", required=True, help="Ex: SL_res_2b_x")
+    parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
+    args, unknown = parser.parse_known_args()
+    if args.mode == 'train_eval':
+        parser.add_argument("-r", "--do_input_feature_ranking", action="store_true", help="set to get input feature ranking")
+    elif args.mode == 'eval':
+        parser.add_argument("-d", "--NNdir", action="store", required=True, help="Directoy of NN to be evaluated. Example: Z_OUTPUT/VarsReco/Neural_Nets/multiclass_HH_ttbar_tW")
+        parser.add_argument("-r", "--do_input_feature_ranking", action="store_true", help="set to get input feature ranking")
+    elif args.mode == 'cv':
+        parser.add_argument("--cv_method", choices=['kfold', 'shuffle'], required=True, default=None, help="Cross-validation method")
+        parser.add_argument("--n_splits", type=int, default=5, help="Number of splits for cross-validation")
     args = parser.parse_args()
 
-    if args.sel_name is None:
-        print ("Need to provide a selection\n")
-        sys.exit()
-
-    assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
-    main(args.workdir, args.sel_name, do_input_feature_ranking=args.do_input_feature_ranking, cv_method=args.cv_method, n_splits=args.n_splits)
+    if args.mode == 'train_eval':
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking)
+    elif args.mode == 'eval':
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir)
+    elif args.mode == 'cv':
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Vars_NEW -c SL_res_2b_x -r --cv_method shuffle
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_0801 -c SL_res_2b_x -m train_eval
     '''
