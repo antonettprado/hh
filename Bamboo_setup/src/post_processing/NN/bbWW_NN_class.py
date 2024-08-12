@@ -259,9 +259,9 @@ class BaseNNModel:
         #    mean=X_train.mean(axis=0).to_numpy(),
         #    variance=X_train.var(axis=0).to_numpy(),
         #    name='Normalization')(inputs)
-        normalizer = Normalization(name='Normalization')(inputs)
+        normalizer = Normalization(name='Normalization')
         normalizer.adapt(X_train)
-        x = normalizer
+        x = normalizer(inputs)
 
         for layer in self.params['layers']:
             if layer['type'] == 'Dense':
