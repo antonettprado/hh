@@ -238,7 +238,7 @@ class BaseNNModel:
         optimizers = {'adam': Adam, 'sgd': SGD, 'rmsprop': RMSprop}
         if optimizer_name in optimizers:
             optimizer_class = optimizers[optimizer_name]
-            return optimizer_class(learning_rate=config.get('lr', 0.001))
+            return optimizer_class(learning_rate=float(config['lr']))
         else:
             raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
 

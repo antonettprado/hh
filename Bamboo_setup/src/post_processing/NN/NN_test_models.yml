@@ -10,7 +10,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   - name: 'binary_HH_ttbar_tW'
@@ -23,7 +23,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   - name: 'binary_All'
@@ -36,7 +36,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   - name: 'binary_All_6ilayers'
@@ -52,7 +52,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   # # ================= Multiclass Models =================
@@ -66,7 +66,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_3classes'
@@ -79,7 +79,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_VV_4classes'
@@ -92,7 +92,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_WJets_4classes'
@@ -105,7 +105,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_VV_WJets_5classes'
@@ -118,7 +118,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 5, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_6classes'
@@ -131,7 +131,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 6, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_4classes_HH_ttbar_tW_Others'
@@ -144,7 +144,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_3classes_HH_Top_Others'
@@ -157,7 +157,7 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_5classes_HH_Top_DY_VV_WJets'
@@ -170,5 +170,5 @@ Models:
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
     outputs: 
       - {type: 'Dense', units: 5, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
