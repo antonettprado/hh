@@ -259,7 +259,7 @@ class BaseNNModel:
         #    mean=X_train.mean(axis=0).to_numpy(),
         #    variance=X_train.var(axis=0).to_numpy(),
         #    name='Normalization')(inputs)
-        normalizer = Normalization()
+        normalizer = Normalization(name='Normalization')(inputs)
         normalizer.adapt(X_train)
         x = normalizer
 
