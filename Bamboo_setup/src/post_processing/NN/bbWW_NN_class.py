@@ -255,11 +255,12 @@ class BaseNNModel:
         ndim = len(X_train.columns)
         inputs = Input(shape=(ndim,), name="input")
 
-        normalizer = Normalization(
-            mean=X_train.mean(axis=0).to_numpy(),
-            variance=X_train.var(axis=0).to_numpy(),
-            name='Normalization')(inputs)
-
+        #normalizer = Normalization(
+        #    mean=X_train.mean(axis=0).to_numpy(),
+        #    variance=X_train.var(axis=0).to_numpy(),
+        #    name='Normalization')(inputs)
+        normalizer = Normalization()
+        normalizer.adapt(X_train)
         x = normalizer
 
         for layer in self.params['layers']:
