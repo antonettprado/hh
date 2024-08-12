@@ -593,11 +593,11 @@ class BinaryModel(BaseNNModel):
         pred_class = (output_df['Score_isSignal'] >= self.binary_optimal_threshold).astype(int)
         xy_ticks = ["Background", "Signal"]
 
-        cm_unnorm = confusion_matrix(true_class, pred_class)
+        #cm_unnorm = confusion_matrix(true_class, pred_class)
         cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
         cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
 
-        super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
+        #super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
@@ -684,11 +684,11 @@ class MulticlassModel(BaseNNModel):
         pred_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Score_')]].to_numpy(), axis=1)
         xy_ticks = self.classes
 
-        cm_unnorm = confusion_matrix(true_class, pred_class)
+        #cm_unnorm = confusion_matrix(true_class, pred_class)
         cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
         cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
 
-        super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
+        #super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
