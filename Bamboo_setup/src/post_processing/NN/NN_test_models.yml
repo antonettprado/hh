@@ -1,161 +1,174 @@
 Models:
   # # ==================== Binary Models ====================
   - name: 'binary_HH_ttbar'
-    categorization: {"isSignal": ["HH", "ttbar"]}
+    type: 'binary'
+    processes: ["HH", "ttbar"]
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   - name: 'binary_HH_ttbar_tW'
-    categorization: {"isSignal": ["HH", "ttbar", "tW"]}
+    type: 'binary'
+    processes: ["HH", "ttbar", "tW"]
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   - name: 'binary_All'
-    categorization: {"isSignal": ["HH", "ttbar", "tW", "DY", "VV", "WJets"]}
+    type: 'binary'
+    processes: ["HH", "ttbar", "tW", "DY", "VV", "WJets"]
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   - name: 'binary_All_6ilayers'
-    categorization: {"isSignal": ["HH", "ttbar", "tW", "DY", "VV", "WJets"]}
+    type: 'binary'
+    processes: ["HH", "ttbar", "tW", "DY", "VV", "WJets"]
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'binary_crossentropy'}
+      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
     fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
 
   # # ================= Multiclass Models =================
   - name: 'multi_HH_ttbar_2classes'
+    type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_3classes'
+    type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_VV_4classes'
+    type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "VV": ["VV"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_WJets_4classes'
+    type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_HH_ttbar_tW_VV_WJets_5classes'
+    type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "VV": ["VV"], "WJets": ["WJets"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 5, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 5, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_6classes'
+    type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "VV": ["VV"], "WJets":["WJets"], "DY": ["DY"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 6, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 6, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_4classes_HH_ttbar_tW_Others'
+    type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "Others": ["DY", "VV", "WJets"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_3classes_HH_Top_Others'
+    type: 'multi'
     categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
 
   - name: 'multi_All_5classes_HH_Top_DY_VV_WJets'
+    type: 'multi'
     categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "DY": ["DY"], "VV": ["VV"], "WJets":["WJets"]}
     input_vars: 'All'
     layers: 
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
-      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-6}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
     outputs: 
-      - {type: 'Dense', units: 5, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-6, name: 'output'}
-    compiler: {optimizer: 'adam', loss: 'categorical_crossentropy'}
+      - {type: 'Dense', units: 5, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}

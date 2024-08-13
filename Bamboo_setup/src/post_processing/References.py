@@ -5,8 +5,7 @@ SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_res_1b', 'SL_res_2b', 'SL_res_2b
 SELECTIONS.sort(key=len, reverse=True)
 
 PROCESSES_FILES = dict(
-    HH=['bbWW_sl', 'bbWW_dl'],
-    #HH=['bbWW_sl', 'bbWW_dl', 'bbtautau'],
+    HH=['bbWW_sl', 'bbWW_dl', 'bbtautau'],
     ttbar=['TTbar_sl', 'TTbar_dl'],
     tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
     WJets=['Wjets_0J', 'Wjets_1J', 'Wjets_2J'],
@@ -16,7 +15,7 @@ PROCESSES_FILES = dict(
     #ttW=[]
     #ttZ=[]
     #ttVV=[]
-    #H=[]
+    # H=[]
     #tH=[]
     #Others=[]
     #Fakes=[]

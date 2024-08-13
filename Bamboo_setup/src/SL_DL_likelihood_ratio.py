@@ -24,7 +24,7 @@ ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
 class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_likelihood_ratio, self).__init__(args)
-        self.event_nr_sel = "odd"
+        self.event_nr_sel = "even"
         print("The work dir for the correction file is: " + self.args.llr_corr_workdir)
         print("The output path is: " + self.args.output)
 
@@ -33,6 +33,17 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the correction file is')
         parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
         
+    def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
+        tree, baseSel, backend, lumiArgs = super(SL_DL_vars_reco, self).prepareTree(tree=tree,
+                                                                                    sample=sample,
+                                                                                    sampleCfg=sampleCfg,
+                                                                                    description=getNanoAODDescription(),
+                                                                                    backend=backend)
+        if self.is_MC:
+            cut = (op.OR(tree.event % 10 == 2, tree.event % 10 == 4, tree.event % 10 == 6, tree.event % 10 == 8))
+            baseSel = baseSel.refine('_four_fifths_of_half', cut=cut)
+
+        return tree, baseSel, backend, lumiArgs
     @staticmethod
     def get_var_llr(llr_corr_workdir:str, data: list, var_name, selection, defineOnFirstUse=True):
         llr_corr_workdir = Path(llr_corr_workdir)

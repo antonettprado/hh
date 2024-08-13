@@ -434,10 +434,7 @@ class SL_HLT_trigger_efficiency(SL_L1_trigger_efficiency):
 
         if self.args.emulation: print("====== Running Emulation Version ========")
         
-        if self.args.test_only:
-            plots = self._test_triggers(tree, baseSel)
-        else:
-            plots = self.SL_HLT_trigger_efficiency(tree, baseSel)
+        plots = self.SL_HLT_trigger_efficiency(tree, baseSel)
 
         return plots
 

@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.interpolate
+import json
 
 INTERPOLATION_SCALE_FACTOR_1D = 9
 INTERPOLATION_SCALE_FACTOR_2D = 3
