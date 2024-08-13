@@ -299,7 +299,7 @@ class BaseNNModel:
         history = self.model.fit(
             X_train, 
             Y_train, 
-            verbose=1,
+            verbose=2,
             batch_size=self.params['fit']['batch_size'], 
             epochs=self.params['fit']['epochs'], 
             sample_weight=sample_weight,
