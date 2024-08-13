@@ -131,8 +131,8 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
 
-        # if not self.args.no_skim:
-        #     plots = SL_DL_vars_reco.get_skims(objects, selections, plots)
+        if not self.args.no_skim:
+            plots = SL_DL_vars_reco.get_skims(objects, selections, plots)
 
         return plots
 
@@ -169,7 +169,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             for subcat_var in var:
                 print(f"\t{subcat_var.ref}")
                 sig_back_dict = myPlotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, which_processes=which_processes, normalized=True)
-                
+
                 ratio_hist = sig_back_dict['Signal'].Clone()
                 ratio_hist.Divide(sig_back_dict['Background'])
 
