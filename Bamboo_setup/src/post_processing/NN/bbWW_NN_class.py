@@ -267,11 +267,10 @@ class BaseNNModel:
             if layer['type'] == 'Dense':
                 x = Dense(
                     units=layer['units'], 
-                    activation=None, 
+                    activation=layer['activation'], 
                     activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
                 x = BatchNormalization()(x)
-                x = Activation(layer['activation'])(x)  
-                x = Dropout(0.5)(x)  
+                x = Dropout(float(layer['dropout_rate']))(x)  
 
         outputs = []
         for layer in self.params['outputs']:
@@ -300,7 +299,7 @@ class BaseNNModel:
         history = self.model.fit(
             X_train, 
             Y_train, 
-            verbose=0,
+            verbose=1,
             batch_size=self.params['fit']['batch_size'], 
             epochs=self.params['fit']['epochs'], 
             sample_weight=sample_weight,
