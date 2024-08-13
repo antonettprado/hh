@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split, StratifiedKFold, StratifiedShuffleSplit
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
 from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization
+from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall
@@ -267,9 +267,11 @@ class BaseNNModel:
             if layer['type'] == 'Dense':
                 x = Dense(
                     units=layer['units'], 
-                    activation=layer['activation'], 
+                    activation=None, 
                     activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
                 x = BatchNormalization()(x)
+                x = Activation(layer['activation'])(x)  
+                x = Dropout(0.5)(x)  
 
         outputs = []
         for layer in self.params['outputs']:
