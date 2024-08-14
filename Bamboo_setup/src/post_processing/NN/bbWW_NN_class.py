@@ -93,6 +93,35 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
     
     return total_df
 
+def data_quality_summary(df: pd.DataFrame):
+
+    from scipy.stats import zscore
+
+
+    nan_summary = df.isna().sum()
+    invalid_value_summary = (df == -9999).sum()
+
+    z_scores = np.abs(zscore(df.select_dtypes(include=[np.number])))
+    sigma_thresholds = [3, 4, 5]
+    outlier_percentages = {}
+    for sigma in sigma_thresholds:
+        outlier_percentages[f"Outliers Percentage (Z-score > {sigma})"] = (z_scores > sigma).mean(axis=0) * 100
+
+    stats_summary = df.describe().transpose()
+
+    # Combine all summaries into single dataframe
+    summary = pd.DataFrame({
+        "NaN Count": nan_summary,
+        "-9999 Count": invalid_value_summary,
+        **outlier_percentages
+    }).fillna(0)
+
+    # Add the basic statistics to the summary
+    summary = summary.join(stats_summary)
+
+    print("Data Quality Summary:")
+    print(summary)
+
 def get_test_models(filename: str):
     # Maybe add model validation here?
     # i.e. Check allowed model types, processes, inputs, etc
@@ -217,7 +246,7 @@ class BaseNNModel:
             if process == 'HH':
                 model_df.loc[process_mask, "sample_weight"] *= model_df.shape[0] / process_total_sum
             else:
-                scaling_factor = 8
+                scaling_factor = 1
                 model_df.loc[process_mask, "sample_weight"] *= (scaling_factor * (model_df.shape[0] / process_total_sum))
 
         # Printing only
@@ -725,6 +754,8 @@ def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, 
     DNN_models_params = get_test_models('NN_test_models.yml')
     total_df = load_and_preprocess_data(sel_name)
     print(f"Total_df:\n{total_df}")
+
+    data_quality_summary(total_df)
 
     if mode == 'train_eval':
         for model_info in DNN_models_params:
