@@ -141,14 +141,13 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
-        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes="All")
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
         
         print("------------------ Calculating Likelihood Ratios --------------------")
         from post_processing import plotting
-
         # Check llr_backgrounds contains valid processes' names:
         if self.args.llr_backgrounds == 'All': 
             which_processes = 'All'
@@ -159,6 +158,8 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             which_processes = ['HH'] + self.args.llr_backgrounds
             postfix = ''.join(self.args.llr_backgrounds)
 
+        llrPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes=which_processes)
+
         print(f"The processes for the ratio calculation are: {which_processes}")
 
         vars = variables.parse_vars_from_refs(myPlotter.refs)
@@ -168,7 +169,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             print(var.name)
             for subcat_var in var:
                 print(f"\t{subcat_var.ref}")
-                sig_back_dict = myPlotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, which_processes=which_processes, normalized=True)
+                sig_back_dict = myPlotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, normalized=True)
 
                 ratio_hist = sig_back_dict['Signal'].Clone()
                 ratio_hist.Divide(sig_back_dict['Background'])

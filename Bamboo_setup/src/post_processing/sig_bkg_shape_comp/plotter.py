@@ -49,8 +49,7 @@ class BasePlotter:
                 sample_name: sample_data['cross-section'] if sample_data['type'] == 'mc' else 0
                 for sample_name, sample_data in yaml_data['samples'].items() }
         
-        print('CROSS_SECTIONS')
-        print(self.CROSS_SECTIONS)
+        print(f"{self.CROSS_SECTIONS=}")
 
     def _set_refs_file_and_refs(self, ref_workdir: Path):
         '''
@@ -81,9 +80,6 @@ class BasePlotter:
         Args:
             names (list[str]): the names of the root files
             path (str): the path to the directory containing the root files
-
-        Returns:
-            list[ROOT.TFile]: the opened files
         '''
         files = []
         try:
@@ -92,6 +88,8 @@ class BasePlotter:
                     file = TFile.Open(str(resultsdir / name), 'read')
                     if file:
                         files.append(file)
+                else:
+                    print(f"{name} does not exist: skipping")
             
             for file in files:
                 sample_name = Path(file.GetName()).stem
@@ -103,12 +101,14 @@ class BasePlotter:
                     print(f"Warning: yields_genEventSumWeight not found in {file.GetName()}")
         except Exception as e:
             print(f"Error opening files: {e}")
+
         return files
 
-    def get_hist_from_file(self, ref: str, file: TFile):
+
+    def get_hist_from_file(self, ref: str, file: TFile) -> ROOT.TH1:
         sample_name = Path(file.GetName()).stem
         try:
-            hist = file.Get(ref)
+            hist: ROOT.TH1 = file.Get(ref)
             if hist:
                 hist.SetDirectory(0)
             else:
@@ -127,15 +127,19 @@ class BasePlotter:
 
 class Plotter(BasePlotter):
 
-    def __init__(self, dir: str, configFile: str, era=None, outdir:str='plotter'):
+    def __init__(self, dir: str, configFile: str, era=None, outdir:str='plotter', which_processes: Union[str, list[str]]="All"):
         super().__init__(dir, configFile, era, outdir, dirtype='workdir')
         self.resultsdir = self.dir / 'results'
         self.dirprocesses = Refs._find_processes(self.resultsdir)
-        self.SUM_WEIGHTS = {}
+        self.SUM_WEIGHTS: dict[str, float] = {}
+        self.tfiles: dict[str, list[TFile]] = {}
         super()._set_refs_file_and_refs(ref_workdir=self.dir)
         super()._set_configFile_info(Path(configFile))
+        processes_to_run_on = self.decide_processes_to_run_on(which_processes)
+        self.open_process_tfiles(processes_to_run_on) 
+        print(f"Initialized Plotter and opened files: {self.tfiles}")
 
-    def decide_processes_to_run_on(self, which_processes):
+    def decide_processes_to_run_on(self, which_processes: Union[str, list[str]]) -> list[str]:
         if which_processes == 'All':
             processes_to_run_on = self.dirprocesses
         else:
@@ -145,21 +149,22 @@ class Plotter(BasePlotter):
             processes_to_run_on = [proc for proc in which_processes if proc in self.dirprocesses]
         return processes_to_run_on
 
-    def get_process_tfiles(self, processes_to_run_on:list) -> dict[str, list[TFile]]:
+    # Opens all files corresponding to processes to run on. Saves them to self.tfiles: dict[str: list[TFile]]
+    def open_process_tfiles(self, processes_to_run_on: list[str]) -> None:
+        for proc in processes_to_run_on:
+            proc_filenames = [ stem + ".root" for stem in Refs.PROCESSES_FILES[proc] ]
+            opened_proc_files: list[TFile] = super().open_root_files(self.resultsdir, proc_filenames)
+            self.tfiles[proc] = opened_proc_files 
 
-        process_tfiles = {}
-        for process in processes_to_run_on:
-            process_filenames = [file.name for file in self.resultsdir.iterdir() if file.stem in Refs.PROCESSES_FILES[process]]
-            process_tfiles[process] = super().open_root_files(self.resultsdir, process_filenames)
+    # Looks up TFiles from self.tfiles for a given process (eg. HH). Returns histogram of that ref for that process combined over TFiles
+    def get_process_hist(self, ref: str, proc: str) -> ROOT.TH1:
+        tfiles = self.tfiles[proc]
 
-        return process_tfiles
-
-    def get_process_hist(self, ref:str, tfiles: list[TFile]):
-
-        total_hist = self.get_hist_from_file(ref, tfiles[0])
+        total_hist: ROOT.TH1 = self.get_hist_from_file(ref, tfiles[0])
         if total_hist:
             for i_file in tfiles[1:]:
                 hist = self.get_hist_from_file(ref, i_file)
+                
                 if hist:
                     total_hist.Add(hist)
                 else:
@@ -167,9 +172,11 @@ class Plotter(BasePlotter):
         else:
             print(f"Warning: Initial histogram for ref {ref} is None")
             
-        return total_hist
+        total_hist.SetLineColor(Refs._get_color_for(proc, ROOT_b=True))
+        return total_hist 
 
-    def get_signal_and_backg_hists(self, ref, process_hist_dict):
+    
+    def get_signal_and_backg_hists(self, ref: str, process_hist_dict: dict[str, ROOT.TH1]) -> dict[str, ROOT.TH1]:
         hist_dict = {proc: hist.Clone(f"{ref}_{proc}") for proc, hist in process_hist_dict.items()}
         sig_back_dict = {}
 
@@ -177,22 +184,22 @@ class Plotter(BasePlotter):
         if any_signal:
             signal_hists = [hist for proc, hist in hist_dict.items() if 'HH' in proc]
             total_signal = signal_hists[0]
-            total_signal.SetLineColor(ROOT.kBlue)
             for i_hist in signal_hists[1:]:
                 total_signal.Add(i_hist)
+            total_signal.SetLineColor(ROOT.kBlue)
             sig_back_dict.update({'Signal': total_signal})
             
         any_backgrounds = not all('HH' in proc for proc in hist_dict.keys())
         if any_backgrounds:
             backg_hists = [hist for proc, hist in hist_dict.items() if 'HH' not in proc]
             total_background = backg_hists[0]
-            total_background.SetLineColor(ROOT.kRed)
             for i_hist in backg_hists[1:]:
                 total_background.Add(i_hist)
+            total_background.SetLineColor(ROOT.kRed)
             sig_back_dict.update({'Background': total_background})
         
         return sig_back_dict
-
+    
     def get_sensitivity_dict(self, ref, sig_back_dict):
         hist_sen_dict, line_maxsen_dict = {}, {}
         try:
@@ -364,15 +371,14 @@ class Plotter(BasePlotter):
         canvas.SaveAs(str(ref_outdir / ref_outfilename))
         canvas.Close()
 
-    def Draw_Processes(self, refs:list = None, normalization='lumi', combine_backs=False, sen_info=True, which_processes: list='All', refs_endingwith=None):
+    def Draw_Processes(self, refs:list = None, normalization='lumi', combine_backs=False, sen_info=True, refs_endingwith=None):
         '''
         Args: 
-            normalization: either 'lumi' or 'unity
+            normalization: either 'lumi' or 'unity'
             combine_backs: combines bacground processes
             sen_info: plots s/sqrt(b) histogram and max-sensitivity 
         '''
-        processes_to_run_on = self.decide_processes_to_run_on(which_processes)
-        process_tfiles = self.get_process_tfiles(processes_to_run_on)
+
         if refs is None and refs_endingwith is None: 
             refs = self.refs
         elif refs is None and refs_endingwith is not None:
@@ -380,11 +386,10 @@ class Plotter(BasePlotter):
 
         for i, ref in enumerate(refs):
             print(f"Ref: {ref}")
-            process_hist_dict = {}
-            for process in processes_to_run_on:
-                process_hist = self.get_process_hist(ref, process_tfiles[process])
-                process_hist.SetLineColor(Refs._get_color_for(process, ROOT_b=True))
-                process_hist_dict.update({process: process_hist})
+            process_hist_dict: dict[str, ROOT.TH1] = {} # eg. {"HH": ROOT.TH1D, ...}
+            for process in self.tfiles.keys():
+                process_hist = self.get_process_hist(ref, process)
+                process_hist_dict[process] = process_hist
 
             sig_back_dict = self.get_signal_and_backg_hists(ref, process_hist_dict)
             
@@ -407,19 +412,15 @@ class Plotter(BasePlotter):
                 ref_outdir = ref_outdir / dist_name
                 for leg_i, hist_i in hist_dict.items():
                     self._draw_2D_hist_on_one_canvas(ref=ref, dist_name=dist_name, ref_outdir=ref_outdir, hist=hist_i, leg=leg_i)
+                    
+    def Get_Signal_Background_for_ref(self, ref:str, normalized:bool=True) -> dict[str, ROOT.TH1]:
 
-        return
+        process_hist_dict: dict[str, ROOT.TH1] = {} # eg. {"HH": ROOT.TH1D, ...}
+        for process in self.tfiles.keys():
+            process_hist = self.get_process_hist(ref, process)
+            process_hist_dict[process] = process_hist
 
-    def Get_Signal_Background_for_ref(self, ref:str, which_processes:str='All', normalized:bool=True):
-        processes_to_run_on = self.decide_processes_to_run_on(which_processes)
-        process_tfiles = self.get_process_tfiles(processes_to_run_on)
-        process_hist_dict = {}
-        for process in processes_to_run_on:
-            process_hist = self.get_process_hist(ref, process_tfiles[process])
-            process_hist.SetLineColor(Refs._get_color_for(process, ROOT_b=True))
-            process_hist_dict.update({process: process_hist})
-
-        sig_back_dict = self.get_signal_and_backg_hists(ref, process_hist_dict)
+        sig_back_dict: dict[str, ROOT.TH1] = self.get_signal_and_backg_hists(ref, process_hist_dict)
 
         if normalized:
             for hist in sig_back_dict.values():
@@ -430,7 +431,7 @@ class Plotter(BasePlotter):
                     print(f"Warning: Integral for {hist.GetName()} is zero.")
 
         return sig_back_dict
-
+    
 
 # ==== SuperPlotter class NOT YET COMPLETED =====================
 
