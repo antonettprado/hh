@@ -162,14 +162,14 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         print(f"The processes for the ratio calculation are: {which_processes}")
 
-        vars = variables.parse_vars_from_refs(myPlotter.refs)
+        vars = variables.parse_vars_from_refs(llrPlotter.refs)
 
         all_corrections = []
         for var in vars:
             print(var.name)
             for subcat_var in var:
                 print(f"\t{subcat_var.ref}")
-                sig_back_dict = myPlotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, normalized=True)
+                sig_back_dict = llrPlotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, normalized=True)
 
                 ratio_hist = sig_back_dict['Signal'].Clone()
                 ratio_hist.Divide(sig_back_dict['Background'])
