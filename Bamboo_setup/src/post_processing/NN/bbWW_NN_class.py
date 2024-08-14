@@ -67,10 +67,10 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
                 upfile_df = upfile_df.sample(n=N_MAX_TRAINING, random_state=1)
             print(f'Number of events read from {file.stem}: {len(upfile_df)}')
             process_df = pd.concat([process_df, upfile_df], ignore_index=True)
-            process_df['Process'] = process
+        process_df['Process'] = process
         df_list.append(process_df)
 
-    total_df = pd.concat([df for df in df_list], ignore_index=True)
+    total_df = pd.concat(df_list, ignore_index=True)
     total_df = pd.get_dummies(total_df, columns=['Process'])
 
     # Removing events with negative weights
@@ -92,6 +92,35 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
     total_df.drop(columns='index', inplace=True)
     
     return total_df
+
+def data_quality_summary(df: pd.DataFrame):
+
+    from scipy.stats import zscore
+
+
+    nan_summary = df.isna().sum()
+    invalid_value_summary = (df == -9999).sum()
+
+    z_scores = np.abs(zscore(df.select_dtypes(include=[np.number])))
+    sigma_thresholds = [3, 4, 5]
+    outlier_percentages = {}
+    for sigma in sigma_thresholds:
+        outlier_percentages[f"Outliers Percentage (Z-score > {sigma})"] = (z_scores > sigma).mean(axis=0) * 100
+
+    stats_summary = df.describe().transpose()
+
+    # Combine all summaries into single dataframe
+    summary = pd.DataFrame({
+        "NaN Count": nan_summary,
+        "-9999 Count": invalid_value_summary,
+        **outlier_percentages
+    }).fillna(0)
+
+    # Add the basic statistics to the summary
+    summary = summary.join(stats_summary)
+
+    print("Data Quality Summary:")
+    print(summary)
 
 def get_test_models(filename: str):
     # Maybe add model validation here?
@@ -180,7 +209,7 @@ class BaseNNModel:
         if not self.modeldir.exists(): 
             self.modeldir.mkdir(parents=True, exist_ok=True)
     
-    def _sculpt_dataframe(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    def _get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
         '''
         This function does the following: 
             - Picks only the features (or input variables) noted in 'input_vars'
@@ -203,17 +232,37 @@ class BaseNNModel:
             condition |= (model_df[f'Process_{process}'] == 1)
         model_df = model_df[condition]
 
-        # Adding training weights (normalized per process) - If different for binary and multiclass,
-        # implement this step in the corresponding classes
+        # Adding training weights (normalized per process) 
         model_df["sample_weight"] = model_df['gen_Weight'].copy()
+        hh_total_weight = 0
+
+        if 'HH' in self.processes:
+            hh_mask = (model_df["Process_HH"] == 1)
+            hh_total_weight = model_df[hh_mask]["gen_Weight"].sum()
+
         for process in self.processes:
             process_mask = (model_df[f"Process_{process}"] == 1)
             process_total_sum = model_df[process_mask]["gen_Weight"].sum()
-            model_df.loc[process_mask, "sample_weight"] *= model_df.shape[0] / process_total_sum
+            if process == 'HH':
+                model_df.loc[process_mask, "sample_weight"] *= model_df.shape[0] / process_total_sum
+            else:
+                scaling_factor = 1
+                model_df.loc[process_mask, "sample_weight"] *= (scaling_factor * (model_df.shape[0] / process_total_sum))
+
+        # Printing only
+        for process in self.processes:
+            column_name = f"Process_{process}"
+            print(column_name)
+            process_mask = model_df[column_name] == 1
+            process_total_gen_weight = model_df[process_mask]['gen_Weight'].sum()
+            process_total_sample_weight = model_df[process_mask]['sample_weight'].sum()
+            print(f"Total sum of gen_Weights for {process}: {process_total_gen_weight} ")
+            print(f"Total sum of sample_weights for {process}: {process_total_sample_weight} ")
 
         return model_df
     
-    def get_callbacks(self):
+    @staticmethod
+    def get_callbacks():
         early_stopping = EarlyStopping( 
             monitor='val_loss', 
             min_delta=0.001, 
@@ -233,7 +282,8 @@ class BaseNNModel:
         
         return [early_stopping, reduce_plateau]
 
-    def get_optimizer(self, config: dict):
+    @staticmethod
+    def get_optimizer(config: dict):
         optimizer_name = config['optimizer'].lower()
         optimizers = {'adam': Adam, 'sgd': SGD, 'rmsprop': RMSprop}
         if optimizer_name in optimizers:
@@ -308,6 +358,8 @@ class BaseNNModel:
 
         self.history = history
 
+        return self.history
+
     def save_model_info(self, features, Y_train, Y_test):
         print(f"\tSaving model info ...")
         # model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
@@ -328,13 +380,14 @@ class BaseNNModel:
         with open(out_yml, 'w') as file:
             yaml.dump(self.params, file, sort_keys=False)
 
-    def output_training_curves(self):
-        training_curves_dir = self.modeldir / 'Training_curves'
-        if not training_curves_dir.exists():
-            training_curves_dir.mkdir(parents=True, exist_ok=True)
+    @staticmethod
+    def output_training_curves(history, outdir: Path):
 
-        epochs = self.history.epoch
-        history_dict = self.history.history
+        if not outdir.exists():
+            outdir.mkdir(parents=True, exist_ok=True)
+
+        epochs = history.epoch
+        history_dict = history.history
 
         metric_types = []
         for metric in history_dict.keys():
@@ -360,7 +413,7 @@ class BaseNNModel:
             plt.ylabel(metric_type)
             plt.legend(loc='best')
             plt.tight_layout()
-            plt.savefig(training_curves_dir / f'{metric_type}_curve.pdf')
+            plt.savefig(outdir / f'{metric_type}_curve.pdf')
             plt.close()
 
         # Create a combined figure with all metrics as subplots in two columns
@@ -388,7 +441,7 @@ class BaseNNModel:
             fig.delaxes(axes[i])
 
         plt.tight_layout()
-        fig.savefig(training_curves_dir / 'all_metrics_curves.pdf')
+        fig.savefig(outdir / 'all_metrics_curves.pdf')
         plt.close()
 
     def evaluate_and_predict(self, X_test, Y_test, events_test) -> pd.DataFrame:
@@ -460,21 +513,12 @@ class BaseNNModel:
         plt.tight_layout()
         fig.savefig(self.modeldir / filename)
 
-    def _standardize_metric_names(self, metrics):
-        standardized_metrics = {}
-        for key, value in metrics.items():
-            if key.startswith('auc'):           standardized_metrics['auc'] = value
-            elif key.startswith('precision'):   standardized_metrics['precision'] = value
-            elif key.startswith('recall'):      standardized_metrics['recall'] = value
-            else:                               standardized_metrics[key] = value
-        return standardized_metrics
-
     def Train(self):
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = self._split_and_shuffle(self.model_df)
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = self.split_and_shuffle(self.model_df)
         self.setup_model(X_train)
-        self.train_model(X_train, Y_train, tw_train)
+        history = self.train_model(X_train, Y_train, tw_train)
         self.save_model_info(X_train.columns, Y_train, Y_test)
-        self.output_training_curves()
+        self.output_training_curves(history=history, outdir= self.modeldir/'Training_curves')
         return X_test, Y_test, evs_test
 
     def Evaluate(self, X_test, Y_test, evs_test, do_input_feature_ranking):
@@ -519,7 +563,8 @@ class BaseNNModel:
         print(f"Avg. metrics: {average_metrics}")
         return self.params, average_metrics
 
-    def _split_and_shuffle(self, model_df):
+    @staticmethod
+    def split_and_shuffle(model_df):
         classes_in_df = model_df.filter(like='Class_').columns
         columns_to_drop = ["event", "gen_Weight", "sample_weight"]
         columns_to_drop.extend(classes_in_df)
@@ -540,15 +585,17 @@ class BinaryModel(BaseNNModel):
         self.classes = ["isSignal"]
         self.processes = params['processes']
         if total_df is not None:
-            self.model_df = self._get_model_df(total_df, params)
+            self.model_df = self.get_model_df(total_df, params)
             print(f"Model: {self.name}")
             print(self.model_df)
 
-    def _get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
-        model_df  = super()._sculpt_dataframe(total_df, params)
+    def get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+        model_df  = super()._get_model_df(total_df, params)
 
         model_df = model_df.assign(Class_isSignal=0)
         model_df.loc[model_df['Process_HH'] == 1, 'Class_isSignal'] = 1
+
+        # Drop 'Process_' columns
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
         model_df = model_df.drop(columns=columns_to_drop)
 
@@ -614,20 +661,21 @@ class MulticlassModel(BaseNNModel):
         for proc in self.processes:
             assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
         if total_df is not None:
-            self.model_df = self._get_model_df(total_df, params)
+            self.model_df = self.get_model_df(total_df, params)
             print(f"Model: {self.name}")
             print(self.model_df)
 
-    def _get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
-        model_df  = super()._sculpt_dataframe(total_df, params)
+    def get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
+        model_df  = super()._get_model_df(total_df, params)
 
         for class_i, class_i_processes in self.categorization.items():
             model_df[f"Class_{class_i}"] = 0
             for proc in class_i_processes:
                 model_df.loc[model_df[f"Process_{proc}"] == 1, f"Class_{class_i}"] = 1
-        
+
+        # Drop 'Process_' columns
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
-        model_df.drop(columns=columns_to_drop, inplace=True)
+        model_df = model_df.drop(columns=columns_to_drop)
 
         return model_df
 
@@ -694,15 +742,20 @@ class MulticlassModel(BaseNNModel):
         super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
-def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, cv_method=None, n_splits=5):
+def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, outdir_name:str=None, cv_method=None, n_splits=5):
     global WORKDIR, NNOUTDIR, MODELS_SUMMARY
     WORKDIR = Path(workdir)
-    nnoutdir_name = 'Neural_Nets_%s'%sel_name
-    NNOUTDIR = WORKDIR / nnoutdir_name
+    if outdir_name is not None:
+        NNOUTDIR = WORKDIR / outdir_name
+    else:
+        nnoutdir_name = 'Neural_Nets_%s'%sel_name
+        NNOUTDIR = WORKDIR / nnoutdir_name
     MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
     DNN_models_params = get_test_models('NN_test_models.yml')
     total_df = load_and_preprocess_data(sel_name)
     print(f"Total_df:\n{total_df}")
+
+    data_quality_summary(total_df)
 
     if mode == 'train_eval':
         for model_info in DNN_models_params:
@@ -740,6 +793,7 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--workdir", action="store", help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
     parser.add_argument("-c", "--sel_name", action="store", required=True, help="Ex: SL_res_2b_x")
     parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
+    parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for trained models')
     args, unknown = parser.parse_known_args()
     if args.mode == 'train_eval':
         parser.add_argument("-r", "--do_input_feature_ranking", action="store_true", help="set to get input feature ranking")
@@ -752,12 +806,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode == 'train_eval':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking)
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking, outdir_name=args.outdir)
     elif args.mode == 'eval':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir)
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir, outdir_name=args.outdir)
     elif args.mode == 'cv':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits)
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits, outdir_name=args.outdir)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_0801 -c SL_res_2b_x -m train_eval
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_0801 -c SL_res_2b_x -m train_eval -o NN_Testing
     '''

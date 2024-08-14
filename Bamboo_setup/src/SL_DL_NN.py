@@ -26,39 +26,55 @@ class SL_DL_NN(NanoBaseHHbbWW):
     @staticmethod
     def get_NN_model(NNdir: str):
         NNdir = Path(NNdir)
-        input_vars_names = []
+        feature_names = []
         input_vars_file = NNdir / 'input_variables.txt'
         with open(input_vars_file, 'r') as file:
             for line in file:
-                input_vars_names.append(line.strip())
+                feature_names.append(line.strip())
         model_path = NNdir / "dnn_model.onnx"
         model = mvaEvaluator(model_path, mvaType='ONNXRuntime', otherArgs = ("output"))
 
         model_info_file = NNdir / 'model_info.yml'
         with open(model_info_file, 'r') as file:
-            model_info_data = yaml.safe_load(file)
+            model_info = yaml.safe_load(file)
 
-        model_name = model_info_data['name']
-        classes = [class_i for class_i in model_info_data['categorization'].keys()]
-        processes = [proc for proc_list in model_info_data['categorization'].values() for proc in proc_list]
-
-        return model, model_name, input_vars_names, classes, processes
+        model_name = model_info['name']
+        if model_info['type']  == 'binary':
+            classes = ["isSignal"]
+            processes = model_info['processes']
+        elif model_info['type'] == 'multi':
+            classes = [class_i for class_i in model_info['categorization'].keys()]
+            processes = [proc for proc_list in model_info['categorization'].values() for proc in proc_list]
+        else:
+            raise Exception(f"Model {model_i['name']} is of invalid type")
+            
+        return model, model_name, feature_names, classes, processes
 
     @staticmethod
-    def gather_input_vars(sel_name, input_vars_names, objects, selections):
+    def gather_input_vars(sel_name, feature_names, objects, selections):
+        var_names = [s for s in feature_names if s.endswith('_llr')]
+        llr_names = [s for s in feature_names if not s.endswith('_llr')]
+        input_vars = []
+        # Variables
         sel_vars_dict = var_defs.gathers_vars_dict(objects, selections)
         vars_dict = sel_vars_dict[sel_name]
-        input_vars = [vars_dict[name] for name in input_vars_names if name in vars_dict]
+        input_vars.extend([vars_dict[name] for name in var_names if name in vars_dict])
+        # LLRs
+        for llr_name in llr_names:
+            ref = llr_name.replace('_llr', '')
+            varnames = ref.split('_x_')
+            llr = LikelihoodRatio(varnames)
+            input_vars.append(llr)
         return input_vars
 
     @staticmethod
-    def get_dnn_score(NNdir:str, sel_name, objects):
+    def get_DNN(NNdir:str, sel_name, objects):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
         selections = var_defs.get_selections_subset(subcat_names)
 
-        model, model_name, input_vars_names, classes, processes = SL_DL_NN.get_NN_model(NNdir)
-        input_vars = SL_DL_NN.gather_input_vars(sel_name, input_vars_names, objects, selections)
+        model, model_name, feature_names, classes, processes = SL_DL_NN.get_NN_model(NNdir)
+        input_vars = SL_DL_NN.gather_input_vars(sel_name, feature_names, objects, selections)
         data = model(*input_vars)
         data = {sel_name_i: data for sel_name_i in selections.keys()}
         DNN.populate(data, selections)
@@ -73,9 +89,13 @@ class SL_DL_NN(NanoBaseHHbbWW):
         
         return DNN
 
-    def output_skims(self, sel_name, DNN, selection, plots):
-        branches = {"event": None, "DNN": DNN.data}
-        plots.append(Skim(sel_name, branches, selection))
+    def output_skims(DNN_LIST, sel_name, selections, plots):
+        selection = selections[sel_name]
+        for DNN in DNN_LIST:
+            branches = {"event": None}
+            for i, class_i in enumerate(DNN.classes):
+                branches.update({class_i: DNN.data[i]})
+            plots.append(Skim(DNN.model_name, branches, selection))
         return plots
 
     @staticmethod
@@ -111,7 +131,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             NNdir_list = self.args.NNdirs
 
 
-        self.dnn_vars_list = []
+        self.DNN_LIST = []
         for NNdir in NNdir_list:
             DNN = SL_DL_NN.get_dnn_score(NNdir, sel_name, objects)
             DNN = DNN[sel_name]
@@ -133,7 +153,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
                 plots.append(Plot.make1D('_'.join([DNN.ref, class_i, 'Score'+class_i, 'Model'+DNN.model_name]), DNN.data[i], sel_NNclass, DNN.eqbin, xTitle=DNN.full_title))
                 self.yields.add(sel_NNclass, sel_NNclass_name) 
 
-            self.dnn_vars_list.append(DNN)
+            self.DNN_LIST.append(DNN)
             
             if DNN.multiclass:
                 DNN_multi_s_over_b = Variable1D("DNN_score_s_over_b")
@@ -162,7 +182,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
         self.yields.add(selections['DL'], 'DL')
 
         if self.args.skim:
-            plots = self.output_skims(sel_name, DNN, selections[sel_name], plots)
+            plots = self.output_skims(self.DNN_LIST, sel_name, selections, plots)
 
         return plots
 
@@ -177,13 +197,13 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
 
         # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory
-        for dnn_var in self.dnn_vars_list:   
+        for dnn_var in self.DNN_LIST:   
             print(f"{dnn_var.model_name}") 
             customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/{dnn_var.model_name}')
             customPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
             customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
 
-        # for dnn_var in self.dnn_vars_list:   
+        # for dnn_var in self.DNN_LIST:   
         #     print(f"{dnn_var.model_name}") 
         #     customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/combined_processes/{dnn_var.model_name}')
         #     customPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
