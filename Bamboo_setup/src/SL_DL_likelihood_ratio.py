@@ -18,9 +18,6 @@ from pathlib import Path
 from typing import Dict, List
 from itertools import combinations
 
-ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
-ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
-
 class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_likelihood_ratio, self).__init__(args)
@@ -34,10 +31,10 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
         
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
-        tree, baseSel, backend, lumiArgs = super(SL_DL_vars_reco, self).prepareTree(tree=tree,
+        tree, baseSel, backend, lumiArgs = super(SL_DL_likelihood_ratio, self).prepareTree(tree=tree,
                                                                                     sample=sample,
                                                                                     sampleCfg=sampleCfg,
-                                                                                    description=getNanoAODDescription(),
+                                                                                    description=description,
                                                                                     backend=backend)
         if self.is_MC:
             cut = (op.OR(tree.event % 10 == 2, tree.event % 10 == 4, tree.event % 10 == 6, tree.event % 10 == 8))
@@ -47,7 +44,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
     @staticmethod
     def get_var_llr(llr_corr_workdir:str, data: list, var_name, selection, defineOnFirstUse=True):
         llr_corr_workdir = Path(llr_corr_workdir)
-        corr_file = llr_corr_workdir / 'results' / 'corrections_llr.json'
+        corr_file = llr_corr_workdir / 'results' / 'corrections_llr_All.json'
         if len(data) == 1: 
             return get_correction(corr_file, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
         elif len(data) == 2:
@@ -244,6 +241,21 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         plots.append(Skim('SL_res_2b_x', branches, selection))
         return plots
 
+    @staticmethod
+    def get_skims(llrs, objects, selections, plots):
+        sel_name = 'SL_res_2b_x'
+        branches = {"event":None, "gen_Weight": objects["gen_Weight"]}
+
+        sel_vars_dict = var_defs.gathers_vars_dict(objects, selections)
+        branches.update(sel_vars_dict[sel_name])
+
+        llrs_dict = {i.name: i.data for llr in llrs for i in llr if i.subcat == sel_name}
+        branches.update(llrs_dict)
+
+        plots.append(Skim(sel_name, branches, selections[sel_name]))
+
+        return plots
+
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         plots.append(self.yields)
@@ -284,7 +296,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
 
 
         if not self.args.no_skim:
-            plots = self.test_skim_refined(all_llrs, objects, selections['SL_res_2b_x'], plots)
+            plots = SL_DL_likelihood_ratio.get_skims(all_llrs, objects, selections, plots)
 
         return plots
 

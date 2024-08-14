@@ -465,9 +465,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             SL_or_DL = "SL" if "SL" in name else "DL"
             self.jet_subcats.update({name: selections[SL_or_DL][name]})
     
-    def get_cat_leptons(self, cat) -> 'dict[str, object]':
+    def get_cat_leptons(self, cat, electrons, muons) -> 'dict[str, object]':
 
-        electrons, muons = self.objects["tight_electrons"], self.objects["tight_muons"]
         leptons = {}
 
         if cat == "SL_e":
@@ -490,7 +489,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         return leptons
 
     # Returns list[list[sel_name, sel_skim[], selection]]
-    def get_skims_args_list(self) -> 'list[list[str, dict[], object]':
+    def get_skims(self, objects, selections, plots) -> 'list[list[str, dict[], object]':
 
         def get_jet_btag(jet, type):
             if type == "ak4":
@@ -501,7 +500,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 else:
                     return jet.particleNetWithMass_HbbvsQCD
 
-        objects = self.objects
         base_tree = {
             "event_nr": objects["event_nr"],
             "run_nr": objects["run_nr"],
@@ -642,42 +640,40 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         sel_skim["ak8jet0_btag"] = op.switch(op.rng_len(objects["cleaned_ak8_btags"]) >= 1, get_jet_btag(cleaned_ak8_jets_btag_sorted[0], "ak8"), op.c_float(-9999))
         sel_skim["ak8jet0_msoftdrop"] = op.switch(op.rng_len(objects["cleaned_ak8_btags"]) >= 1, cleaned_ak8_jets_btag_sorted[0].msoftdrop, op.c_float(-9999))
 
-        skims_args_list.append(["Total", sel_skim, self.all_selections["Total"]["Total"]])
+        plots.append(Skim("Total", sel_skim, selections["Total"]["Total"]))
             
-        return skims_args_list
+        return plots
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         plots.append(self.yields)
         plots.extend(self.base_plots)
         
-        self.objects = SL_DL_event_selection.get_objects(tree, self.era, self.args.mc_truth_b, use_mvaTTH=False) 
-        self.selections = SL_DL_event_selection.get_event_selections(tree, self.objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
+        objects = SL_DL_event_selection.get_objects(tree, self.era, self.args.mc_truth_b, use_mvaTTH=False) 
+        selections = SL_DL_event_selection.get_event_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
         
-        self.set_category_groups(self.selections)
+        self.set_category_groups(selections)
 
         # ===============================================================================
         # ================= Yields, Skims and Plots =====================================
         # ===============================================================================
 
         # Adding Yields for ALL selections --------------------
-        for gen_sel_name, gen_sel_dict in self.selections.items():
+        for gen_sel_name, gen_sel_dict in selections.items():
             for sel_name, sel in gen_sel_dict.items():
                 self.yields.add(sel, sel_name)
 
         # Adding Skims ----------------------------------------
         if self.args.skim:
-            skims_args_list = self.get_skims_args_list()
-            for skims_args in skims_args_list:
-                plots.append(Skim(skims_args[0], skims_args[1], skims_args[2]))
+            plots = self.get_skims(objects, selections, plots)
 
         # Adding plots -----------------------------------------
         jets = {
-                "AK4_0": self.objects["cleaned_ak4_jets"][0], 
-                "AK4_1": self.objects["cleaned_ak4_jets"][1],
-                "AK4_btag_0": self.objects["cleaned_ak4_btags"][0], 
-                "AK4_btag_1": self.objects["cleaned_ak4_btags"][1], 
-                "AK8_btag_0": self.objects["cleaned_ak8_btags"][0]}
+                "AK4_0": objects["cleaned_ak4_jets"][0], 
+                "AK4_1": objects["cleaned_ak4_jets"][1],
+                "AK4_btag_0": objects["cleaned_ak4_btags"][0], 
+                "AK4_btag_1": objects["cleaned_ak4_btags"][1], 
+                "AK8_btag_0": objects["cleaned_ak8_btags"][0]}
 
         def get_lepton_plots(lep, lep_name, sel, sel_name):
             lepton_plots = {
@@ -693,7 +689,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         DL_emu_mu0_plots = {}
         for sel_name, sel in selections_dict.items():
             # Plots for leptons in the selection
-            leptons = self.get_cat_leptons(sel_name)
+            leptons = self.get_cat_leptons(sel_name, objects["tight_electrons"], objects["tight_muons"])
             for lep_name, lep in leptons.items():
                 if "DL_emu_e0" == sel_name:
                     DL_emu_e0_plots.update({lep_name: get_lepton_plots(lep, lep_name, sel, sel_name)})
@@ -706,9 +702,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
                 plots.extend([Plot.make1D('_'.join([sel_name, jet_name, 'pt']), jet.pt, sel, EqBin(250, 0, 250), xTitle="pT (GeV)")])
             # Plot for MET and HT
             plots.extend([
-                Plot.make1D('_'.join([sel_name, 'met', 'pt']), self.objects["met"].pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
-                Plot.make1D('_'.join([sel_name, 'met', 'phi']), self.objects["met"].phi, sel, EqBin(100, -4, 4), xTitle="MET phi (GeV)"),
-                Plot.make1D('_'.join([sel_name, 'HT']), self.objects["ht_jets"], sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
+                Plot.make1D('_'.join([sel_name, 'met', 'pt']), objects["met"].pt, sel, EqBin(250, 0, 500), xTitle="MET pT (GeV)"),
+                Plot.make1D('_'.join([sel_name, 'met', 'phi']), objects["met"].phi, sel, EqBin(100, -4, 4), xTitle="MET phi (GeV)"),
+                Plot.make1D('_'.join([sel_name, 'HT']), objects["ht_jets"], sel, EqBin(500, 0, 1000), xTitle="HT (GeV)")])
 
         for plot_tag in ["pt", "eta", "pdgId", "sip3d", "pt_vs_eta"]:
             for lep_name in ["lepton0", "lepton1"]:

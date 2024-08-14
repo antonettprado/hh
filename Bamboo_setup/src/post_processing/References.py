@@ -37,7 +37,8 @@ COLOR_MAP = dict(
     #Others=[]
     #Fakes=[]
     Others=['black', ROOT.kBlack],
-    Top=['pink', ROOT.kPink]
+    Top=['pink', ROOT.kPink],
+    AllOthers=['black', ROOT.kBlack]
     )
 
 
