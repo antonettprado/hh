@@ -142,7 +142,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
 
-        myPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes="All", outdir='plotter_fromrecov2')
+        myPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes="All")
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
@@ -159,6 +159,6 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             postfix = ''.join(self.args.llr_backgrounds)
 
         llrPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes=which_processes)
-        llr_functions.compute_llrs(plotter=llrPlotter, outfilename='corrections_llr_'+postfix+'_v2', which_processes=which_processes)
+        llr_functions.compute_llrs(plotter=llrPlotter, outfilename='corrections_llr_'+postfix, which_processes=which_processes)
 
 
