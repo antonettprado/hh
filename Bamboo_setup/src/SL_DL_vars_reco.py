@@ -141,14 +141,14 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
-        myPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes="All")
+
+        myPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes="All", outdir='plotter_fromrecov2')
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 
-        
-        print("------------------ Calculating Likelihood Ratios --------------------")
-        from post_processing import plotting
-        # Check llr_backgrounds contains valid processes' names:
+
+        from post_processing import llr_functions
+
         if self.args.llr_backgrounds == 'All': 
             which_processes = 'All'
             postfix = which_processes
@@ -159,70 +159,6 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             postfix = ''.join(self.args.llr_backgrounds)
 
         llrPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes=which_processes)
+        llr_functions.compute_llrs(plotter=llrPlotter, outfilename='corrections_llr_'+postfix+'_v2', which_processes=which_processes)
 
-        print(f"The processes for the ratio calculation are: {which_processes}")
 
-        vars = variables.parse_vars_from_refs(llrPlotter.refs)
-
-        all_corrections = []
-        for var in vars:
-            print(var.name)
-            for subcat_var in var:
-                print(f"\t{subcat_var.ref}")
-                sig_back_dict = llrPlotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, normalized=True)
-
-                ratio_hist = sig_back_dict['Signal'].Clone()
-                ratio_hist.Divide(sig_back_dict['Background'])
-
-                if isinstance(var, Variable1D):
-                    bin_edges, bin_contents = plotting.interpolate_1d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_1D)
-                    inputs = [cs.Variable(name="xaxis", type="real", description="")]
-                    data = cs.Binning(
-                        nodetype="binning",
-                        input="xaxis",
-                        edges=list(np.round(bin_edges, plotting.DECIMAL_PLACES)),
-                        content=list(np.round(bin_contents, plotting.DECIMAL_PLACES)),
-                        flow="clamp",
-                    )
-                elif isinstance(var, Variable2D):
-                    bin_edges, bin_contents = plotting.interpolate_2d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_2D)
-                    bin_edges = [ np.round(axis, plotting.DECIMAL_PLACES).tolist() for axis in bin_edges ]
-                    inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                            cs.Variable(name="yaxis", type="real", description="")]
-                    data = cs.MultiBinning(
-                        nodetype="multibinning",
-                        inputs=["xaxis","yaxis"],
-                        edges=bin_edges,
-                        content=np.round(bin_contents, plotting.DECIMAL_PLACES).tolist(),
-                        flow="clamp",
-                    )
-                elif isinstance(var, Variable3D):
-                    bin_edges, bin_contents = plotting.interpolate_3d_root_histogram(ratio_hist, plotting.INTERPOLATION_SCALE_FACTOR_3D)
-                    bin_edges = [ np.round(axis, plotting.DECIMAL_PLACES).tolist() for axis in bin_edges ]
-                    inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                            cs.Variable(name="yaxis", type="real", description=""),
-                            cs.Variable(name="zaxis", type="real", description="")]
-                    data = cs.MultiBinning(
-                        nodetype="multibinning",
-                        inputs=["xaxis","yaxis", "zaxis"],
-                        edges=bin_edges,
-                        content=np.round(bin_contents, plotting.DECIMAL_PLACES).tolist(),
-                        flow="clamp",
-                    )
-
-                corr = cs.Correction(
-                    name=subcat_var.ref + '_llr',
-                    # description = f'llr for {subcat_var.ref}'
-                    version=0,
-                    inputs=inputs,
-                    output=cs.Variable(name="", type="real", description=""),
-                    data=data)
-
-                all_corrections.append(corr)
-
-        cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = os.path.join(resultsdir, "corrections_llr_" + postfix +".json")
-        with open(output_llr_file, "w") as outfile:
-            outfile.write(cset.json(exclude_unset=False))
-
-        plotting.custom_pretty_print_json(output_llr_file, output_llr_file)
