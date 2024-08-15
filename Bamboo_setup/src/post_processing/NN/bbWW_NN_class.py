@@ -24,6 +24,14 @@ FIXED_RANDOM_SEED = True
 N_MAX_TRAINING = 1000000
 N_MAX_HH_TRAINING = -1 # -1 for using all available events
 
+TRAINING_WEIGHT_SCALING_FACTORS = {}
+TRAINING_WEIGHT_SCALING_FACTORS["HH"] = 1.0
+TRAINING_WEIGHT_SCALING_FACTORS["ttbar"] = 1.0
+TRAINING_WEIGHT_SCALING_FACTORS["tW"] = 1.0
+TRAINING_WEIGHT_SCALING_FACTORS["WJets"] = 1.0
+TRAINING_WEIGHT_SCALING_FACTORS["VV"] = 1.0
+TRAINING_WEIGHT_SCALING_FACTORS["DY"] = 1.0
+
 if FIXED_RANDOM_SEED:
     # Set seeds for reproducibility
     seed_value = 42
@@ -243,11 +251,10 @@ class BaseNNModel:
         for process in self.processes:
             process_mask = (model_df[f"Process_{process}"] == 1)
             process_total_sum = model_df[process_mask]["gen_Weight"].sum()
-            if process == 'HH':
-                model_df.loc[process_mask, "sample_weight"] *= model_df.shape[0] / process_total_sum
-            else:
-                scaling_factor = 1
-                model_df.loc[process_mask, "sample_weight"] *= (scaling_factor * (model_df.shape[0] / process_total_sum))
+            scaling_factor = 1
+            if process in TRAINING_WEIGHT_SCALING_FACTORS:
+                scaling_factor = TRAINING_WEIGHT_SCALING_FACTORS[process]
+            model_df.loc[process_mask, "sample_weight"] *= (scaling_factor * (model_df.shape[0] / process_total_sum))
 
         # Printing only
         for process in self.processes:
@@ -362,7 +369,7 @@ class BaseNNModel:
 
     def save_model_info(self, features, Y_train, Y_test):
         print(f"\tSaving model info ...")
-        # model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
+        model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
         input_names = features.tolist()
         input_vars_file = self.modeldir /'input_variables.txt'
         with open(input_vars_file, 'w') as file:
