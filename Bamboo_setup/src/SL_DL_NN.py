@@ -8,7 +8,7 @@ from bamboo import treefunctions as op
 
 from base_selection import NanoBaseHHbbWW
 from SL_DL_vars_reco import SL_DL_vars_reco
-from utils.variables import Variable1D
+from utils.variables import Variable1D, LikelihoodRatio
 import utils.variable_definition as var_defs
 
 class SL_DL_NN(NanoBaseHHbbWW):
@@ -52,8 +52,8 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
     @staticmethod
     def gather_input_vars(sel_name, feature_names, objects, selections):
-        var_names = [s for s in feature_names if s.endswith('_llr')]
-        llr_names = [s for s in feature_names if not s.endswith('_llr')]
+        var_names = [s for s in feature_names if not s.endswith('_llr')]
+        llr_names = [s for s in feature_names if s.endswith('_llr')]
         input_vars = []
         # Variables
         sel_vars_dict = var_defs.gathers_vars_dict(objects, selections)
