@@ -354,7 +354,7 @@ class BaseNNModel:
             batch_size=self.params['fit']['batch_size'], 
             epochs=self.params['fit']['epochs'], 
             sample_weight=sample_weight,
-            class_weight = self.params['class_weight'],
+            class_weight=self.class_weight,
             validation_split=self.params['fit']['validation_split'],  
             callbacks=self.get_callbacks())
 
