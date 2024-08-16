@@ -4,7 +4,6 @@ Models:
     type: 'binary'
     processes: ["HH", "ttbar"]
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0}
-    class_weight: {0: 1.0, 1: 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -19,7 +18,6 @@ Models:
     type: 'binary'
     processes: ["HH", "ttbar", "tW"]
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0}
-    class_weight: {0: 1.0, 1: 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -34,7 +32,6 @@ Models:
     type: 'binary'
     processes: ["HH", "ttbar", "tW", "DY", "VV", "WJets"]
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
-    class_weight: {0: 1.0, 1: 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -49,7 +46,6 @@ Models:
     type: 'binary'
     processes: ["HH", "ttbar", "tW", "DY", "VV", "WJets"]
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
-    class_weight: {0: 1.0, 1: 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -68,7 +64,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0}
-    class_weight: {"HH": 1.0, "ttbar": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -83,7 +78,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0}
-    class_weight: {"HH": 1.0, "ttbar": 1.0, "tW": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -98,7 +92,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "VV": ["VV"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "VV": 1.0}
-    class_weight: {"HH": 1.0, "ttbar": 1.0, "tW": 1.0, "VV": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -113,7 +106,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "WJets": 1.0}
-    class_weight: {"HH": 1.0, "ttbar": 1.0, "tW": 1.0, "WJets": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -128,7 +120,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "VV": ["VV"], "WJets": ["WJets"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "VV": 1.0, "WJets": 1.0}
-    class_weight: {"HH": 1.0, "ttbar": 1.0, "tW": 1.0, "VV": 1.0, "WJets": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -143,7 +134,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "VV": ["VV"], "WJets":["WJets"], "DY": ["DY"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
-    class_weight: {"HH": 1.0, "ttbar": 1.0, "tW": 1.0, "VV": 1.0, "WJets": 1.0, "DY": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -158,7 +148,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW":["tW"], "Others": ["DY", "VV", "WJets"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
-    class_weight: {"HH": 1.0, "ttbar": 1.0, "tW": 1.0, "Others": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -173,7 +162,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
-    class_weight: {"HH": 1.0, "Top": 1.0, "Others": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
@@ -188,7 +176,6 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "DY": ["DY"], "VV": ["VV"], "WJets":["WJets"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 1.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
-    class_weight: {"HH": 1.0, "Top": 1.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
     input_vars: 'All'
     layers: 
       - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}

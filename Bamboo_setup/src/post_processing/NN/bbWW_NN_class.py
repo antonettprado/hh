@@ -203,7 +203,6 @@ class BaseNNModel:
         self.classes = None
         self.processes = None
         self.training_weight_sf = params['training_weight_sf']
-        self.class_weight = params['class_weight']
         self.model = None
         self.type = None
         self.history = None
@@ -354,7 +353,6 @@ class BaseNNModel:
             batch_size=self.params['fit']['batch_size'], 
             epochs=self.params['fit']['epochs'], 
             sample_weight=sample_weight,
-            class_weight=self.class_weight,
             validation_split=self.params['fit']['validation_split'],  
             callbacks=self.get_callbacks())
 
@@ -660,11 +658,6 @@ class MulticlassModel(BaseNNModel):
         self.categorization = params['categorization']
         self.classes = [class_i for class_i in params['categorization'].keys()]
         self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
-
-        class_weight = {}
-        for i,node in enumerate(self.classes):
-            class_weight[i] = self.class_weight[node]
-        self.class_weight = class_weight
 
         for proc in self.processes:
             assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
