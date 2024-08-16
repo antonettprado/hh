@@ -144,12 +144,12 @@ def compute_llrs(plotter: Plotter, outfilename: str = 'corrections_llr', which_p
 
             all_corrections.append(corr)
 
-        cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-        output_llr_file = plotter.resultsdir /  (outfilename + ".json")
-        with open(output_llr_file, "w") as outfile:
-            outfile.write(cset.json(exclude_unset=False))
-
-        custom_pretty_print_json(output_llr_file, output_llr_file)
+    cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
+    output_llr_file = plotter.resultsdir /  (outfilename + ".json")
+    with open(output_llr_file, "w") as outfile:
+        outfile.write(cset.json(exclude_unset=False))
+    
+    custom_pretty_print_json(output_llr_file, output_llr_file)
 
 if __name__ == '__main__':
 
