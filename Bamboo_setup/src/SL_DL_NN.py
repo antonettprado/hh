@@ -133,7 +133,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
         self.DNN_LIST = []
         for NNdir in NNdir_list:
-            DNN = SL_DL_NN.get_dnn_score(NNdir, sel_name, objects)
+            DNN = SL_DL_NN.get_DNN(NNdir, sel_name, objects)
             DNN = DNN[sel_name]
 
             scores = DNN.data
