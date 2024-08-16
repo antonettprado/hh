@@ -24,14 +24,6 @@ FIXED_RANDOM_SEED = True
 N_MAX_TRAINING = 1000000
 N_MAX_HH_TRAINING = -1 # -1 for using all available events
 
-TRAINING_WEIGHT_SCALING_FACTORS = {}
-TRAINING_WEIGHT_SCALING_FACTORS["HH"] = 1.0
-TRAINING_WEIGHT_SCALING_FACTORS["ttbar"] = 8.0
-TRAINING_WEIGHT_SCALING_FACTORS["tW"] = 1.0
-TRAINING_WEIGHT_SCALING_FACTORS["WJets"] = 1.0
-TRAINING_WEIGHT_SCALING_FACTORS["VV"] = 1.0
-TRAINING_WEIGHT_SCALING_FACTORS["DY"] = 1.0
-
 if FIXED_RANDOM_SEED:
     # Set seeds for reproducibility
     seed_value = 42
@@ -210,6 +202,7 @@ class BaseNNModel:
         self.params = params
         self.classes = None
         self.processes = None
+        self.training_weight_sf = params['training_weight_sf']
         self.model = None
         self.type = None
         self.history = None
@@ -252,8 +245,8 @@ class BaseNNModel:
             process_mask = (model_df[f"Process_{process}"] == 1)
             process_total_sum = model_df[process_mask]["gen_Weight"].sum()
             scaling_factor = 1
-            if process in TRAINING_WEIGHT_SCALING_FACTORS:
-                scaling_factor = TRAINING_WEIGHT_SCALING_FACTORS[process]
+            if process in self.training_weight_sf:
+                scaling_factor = self.training_weight_sf[process]
             model_df.loc[process_mask, "sample_weight"] *= (scaling_factor * (model_df.shape[0] / process_total_sum))
 
         # Printing only
