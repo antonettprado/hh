@@ -166,8 +166,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     '''
-    To run this, you must have already run cut_based_selections.py, since this script uses the csv file of the cuts produced
-    Example1:
+    Before running the command, within a new lxplus session, run:
+    cd /afs/cern.ch/user/a/anunezde/CMSSW_14_1_0_pre4/src/CombineHarvester/CombineTools/hh/Bamboo_setup/
+    export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
+    cmsenv
+    Command:
     $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_Reco_even_0815_NN -nndir $Z_OUTPUT_eos/2022_Reco_even_0815/Neural_Nets_SL_res_2b_x -c config/analysis_2022.yml -p all -a
     '''
 
