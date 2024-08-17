@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split, StratifiedKFold, StratifiedShuffleSplit
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
 from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout
+from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall
@@ -43,15 +43,23 @@ if FIXED_RANDOM_SEED:
 
 POSTPROCESSING_NN_FOLDER = Path(__file__).parent
 BAMBOO_SETUP = POSTPROCESSING_NN_FOLDER.parents[2]
-WORKDIR, NNOUTDIR, MODELS_SUMMARY = None, None, None
+WORKDIR, RESULTSDIR, NNOUTDIR = None, None, None
 assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
 
-def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
-    resultsdir = WORKDIR / 'results'
-    sel_name = sel_name
+def set_globals(workdir: str, sel_name: str, nnoutdir_name:str=None):
+    global WORKDIR, RESULTSDIR, NNOUTDIR
+    WORKDIR = Path(workdir)
+    RESULTSDIR = WORKDIR / 'results'
+    if nnoutdir_name is not None:
+        NNOUTDIR = WORKDIR / nnoutdir_name
+    else:
+        nnoutdir_name = 'Neural_Nets_%s'%sel_name
+        NNOUTDIR = WORKDIR / nnoutdir_name
 
-    processes_available = Refs._find_processes(resultsdir)
-    root_files_available = Refs._find_root_files(resultsdir)
+def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
+
+    processes_available = Refs._find_processes(RESULTSDIR)
+    root_files_available = Refs._find_root_files(RESULTSDIR)
 
     df_list = []
     for process in processes_available:
@@ -79,8 +87,8 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
     print(f"After preprocessing:")
     for col in total_df.columns:
         if col.startswith('Process_'):
-            ones = total_df[col].value_counts().get(1)
-            print(f"Number of events in process {col}: {ones}")
+            count = total_df[total_df[col] == 1].shape[0]
+            print(f"Number of events in process {col}: {count}")
     
     # Reset the index to make it a column
     total_df.reset_index(inplace=True)
@@ -90,14 +98,15 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
 
     # Drop the index column
     total_df.drop(columns='index', inplace=True)
+
+    print("Total_df:")
+    print(total_df)
     
     return total_df
 
 def data_quality_summary(df: pd.DataFrame):
 
     from scipy.stats import zscore
-
-
     nan_summary = df.isna().sum()
     invalid_value_summary = (df == -9999).sum()
 
@@ -113,13 +122,14 @@ def data_quality_summary(df: pd.DataFrame):
     summary = pd.DataFrame({
         "NaN Count": nan_summary,
         "-9999 Count": invalid_value_summary,
-        **outlier_percentages
+        **outlier_percentages,
+        "Mode": df.mode().iloc[0]
     }).fillna(0)
 
     # Add the basic statistics to the summary
     summary = summary.join(stats_summary)
 
-    print("Data Quality Summary:")
+    print("Data Quality Summaryyyyy:")
     print(summary)
 
 def get_test_models(filename: str):
@@ -164,9 +174,10 @@ def load_model(dir: str):
         
     return tf_model, model_info
 
-def update_models_summary_csv(model_name: str, model_metrics: dict):
-    if MODELS_SUMMARY.exists():
-        df = pd.read_csv(MODELS_SUMMARY)
+def update_models_summary_csv(models_summary_name: Path, model_name: str, model_metrics: dict):
+    models_summary = NNOUTDIR / models_summary_name
+    if models_summary.exists():
+        df = pd.read_csv(models_summary)
     else:
         df = pd.DataFrame(columns=['name'] + list(model_metrics.keys()))
 
@@ -182,7 +193,7 @@ def update_models_summary_csv(model_name: str, model_metrics: dict):
         new_row.update(model_metrics)
         df = df._append(new_row, ignore_index=True)
 
-    df.to_csv(MODELS_SUMMARY, index=False)
+    df.to_csv(models_summary, index=False)
     print(df)
 
 class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
@@ -202,7 +213,7 @@ class BaseNNModel:
         self.params = params
         self.classes = None
         self.processes = None
-        self.training_weight_sf = params['training_weight_sf']
+        self.training_weight_sf = None
         self.model = None
         self.type = None
         self.history = None
@@ -310,7 +321,7 @@ class BaseNNModel:
         #    variance=X_train.var(axis=0).to_numpy(),
         #    name='Normalization')(inputs)
         normalizer = Normalization(name='Normalization')
-        normalizer.adapt(X_train)
+        normalizer.adapt(np.array(X_train))
         x = normalizer(inputs)
 
         for layer in self.params['layers']:
@@ -336,15 +347,15 @@ class BaseNNModel:
         model = Model(inputs=inputs, outputs=outputs, name=self.params['name'])
 
         model.compile(
-            optimizer=self.get_optimizer(self.params['compiler']),
+            optimizer=BaseNNModel.get_optimizer(self.params['compiler']),
             loss=self.params['compiler']['loss'],
-            metrics = self._get_metrics(),
+            metrics = self._get_metrics(self.classes),
             weighted_metrics = []
         )
         
         self.model = model
 
-    def train_model(self, X_train, Y_train, sample_weight):
+    def train_model(self, X_train, Y_train, sw_train):
         print(f"\tTraining model ...")
         history = self.model.fit(
             X_train, 
@@ -352,9 +363,9 @@ class BaseNNModel:
             verbose=2,
             batch_size=self.params['fit']['batch_size'], 
             epochs=self.params['fit']['epochs'], 
-            sample_weight=sample_weight,
+            sample_weight=sw_train,
             validation_split=self.params['fit']['validation_split'],  
-            callbacks=self.get_callbacks())
+            callbacks=BaseNNModel.get_callbacks())
 
         self.history = history
 
@@ -374,7 +385,6 @@ class BaseNNModel:
         for cls_i in self.classes:
             self.params['Training Events'][cls_i] = int(Y_train['Class_'+cls_i].value_counts()[1])
             self.params['Testing Events'][cls_i] = int(Y_test['Class_'+cls_i].value_counts()[1])
-        self.params[f'Trained on'] = WORKDIR.name
 
         out_yml = self.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
@@ -475,7 +485,8 @@ class BaseNNModel:
             for i, ranked_f in enumerate(features_ranked):
                 file.write(f"{i+1}. {ranked_f}\n")
 
-    def _draw_score_distribution(self, class_score):
+    @staticmethod
+    def _draw_score_distribution(class_score):
         fig, ax = plt.subplots(figsize=(8, 6))
         ax.set_xlim(0, 1)
         ax.set_ylabel('Normalized Number of Events')
@@ -514,16 +525,16 @@ class BaseNNModel:
         fig.savefig(self.modeldir / filename)
 
     def Train(self):
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = self.split_and_shuffle(self.model_df)
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df)
         self.setup_model(X_train)
         history = self.train_model(X_train, Y_train, tw_train)
         self.save_model_info(X_train.columns, Y_train, Y_test)
-        self.output_training_curves(history=history, outdir= self.modeldir/'Training_curves')
+        BaseNNModel.output_training_curves(history=history, outdir= self.modeldir/'Training_curves')
         return X_test, Y_test, evs_test
 
     def Evaluate(self, X_test, Y_test, evs_test, do_input_feature_ranking):
         output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
-        self.draw_score_distribution(output_df)
+        self.draw_score_distribution(output_df, self.modeldir)
         self.draw_roc_curve(output_df)
         self.draw_confusion_matrix(output_df)
         if do_input_feature_ranking:
@@ -584,6 +595,7 @@ class BinaryModel(BaseNNModel):
         self.type = 'binary'
         self.classes = ["isSignal"]
         self.processes = params['processes']
+        self.training_weight_sf = params['training_weight_sf']
         if total_df is not None:
             self.model_df = self.get_model_df(total_df, params)
             print(f"Model: {self.name}")
@@ -601,7 +613,8 @@ class BinaryModel(BaseNNModel):
 
         return model_df
 
-    def _get_metrics(self):
+    @staticmethod
+    def _get_metrics(classes=None):
             '''
             Global metrics are the same as per-class metrics for bianry models
             '''
@@ -614,15 +627,16 @@ class BinaryModel(BaseNNModel):
                        ]
             return metrics
 
-    def draw_score_distribution(self, output_df):
+    @staticmethod
+    def draw_score_distribution(output_df, modeldir):
         class_score = [col for col in output_df.columns if col.startswith('Score_')][0]
         class_true = [col for col in output_df.columns if col.startswith('Class_')][0]
         nbins = 50
-        fig, ax = super()._draw_score_distribution(class_score)
+        fig, ax = BaseNNModel._draw_score_distribution(class_score)
         ax.hist(output_df.loc[output_df[class_true] == 1, class_score], bins=nbins, color='blue', label='HH', histtype='step', density=True)
         ax.hist(output_df.loc[output_df[class_true] == 0, class_score], bins=nbins, color='red', label='Background', histtype='step', density=True)
         ax.legend()
-        fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
+        fig.savefig(modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
 
     def draw_roc_curve(self, output_df) -> dict:
         fig, ax = super()._draw_roc_curve()
@@ -658,6 +672,7 @@ class MulticlassModel(BaseNNModel):
         self.categorization = params['categorization']
         self.classes = [class_i for class_i in params['categorization'].keys()]
         self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
+        self.training_weight_sf = params['training_weight_sf']
 
         for proc in self.processes:
             assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
@@ -680,7 +695,8 @@ class MulticlassModel(BaseNNModel):
 
         return model_df
 
-    def _get_metrics(self):
+    @staticmethod
+    def _get_metrics(classes=None):
             '''
             Global metrics:
                 - Accuracy: ratio of correctly predicted instances to total instances (does not need averaging)
@@ -696,7 +712,7 @@ class MulticlassModel(BaseNNModel):
             '''
             Per-class metrics:
             '''
-            for i, cls_i in enumerate(self.classes):
+            for i, cls_i in enumerate(classes):
                 # metrics.append(Accuracy(name=f'accuracy_{cls_i}', class_id=i))
                 metrics.append(Precision(name=f'precision_{cls_i}', class_id=i))
                 metrics.append(Recall(name=f'recall_{cls_i}', class_id=i))
@@ -705,17 +721,18 @@ class MulticlassModel(BaseNNModel):
                 # metrics.append(F1Score(name=f'f1_score_{cls_i}', class_id=i))
             return metrics
 
-    def draw_score_distribution(self, output_df):
+    @staticmethod
+    def draw_score_distribution(output_df, modeldir):
         classes_score = [col for col in output_df.columns if col.startswith('Score_')]
         classes_true = [col for col in output_df.columns if col.startswith('Class_')]
         nbins = 50
         for class_score in classes_score:
-            fig, ax = super()._draw_score_distribution(class_score)
+            fig, ax = BaseNNModel._draw_score_distribution(class_score)
             for true_proc in classes_true:
                 label = true_proc.removeprefix('Class_')
                 ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=nbins, color=Refs._get_color_for(label, ROOT_b=False), label=label, histtype='step', density=True)
             ax.legend()
-            fig.savefig(self.modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
+            fig.savefig(modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
 
     def draw_roc_curve(self, output_df) -> dict:
         fig, ax = super()._draw_roc_curve()
@@ -743,18 +760,11 @@ class MulticlassModel(BaseNNModel):
         super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
-def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, outdir_name:str=None, cv_method=None, n_splits=5):
-    global WORKDIR, NNOUTDIR, MODELS_SUMMARY
-    WORKDIR = Path(workdir)
-    if outdir_name is not None:
-        NNOUTDIR = WORKDIR / outdir_name
-    else:
-        nnoutdir_name = 'Neural_Nets_%s'%sel_name
-        NNOUTDIR = WORKDIR / nnoutdir_name
-    MODELS_SUMMARY = NNOUTDIR / 'models_performance.csv'
+def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5):
+    set_globals(workdir, sel_name, nnoutdir_name)
+    models_summary_name = 'models_performance.csv'
     DNN_models_params = get_test_models('NN_test_models.yml')
     total_df = load_and_preprocess_data(sel_name)
-    print(f"Total_df:\n{total_df}")
 
     data_quality_summary(total_df)
 
@@ -766,7 +776,7 @@ def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, 
                 DNN = MulticlassModel(params=model_info, total_df=total_df)
             X_test, Y_test, evs_test = DNN.Train()
             model_metrics = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
-            update_models_summary_csv(model_info['name'], model_metrics)
+            update_models_summary_csv(models_summary_name, model_info['name'], model_metrics)
 
     elif mode == 'eval':
         tf_model, model_info = load_model(NNdir)
@@ -779,7 +789,7 @@ def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, 
         DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
 
     elif mode == 'cv':
-        for model_i in NN_test_models:
+        for model_i in DNN_models_params:
             if model_i['type'] == 'binary': 
                 DNN = BinaryModel(params=model_i, total_df=total_df)
             elif model_i['type'] == 'multi':             
@@ -791,7 +801,7 @@ def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("-w", "--workdir", action="store", help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
+    parser.add_argument("-w", "--workdir", action="store", required=True, help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
     parser.add_argument("-c", "--sel_name", action="store", required=True, help="Ex: SL_res_2b_x")
     parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for trained models')
@@ -807,12 +817,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode == 'train_eval':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking, outdir_name=args.outdir)
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir)
     elif args.mode == 'eval':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir, outdir_name=args.outdir)
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir, nnoutdir_name=args.outdir)
     elif args.mode == 'cv':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits, outdir_name=args.outdir)
+        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_0801 -c SL_res_2b_x -m train_eval -o NN_Testing
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_even_0815 -c SL_res_2b_x -m train_eval -o NN_Testing
     '''
