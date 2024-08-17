@@ -13,22 +13,27 @@ PATHS = dict(
     DC_YML = FIT_BAMBOO / 'src' / 'input' / 'datacard_category_discriminant.yml',
     COMBINE_DC_YML = FIT_BAMBOO / 'src' / 'input' / 'combine_datacards.yml',
     FIT_DC_YML = FIT_BAMBOO / 'src' / 'input' / 'fit_datacards.yml',
-    NN_LIST = FIT_BAMBOO / 'src' / 'input' / 'NN_list.txt',
+    # NN_LIST = FIT_BAMBOO / 'src' / 'input' / 'NN_list.txt',
     WORKDIR = None,
     NN_DIR = None,
     OUTPUT = None)
 
 def get_NN_model_info(NN_name):
-    model_info_yml = PATHS['NNDIR'] / NN_name / 'model_info.yml'
-    with open(model_info_yml, "r") as file:
-        model_info_data = yaml.safe_load(file)
-    training_processes = [process for process_list in model_info_data['categorization'].values() for process in process_list]
-    classes = [class_i for class_i in model_info_data['categorization'].keys()]
-    multiclass = len(classes) > 1
-    return multiclass, training_processes, classes
+    model_info_file = PATHS['NNDIR'] / NN_name / 'model_info.yml'
+    with open(model_info_file, "r") as file:
+        model_info = yaml.safe_load(file)
+    model_name = model_info['name']
+    model_type = model_info['type']
+    if model_type  == 'binary':
+        classes = ["isSignal"]
+        training_processes = model_info['processes']
+    elif model_type == 'multi':
+        classes = [class_i for class_i in model_info['categorization'].keys()]
+        training_processes = [proc for proc_list in model_info['categorization'].values() for proc in proc_list]
+
+    return model_type, training_processes, classes
 
 def modify_dc_yml(NN_name, processes, classes):
-    processes = ['HH_bbWW' if element == 'HH' else element for element in processes]    #Temporary
     # Modifying datacard_category_discriminant.yml
     dc_yml_data = {
         'Processes': {}, 
@@ -43,13 +48,13 @@ def modify_dc_yml(NN_name, processes, classes):
 
     return dc_yml_data
 
-def modify_fit_yml(NN_name, dc_yml_data, multiclass: bool):
+def modify_fit_yml(NN_name, dc_yml_data, model_type: str):
 
     fit_yml_data = {
         'Processes': dc_yml_data['Processes'], 
         'Channels': {}}
 
-    if multiclass:
+    if model_type == 'multi':
         discriminant_names = []
         for channel, disc in dc_yml_data['Channels'].items():
             discriminant_names.extend(disc)
@@ -63,9 +68,9 @@ def modify_fit_yml(NN_name, dc_yml_data, multiclass: bool):
 
     return fit_yml_data
 
-def read_result(NN_name, multiclass, fit_yml_data):
+def read_result(NN_name, model_type: str, fit_yml_data):
 
-    if multiclass:
+    if model_type == 'multi':
         dir_channel = 'combined'
         dir_var = fit_yml_data['Channels']['combined'][0]
         var = f"combined_datacard_fit_results.txt"
@@ -85,28 +90,30 @@ def read_result(NN_name, multiclass, fit_yml_data):
     UL = elements[-1]
     return UL
 
-def Run(NN_name:str, multiclass: bool, processes: list, classes: list):
+def Run(NN_name:str, model_type: str, configFile: str, processes: list, classes: list, asimov_only: bool):
 
     print(f"Running make_datacard.py ~~~~~~~~~~~~~~~")
     dc_yml_data = modify_dc_yml(NN_name, processes, classes)
-    com_dc = f"python3 src/post_processing/datacard/make_datacard.py -i {PATHS['WORKDIR'].resolve()} -c config/analysis_2022_all.yml -f src/input/datacard_category_discriminant.yml -a"
+    com_dc = f"python3 src/post_processing/datacard/make_datacard.py -i {PATHS['WORKDIR'].resolve()} -c {configFile} -f src/input/datacard_category_discriminant.yml"
+    if asimov_only:
+        com_dc = ' '.join([com_dc, '-a'])
     subprocess.run(com_dc.split(' '))
 
-    if multiclass:
+    if model_type == 'multi':
         print(f"Running combine_datacards.py ~~~~~~~~~~~~~~~")
         com_combine = f"python3 src/post_processing/fits/combine_datacards.py -i {PATHS['WORKDIR'].resolve()} -f src/input/datacard_category_discriminant.yml"   #NOTE: Using the same yaml for dc and combine
         subprocess.run(com_combine.split(' '))
 
     print(f"Running fit_datacards.py ~~~~~~~~~~~~~~~")
-    fit_yml_data = modify_fit_yml(NN_name, dc_yml_data, multiclass)
+    fit_yml_data = modify_fit_yml(NN_name, dc_yml_data, model_type)
     com_fit = f"python3 src/post_processing/fits/run_fits.py -i {PATHS['WORKDIR'].resolve()} -f src/input/fit_datacards.yml"
     subprocess.run(com_fit.split(' '))
     
-    UL = read_result(NN_name, multiclass, fit_yml_data)
+    UL = read_result(NN_name, model_type, fit_yml_data)
 
     return UL
 
-def main(workdir: str, nndir:str, processes_for_fitting:str, asimov_only: bool, rate_only: bool):
+def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, asimov_only: bool):
 
     if processes_for_fitting == 'all':
         results_csv_name = 'fit_results_all_processes.csv'
@@ -117,8 +124,8 @@ def main(workdir: str, nndir:str, processes_for_fitting:str, asimov_only: bool, 
     PATHS['WORKDIR'] = Path(workdir)
     PATHS['NNDIR'] = Path(nndir)
     PATHS['OUTPUT'] = Path(workdir) / results_csv_name
-    with open(PATHS['NN_LIST'], "r") as file:
-        NN_list = [line.strip() for line in file]
+
+    NN_list = [f.name for f in Path(nndir).iterdir() if f.is_dir()]
 
     all_processes = [process for process in Refs.PROCESSES_FILES.keys()]
 
@@ -129,14 +136,14 @@ def main(workdir: str, nndir:str, processes_for_fitting:str, asimov_only: bool, 
         print(f"\n\n\n{NN_name}")
         
         NN_results = {'NN name': NN_name, 'UL': None}
-        multiclass, training_processes, classes = get_NN_model_info(NN_name)
+        model_type, training_processes, classes = get_NN_model_info(NN_name)
 
         if processes_for_fitting == 'training':
             processes = training_processes
         elif processes_for_fitting == 'all':
             processes = all_processes
 
-        UL = Run(NN_name, multiclass, processes, classes)
+        UL = Run(NN_name, model_type, configFile, processes, classes, asimov_only)
         NN_results['UL'] = UL
 
         output_df = output_df._append(NN_results, ignore_index=True)
@@ -151,16 +158,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-w", "--workdir", action='store', type=str, help="work directory. Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
     parser.add_argument("-nndir", "--nndir", action='store', type=str, help="Neural Nets directory to pull info from. Ex: Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets")
-    parser.add_argument("-p", "--processes", choices=['training','all'], default='all', action='store', type=str, help="Processes used for fitting: training, all or both")
+    parser.add_argument("-c", "--configFile", action='store', type=str, help="Ex: config/analysis_2022.yml")
+    parser.add_argument("-p", "--processes", choices=['training','all'], default='all', action='store', type=str, help="Processes used for fitting: only on trained processes or all")
     parser.add_argument("-a", "--asimov_only", action="store_true", dest="asimov_only", help="asimov_only = to make datacards for asimov only")
-    parser.add_argument("-r", "--rate_only", action="store_true", dest="rate_only", help="rate_only = to make datacards for rate only")
+    # parser.add_argument("-r", "--rate_only", action="store_true", dest="rate_only", help="rate_only = to make datacards for rate only")
     # parser.add_argument("-v", "--vars", action='store', type=str, help="Which vars to run: from disc_list (-v list) or all vars from cut sel if rate_only used (-v all)")
     args = parser.parse_args()
     
     '''
     To run this, you must have already run cut_based_selections.py, since this script uses the csv file of the cuts produced
     Example1:
-    $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_NN_NEW_nnv2seedSet -nndir $Z_OUTPUT_eos/2022_Vars_NEW/Neural_Nets_v2_seedSet -p both
+    $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_Reco_even_0815_NN -nndir $Z_OUTPUT_eos/2022_Reco_even_0815/Neural_Nets_SL_res_2b_x -c config/analysis_2022.yml -p all -a
     '''
 
-    main(args.workdir, args.nndir, args.processes, args.asimov_only, args.rate_only)
+    main(args.workdir, args.nndir, args.configFile, args.processes, args.asimov_only)
