@@ -199,9 +199,9 @@ class SL_DL_NN(NanoBaseHHbbWW):
         # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory
         for dnn_var in self.DNN_LIST:   
             print(f"{dnn_var.model_name}") 
-            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/{dnn_var.model_name}')
-            customPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
-            customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, which_processes=dnn_var.processes, refs_endingwith=dnn_var.model_name)
+            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/{dnn_var.model_name}', which_processes=dnn_var.processes)
+            customPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True, refs_endingwith=dnn_var.model_name)
+            customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, refs_endingwith=dnn_var.model_name)
 
         # for dnn_var in self.DNN_LIST:   
         #     print(f"{dnn_var.model_name}") 
