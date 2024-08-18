@@ -135,6 +135,7 @@ def data_quality_summary(df: pd.DataFrame):
 def get_test_models(filename: str):
     # Maybe add model validation here?
     # i.e. Check allowed model types, processes, inputs, etc
+    print(f"Getting test models from: {filename}")
     models_file = POSTPROCESSING_NN_FOLDER / filename
     with open(models_file, 'r') as file:
         yaml_data = yaml.safe_load(file)
@@ -760,10 +761,10 @@ class MulticlassModel(BaseNNModel):
         super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
-def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5):
+def main(workdir: str, test_models_file: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5):
     set_globals(workdir, sel_name, nnoutdir_name)
     models_summary_name = 'models_performance.csv'
-    DNN_models_params = get_test_models('NN_test_models.yml')
+    DNN_models_params = get_test_models(test_models_file)
     total_df = load_and_preprocess_data(sel_name)
 
     data_quality_summary(total_df)
@@ -802,6 +803,7 @@ def main(workdir: str, sel_name: str, mode:str, do_input_feature_ranking: bool, 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", action="store", required=True, help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
+    parser.add_argument("-tm", "--test_models", action="store", required=True, default="Ex: NN_test_models.yml")
     parser.add_argument("-c", "--sel_name", action="store", required=True, help="Ex: SL_res_2b_x")
     parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for trained models')
@@ -817,12 +819,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode == 'train_eval':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir)
     elif args.mode == 'eval':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir, nnoutdir_name=args.outdir)
     elif args.mode == 'cv':
-        main(workdir=args.workdir, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_even_0815 -c SL_res_2b_x -m train_eval -o NN_Testing
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_even_0815 -tm NN_test_models_u368.yml -c SL_res_2b_x -m train_eval -o NN_Testing_u368
     '''
