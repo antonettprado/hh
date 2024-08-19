@@ -146,7 +146,7 @@ def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, as
         UL = Run(NN_name, model_type, configFile, processes, classes, asimov_only)
         NN_results['UL'] = UL
 
-        output_df = output_df.append(NN_results, ignore_index=True)
+        output_df = output_df._append(NN_results, ignore_index=True)
         print(output_df)
         output_df.to_csv(PATHS['OUTPUT'], index=False)
 
