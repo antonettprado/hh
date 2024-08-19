@@ -148,19 +148,19 @@ Must use lxplus7 for now
 
 ```bash
 cd
-cmsrel CMSSW_11_3_4
-cd CMSSW_11_3_4/src
+cmsrel CMSSW_14_1_0_pre4
+cd CMSSW_14_1_0_pre4/src
 cmsenv
 git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
 cd HiggsAnalysis/CombinedLimit
 git fetch origin
-git checkout v9.2.0
+git checkout v10.0.2
 scramv1 b clean; scramv1 b
 cd ../../
 
 git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
 cd CombineHarvester
-git checkout v2.0.0
+git checkout v3.0.0
 scram b
 cd CombineTools/
 
