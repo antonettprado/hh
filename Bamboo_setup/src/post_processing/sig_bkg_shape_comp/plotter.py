@@ -116,11 +116,14 @@ class BasePlotter:
         except AttributeError as err:
             raise KeyError(f"'{ref}' not found in {sample_name}") from err
         
-        if self.CROSS_SECTIONS[sample_name] != 0:
-            scale_factor = self.CROSS_SECTIONS[sample_name] * self.LUMINOSITY / self.SUM_WEIGHTS[sample_name]
+        if sample_name in self.CROSS_SECTIONS:
+            if self.CROSS_SECTIONS[sample_name] != 0:
+                scale_factor = self.CROSS_SECTIONS[sample_name] * self.LUMINOSITY / self.SUM_WEIGHTS[sample_name]
+            else:
+                scale_factor = 1.0
+            hist.Scale(scale_factor)
         else:
-            scale_factor = 1.0
-        hist.Scale(scale_factor)
+            raise KeyError(f"{sample_name} was not found in the configFile")
         
         return hist
 
