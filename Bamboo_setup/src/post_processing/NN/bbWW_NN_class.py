@@ -47,6 +47,7 @@ WORKDIR, RESULTSDIR, NNOUTDIR = None, None, None
 assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
 
 def set_globals(workdir: str, sel_name: str, nnoutdir_name:str=None):
+    print(f"\nSetting globals ...")
     global WORKDIR, RESULTSDIR, NNOUTDIR
     WORKDIR = Path(workdir)
     RESULTSDIR = WORKDIR / 'results'
@@ -56,10 +57,18 @@ def set_globals(workdir: str, sel_name: str, nnoutdir_name:str=None):
         nnoutdir_name = 'Neural_Nets_%s'%sel_name
         NNOUTDIR = WORKDIR / nnoutdir_name
 
-def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
+def load_data(sel_name: str, total_inputs:str = None) -> list[pd.DataFrame]:
+    print(f"Loading data ...")
 
     processes_available = Refs._find_processes(RESULTSDIR)
     root_files_available = Refs._find_root_files(RESULTSDIR)
+
+    if total_inputs is not None:
+        with open(POSTPROCESSING_NN_FOLDER / total_inputs) as file:
+            branches = [line.strip() for line in file]
+        array_extractor = lambda upfile, sel_name: upfile[sel_name].arrays(branches, library="pd")
+    else:
+        array_extractor = lambda upfile, sel_name: upfile[sel_name].arrays(library="pd")
 
     df_list = []
     for process in processes_available:
@@ -67,7 +76,7 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
         process_files = [file for file in root_files_available if file.stem in Refs.PROCESSES_FILES[process]]
         for file in process_files:
             upfile = uproot.open(file)
-            upfile_df = upfile[sel_name].arrays(library="pd")
+            upfile_df = array_extractor(upfile, sel_name)
             if process == "HH" and N_MAX_HH_TRAINING != -1:
                 if len(upfile_df) > N_MAX_HH_TRAINING:
                     upfile_df = upfile_df.sample(n=N_MAX_HH_TRAINING, random_state=1)
@@ -81,15 +90,6 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
     total_df = pd.concat(df_list, ignore_index=True)
     total_df = pd.get_dummies(total_df, columns=['Process'])
 
-    # Removing events with negative weights
-    total_df = total_df[total_df.gen_Weight > 0].copy()
-
-    print(f"After preprocessing:")
-    for col in total_df.columns:
-        if col.startswith('Process_'):
-            count = total_df[total_df[col] == 1].shape[0]
-            print(f"Number of events in process {col}: {count}")
-    
     # Reset the index to make it a column
     total_df.reset_index(inplace=True)
 
@@ -99,43 +99,67 @@ def load_and_preprocess_data(sel_name) -> list[pd.DataFrame]:
     # Drop the index column
     total_df.drop(columns='index', inplace=True)
 
-    print("Total_df:")
-    print(total_df)
+    print(f"Total_df:\n{total_df}")
     
     return total_df
 
+def preprocess_data(df: pd.DataFrame):
+    print(f"\nPreprocessing data ...")
+
+    # Removing events with negative weights
+    df = df[df.gen_Weight > 0].copy()
+
+    print(f"After removing events with negative weights:")
+    for col in df.columns:
+        if col.startswith('Process_'):
+            count = df[df[col] == 1].shape[0]
+            print(f"Number of events in process {col}: {count}")
+
+    llr_columns = [col for col in df.columns if col.endswith('_llr')]
+    if llr_columns:
+        print("LLRs were found in the loaded data.")
+        df[llr_columns] = df[llr_columns].clip(lower=-20, upper=20)
+    
+    inf_replacement = 1e9
+    df.replace(-np.inf, -inf_replacement, inplace=True)
+    df.replace(np.inf, inf_replacement, inplace=True)
+
+    print(f"Replacing problematic values")
+    invalid_value_replacement = -9999
+    df.replace(np.nan, invalid_value_replacement, inplace=True)
+
+    return df
+
 def data_quality_summary(df: pd.DataFrame):
-
+    print(f"\nData Quality Summary ...")
     from scipy.stats import zscore
-    nan_summary = df.isna().sum()
-    invalid_value_summary = (df == -9999).sum()
-
-    z_scores = np.abs(zscore(df.select_dtypes(include=[np.number])))
+    
+    z_scores = np.abs(zscore(df.select_dtypes(include=[np.number]), nan_policy='omit'))
     sigma_thresholds = [3, 4, 5]
     outlier_percentages = {}
     for sigma in sigma_thresholds:
         outlier_percentages[f"Outliers Percentage (Z-score > {sigma})"] = (z_scores > sigma).mean(axis=0) * 100
 
-    stats_summary = df.describe().transpose()
-
     # Combine all summaries into single dataframe
     summary = pd.DataFrame({
-        "NaN Count": nan_summary,
-        "-9999 Count": invalid_value_summary,
-        **outlier_percentages,
-        "Mode": df.mode().iloc[0]
+        "NaN Count": df.isna().sum(),
+        "-9999 Count": (df == -9999).sum(),
+        "-Inf Count": (df == -np.inf).sum(),
+        "Inf Count": (df == np.inf).sum(),
+        "Mode": df.mode().iloc[0],
+        **outlier_percentages
     }).fillna(0)
 
     # Add the basic statistics to the summary
+    stats_summary = df.describe().transpose()
     summary = summary.join(stats_summary)
 
-    print("Data Quality Summaryyyyy:")
     print(summary)
 
 def get_test_models(filename: str):
     # Maybe add model validation here?
     # i.e. Check allowed model types, processes, inputs, etc
-    print(f"Getting test models from: {filename}")
+    print(f"\nGetting test models from: {filename}")
     models_file = POSTPROCESSING_NN_FOLDER / filename
     with open(models_file, 'r') as file:
         yaml_data = yaml.safe_load(file)
@@ -316,14 +340,11 @@ class BaseNNModel:
 
         ndim = len(X_train.columns)
         inputs = Input(shape=(ndim,), name="input")
-
-        #normalizer = Normalization(
-        #    mean=X_train.mean(axis=0).to_numpy(),
-        #    variance=X_train.var(axis=0).to_numpy(),
-        #    name='Normalization')(inputs)
+        masked_inputs = Masking(mask_value=-9999)(inputs)
         normalizer = Normalization(name='Normalization')
         normalizer.adapt(np.array(X_train))
-        x = normalizer(inputs)
+        normalized_inputs = normalizer(masked_inputs)
+        x=normalized_inputs
 
         for layer in self.params['layers']:
             if layer['type'] == 'Dense':
@@ -458,7 +479,7 @@ class BaseNNModel:
     def evaluate_and_predict(self, X_test, Y_test, events_test) -> pd.DataFrame:
         print(f"\tEvaluating model and predicting ...")
         model_metrics = self.model.evaluate(X_test, Y_test, verbose=0, return_dict=True)   
-
+        print(model_metrics)
         events_test.reset_index(drop=True, inplace=True)
         Y_test.reset_index(drop=True, inplace=True)
         output_df = pd.concat([events_test, Y_test], axis=1)
@@ -761,12 +782,13 @@ class MulticlassModel(BaseNNModel):
         super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
         super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
 
-def main(workdir: str, test_models_file: str, sel_name: str, mode:str, do_input_feature_ranking: bool, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5):
+def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inputs:str, do_input_feature_ranking: bool, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5):
     set_globals(workdir, sel_name, nnoutdir_name)
     models_summary_name = 'models_performance.csv'
     DNN_models_params = get_test_models(test_models_file)
-    total_df = load_and_preprocess_data(sel_name)
-
+    total_df = load_data(sel_name, total_inputs)
+    total_df = preprocess_data(total_df)
+    
     data_quality_summary(total_df)
 
     if mode == 'train_eval':
@@ -803,9 +825,10 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, do_input_
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", action="store", required=True, help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
-    parser.add_argument("-tm", "--test_models", action="store", required=True, default="Ex: NN_test_models.yml")
+    parser.add_argument("-tm", "--test_models", action="store", required=False, default="NN_test_models.yml")
     parser.add_argument("-c", "--sel_name", action="store", required=True, help="Ex: SL_res_2b_x")
     parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
+    parser.add_argument("-ti", "--total_inputs", type=str, required=False, default=None, help='Loads only the inputs listed on the txt file to the total_df')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for trained models')
     args, unknown = parser.parse_known_args()
     if args.mode == 'train_eval':
@@ -819,12 +842,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode == 'train_eval':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir)
     elif args.mode == 'eval':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, NNdir=args.NNdir, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, NNdir=args.NNdir, nnoutdir_name=args.outdir)
     elif args.mode == 'cv':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
 
     '''
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_Reco_even_0815 -tm NN_test_models_u368.yml -c SL_res_2b_x -m train_eval -o NN_Testing_u368
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_even_0815/Reco -tm NN_u512.yml -c SL_res_2b_x -m train_eval -o NN_lxp992_Testing_u512
     '''
