@@ -823,6 +823,7 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
         for model_info in DNN_models_params:
             modelsuperdir = model_info['name']
             model_name = model_info['name']
+            diag_csv = NNOUTDIR / f"{modelsuperdir}" / "cm_diagonals.csv"
             cm_diags_df = pd.DataFrame()
 
             for iteration in range(n_iterations):
@@ -848,6 +849,7 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
                 
                 iter_df = pd.DataFrame([iter_diags], index=[model_iter_name])
                 cm_diags_df = pd.concat([cm_diags_df, iter_df])
+                cm_diags_df.to_csv(diag_csv, header=True)
 
             mean_diags = cm_diags_df.mean().to_frame().T
             mean_diags.index = ['mean']
@@ -858,7 +860,7 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
             # Ensure the correct header structure in the CSV
             cm_diags_df.columns = pd.MultiIndex.from_product([['cm_norm_true', 'cm_norm_pred'], diag_names])
             
-            cm_diags_df.to_csv(NNOUTDIR / f"{modelsuperdir}" / "cm_diagonals.csv", header=True)
+            cm_diags_df.to_csv(diag_csv, header=True)
 
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()}")
