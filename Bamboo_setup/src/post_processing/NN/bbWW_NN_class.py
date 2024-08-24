@@ -476,7 +476,7 @@ class BaseNNModel:
         fig.savefig(outdir / 'all_metrics_curves.pdf')
         plt.close()
 
-    def evaluate_and_predict(self, X_test, Y_test, events_test) -> pd.DataFrame:
+    def evaluate_and_predict(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
         print(f"\tEvaluating model and predicting ...")
         model_metrics = self.model.evaluate(X_test, Y_test, verbose=0, return_dict=True)   
         print(model_metrics)
@@ -525,26 +525,35 @@ class BaseNNModel:
         ax.set_title('ROC Curve')
         return fig, ax
 
-    def _draw_confusion_matrix(self, cm, title, filename, xy_ticks):
-        fig, ax = plt.subplots(figsize=(8,6))
-        im = ax.imshow(cm, interpolation='nearest', cmap="plasma", alpha=0.5)
-        plt.colorbar(im)
-        for i in range(cm.shape[0]):
-            for j in range(cm.shape[1]):
-                ax.text(j, i, f"{cm[i, j]:.3f}", ha='center', va='center', fontsize=14)
+    def draw_confusion_matrices(self, true_class, pred_class, xy_ticks):
+        def _draw_confusion_matrix(cm, title, filename):
+            fig, ax = plt.subplots(figsize=(8,6))
+            im = ax.imshow(cm, interpolation='nearest', cmap="plasma", alpha=0.5)
+            plt.colorbar(im)
+            for i in range(cm.shape[0]):
+                for j in range(cm.shape[1]):
+                    ax.text(j, i, f"{cm[i, j]:.3f}", ha='center', va='center', fontsize=14)
 
-        ax.set_xlabel('Predicted', labelpad=10, fontsize=12)
-        ax.set_ylabel('True', labelpad=10, fontsize=12)
-        ax.set_title(title, fontsize=16)
-        ax.set_xticks(range(len(xy_ticks)))
-        ax.set_yticks(range(len(xy_ticks)))
-        ax.set_xticklabels(xy_ticks, rotation=0, fontsize=12)
-        ax.set_yticklabels(xy_ticks, fontsize=12)
+            ax.set_xlabel('Predicted', labelpad=10, fontsize=12)
+            ax.set_ylabel('True', labelpad=10, fontsize=12)
+            ax.set_title(title, fontsize=16)
+            ax.set_xticks(range(len(xy_ticks)))
+            ax.set_yticks(range(len(xy_ticks)))
+            ax.set_xticklabels(xy_ticks, rotation=0, fontsize=12)
+            ax.set_yticklabels(xy_ticks, fontsize=12)
 
-        ax.xaxis.set_ticks_position('bottom')
-        ax.xaxis.set_label_position('bottom')
-        plt.tight_layout()
-        fig.savefig(self.modeldir / filename)
+            ax.xaxis.set_ticks_position('bottom')
+            ax.xaxis.set_label_position('bottom')
+            plt.tight_layout()
+            fig.savefig(self.modeldir / filename)
+            cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
+            cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
+
+        cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
+        cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
+        _draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf')
+        _draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf')
+        return cm_norm_true, cm_norm_pred
 
     def Train(self):
         X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df)
@@ -558,10 +567,10 @@ class BaseNNModel:
         output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
         self.draw_score_distribution(output_df, self.modeldir)
         self.draw_roc_curve(output_df)
-        self.draw_confusion_matrix(output_df)
+        cm_norm_true, cm_norm_pred, diag_names = self.draw_confusion_matrix(output_df)
         if do_input_feature_ranking:
             self.feature_ranking(X_test, Y_test)
-        return model_metrics
+        return model_metrics, cm_norm_true, cm_norm_pred, diag_names
 
     def Cross_Validate(self, cv_method, n_splits):
         if cv_method == 'kfold':
@@ -677,14 +686,8 @@ class BinaryModel(BaseNNModel):
         true_class = output_df['Class_isSignal'].values.flatten()
         pred_class = (output_df['Score_isSignal'] >= self.binary_optimal_threshold).astype(int)
         xy_ticks = ["Background", "Signal"]
-
-        #cm_unnorm = confusion_matrix(true_class, pred_class)
-        cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
-        cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
-
-        #super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
+        cm_norm_true, cm_norm_pred = self.draw_confusion_matrices(true_class, pred_class, xy_ticks)
+        return cm_norm_true, cm_norm_pred, xy_ticks
 
 class MulticlassModel(BaseNNModel):
 
@@ -773,16 +776,10 @@ class MulticlassModel(BaseNNModel):
         true_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Class_')]].to_numpy(), axis=1)
         pred_class = np.argmax(output_df[[col for col in output_df.columns if col.startswith('Score_')]].to_numpy(), axis=1)
         xy_ticks = self.classes
+        cm_norm_true, cm_norm_pred = self.draw_confusion_matrices(true_class, pred_class, xy_ticks)
+        return cm_norm_true, cm_norm_pred, xy_ticks
 
-        #cm_unnorm = confusion_matrix(true_class, pred_class)
-        cm_norm_true = confusion_matrix(true_class, pred_class, normalize='true')
-        cm_norm_pred = confusion_matrix(true_class, pred_class, normalize='pred')
-
-        #super()._draw_confusion_matrix(cm_unnorm, 'Confusion Matrix ', 'confusion_matrix_unnorm.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_true, 'Confusion Matrix (Normalized over True)', 'confusion_matrix_norm_true.pdf', xy_ticks)
-        super()._draw_confusion_matrix(cm_norm_pred, 'Confusion Matrix (Normalized over Predicted)', 'confusion_matrix_norm_pred.pdf', xy_ticks)
-
-def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inputs:str, do_input_feature_ranking: bool, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5):
+def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inputs:str, do_input_feature_ranking: bool=False, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5, n_iterations=10):
     set_globals(workdir, sel_name, nnoutdir_name)
     models_summary_name = 'models_performance.csv'
     DNN_models_params = get_test_models(test_models_file)
@@ -798,7 +795,7 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
             elif model_info['type'] == 'multi':             
                 DNN = MulticlassModel(params=model_info, total_df=total_df)
             X_test, Y_test, evs_test = DNN.Train()
-            model_metrics = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
+            model_metrics, _, _, _ = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
             update_models_summary_csv(models_summary_name, model_info['name'], model_metrics)
 
     elif mode == 'eval':
@@ -809,7 +806,7 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
             DNN = MulticlassModel(params=model_info, total_df=total_df)
 
         DNN.model = tf_model
-        DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
+        model_metrics, _, _, _ = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
 
     elif mode == 'cv':
         for model_i in DNN_models_params:
@@ -819,6 +816,50 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
                 DNN = MulticlassModel(params=model_i, total_df=total_df)
 
             DNN.Cross_Validate(cv_method, n_splits)
+    
+    elif mode == 'multi':
+        global FIXED_RANDOM_SEED
+        FIXED_RANDOM_SEED = False
+        for model_info in DNN_models_params:
+            modelsuperdir = model_info['name']
+            model_name = model_info['name']
+            cm_diags_df = pd.DataFrame()
+
+            for iteration in range(n_iterations):
+                model_iter_name = model_name + f'_{iteration}'
+                model_info['name'] = model_iter_name
+                modeldir = f"{modelsuperdir}/{model_info['name']}"
+                if model_info['type'] == 'binary': 
+                    DNN = BinaryModel(params=model_info, total_df=total_df, modeldir=modeldir)
+                elif model_info['type'] == 'multi':             
+                    DNN = MulticlassModel(params=model_info, total_df=total_df, modeldir=modeldir)
+                X_test, Y_test, evs_test = DNN.Train()
+                model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
+                update_models_summary_csv(models_summary_name, model_info['name'], model_metrics)
+
+                # Creating a MultiIndex for columns
+                columns = pd.MultiIndex.from_product([['cm_norm_true', 'cm_norm_pred'], diag_names])
+                
+                # Create a DataFrame with the current iteration's diagonals
+                iter_diags = {}
+                for i, diag_name in enumerate(diag_names):
+                    iter_diags[('cm_norm_true', diag_name)] = cm_norm_true[i, i]
+                    iter_diags[('cm_norm_pred', diag_name)] = cm_norm_pred[i, i]
+                
+                iter_df = pd.DataFrame([iter_diags], index=[model_iter_name])
+                cm_diags_df = pd.concat([cm_diags_df, iter_df])
+
+            mean_diags = cm_diags_df.mean().to_frame().T
+            mean_diags.index = ['mean']
+            std_diags = cm_diags_df.std().to_frame().T
+            std_diags.index = ['std']
+            cm_diags_df = pd.concat([cm_diags_df, mean_diags, std_diags])
+
+            # Ensure the correct header structure in the CSV
+            cm_diags_df.columns = pd.MultiIndex.from_product([['cm_norm_true', 'cm_norm_pred'], diag_names])
+            
+            cm_diags_df.to_csv(NNOUTDIR / f"{modelsuperdir}" / "cm_diagonals.csv", header=True)
+
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()}")
 
@@ -827,7 +868,7 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--workdir", action="store", required=True, help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
     parser.add_argument("-tm", "--test_models", action="store", required=False, default="NN_test_models.yml")
     parser.add_argument("-c", "--sel_name", action="store", required=True, help="Ex: SL_res_2b_x")
-    parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
+    parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv', 'multi'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
     parser.add_argument("-ti", "--total_inputs", type=str, required=False, default=None, help='Loads only the inputs listed on the txt file to the total_df')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for trained models')
     args, unknown = parser.parse_known_args()
@@ -839,6 +880,8 @@ if __name__ == '__main__':
     elif args.mode == 'cv':
         parser.add_argument("--cv_method", choices=['kfold', 'shuffle'], required=True, default=None, help="Cross-validation method")
         parser.add_argument("--n_splits", type=int, default=5, help="Number of splits for cross-validation")
+    elif args.mode == 'multi':
+        parser.add_argument("--n_iterations", type=int, required=False, default=10, help="Number of iterations per model")
     args = parser.parse_args()
 
     if args.mode == 'train_eval':
@@ -847,7 +890,14 @@ if __name__ == '__main__':
         main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, NNdir=args.NNdir, nnoutdir_name=args.outdir)
     elif args.mode == 'cv':
         main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
+    elif args.mode == 'multi':
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, n_iterations=args.n_iterations, nnoutdir_name=args.outdir)
 
     '''
+    Examples:
+    - Mode: Train_eval
     python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_even_0815/Reco -tm NN_u512.yml -c SL_res_2b_x -m train_eval -o NN_lxp992_Testing_u512
+
+    - Mode: multi
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_even_0815/Reco -tm NN_multi_actual.yml -c SL_res_2b_x -m multi -o NN_multi_actual --n_iterations 10
     '''
