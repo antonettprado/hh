@@ -232,16 +232,6 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         return llrs_product_list
 
     @staticmethod
-    def test_skim_refined(lrs: list[LikelihoodRatio], objects, selection, plots):
-
-        keys = [i.name for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
-        values = [i.data for lr in lrs for i in lr if i.subcat == "SL_res_2b_x"]
-        branches = {"event":None, "gen_Weight": objects["gen_Weight"]}
-        branches.update(dict(zip(keys, values)))
-        plots.append(Skim('SL_res_2b_x', branches, selection))
-        return plots
-
-    @staticmethod
     def get_skims(llrs, objects, selections, plots):
         sel_name = 'SL_res_2b_x'
         branches = {"event":None, "gen_Weight": objects["gen_Weight"]}
