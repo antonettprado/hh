@@ -838,30 +838,38 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
                 update_models_summary_csv(models_summary_name, model_info['name'], model_metrics)
 
-                # Creating a MultiIndex for columns
-                columns = pd.MultiIndex.from_product([['cm_norm_true', 'cm_norm_pred'], diag_names])
-                
-                # Create a DataFrame with the current iteration's diagonals
+                # Get diagonal elements
+                diagonal_true = np.diag(cm_norm_true)
+                diagonal_pred = np.diag(cm_norm_pred)
+
+                # Store the diagonals in a dictionary
                 iter_diags = {}
-                for i, diag_name in enumerate(diag_names):
-                    iter_diags[('cm_norm_true', diag_name)] = cm_norm_true[i, i]
-                    iter_diags[('cm_norm_pred', diag_name)] = cm_norm_pred[i, i]
-                
+                for diag_name, value_true, value_pred in zip(diag_names, diagonal_true, diagonal_pred):
+                    iter_diags[('cm_norm_true', diag_name)] = value_true
+                    iter_diags[('cm_norm_pred', diag_name)] = value_pred
+
+                # Create a DataFrame for the current iteration
                 iter_df = pd.DataFrame([iter_diags], index=[model_iter_name])
+
+                # On the first iteration, set up the columns
+                if iteration == 0:
+                    cm_diags_df = pd.DataFrame(columns=pd.MultiIndex.from_product([['cm_norm_true', 'cm_norm_pred'], diag_names]))
+
+                # Append the current iteration's data
                 cm_diags_df = pd.concat([cm_diags_df, iter_df])
+
+                # Save after each iteration to keep the CSV updated
                 cm_diags_df.to_csv(diag_csv, header=True)
 
+            # Calculate mean and std, maintaining the correct column structure
             mean_diags = cm_diags_df.mean().to_frame().T
             mean_diags.index = ['mean']
             std_diags = cm_diags_df.std().to_frame().T
             std_diags.index = ['std']
             cm_diags_df = pd.concat([cm_diags_df, mean_diags, std_diags])
 
-            # Ensure the correct header structure in the CSV
-            cm_diags_df.columns = pd.MultiIndex.from_product([['cm_norm_true', 'cm_norm_pred'], diag_names])
-            
+            # Final save to the CSV
             cm_diags_df.to_csv(diag_csv, header=True)
-
 
     print(f"The DNN models tested were saved in {NNOUTDIR.resolve()}")
 
@@ -901,5 +909,5 @@ if __name__ == '__main__':
     python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_even_0815/Reco -tm NN_u512.yml -c SL_res_2b_x -m train_eval -o NN_lxp992_Testing_u512
 
     - Mode: multi
-    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_even_0815/Reco -tm NN_multi_actual.yml -c SL_res_2b_x -m multi -o NN_multi_actual --n_iterations 10
+    python3 src/post_processing/NN/bbWW_NN_class.py -w $Z_OUTPUT_eos/2022_even_0815/Reco -tm NN_multi_actual.yml -c SL_res_2b_x -m multi -o NN_multi_actual_test_2iters --n_iterations 2
     '''
