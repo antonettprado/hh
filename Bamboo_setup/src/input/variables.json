@@ -648,7 +648,44 @@
             "unit": "",
             "title": "ll p_T",
             "subcats": ["DL_res_1b", "DL_res_2b"]
+        },
+        "nAK4":
+        {
+            "nbins": 30,
+            "min": 0,
+            "max": 30,
+            "unit": "",
+            "title": "nAK4",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
+        "nAK4_btag":
+        {
+            "nbins": 30,
+            "min": 0,
+            "max": 30,
+            "unit": "",
+            "title": "nAK4_btag",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
+        "nAK4_nonbtag":
+        {
+            "nbins": 30,
+            "min": 0,
+            "max": 30,
+            "unit": "",
+            "title": "nAK4_nonbtag",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
+        "nAK8_btag":
+        {
+            "nbins": 30,
+            "min": 0,
+            "max": 30,
+            "unit": "",
+            "title": "nAK8_btag",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         }
+
     },
 
     "2D":

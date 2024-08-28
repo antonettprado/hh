@@ -921,6 +921,46 @@ def get_met_phi(objects) -> Variable1D:
     met_phi.populate(data, selections)
     return met_phi
 
+def get_nAK4(objects):
+    nAK4 = Variable('nAK4')
+    subcat_names = nAK4.subcats
+    selections = get_selection_subset(subcat_names)
+
+    data = op.rng_len(objects["cleaned_ak4_jets"])
+    data = {sel_name: data for sel_name in selections.keys()}
+    nAK4.populate(data, selections)
+    return nAK4
+
+def get_nAK4_btag(objects):
+    nAK4_btag = Variable('nAK4_btag')
+    subcat_names = nAK4_btag.subcats
+    selections = get_selection_subset(subcat_names)
+
+    data = op.rng_len(objects["cleaned_ak4_btags"])
+    data = {sel_name: data for sel_name in selections.keys()}
+    nAK4_btag.populate(data, selections)
+    return nAK4_btag
+
+def get_nAK4_nonbtag(objects):
+    nAK4_nonbtag = Variable('nAK4_nonbtag')
+    subcat_names = nAK4_nonbtag.subcats
+    selections = get_selection_subset(subcat_names)
+
+    data = op.rng_len(objects["ak4_nonbtags"])
+    data = {sel_name: data for sel_name in selections.keys()}
+    nAK4_nonbtag.populate(data, selections)
+    return nAK4_nonbtag
+
+def get_nAK8_btag(objects):
+    nAK8_btag = Variable('nAK8_btag')
+    subcat_names = nAK8_btag.subcats
+    selections = get_selection_subset(subcat_names)
+
+    data = op.rng_len(objects["cleaned_ak8_btags"])
+    data = {sel_name: data for sel_name in selections.keys()}
+    nAK8_btag.populate(data, selections)
+    return nAK8_btag
+
 def gather_object_vars(objects) -> list[Variable1D]:
     object_vars = [
         get_lep0_pt(objects),
@@ -948,7 +988,11 @@ def gather_object_vars(objects) -> list[Variable1D]:
         get_ak8_btag0_eta(objects),
         get_ak8_btag0_phi(objects),
         get_met_pt(objects),
-        get_met_phi(objects)
+        get_met_phi(objects),
+        get_nAK4(objects),
+        get_nAK4_btag(objects),
+        get_nAK4_nonbtag(objects),
+        get_nAK8_btag(objects)
     ]
     return object_vars
 
@@ -1048,19 +1092,13 @@ def gather_all_3D_variables(objects) -> list[Variable3D]:
 
     return vars3D
 
-
 # Returns a dictionary, ex: sel_vars_dict = {SL_res_2b_x: {'bjets_mbb': bjets_mbb}}
 def gathers_vars_dict(objects, selections) -> dict[str: dict[str: Variable]]:
-    basic_vars_dict = {
-        "nAK4": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"])),
-        "nAK4_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_btags"])),
-        "nAK8_btag": op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"]))}
     vars1D = gather_all_1D_variables(objects)
     sel_vars_dict = {}
     for sel_name, sel in selections.items():
         if sel_name not in ["SL", "DL"]:
             vars1D_dict = {sub_var.name: sub_var.data for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
-            subcat_vars_dict = {**basic_vars_dict, **vars1D_dict}
-            sel_vars_dict[sel_name] = subcat_vars_dict
+            sel_vars_dict[sel_name] = vars1D_dict
 
     return sel_vars_dict
