@@ -922,9 +922,9 @@ def get_met_phi(objects) -> Variable1D:
     return met_phi
 
 def get_nAK4(objects):
-    nAK4 = Variable('nAK4')
+    nAK4 = Variable1D('nAK4')
     subcat_names = nAK4.subcats
-    selections = get_selection_subset(subcat_names)
+    selections = get_selections_subset(subcat_names)
 
     data = op.rng_len(objects["cleaned_ak4_jets"])
     data = {sel_name: data for sel_name in selections.keys()}
@@ -932,9 +932,9 @@ def get_nAK4(objects):
     return nAK4
 
 def get_nAK4_btag(objects):
-    nAK4_btag = Variable('nAK4_btag')
+    nAK4_btag = Variable1D('nAK4_btag')
     subcat_names = nAK4_btag.subcats
-    selections = get_selection_subset(subcat_names)
+    selections = get_selections_subset(subcat_names)
 
     data = op.rng_len(objects["cleaned_ak4_btags"])
     data = {sel_name: data for sel_name in selections.keys()}
@@ -942,9 +942,9 @@ def get_nAK4_btag(objects):
     return nAK4_btag
 
 def get_nAK4_nonbtag(objects):
-    nAK4_nonbtag = Variable('nAK4_nonbtag')
+    nAK4_nonbtag = Variable1D('nAK4_nonbtag')
     subcat_names = nAK4_nonbtag.subcats
-    selections = get_selection_subset(subcat_names)
+    selections = get_selections_subset(subcat_names)
 
     data = op.rng_len(objects["ak4_nonbtags"])
     data = {sel_name: data for sel_name in selections.keys()}
@@ -952,9 +952,9 @@ def get_nAK4_nonbtag(objects):
     return nAK4_nonbtag
 
 def get_nAK8_btag(objects):
-    nAK8_btag = Variable('nAK8_btag')
+    nAK8_btag = Variable1D('nAK8_btag')
     subcat_names = nAK8_btag.subcats
-    selections = get_selection_subset(subcat_names)
+    selections = get_selections_subset(subcat_names)
 
     data = op.rng_len(objects["cleaned_ak8_btags"])
     data = {sel_name: data for sel_name in selections.keys()}
