@@ -78,7 +78,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
                         llr_list.append(llr)
                     llr_product = LikelihoodRatio(varnames)
                     llr_product_data = op.sum(*[llr[sel_name].data for llr in llr_list])
-                    llr_product.populate({sel_name: llr_product_data}, var_defs.get_selection_subset([sel_name]))
+                    llr_product.populate({sel_name: llr_product_data}, var_defs.get_selections_subset([sel_name]))
                     input_vars.append(llr_product[sel_name].data)
                 else:
                     varname = ref
