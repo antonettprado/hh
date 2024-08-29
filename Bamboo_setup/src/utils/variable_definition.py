@@ -1098,7 +1098,7 @@ def gathers_vars_dict(objects, selections) -> dict[str: dict[str: Variable]]:
     sel_vars_dict = {}
     for sel_name, sel in selections.items():
         if sel_name not in ["SL", "DL"]:
-            vars1D_dict = {sub_var.name: sub_var.data for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
+            vars1D_dict = {sub_var.name: sub_var for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
             sel_vars_dict[sel_name] = vars1D_dict
 
     return sel_vars_dict

@@ -53,6 +53,17 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
             return get_correction(corr_file, var_name, params={"xaxis": data[0],"yaxis":data[1], "zaxis":data[2]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     @staticmethod
+    def get_llr_for_sel(subvar: Variable1D, sel_name:str, llr_corr_workdir) -> LikelihoodRatio:
+        llr = LikelihoodRatio(subvar.name)
+        subvar_data = op.switch(subvar.data < subvar.min, subvar.min + 0.0001*abs(subvar.min), subvar.data)
+        subvar_data = op.switch(subvar.data > subvar.max, subvar.max - 0.0001*abs(subvar.max), subvar.data)
+        subvar_llr = SL_DL_likelihood_ratio.get_var_llr(llr_corr_workdir, [subvar_data], llr[subvar.subcat].ref, subvar.selection)
+        
+        llr_data = {sel_name: subvar_llr}
+        llr.populate(llr_data, var_defs.get_selections_subset([sel_name]))
+        return llr
+
+    @staticmethod
     def get_llrs_for_vars_1D(llr_corr_workdir, objects) -> list[LikelihoodRatio]:
         vars_1D = var_defs.gather_all_1D_variables(objects)
         llrs_for_vars_1D = []

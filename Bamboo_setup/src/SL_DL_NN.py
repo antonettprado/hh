@@ -8,6 +8,7 @@ from bamboo import treefunctions as op
 
 from base_selection import NanoBaseHHbbWW
 from SL_DL_vars_reco import SL_DL_vars_reco
+from SL_DL_likelihood_ratio import SL_DL_likelihood_ratio
 from utils.variables import Variable1D, LikelihoodRatio
 import utils.variable_definition as var_defs
 
@@ -22,6 +23,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
         parser.add_argument("-SNN", "--superNNdir", action="store", dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
         parser.add_argument("-c", "--sel_name", action="store", help="Ex: SL_res_2b_x")
         parser.add_argument("-s", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
+        parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the llr correction file is')
 
     @staticmethod
     def get_NN_model(NNdir: str):
@@ -51,30 +53,49 @@ class SL_DL_NN(NanoBaseHHbbWW):
         return model, model_name, feature_names, classes, processes
 
     @staticmethod
-    def gather_input_vars(sel_name, feature_names, objects, selections):
+    def gather_input_vars(sel_name, feature_names, objects, selections, llr_corr_workdir=None):
         var_names = [s for s in feature_names if not s.endswith('_llr')]
         llr_names = [s for s in feature_names if s.endswith('_llr')]
         input_vars = []
+
+        sel_subvars_dict = var_defs.gathers_vars_dict(objects, selections)
+        subvars_dict = sel_subvars_dict[sel_name]
+
         # Variables
-        sel_vars_dict = var_defs.gathers_vars_dict(objects, selections)
-        vars_dict = sel_vars_dict[sel_name]
-        input_vars.extend([vars_dict[name] for name in var_names if name in vars_dict])
+        if var_names:
+            input_vars.extend([subvars_dict[name].data for name in var_names if name in subvars_dict])
+
         # LLRs
-        for llr_name in llr_names:
-            ref = llr_name.replace('_llr', '')
-            varnames = ref.split('_x_')
-            llr = LikelihoodRatio(varnames)
-            input_vars.append(llr)
+        if llr_names:
+            for llr_name in llr_names:
+                ref = llr_name.replace('_llr', '')
+                if '_x_' in ref:
+                    varnames = ref.split('_x_')
+                    llr_list = []
+                    for varname in varnames:
+                        subvar = subvars_dict[varname]
+                        llr = SL_DL_likelihood_ratio.get_llr_for_sel(subvar, sel_name, llr_corr_workdir)
+                        llr_list.append(llr)
+                    llr_product = LikelihoodRatio(varnames)
+                    llr_product_data = op.sum(*[llr[sel_name].data for llr in llr_list])
+                    llr_product.populate({sel_name: llr_product_data}, var_defs.get_selection_subset([sel_name]))
+                    input_vars.append(llr_product[sel_name].data)
+                else:
+                    varname = ref
+                    subvar = subvars_dict[varname]
+                    llr = SL_DL_likelihood_ratio.get_llr_for_sel(subvar, sel_name, llr_corr_workdir)
+                    input_vars.append(llr[sel_name].data)
+
         return input_vars
 
     @staticmethod
-    def get_DNN(NNdir:str, sel_name, objects):
+    def get_DNN(NNdir:str, sel_name, objects, llr_corr_workdir=None):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
         selections = var_defs.get_selections_subset(subcat_names)
 
         model, model_name, feature_names, classes, processes = SL_DL_NN.get_NN_model(NNdir)
-        input_vars = SL_DL_NN.gather_input_vars(sel_name, feature_names, objects, selections)
+        input_vars = SL_DL_NN.gather_input_vars(sel_name, feature_names, objects, selections, llr_corr_workdir)
         data = model(*input_vars)
         data = {sel_name_i: data for sel_name_i in selections.keys()}
         DNN.populate(data, selections)
@@ -133,7 +154,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
         self.DNN_LIST = []
         for NNdir in NNdir_list:
-            DNN = SL_DL_NN.get_DNN(NNdir, sel_name, objects)
+            DNN = SL_DL_NN.get_DNN(NNdir, sel_name, objects, self.args.llr_corr_workdir)
             DNN = DNN[sel_name]
 
             scores = DNN.data
