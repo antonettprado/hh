@@ -92,26 +92,34 @@ def read_result(NN_name, model_type: str, fit_yml_data):
 
 def Run(NN_name:str, model_type: str, configFile: str, processes: list, classes: list, asimov_only: bool):
 
-    print(f"Running make_datacard.py ~~~~~~~~~~~~~~~")
-    dc_yml_data = modify_dc_yml(NN_name, processes, classes)
-    com_dc = f"python3 src/post_processing/datacard/make_datacard.py -i {PATHS['WORKDIR'].resolve()} -c {configFile} -f src/input/datacard_category_discriminant.yml"
-    if asimov_only:
-        com_dc = ' '.join([com_dc, '-a'])
-    subprocess.run(com_dc.split(' '))
+    try:
+        print(f"Running make_datacard.py ~~~~~~~~~~~~~~~")
+        dc_yml_data = modify_dc_yml(NN_name, processes, classes)
+        com_dc = f"python3 src/post_processing/datacard/make_datacard.py -i {PATHS['WORKDIR'].resolve()} -c {configFile} -f src/input/datacard_category_discriminant.yml"
+        if asimov_only:
+            com_dc = ' '.join([com_dc, '-a'])
+        subprocess.run(com_dc.split(' '), check=True)
 
-    if model_type == 'multi':
-        print(f"Running combine_datacards.py ~~~~~~~~~~~~~~~")
-        com_combine = f"python3 src/post_processing/fits/combine_datacards.py -i {PATHS['WORKDIR'].resolve()} -f src/input/datacard_category_discriminant.yml"   #NOTE: Using the same yaml for dc and combine
-        subprocess.run(com_combine.split(' '))
+        if model_type == 'multi':
+            print(f"Running combine_datacards.py ~~~~~~~~~~~~~~~")
+            com_combine = f"python3 src/post_processing/fits/combine_datacards.py -i {PATHS['WORKDIR'].resolve()} -f src/input/datacard_category_discriminant.yml"   #NOTE: Using the same yaml for dc and combine
+            subprocess.run(com_combine.split(' '), check=True)
 
-    print(f"Running fit_datacards.py ~~~~~~~~~~~~~~~")
-    fit_yml_data = modify_fit_yml(NN_name, dc_yml_data, model_type)
-    com_fit = f"python3 src/post_processing/fits/run_fits.py -i {PATHS['WORKDIR'].resolve()} -f src/input/fit_datacards.yml"
-    subprocess.run(com_fit.split(' '))
+        print(f"Running fit_datacards.py ~~~~~~~~~~~~~~~")
+        fit_yml_data = modify_fit_yml(NN_name, dc_yml_data, model_type)
+        com_fit = f"python3 src/post_processing/fits/run_fits.py -i {PATHS['WORKDIR'].resolve()} -f src/input/fit_datacards.yml"
+        subprocess.run(com_fit.split(' '), check=True)
+        
+        UL = read_result(NN_name, model_type, fit_yml_data)
+        return UL
     
-    UL = read_result(NN_name, model_type, fit_yml_data)
+    except subprocess.CalledProcessError as e:
+        print(f"\n**************************************************************")
+        print(f"**************************************************************")
+        print(f"The fit failed for: {NN_name}")
+        print(f"Failed command: {e.cmd}")
+        return None
 
-    return UL
 
 def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, asimov_only: bool):
 
@@ -130,8 +138,9 @@ def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, as
     all_processes = [process for process in Refs.PROCESSES_FILES.keys()]
 
     output_df = pd.DataFrame(columns=['NN name', 'UL'])
+    failed_NN_list = []  # List to keep track of failed models
 
-    for NN_name in NN_list[:12]:
+    for NN_name in NN_list:
 
         print(f"\n\n\n\n--------------------------------------------------------------")
         print(f"{NN_name}")
@@ -151,6 +160,16 @@ def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, as
         output_df = output_df._append(NN_results, ignore_index=True)
         print(output_df)
         output_df.to_csv(PATHS['OUTPUT'], index=False)
+
+        if UL is None:
+            failed_NN_list.append(NN_name)
+
+    if failed_NN_list:
+        print("\n**************************************************************")
+        print(f"The following Neural Networks failed during fitting:")
+        for nn in failed_NN_list:
+            print(nn)
+        print("**************************************************************")
 
     
         
