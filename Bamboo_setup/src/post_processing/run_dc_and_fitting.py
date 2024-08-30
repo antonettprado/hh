@@ -131,9 +131,11 @@ def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, as
 
     output_df = pd.DataFrame(columns=['NN name', 'UL'])
 
-    for NN_name in NN_list:
+    for NN_name in NN_list[:12]:
 
-        print(f"\n\n\n{NN_name}")
+        print(f"\n\n\n\n--------------------------------------------------------------")
+        print(f"{NN_name}")
+        print(f"--------------------------------------------------------------")
         
         NN_results = {'NN name': NN_name, 'UL': None}
         model_type, training_processes, classes = get_NN_model_info(NN_name)
@@ -171,7 +173,7 @@ if __name__ == "__main__":
     export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
     cmsenv
     Command:
-    $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_Reco_even_0815_NN -nndir $Z_OUTPUT_eos/2022_Reco_even_0815/Neural_Nets_SL_res_2b_x -c config/analysis_2022.yml -p all -a
+    $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_even_0822/NN_default/NN_ti_20llrscombos -nndir $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5/NN_default/NN_ti_20llrscombos -c config/analysis_2022.yml -p all -a
     '''
 
     main(args.workdir, args.nndir, args.configFile, args.processes, args.asimov_only)
