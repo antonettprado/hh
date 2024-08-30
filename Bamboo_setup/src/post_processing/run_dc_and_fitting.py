@@ -114,7 +114,6 @@ def Run(NN_name:str, model_type: str, configFile: str, processes: list, classes:
         return UL
     
     except subprocess.CalledProcessError as e:
-        print(f"\n**************************************************************")
         print(f"**************************************************************")
         print(f"The fit failed for: {NN_name}")
         print(f"Failed command: {e.cmd}")
@@ -166,12 +165,13 @@ def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, as
 
     if failed_NN_list:
         print("\n**************************************************************")
+        print("**************************************************************")
         print(f"The following Neural Networks failed during fitting:")
         for nn in failed_NN_list:
             print(nn)
         print("**************************************************************")
+        print("**************************************************************")
 
-    
         
 if __name__ == "__main__":
     
