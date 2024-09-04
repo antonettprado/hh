@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split, StratifiedKFold, StratifiedShuffleSplit
 from sklearn.metrics import roc_curve, accuracy_score, auc, confusion_matrix
 from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking
+from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking, add
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall
@@ -328,6 +328,22 @@ class BaseNNModel:
         else:
             raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
 
+    @staticmethod
+    def add_residual_layers(x, units, dropout_rate):
+        orginal = x
+        x = Dense(units)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        x = Dropout(dropout_rate)(x)
+
+        x = Dense(units)(x)
+        x = BatchNormalization()(x)
+        x = add([x, orginal])
+        x = Activation('relu')(x)
+        
+        return x
+
     def setup_model(self, X_train):
         print(f"\tSetting up model ...")
 
@@ -352,8 +368,9 @@ class BaseNNModel:
                     units=layer['units'], 
                     activation=layer['activation'], 
                     activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
-                x = BatchNormalization()(x)
-                x = Dropout(float(layer['dropout_rate']))(x)  
+                x = BaseNNModel.add_residual_layers(x, layer['units'], float(layer['dropout_rate']))
+                #x = BatchNormalization()(x)
+                #x = Dropout(float(layer['dropout_rate']))(x)  
 
         outputs = []
         for layer in self.params['outputs']:
