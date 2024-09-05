@@ -328,22 +328,6 @@ class BaseNNModel:
         else:
             raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
 
-    @staticmethod
-    def add_residual_layers(x, units, dropout_rate):
-        orginal = x
-        x = Dense(units)(x)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-
-        x = Dropout(dropout_rate)(x)
-
-        x = Dense(units)(x)
-        x = BatchNormalization()(x)
-        x = add([x, orginal])
-        x = Activation('relu')(x)
-        
-        return x
-
     def setup_model(self, X_train):
         print(f"\tSetting up model ...")
 
@@ -362,15 +346,28 @@ class BaseNNModel:
         normalized_inputs = normalizer(masked_inputs)
         x=normalized_inputs
 
-        for layer in self.params['layers']:
+        for n_layer, layer in enumerate(self.params['layers']):
             if layer['type'] == 'Dense':
-                x = Dense(
-                    units=layer['units'], 
-                    activation=layer['activation'], 
-                    activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
-                x = BaseNNModel.add_residual_layers(x, layer['units'], float(layer['dropout_rate']))
-                #x = BatchNormalization()(x)
-                #x = Dropout(float(layer['dropout_rate']))(x)  
+                if self.params['residual_network']:
+                    if n_layer%2 == 0:
+                        x_input = x
+                        x = Dense(
+                            units=layer['units'], 
+                            activation=layer['activation'], 
+                            activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+                    else:
+                        x = Dense(
+                            units=layer['units'], 
+                            activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+                        x = add([x, x_input])
+                        x = Activation(layer['activation'])(x)
+                else:
+                    x = Dense(
+                        units=layer['units'], 
+                        activation=layer['activation'], 
+                        activity_regularizer=regularizers.l2(float(layer['l2'])))(x)    
+                x = BatchNormalization()(x)
+                x = Dropout(float(layer['dropout_rate']))(x)  
 
         outputs = []
         for layer in self.params['outputs']:
