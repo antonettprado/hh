@@ -353,24 +353,29 @@ class BaseNNModel:
                         x = Dense(
                             units=layer['units'], 
                             activation=layer['activation'], 
-                            activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+                            activity_regularizer=regularizers.l2(float(layer['l2'])),
+                            name="layer_%d"%n_layer)(x)
                     elif n_layer%2 != 0:
                         x_input = x
                         x = Dense(
                             units=layer['units'], 
                             activation=layer['activation'], 
-                            activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+                            activity_regularizer=regularizers.l2(float(layer['l2'])),
+                            name="ayer_%d"%n_layer)(x)
                     else:
                         x = Dense(
                             units=layer['units'], 
-                            activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+                            activity_regularizer=regularizers.l2(float(layer['l2'])),
+                            name="layer_%d"%n_layer)(x)
                         x = add([x, x_input])
-                        x = Activation(layer['activation'])(x)
+                        x = Activation(layer['activation'],
+                            name="activation_%d"%n_layer)(x)
                 else:
                     x = Dense(
                         units=layer['units'], 
                         activation=layer['activation'], 
-                        activity_regularizer=regularizers.l2(float(layer['l2'])))(x)    
+                        activity_regularizer=regularizers.l2(float(layer['l2'])),
+                        name="layer_%d"%n_layer)(x)    
                 x = BatchNormalization()(x)
                 x = Dropout(float(layer['dropout_rate']))(x)  
 
