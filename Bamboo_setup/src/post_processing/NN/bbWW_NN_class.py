@@ -349,7 +349,12 @@ class BaseNNModel:
         for n_layer, layer in enumerate(self.params['layers']):
             if layer['type'] == 'Dense':
                 if self.params['residual_network']:
-                    if n_layer%2 == 0:
+                    if n_layer == 0:
+                        x = Dense(
+                            units=layer['units'], 
+                            activation=layer['activation'], 
+                            activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+                    elif n_layer%2 != 0:
                         x_input = x
                         x = Dense(
                             units=layer['units'], 
