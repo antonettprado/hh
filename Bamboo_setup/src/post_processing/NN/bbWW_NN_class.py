@@ -361,7 +361,7 @@ class BaseNNModel:
                             units=layer['units'], 
                             activation=layer['activation'], 
                             activity_regularizer=regularizers.l2(float(layer['l2'])),
-                            name="ayer_%d"%n_layer)(x)
+                            name="layer_%d"%n_layer)(x)
                     else:
                         x = Dense(
                             units=layer['units'], 
