@@ -367,7 +367,8 @@ class BaseNNModel:
                             units=layer['units'], 
                             activity_regularizer=regularizers.l2(float(layer['l2'])),
                             name="layer_%d"%n_layer)(x)
-                        x = add([x, x_input])
+                        x = add([x, x_input], 
+                            name="add_%d"%n_layer)
                         x = Activation(layer['activation'],
                             name="activation_%d"%n_layer)(x)
                 else:
