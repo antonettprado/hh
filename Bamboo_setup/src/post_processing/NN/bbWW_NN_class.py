@@ -24,27 +24,28 @@ FIXED_RANDOM_SEED = True
 N_MAX_TRAINING = 1000000
 N_MAX_HH_TRAINING = -1 # -1 for using all available events
 
-if FIXED_RANDOM_SEED:
-    # Set seeds for reproducibility
-    seed_value = 42
-    os.environ['PYTHONHASHSEED'] = str(seed_value)
-    random.seed(seed_value)
-    np.random.seed(seed_value)
-    tf.random.set_seed(seed_value)
-
-    # Set TensorFlow to use deterministic operations
-    os.environ['TF_DETERMINISTIC_OPS'] = '1'
-    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
-    os.environ['OMP_NUM_THREADS'] = '1'
-    os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
-    os.environ['TF_NUM_INTEROP_THREADS'] = '1'
-    tf.config.threading.set_intra_op_parallelism_threads(1)
-    tf.config.threading.set_inter_op_parallelism_threads(1)
-
 POSTPROCESSING_NN_FOLDER = Path(__file__).parent
 BAMBOO_SETUP = POSTPROCESSING_NN_FOLDER.parents[2]
 WORKDIR, RESULTSDIR, NNOUTDIR = None, None, None
 assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
+
+def set_random_seed():
+    if FIXED_RANDOM_SEED:
+        # Set seeds for reproducibility
+        seed_value = 42
+        os.environ['PYTHONHASHSEED'] = str(seed_value)
+        random.seed(seed_value)
+        np.random.seed(seed_value)
+        tf.random.set_seed(seed_value)
+
+        # Set TensorFlow to use deterministic operations
+        os.environ['TF_DETERMINISTIC_OPS'] = '1'
+        os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+        os.environ['OMP_NUM_THREADS'] = '1'
+        os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
+        os.environ['TF_NUM_INTEROP_THREADS'] = '1'
+        tf.config.threading.set_intra_op_parallelism_threads(1)
+        tf.config.threading.set_inter_op_parallelism_threads(1)
 
 def set_globals(workdir: str, sel_name: str, nnoutdir_name:str=None):
     print(f"\nSetting globals ...")
@@ -814,6 +815,9 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
     
     data_quality_summary(total_df)
 
+    if mode != 'multi':
+        set_random_seed()
+
     if mode == 'train_eval':
         for model_info in DNN_models_params:
             if model_info['type'] == 'binary': 
@@ -846,6 +850,7 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
     elif mode == 'multi':
         global FIXED_RANDOM_SEED
         FIXED_RANDOM_SEED = False
+        set_random_seed()
         for model_info in DNN_models_params:
             modelsuperdir = model_info['name']
             model_name = model_info['name']
