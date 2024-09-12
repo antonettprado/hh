@@ -158,7 +158,13 @@ class SL_DL_NN(NanoBaseHHbbWW):
                 NNsubdir_list = [NNsubdir.resolve() for NNsubdir in NNdir.iterdir() if NNsubdir.is_dir()]
                 n_splits = len(NNsubdir_list)
                 event_nr = tree.event
-                NNdir = Path(NNdir.name + "_%d"%(event_nr%n_splits)).resolve
+                for NNsubdir in NNsubdir_list:
+                    NN_index = int(NNsubdir.split("_")[-1])
+                    NNdir = op.switch(
+                        event_nr%n_splits == op.c_int(NN_index),
+                        NNsubdir,
+                        NNdir
+                    )
             DNN = SL_DL_NN.get_DNN(NNdir, sel_name, objects, self.args.llr_corr_workdir)
             DNN = DNN[sel_name]
 
