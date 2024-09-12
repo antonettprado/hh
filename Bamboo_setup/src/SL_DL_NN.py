@@ -15,13 +15,14 @@ import utils.variable_definition as var_defs
 class SL_DL_NN(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_NN, self).__init__(args)
-        self.event_nr_sel = "odd"
+        self.event_nr_sel = "all" # set to odd manually if needed
 
     def addArgs(self, parser):
         super(SL_DL_NN, self).addArgs(parser)
         parser.add_argument("-NN", "--NNdirs", action="store", dest="NNdirs", nargs="+", help="List of dirs where NN models are in (Ex: -NN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model1 Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model2 ", default=None)
         parser.add_argument("-SNN", "--superNNdir", action="store", dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
         parser.add_argument("-c", "--sel_name", action="store", help="Ex: SL_res_2b_x")
+        parser.add_argument("-ca", "--cross_app", action='store_true', dest = "cross_app", help='Whether using cross application')
         parser.add_argument("-s", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
         parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the llr correction file is')
 
@@ -48,7 +49,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
             classes = [class_i for class_i in model_info['categorization'].keys()]
             processes = [proc for proc_list in model_info['categorization'].values() for proc in proc_list]
         else:
-            raise Exception(f"Model {model_i['name']} is of invalid type")
+            raise Exception(f"Model {model_info['name']} is of invalid type")
             
         return model, model_name, feature_names, classes, processes
 
@@ -149,11 +150,15 @@ class SL_DL_NN(NanoBaseHHbbWW):
         if self.args.superNNdir is not None:
             NNdir_list = [NNdir.resolve() for NNdir in Path(self.args.superNNdir).iterdir() if NNdir.is_dir()]
         else:
-            NNdir_list = self.args.NNdirs
-
+            NNdir_list = self.args.NNdirs    
 
         self.DNN_LIST = []
         for NNdir in NNdir_list:
+            if self.args.ca:
+                NNsubdir_list = [NNsubdir.resolve() for NNsubdir in NNdir.iterdir() if NNsubdir.is_dir()]
+                n_splits = len(NNsubdir_list)
+                event_nr = tree.event
+                NNdir = Path(NNdir.name + "_%d"%(event_nr%n_splits)).resolve
             DNN = SL_DL_NN.get_DNN(NNdir, sel_name, objects, self.args.llr_corr_workdir)
             DNN = DNN[sel_name]
 

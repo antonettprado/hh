@@ -809,6 +809,8 @@ class MulticlassModel(BaseNNModel):
 def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inputs:str, do_input_feature_ranking: bool=False, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5, n_iterations=10):
     set_globals(workdir, sel_name, nnoutdir_name)
     models_summary_name = 'models_performance.csv'
+    if mode == 'ca':
+        N_MAX_TRAINING *= (n_splits/(n_splits-1))
     DNN_models_params = get_test_models(test_models_file)
     total_df = load_data(sel_name, total_inputs)
     total_df = preprocess_data(total_df)
@@ -837,6 +839,26 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
 
         DNN.model = tf_model
         model_metrics, _, _, _ = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
+
+    elif mode == 'ca':
+        kfolding_dfs = []
+        for i in range(0, n_splits):
+            kfolding_dfs.append(total_df[total_df.event%n_splits != i].copy())
+
+        for model_info in DNN_models_params:
+            modelsuperdir = model_info['name']
+            model_name = model_info['name']
+            for i,train_df in enumerate(kfolding_dfs):
+                model_iter_name = model_name + f'_{i}'
+                model_info['name'] = model_iter_name
+                modeldir = f"{modelsuperdir}/{model_info['name']}"
+                if model_info['type'] == 'binary': 
+                    DNN = BinaryModel(params=model_info, total_df=train_df, modeldir=modeldir)
+                elif model_info['type'] == 'multi':             
+                    DNN = MulticlassModel(params=model_info, total_df=train_df, modeldir=modeldir)
+                X_test, Y_test, evs_test = DNN.Train()
+                model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
+                update_models_summary_csv(models_summary_name, model_info['name'], model_metrics)
 
     elif mode == 'cv':
         for model_i in DNN_models_params:
@@ -909,7 +931,7 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--workdir", action="store", required=True, help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
     parser.add_argument("-tm", "--test_models", action="store", required=False, default="NN_test_models.yml")
     parser.add_argument("-c", "--sel_name", action="store", required=True, help="Ex: SL_res_2b_x")
-    parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'cv', 'multi'], required=True, help='Train and Evaluate, evaluate only, or cross-validate')
+    parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'ca', 'cv', 'multi'], required=True, help='Train and Evaluate, evaluate only, cross-application, cross-validate, multiple')
     parser.add_argument("-ti", "--total_inputs", type=str, required=False, default=None, help='Loads only the inputs listed on the txt file to the total_df')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for trained models')
     args, unknown = parser.parse_known_args()
@@ -918,6 +940,8 @@ if __name__ == '__main__':
     elif args.mode == 'eval':
         parser.add_argument("-d", "--NNdir", action="store", required=True, help="Directoy of NN to be evaluated. Example: Z_OUTPUT/VarsReco/Neural_Nets/multiclass_HH_ttbar_tW")
         parser.add_argument("-r", "--do_input_feature_ranking", action="store_true", help="set to get input feature ranking")
+    elif args.mode == 'ca':
+        parser.add_argument("--n_splits", type=int, default=5, help="Number of splits for cross-validation")
     elif args.mode == 'cv':
         parser.add_argument("--cv_method", choices=['kfold', 'shuffle'], required=True, default=None, help="Cross-validation method")
         parser.add_argument("--n_splits", type=int, default=5, help="Number of splits for cross-validation")
@@ -929,6 +953,8 @@ if __name__ == '__main__':
         main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir)
     elif args.mode == 'eval':
         main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, NNdir=args.NNdir, nnoutdir_name=args.outdir)
+    elif args.mode == 'ca':
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, n_splits=args.n_splits, nnoutdir_name=args.outdir)
     elif args.mode == 'cv':
         main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
     elif args.mode == 'multi':
