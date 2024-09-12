@@ -159,7 +159,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
                 n_splits = len(NNsubdir_list)
                 event_nr = tree.event
                 for NNsubdir in NNsubdir_list:
-                    NN_index = int(NNsubdir.split("_")[-1])
+                    NN_index = int(NNsubdir.name.split("_")[-1])
                     NNdir = op.switch(
                         event_nr%n_splits == op.c_int(NN_index),
                         NNsubdir,
