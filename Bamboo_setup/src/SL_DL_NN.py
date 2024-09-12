@@ -154,7 +154,7 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
         self.DNN_LIST = []
         for NNdir in NNdir_list:
-            if self.args.ca:
+            if self.args.cross_app:
                 NNsubdir_list = [NNsubdir.resolve() for NNsubdir in NNdir.iterdir() if NNsubdir.is_dir()]
                 n_splits = len(NNsubdir_list)
                 event_nr = tree.event
