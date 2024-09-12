@@ -47,7 +47,7 @@ def set_random_seed():
         tf.config.threading.set_intra_op_parallelism_threads(1)
         tf.config.threading.set_inter_op_parallelism_threads(1)
 
-def set_globals(workdir: str, sel_name: str, nnoutdir_name:str=None):
+def set_globals(workdir: str, sel_name: str, nnoutdir_name:str=None, postfix:str=None):
     print(f"\nSetting globals ...")
     global WORKDIR, RESULTSDIR, NNOUTDIR
     WORKDIR = Path(workdir)
@@ -56,6 +56,8 @@ def set_globals(workdir: str, sel_name: str, nnoutdir_name:str=None):
         NNOUTDIR = WORKDIR / nnoutdir_name
     else:
         nnoutdir_name = 'Neural_Nets_%s'%sel_name
+        if postfix is not None:
+            nnoutdir_name += "_%s"%postfix
         NNOUTDIR = WORKDIR / nnoutdir_name
 
 def load_data(sel_name: str, total_inputs:str = None) -> list[pd.DataFrame]:
@@ -806,8 +808,8 @@ class MulticlassModel(BaseNNModel):
         cm_norm_true, cm_norm_pred = self.draw_confusion_matrices(true_class, pred_class, xy_ticks)
         return cm_norm_true, cm_norm_pred, xy_ticks
 
-def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inputs:str, do_input_feature_ranking: bool=False, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5, n_iterations=10):
-    set_globals(workdir, sel_name, nnoutdir_name)
+def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inputs:str, do_input_feature_ranking: bool=False, NNdir:str=None, nnoutdir_name:str=None, cv_method=None, n_splits=5, n_iterations=10, postfix:str=None):
+    set_globals(workdir, sel_name, nnoutdir_name, postfix)
     models_summary_name = 'models_performance.csv'
     if mode == 'ca':
         N_MAX_TRAINING *= (n_splits/(n_splits-1))
@@ -934,6 +936,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--mode", choices=['train_eval', 'eval', 'ca', 'cv', 'multi'], required=True, help='Train and Evaluate, evaluate only, cross-application, cross-validate, multiple')
     parser.add_argument("-ti", "--total_inputs", type=str, required=False, default=None, help='Loads only the inputs listed on the txt file to the total_df')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for trained models')
+    parser.add_argument("-p", "--postfix", type=str, default=None, help='Postfix to trained NN directory')
     args, unknown = parser.parse_known_args()
     if args.mode == 'train_eval':
         parser.add_argument("-r", "--do_input_feature_ranking", action="store_true", help="set to get input feature ranking")
@@ -950,15 +953,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode == 'train_eval':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, do_input_feature_ranking=args.do_input_feature_ranking, nnoutdir_name=args.outdir, postfix=args.postfix)
     elif args.mode == 'eval':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, NNdir=args.NNdir, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, NNdir=args.NNdir, nnoutdir_name=args.outdir, postfix=args.postfix)
     elif args.mode == 'ca':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, n_splits=args.n_splits, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, n_splits=args.n_splits, nnoutdir_name=args.outdir, postfix=args.postfix)
     elif args.mode == 'cv':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, cv_method=args.cv_method, n_splits=args.n_splits, nnoutdir_name=args.outdir, postfix=args.postfix)
     elif args.mode == 'multi':
-        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, n_iterations=args.n_iterations, nnoutdir_name=args.outdir)
+        main(workdir=args.workdir, test_models_file=args.test_models, sel_name=args.sel_name, mode=args.mode, total_inputs=args.total_inputs, n_iterations=args.n_iterations, nnoutdir_name=args.outdir, postfix=args.postfix)
 
     '''
     Examples:
