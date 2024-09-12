@@ -242,6 +242,9 @@ class BaseNNModel:
         self.classes = None
         self.processes = None
         self.training_weight_sf = None
+        self.model_df = None
+        self.model_df_train = None
+        self.model_df_test = None
         self.model = None
         self.type = None
         self.history = None
@@ -585,7 +588,7 @@ class BaseNNModel:
         return cm_norm_true, cm_norm_pred
 
     def Train(self):
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df)
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df, self.model_df_train, self.model_df_train)
         self.setup_model(X_train)
         history = self.train_model(X_train, Y_train, tw_train)
         self.save_model_info(X_train.columns, Y_train, Y_test)
@@ -635,31 +638,60 @@ class BaseNNModel:
         return self.params, average_metrics
 
     @staticmethod
-    def split_and_shuffle(model_df):
-        classes_in_df = model_df.filter(like='Class_').columns
+    def split_and_shuffle(model_df, model_df_train, model_df_test):
+        if model_df is not None:
+            test_size = int(0.2 * len(model_df))
+            model_df_train = model_df.sample(n=test_size, random_state=7)
+            model_df_diff = pd.merge(model_df, model_df_train, how='left', indicator=True)
+            model_df_test = model_df_diff[model_df_diff['_merge'] == 'left_only']
+            model_df_test = model_df_test.drop(columns=['_merge'])
+
+        classes_in_df = model_df_train.filter(like='Class_').columns
         columns_to_drop = ["event", "gen_Weight", "sample_weight"]
         columns_to_drop.extend(classes_in_df)
-        X_df = model_df.drop(columns=columns_to_drop)
-        classes = [cls_i for cls_i in model_df.columns if cls_i.startswith('Class_')]
-        Y_df = model_df[classes]
+        classes = [cls_i for cls_i in model_df_train.columns if cls_i.startswith('Class_')]
 
-        test_size = 0.2
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["sample_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
+        X_train = model_df_train.drop(columns=columns_to_drop)
+        Y_train = model_df_train[classes]
+        X_test = model_df_test.drop(columns=columns_to_drop)
+        Y_test = model_df_test[classes]
+        evs_train = model_df_train["event"]
+        evs_test = model_df_test["event"]
+        tw_train = model_df_train["sample_weight"]
+        tw_test = model_df_test["sample_weight"]
+
+        #test_size = 0.2
+        #X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["sample_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
 
         return X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test
 
 class BinaryModel(BaseNNModel):
 
-    def __init__(self, params: dict, modeldir: str = None, total_df: pd.DataFrame = None):
+    def __init__(self, params: dict, modeldir: str = None, total_df: pd.DataFrame = None, train_df: pd.DataFrame = None, test_df: pd.DataFrame = None):
         super().__init__(params, modeldir)
         self.type = 'binary'
         self.classes = ["isSignal"]
         self.processes = params['processes']
         self.training_weight_sf = params['training_weight_sf']
+
         if total_df is not None:
+            if train_df is not None or test_df is not None:
+                print ("Cannot provide train, test dataframes along with total dataframe\n")
+                sys.exit()
             self.model_df = self.get_model_df(total_df, params)
             print(f"Model: {self.name}")
             print(self.model_df)
+        else:
+            if train_df is None or test_df is None:
+                print ("Need to provide train, test dataframes if not providing total dataframe\n")
+                sys.exit()
+            self.model_df_train = self.get_model_df(train_df, params)
+            print(f"Model: {self.name}")
+            print(self.model_df_train)
+            self.model_df_test = self.get_model_df(test_df, params)
+            print(f"Model: {self.name}")
+            print(self.model_df_test)
+
 
     def get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
         model_df  = super()._get_model_df(total_df, params)
@@ -720,7 +752,7 @@ class BinaryModel(BaseNNModel):
 
 class MulticlassModel(BaseNNModel):
 
-    def __init__(self, params: dict, modeldir: str = None, total_df: pd.DataFrame = None):
+    def __init__(self, params: dict, modeldir: str = None, total_df: pd.DataFrame = None, train_df: pd.DataFrame = None, test_df: pd.DataFrame = None):
         super().__init__(params, modeldir)
         self.type = 'multi'
         self.categorization = params['categorization']
@@ -731,9 +763,22 @@ class MulticlassModel(BaseNNModel):
         for proc in self.processes:
             assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
         if total_df is not None:
+            if train_df is not None or test_df is not None:
+                print ("Cannot provide train, test dataframes along with total dataframe\n")
+                sys.exit()
             self.model_df = self.get_model_df(total_df, params)
             print(f"Model: {self.name}")
             print(self.model_df)
+        else:
+            if train_df is None or test_df is None:
+                print ("Need to provide train, test dataframes if not providing total dataframe\n")
+                sys.exit()
+            self.model_df_train = self.get_model_df(train_df, params)
+            print(f"Model: {self.name}")
+            print(self.model_df_train)
+            self.model_df_test = self.get_model_df(test_df, params)
+            print(f"Model: {self.name}")
+            print(self.model_df_test)
 
     def get_model_df(self, total_df: pd.DataFrame, params: dict) -> pd.DataFrame:
         model_df  = super()._get_model_df(total_df, params)
@@ -845,20 +890,22 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
 
     elif mode == 'ca':
         kfolding_dfs = []
+        test_dfs = []
         for i in range(0, n_splits):
             kfolding_dfs.append(total_df[total_df.event%n_splits != i].copy())
+            test_dfs.append(total_df[total_df.event%n_splits == i].copy())
 
         for model_info in DNN_models_params:
             modelsuperdir = model_info['name']
             model_name = model_info['name']
-            for i,train_df in enumerate(kfolding_dfs):
+            for i in range(0, n_splits):
                 model_iter_name = model_name + f'_{i}'
                 model_info['name'] = model_iter_name
                 modeldir = f"{modelsuperdir}/{model_info['name']}"
                 if model_info['type'] == 'binary': 
-                    DNN = BinaryModel(params=model_info, total_df=train_df, modeldir=modeldir)
+                    DNN = BinaryModel(params=model_info, train_df=kfolding_dfs[i], test_df=test_dfs[i], modeldir=modeldir)
                 elif model_info['type'] == 'multi':             
-                    DNN = MulticlassModel(params=model_info, total_df=train_df, modeldir=modeldir)
+                    DNN = MulticlassModel(params=model_info, train_df=kfolding_dfs[i], test_df=test_dfs[i], modeldir=modeldir)
                 X_test, Y_test, evs_test = DNN.Train()
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Evaluate(X_test, Y_test, evs_test, do_input_feature_ranking)
                 update_models_summary_csv(models_summary_name, model_info['name'], model_metrics)
