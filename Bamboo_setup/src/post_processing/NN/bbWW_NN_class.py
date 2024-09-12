@@ -813,7 +813,7 @@ def main(workdir: str, test_models_file: str, sel_name: str, mode:str, total_inp
     models_summary_name = 'models_performance.csv'
     if mode == 'ca':
         global N_MAX_TRAINING
-        N_MAX_TRAINING *= (n_splits/(n_splits-1))
+        N_MAX_TRAINING *= int(n_splits/(n_splits-1))
     DNN_models_params = get_test_models(test_models_file)
     total_df = load_data(sel_name, total_inputs)
     total_df = preprocess_data(total_df)
