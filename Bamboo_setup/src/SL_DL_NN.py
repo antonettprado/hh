@@ -163,10 +163,10 @@ class SL_DL_NN(NanoBaseHHbbWW):
                     NN_postfix = int(NNsubdir.name.split("_")[-1])
                     NN_match_index = op.switch(
                         event_nr%n_splits == NN_postfix,
-                        op.c_int(i),
-                        op.c_int(NN_match_index)
+                        i,
+                        NN_match_index
                     )
-                NNdir = NNsubdir_list[NN_match_index]
+                NNdir = NNsubdir_list[op.c_int(NN_match_index)]
             DNN = SL_DL_NN.get_DNN(NNdir, sel_name, objects, self.args.llr_corr_workdir)
             DNN = DNN[sel_name]
 
