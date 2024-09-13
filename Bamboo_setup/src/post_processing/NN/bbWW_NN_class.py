@@ -760,12 +760,12 @@ class MulticlassModel(BaseNNModel):
         self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
         self.training_weight_sf = params['training_weight_sf']
 
-        for proc in self.processes:
-            assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
         if total_df is not None:
             if train_df is not None or test_df is not None:
                 print ("Cannot provide train, test dataframes along with total dataframe\n")
                 sys.exit()
+            for proc in self.processes:
+                assert f"Process_{proc}" in total_df.columns, f"Process {proc} was not found in the total dataframe"
             self.model_df = self.get_model_df(total_df, params)
             print(f"Model: {self.name}")
             print(self.model_df)
@@ -773,6 +773,10 @@ class MulticlassModel(BaseNNModel):
             if train_df is None or test_df is None:
                 print ("Need to provide train, test dataframes if not providing total dataframe\n")
                 sys.exit()
+            for proc in self.processes:
+                assert f"Process_{proc}" in train_df.columns, f"Process {proc} was not found in the train dataframe"
+            for proc in self.processes:
+                assert f"Process_{proc}" in test_df.columns, f"Process {proc} was not found in the test dataframe"
             self.model_df_train = self.get_model_df(train_df, params)
             print(f"Model: {self.name}")
             print(self.model_df_train)
