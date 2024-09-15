@@ -662,6 +662,8 @@ class BaseNNModel:
         tw_test = model_df_test["sample_weight"]
 
         #test_size = 0.2
+        #X_df = model_df.drop(columns=columns_to_drop)
+        #Y_df = model_df[classes]
         #X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["sample_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
 
         return X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test
