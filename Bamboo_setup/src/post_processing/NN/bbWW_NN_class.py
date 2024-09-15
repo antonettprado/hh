@@ -640,12 +640,13 @@ class BaseNNModel:
     @staticmethod
     def split_and_shuffle(model_df, model_df_train, model_df_test):
         if model_df is not None:
-            test_size = int(0.2 * len(model_df))
-            model_df_test = model_df.sample(n=test_size, random_state=7)
-            model_df_diff = pd.merge(model_df, model_df_test, how='left', indicator=True)
-            model_df_train = model_df_diff[model_df_diff['_merge'] == 'left_only']
-            model_df_train = model_df_train.drop(columns=['_merge'])
-
+            model_df.sample(frac=1).reset_index(drop=True)
+            test_size = 0.2
+            model_df_test = model_df.sample(frac=test_size, random_state=7)
+            model_df_train = model_df.drop(model_df_test.index)
+        else:
+            model_df_train.sample(frac=1).reset_index(drop=True)
+            model_df_test.sample(frac=1).reset_index(drop=True)
         classes_in_df = model_df_train.filter(like='Class_').columns
         columns_to_drop = ["event", "gen_Weight", "sample_weight"]
         columns_to_drop.extend(classes_in_df)
