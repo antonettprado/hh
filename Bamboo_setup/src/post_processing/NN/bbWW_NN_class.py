@@ -588,7 +588,7 @@ class BaseNNModel:
         return cm_norm_true, cm_norm_pred
 
     def Train(self):
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df, self.model_df_train, self.model_df_train)
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df, self.model_df_train, self.model_df_test)
         self.setup_model(X_train)
         history = self.train_model(X_train, Y_train, tw_train)
         self.save_model_info(X_train.columns, Y_train, Y_test)
