@@ -641,10 +641,10 @@ class BaseNNModel:
     def split_and_shuffle(model_df, model_df_train, model_df_test):
         if model_df is not None:
             test_size = int(0.2 * len(model_df))
-            model_df_train = model_df.sample(n=test_size, random_state=7)
-            model_df_diff = pd.merge(model_df, model_df_train, how='left', indicator=True)
-            model_df_test = model_df_diff[model_df_diff['_merge'] == 'left_only']
-            model_df_test = model_df_test.drop(columns=['_merge'])
+            model_df_test = model_df.sample(n=test_size, random_state=7)
+            model_df_diff = pd.merge(model_df, model_df_test, how='left', indicator=True)
+            model_df_train = model_df_diff[model_df_diff['_merge'] == 'left_only']
+            model_df_train = model_df_train.drop(columns=['_merge'])
 
         classes_in_df = model_df_train.filter(like='Class_').columns
         columns_to_drop = ["event", "gen_Weight", "sample_weight"]
