@@ -10,12 +10,38 @@ def setup_architecture_from_yml(params, input_layer, normalized_input):
     print(f"\t\tSetting up architecture from yml ...")
 
     x = normalized_input
-    for layer in params['layers']:
+    for n_layer, layer in enumerate(params['layers']):
         if layer['type'] == 'Dense':
-            x = Dense(
-                units=layer['units'], 
-                activation=layer['activation'], 
-                activity_regularizer=regularizers.l2(float(layer['l2'])))(x)
+            if params['residual_network']:
+                if n_layer == 0:
+                    x = Dense(
+                        units=layer['units'], 
+                        activation=layer['activation'], 
+                        activity_regularizer=regularizers.l2(float(layer['l2'])),
+                        name="layer_%d"%n_layer)(x)
+                elif n_layer%2 != 0:
+                    x_input = x
+                    x = Dense(
+                        units=layer['units'], 
+                        activation=layer['activation'], 
+                        activity_regularizer=regularizers.l2(float(layer['l2'])),
+                        name="layer_%d"%n_layer)(x)
+                else:
+                    x = add([x, x_input], 
+                        name="add_%d"%n_layer)
+                    x = Dense(
+                        units=layer['units'], 
+                        activation=layer['activation'], 
+                        activity_regularizer=regularizers.l2(float(layer['l2'])),
+                        name="layer_%d"%n_layer)(x)
+                    #x = Activation(layer['activation'],
+                    #    name="activation_%d"%n_layer)(x)
+            else:
+                x = Dense(
+                    units=layer['units'], 
+                    activation=layer['activation'], 
+                    activity_regularizer=regularizers.l2(float(layer['l2'])),
+                    name="layer_%d"%n_layer)(x)    
             x = BatchNormalization()(x)
             x = Dropout(float(layer['dropout_rate']))(x)  
 
