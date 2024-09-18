@@ -588,7 +588,7 @@ class BaseNNModel:
         return cm_norm_true, cm_norm_pred
 
     def Train(self):
-        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df, self.model_df_train, self.model_df_train)
+        X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = BaseNNModel.split_and_shuffle(self.model_df, self.model_df_train, self.model_df_test)
         self.setup_model(X_train)
         history = self.train_model(X_train, Y_train, tw_train)
         self.save_model_info(X_train.columns, Y_train, Y_test)
@@ -640,12 +640,13 @@ class BaseNNModel:
     @staticmethod
     def split_and_shuffle(model_df, model_df_train, model_df_test):
         if model_df is not None:
-            test_size = int(0.2 * len(model_df))
-            model_df_train = model_df.sample(n=test_size, random_state=7)
-            model_df_diff = pd.merge(model_df, model_df_train, how='left', indicator=True)
-            model_df_test = model_df_diff[model_df_diff['_merge'] == 'left_only']
-            model_df_test = model_df_test.drop(columns=['_merge'])
-
+            model_df.sample(frac=1).reset_index(drop=True)
+            test_size = 0.1
+            model_df_test = model_df.sample(frac=test_size, random_state=7)
+            model_df_train = model_df.drop(model_df_test.index)
+        else:
+            model_df_train.sample(frac=1).reset_index(drop=True)
+            model_df_test.sample(frac=1).reset_index(drop=True)
         classes_in_df = model_df_train.filter(like='Class_').columns
         columns_to_drop = ["event", "gen_Weight", "sample_weight"]
         columns_to_drop.extend(classes_in_df)
@@ -660,7 +661,9 @@ class BaseNNModel:
         tw_train = model_df_train["sample_weight"]
         tw_test = model_df_test["sample_weight"]
 
-        #test_size = 0.2
+        #test_size = 0.1
+        #X_df = model_df.drop(columns=columns_to_drop)
+        #Y_df = model_df[classes]
         #X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test = train_test_split(X_df, Y_df, model_df["event"], model_df["sample_weight"], test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
 
         return X_train, X_test, Y_train, Y_test, evs_train, evs_test, tw_train, tw_test
