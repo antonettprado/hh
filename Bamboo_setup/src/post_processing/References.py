@@ -23,6 +23,8 @@ PROCESSES_FILES = dict(
     )
 
 CLASS_COLOR_MAP = dict(
+    HH_bbWW=['blue', ROOT.kBlue],
+    HH_bbtautau = ['blue', ROOT.kBlue],
     HH=['blue', ROOT.kBlue], 
     ttbar=['red', ROOT.kRed], 
     tW=['green', ROOT.kGreen], 
