@@ -246,7 +246,7 @@ class DNNManager:
             for fold_i, (train_index, test_index) in enumerate(skf.split(X_df, Y_df_single)):
                 print(f"Running fold {fold_i+1}/{skf.get_n_splits()}")
                 model_params['name'] = model_name + f'_Fold{fold_i}'
-                DNN_fold_i = DNNModel(params=model_params, modeldir=self.DNNMANAGERDIR / model_params['name'])
+                DNN_fold_i = DNNModel(params=model_params, modeldir=self.DNNMANAGERDIR / modelsuperdir / model_params['name'])
                 X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNNModel.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='skf', train_index=train_index, test_index=test_index)
                 DNN_fold_i.Train(X_train, Y_train, sw_train, Y_test)
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN_fold_i.Evaluate(X_test, Y_test, evs_test)
@@ -265,7 +265,7 @@ class DNNManager:
             model_name = model_params['name']
             for iteration in range(n_iterations):
                 model_params['name'] = model_name + f'_{iteration}'
-                DNN = DNNModel(params=model_params, modeldir=self.DNNMANAGERDIR / model_params['name'])
+                DNN = DNNModel(params=model_params, modeldir=self.DNNMANAGERDIR / modelsuperdir / model_params['name'])
                 DNN.set_model_df_from_total_df(total_df)
                 X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNN.Full_Splitting(DNN.model_df)
                 DNN.Train(X_train, Y_train, sw_train, Y_test, fixed_random_seed = self.FIXED_RANDOM_SEED)
@@ -345,9 +345,9 @@ if __name__ == '__main__':
     '''
     Example:
     
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_test_models.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager -m train_eval
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager -m train_eval
 
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_test_models.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager_ca_1 -m ca --n_splits 5
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_ca -m ca --n_splits 5
 
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_test_models.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager_multi_1 -m multi --n_iterations 3
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_multi -m multi --n_iterations 3
     '''

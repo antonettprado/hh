@@ -217,7 +217,7 @@ class DNNModel:
 
     def save_model_info(self, features, Y_train, Y_test):
         print(f"\tSaving model info ...")
-        # model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
+        model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
 
         plot_model(self.model, to_file=self.modeldir/'model_plot.png', show_shapes=True, show_layer_names=True)
     
