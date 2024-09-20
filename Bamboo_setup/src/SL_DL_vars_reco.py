@@ -5,21 +5,18 @@ from bamboo.plots import EquidistantBinning as EqBin
 from base_selection import NanoBaseHHbbWW
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.variable_definition as var_defs
-from utils import variables
-from utils.variables import Variable, Variable1D, Variable2D, Variable3D
 
 from pathlib import Path
 import os
 import correctionlib.schemav2 as cs
 import ROOT
 import numpy as np
-import scipy.interpolate
 
 class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     def __init__(self, args):
         super(SL_DL_vars_reco, self).__init__(args)
-        self.event_nr_sel = "even"
+        self.event_nr_sel = "all"
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
@@ -36,15 +33,11 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
                                                                                     sampleCfg=sampleCfg,
                                                                                     description=description,
                                                                                     backend=backend)
-        if self.is_MC:
-            cut = (tree.event % 10 == 0)
-            baseSel = baseSel.refine('_one_fifth_of_half', cut=cut)
 
         return tree, baseSel, backend, lumiArgs
 
     @staticmethod
     def get_objects(tree, era):
-
         objects = SL_DL_event_selection.get_objects(tree, era)
         ak4_jets = objects["cleaned_ak4_jets"]
         ak4_btags = objects["cleaned_ak4_btags"]
@@ -82,11 +75,19 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     @staticmethod
     def get_skims(objects, selections, plots):
-        base_skim = {"event": None, "gen_Weight": objects["gen_Weight"]}
+        base_skim = {
+            "event": None,
+            "run": None,
+            "luminosityBlock": None,
+            "genWeight": None,
+            "bunchCrossing": None,
+            "genTtbarId": None
+            }
         sel_vars_dict = var_defs.gathers_vars_dict(objects, selections)
         for sel_name in ["SL_res_2b_x"]:
             subcat_vars_dict = sel_vars_dict[sel_name]
-            sel_skim = {**base_skim, **subcat_vars_dict}
+            subcat_vars_data = {k: v.data for k,v in subcat_vars_dict.items()}
+            sel_skim = {**base_skim, **subcat_vars_data}
             selection = selections[sel_name]
             plots.append(Skim(sel_name, sel_skim, selection))
         return plots

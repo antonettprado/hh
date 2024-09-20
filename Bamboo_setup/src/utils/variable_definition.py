@@ -1093,7 +1093,7 @@ def gather_all_3D_variables(objects) -> list[Variable3D]:
     return vars3D
 
 # Returns a dictionary, ex: sel_vars_dict = {SL_res_2b_x: {'bjets_mbb': bjets_mbb}}
-def gathers_vars_dict(objects, selections) -> dict[str: dict[str: Variable]]:
+def gathers_vars_dict(objects, selections) -> dict[str, dict[str, Variable]]:
     vars1D = gather_all_1D_variables(objects)
     sel_vars_dict = {}
     for sel_name, sel in selections.items():
