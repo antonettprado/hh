@@ -12,9 +12,9 @@ from tensorflow.keras.layers import Input, Masking, Normalization
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.utils import plot_model
 from contextlib import redirect_stdout
-from post_processing import References as Refs
-import model_builder
-import  utils
+import post_processing.References as Refs
+import post_processing.NN.model_builder as model_builder
+import  post_processing.NN.utils as utils
 
 
 class DNNModel:

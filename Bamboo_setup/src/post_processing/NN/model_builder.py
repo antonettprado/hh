@@ -12,27 +12,27 @@ def setup_architecture_from_yml(params, input_layer, normalized_input):
     x = normalized_input
     for n_layer, layer in enumerate(params['layers']):
         if layer['type'] == 'Dense':
+            reg = get_activity_regularizer(layer['act_regularizer'])
             if params['residual_network']:
                 if n_layer == 0:
                     x = Dense(
                         units=layer['units'], 
                         activation=layer['activation'], 
-                        activity_regularizer=regularizers.l2(float(layer['l2'])),
+                        activity_regularizer=reg,
                         name="layer_%d"%n_layer)(x)
                 elif n_layer%2 != 0:
                     x_input = x
                     x = Dense(
                         units=layer['units'], 
                         activation=layer['activation'], 
-                        activity_regularizer=regularizers.l2(float(layer['l2'])),
+                        activity_regularizer=reg,
                         name="layer_%d"%n_layer)(x)
                 else:
-                    x = add([x, x_input], 
-                        name="add_%d"%n_layer)
+                    x = Add(name="add_%d" % n_layer)([x, x_input])
                     x = Dense(
                         units=layer['units'], 
                         activation=layer['activation'], 
-                        activity_regularizer=regularizers.l2(float(layer['l2'])),
+                        activity_regularizer=reg,
                         name="layer_%d"%n_layer)(x)
                     #x = Activation(layer['activation'],
                     #    name="activation_%d"%n_layer)(x)
@@ -40,7 +40,7 @@ def setup_architecture_from_yml(params, input_layer, normalized_input):
                 x = Dense(
                     units=layer['units'], 
                     activation=layer['activation'], 
-                    activity_regularizer=regularizers.l2(float(layer['l2'])),
+                    activity_regularizer=reg,
                     name="layer_%d"%n_layer)(x)    
             x = BatchNormalization()(x)
             x = Dropout(float(layer['dropout_rate']))(x)  
@@ -52,7 +52,7 @@ def setup_architecture_from_yml(params, input_layer, normalized_input):
                 units=layer['units'],
                 kernel_initializer=layer['kernel_initializer'], 
                 activation=layer['activation'], 
-                activity_regularizer=regularizers.l2(float(layer['l2'])), 
+                activity_regularizer=reg, 
                 name=layer['name'])(x)
             outputs.append(output)
         
@@ -63,10 +63,22 @@ def setup_architecture_from_fnc(arch_fnc_name, nodes_per_layer, input_layer, nor
     architecture_dict = {
         'default_model': default_model,
         'default_model_with_1resblock': default_model_with_1resblock,
+        'default_model_with_1resblock_3hl': default_model_with_1resblock_3hl
         }
     assert arch_fnc_name in architecture_dict.keys()
     fnc = architecture_dict[arch_fnc_name]
     return fnc(input_layer, normalized_input, n_classifierNodes, nodes_per_layer)
+
+def get_activity_regularizer(act_reg: dict):
+    if 'l1' in act_reg and 'l2' in act_reg:
+        reg = regularizers.l1_l2(l1=float(act_reg['l1']), l2=float(act_reg['l2']))
+    elif 'l1' in act_reg:
+        reg = regularizers.l1(float(act_reg['l1']))
+    elif 'l2' in act_reg:
+        reg = regularizers.l1(float(act_reg['l2']))
+    else:
+        reg = None
+    return reg
 
 def get_optimizer(config: dict):
     optimizer_name = config['optimizer'].lower()
@@ -215,8 +227,8 @@ def default_model(input_layer, normalized_input, n_outnodes, nodes_per_layer):
 def default_model_with_1resblock(input_layer, normalized_input, n_outnodes, nodes_per_layer):
     # Total number of Dense layers = 1 + 2 + 1 + 1 = 5 Dense layers.
     units = nodes_per_layer
-    reg_l2 = regularizers.l2(1e-6)
-    dropout_rate = 0.3
+    reg_l2 = regularizers.l2(1e-4)
+    dropout_rate = 0.4
 
     x = normalized_input
 
@@ -232,6 +244,35 @@ def default_model_with_1resblock(input_layer, normalized_input, n_outnodes, node
     x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
+    
+    # Final Dense Layer for output
+    output = Dense(
+        units=n_outnodes, 
+        kernel_initializer='normal', 
+        activation='softmax', 
+        activity_regularizer=reg_l2, 
+        name='output')(x)
+
+    # Create the Model
+    model = Model(inputs=input_layer, outputs=[output], name='model_with_1_residual_block')
+
+    return model
+
+def default_model_with_1resblock_3hl(input_layer, normalized_input, n_outnodes, nodes_per_layer):
+    # Total number of Dense layers = 1 + 2 + 1 = 4 Dense layers.
+    units = nodes_per_layer
+    reg_l2 = regularizers.l2(1e-4)
+    dropout_rate = 0.4
+
+    x = normalized_input
+
+    # Initial Dense Layer
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout_rate)(x)
+    
+    # Apply 1 Residual Block
+    x = residual_block(x, units, reg_l2, dropout_rate)
     
     # Final Dense Layer for output
     output = Dense(

@@ -34,13 +34,15 @@ class DNNManager:
 
         self.sel_name = sel_name
         self.models_yml = self.POSTPROCESSING_NN_FOLDER / models_yml
-        self.total_inputs = total_inputs
+        self.total_inputs = self.POSTPROCESSING_NN_FOLDER / total_inputs
         self.mode = None
 
         print(f"DNN Manager instantiated:")
         print(f"\tWORKDIR:{self.WORKDIR}")
         print(f"\tRESULTSDIR:{self.RESULTSDIR}")
         print(f"\tDNNMANAGERDIR:{self.DNNMANAGERDIR}")
+        print(f"\tTotal inputs file: {self.total_inputs}")
+        print(f"\tTest models file: {self.models_yml}")
 
     def set_mode(self, mode: str, **kwargs):
         if mode not in DNNManager.MODE_MAPPING:
@@ -94,7 +96,7 @@ class DNNManager:
         root_files_available = Refs._find_root_files(self.RESULTSDIR)
 
         if self.total_inputs is not None:
-            with open(self.POSTPROCESSING_NN_FOLDER / self.total_inputs) as file:
+            with open(self.total_inputs) as file:
                 branches = [line.strip() for line in file]
             array_extractor = lambda upfile, sel_name: upfile[sel_name].arrays(branches, library="pd")
         else:
@@ -343,9 +345,9 @@ if __name__ == '__main__':
     '''
     Example:
     
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_archs_run2.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager_train_eval -m train_eval
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_test_models.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager -m train_eval
 
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_refactor_test.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager_ca_1 -m ca --n_splits 5
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_test_models.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager_ca_1 -m ca --n_splits 5
 
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_refactor_test.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager_multi_1 -m multi --n_iterations 3
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my Test_Models_0822/NN_test_models.yml -c SL_res_2b_x -m ca -ti Total_inputs/vars40.txt -o Testing_DNNManager_multi_1 -m multi --n_iterations 3
     '''
