@@ -926,7 +926,7 @@ def get_nAK4(objects):
     subcat_names = nAK4.subcats
     selections = get_selections_subset(subcat_names)
 
-    data = op.rng_len(objects["cleaned_ak4_jets"])
+    data = op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"]))
     data = {sel_name: data for sel_name in selections.keys()}
     nAK4.populate(data, selections)
     return nAK4
@@ -936,7 +936,7 @@ def get_nAK4_btag(objects):
     subcat_names = nAK4_btag.subcats
     selections = get_selections_subset(subcat_names)
 
-    data = op.rng_len(objects["cleaned_ak4_btags"])
+    data = op.static_cast("UInt_t",op.rng_len(objects["cleaned_ak4_btags"]))
     data = {sel_name: data for sel_name in selections.keys()}
     nAK4_btag.populate(data, selections)
     return nAK4_btag
@@ -946,7 +946,7 @@ def get_nAK4_nonbtag(objects):
     subcat_names = nAK4_nonbtag.subcats
     selections = get_selections_subset(subcat_names)
 
-    data = op.rng_len(objects["ak4_nonbtags"])
+    data = op.static_cast("UInt_t",op.rng_len(objects["ak4_nonbtags"]))
     data = {sel_name: data for sel_name in selections.keys()}
     nAK4_nonbtag.populate(data, selections)
     return nAK4_nonbtag
@@ -956,7 +956,7 @@ def get_nAK8_btag(objects):
     subcat_names = nAK8_btag.subcats
     selections = get_selections_subset(subcat_names)
 
-    data = op.rng_len(objects["cleaned_ak8_btags"])
+    data = op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak8_btags"]))
     data = {sel_name: data for sel_name in selections.keys()}
     nAK8_btag.populate(data, selections)
     return nAK8_btag
