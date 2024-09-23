@@ -242,7 +242,7 @@ def tau_selection(taus, era):
         tau.pt > 20,
         op.abs(tau.eta) < 2.3,
         get_idDeepTau_cut(tau, era),
-        op.OR( ## TO DO: check tau decay modes
+        op.OR(
             tau.decayMode == 0,
             tau.decayMode == 1,
             tau.decayMode == 2,
