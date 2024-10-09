@@ -489,7 +489,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         return leptons
 
     # Returns list[list[sel_name, sel_skim[], selection]]
-    def get_skims(self, objects, selections, plots) -> 'list[list[str, dict[], object]':
+    def get_skims(self, objects, selections, plots):
 
         def get_jet_btag(jet, type):
             if type == "ak4":
@@ -722,6 +722,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         super(SL_DL_event_selection, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
-        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, resultsdir=resultsdir)
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)

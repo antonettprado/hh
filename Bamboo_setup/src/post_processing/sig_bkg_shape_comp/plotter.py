@@ -57,7 +57,7 @@ class BasePlotter:
         '''
         _find_root_files = lambda dir: [file for file in dir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
         self.refs_file = _find_root_files(ref_workdir/'results')[0]
-
+        print(_find_root_files(ref_workdir/'results'))
         tfile = TFile.Open(str(self.refs_file), 'read')
         refs = []
         for key in tfile.GetListOfKeys():
@@ -130,13 +130,16 @@ class BasePlotter:
 
 class Plotter(BasePlotter):
 
-    def __init__(self, dir: str, configFile: str, era=None, outdir:str='plotter', which_processes: Union[str, list[str]]="All"):
+    def __init__(self, dir: str, configFile: str, era=None, outdir:str='plotter', which_processes: Union[str, list[str]]="All", resultsdir: str=None):
         super().__init__(dir, configFile, era, outdir, dirtype='workdir')
-        self.resultsdir = self.dir / 'results'
+        if not resultsdir:
+            resultsdir = self.dir / 'results'
+        self.resultsdir = Path(resultsdir)
+        print(f"{self.resultsdir.parent=}")
         self.dirprocesses = Refs._find_processes(self.resultsdir)
         self.SUM_WEIGHTS: dict[str, float] = {}
         self.tfiles: dict[str, list[TFile]] = {}
-        super()._set_refs_file_and_refs(ref_workdir=self.dir)
+        super()._set_refs_file_and_refs(ref_workdir=self.resultsdir.parent)
         super()._set_configFile_info(Path(configFile))
         processes_to_run_on = self.decide_processes_to_run_on(which_processes)
         self.open_process_tfiles(processes_to_run_on) 
@@ -487,6 +490,3 @@ if __name__ == "__main__":
     Example of use from command line:
         python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022_3backs -c config/analysis_2022_3backs.yml
     '''
-
-
-    
