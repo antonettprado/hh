@@ -2,18 +2,26 @@
 
 ## Installation:
 
-Install bamboo analysis framework with the instructions here: https://bamboo-hep.readthedocs.io/en/latest/install.html#fresh-install
+Install bamboo analysis framework with the instructions here: https://bamboo-hep.readthedocs.io/en/latest/install.html#fresh-install. 
+**On line 4, replace "centos7" with "el9"**
 
-Make some minor updates to bamboo in bamboo/bamboo/batch_htcondor.py:
+Run the following code within the "bamboo" directory (just bamboo, not bamboo/bamboo). This updates bamboo to the PR where we can save root files to EOS
+```bash
+git fetch "https://gitlab.cern.ch/jlidrych/bamboo.git" 'twoOutputDirs'
+git checkout -b 'bamboo-twoOutputDirs' FETCH_HEAD
+git push "https://gitlab.cern.ch/jlidrych/bamboo.git" 'bamboo-twoOutputDirs:twoOutputDirs'
+```
 
-From
+### Make some minor updates to bamboo:
+
+In `bamboo/bamboo/batch_htcondor.py`, replace
 ```bash
 chCmdArgs = [
     "condor_history", f"{self.clusterId}.{self.commandList.index(command):d}",
     "-af", "CommittedTime", "CommittedSuspensionTime"]
 elapsed, suspended = subprocess.check_output(chCmdArgs).decode().strip().split()
 ```
-to
+with
 ```bash
 #chCmdArgs = [
 #    "condor_history", f"{self.clusterId}.{self.commandList.index(command):d}",
@@ -21,25 +29,25 @@ to
 elapsed, suspended = 0, 0
 ```
 
-Also make some minor changes if you want to save output of jobs to eos area through HT condor (OPTIONAL and NOT RECOMMENDED at the moment) - modify the lines in bamboo/bamboo/batch_htcondor.py:
-
-From
+**Very Important**: In `bamboo/bamboo/analysismodules.py`, replace
 ```bash
-result = subprocess.check_output(["condor_submit", cmdFile]).decode()
+def inputs(self):
+    inputs = list(self.args.input)
+    if self.args.distributed == "worker" and self.args.filelists:
+```
+with
+```bash
+def inputs(self):
+    inputs = list(self.args.input)
+    logger.info(f"{self.args.filelists =}")
+    if self.args.distributed == "worker" and self.args.filelists:
 ```
 
-to
-```bash
-result = subprocess.check_output(["condor_submit", "-spool", cmdFile]).decode()
-```
+And then resinstall bamboo using: `pip install . --upgrade` (again, within the first "bamboo" directory)
 
+### Install HH analysis
 
-And then resinstall bamboo using:
-```bash
-pip install ./bamboo
-```
-
-Then clone this repository in the parent directory containing the bamboo installation:
+Clone this repository into the parent directory containing the bamboo installation:
 
 ```bash
 git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
@@ -58,7 +66,44 @@ cp $(voms-proxy-info -p) ~/private/x509up
 export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
+### Additional options
+
+Sam likes the following executable scripts in his `~/bamboodev/bamboovenv/bin` directory.
+
+**br**: Faster way of typing `python -u bambooRunBetter.py [args] &> afs_outdir/out.txt &`, which runs bambooRunBetter in the background and pipes the output to the specified afs directory. 
+Eg: from `Bamboo_setup`: `br src/SL_DL_event_selection.py total_event_selection -td`
+```bash
+#!/usr/bin/env bash
+
+[ -d Z_OUTPUT/$2 ] || mkdir Z_OUTPUT/$2 2> /dev/null
+OUTFILE="Z_OUTPUT/$2/out.txt"
+python -u bambooRunBetter.py $@ &> $OUTFILE &
+echo Output is being redirected to $OUTFILE
+```
+
+**clean**: Removes files in afs and eos area at the same time. Use carefully as files are not recoverable. 
+Eg: from `Bamboo_setup`: `clean total_vars_reco`
+```bash
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+        exit 1
+fi
+rm -rf Z_OUTPUT/$1 /eos/user/s/scrossle/$1
+```
+
 # ------------------------------ Analysis -------------------------------
+## To Use bambooRunBetter.py
+```bash
+# For more complete instructions and default arguments (feel free to configure the defaults as you like)
+python -u bambooRunBetter.py --help
+# Some Examples
+python -u bambooRunBetter.py src/SL_DL_event_selection.py local_event_selection # local run using config/analysis_2022_test.yml and config/cern.ini as default
+python -u bambooRunBetter.py src/SL_DL_event_selection.py total_event_selection -td # distributed=driver run using analysis_2022.yml
+python -u bambooRunBetter.py src/SL_DL_vars_reco.py local_vars_reco -c config/analysis_2017.yml -d # driver run using a different config file
+python -u bambooRunBetter.py src/SL_DL_likelihood_ratio.py total_vars_reco -c config/analysis_2022.yml --driver --input-dir Z_OUTPUT/total_vars_reco # --input-dir argument is passed onto SL_DL_likelihood_ratio.py
+```
+
 ## Process NANOAODs: SL_DL_event_selection 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
