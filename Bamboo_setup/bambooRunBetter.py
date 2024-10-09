@@ -382,7 +382,7 @@ def main(args, mod_args):
         print("Job failures detected, finalizing...")
         args.driver = ""
         args.finalize = "--distributed=finalize"
-        main(args)
+        main(args, mod_args)
 
 if __name__ == "__main__":
     args, mod_args = parse_args()
