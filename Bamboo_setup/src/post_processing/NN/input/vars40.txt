@@ -1,5 +1,5 @@
 event
-gen_Weight
+genWeight
 nAK4
 nAK4_btag
 lep0_pt
