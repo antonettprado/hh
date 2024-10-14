@@ -4,6 +4,80 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc, confusion_matrix
+from typing import List, Dict, Union, Any
+from dataclasses import dataclass, field, asdict
+import os, random
+import tensorflow as tf
+
+@dataclass
+class HiddenLayerConfig:
+    type: str
+    units: int
+    activation: str
+    act_regularizer: Dict[str, Any] = field(default_factory=dict)
+    dropout_rate: float = 0.0
+
+@dataclass
+class OutputLayerConfig:
+    name: str
+    type: str
+    units: int
+    kernel_initializer: str
+    activation: str
+    act_regularizer: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass
+class CompilerConfig:
+    optimizer: str
+    lr: float
+    loss: str
+
+@dataclass
+class FitConfig:
+    batch_size: int
+    epochs: int
+    validation_split: float
+
+@dataclass
+class ModelConfig:
+    name: str
+    type: str
+    categorization: Dict[str, List[str]]
+    training_weight_sf: Dict[str, float]
+    input_vars: Union[str, List[str]]
+    architecture_in_yml: bool
+    residual_network: bool
+    hiddenlayers: List[HiddenLayerConfig]
+    outputlayers: List[OutputLayerConfig]
+    compiler: CompilerConfig
+    fit: FitConfig
+    training_events: Dict[str, Any] = field(default_factory=dict)
+    testing_events: Dict[str, Any] = field(default_factory=dict)
+
+    def __getstate__(self):
+        return asdict(self)
+
+    def __repr__(self):
+        return yaml.dump(asdict(self), sort_keys=False)
+
+def fix_random_seed(seed_value = 42):
+    """
+    Sets the random seed for reproducibility across various libraries.
+    """
+    # Fix seeds for reproducibility
+    os.environ['PYTHONHASHSEED'] = str(seed_value)
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    tf.random.set_seed(seed_value)
+
+    # Set TensorFlow to use deterministic operations
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
+    os.environ['TF_NUM_INTEROP_THREADS'] = '1'
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
 
 # =================================================================
 # =============== Post-training utilities =========================
