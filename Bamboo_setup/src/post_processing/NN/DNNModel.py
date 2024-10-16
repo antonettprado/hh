@@ -238,7 +238,8 @@ class DNNModel:
 
         out_yml = self.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
-            yaml.dump(self.config, file, sort_keys=False)
+            yaml.dump(self.config.__getstate__(), file, sort_keys=False)
+
 
     def evaluate_and_predict(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
         print(f"\tEvaluating model and predicting ...")

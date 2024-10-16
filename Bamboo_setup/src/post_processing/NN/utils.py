@@ -58,7 +58,7 @@ class ModelConfig:
         return asdict(self)
 
     def __repr__(self):
-        return yaml.dump(asdict(self), sort_keys=False)
+        return yaml.dump(self.__getstate__(), sort_keys=False)
 
 def fix_random_seed(seed_value = 42):
     """
