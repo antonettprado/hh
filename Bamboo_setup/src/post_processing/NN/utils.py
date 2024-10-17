@@ -8,35 +8,7 @@ from typing import List, Dict, Union, Any
 from dataclasses import dataclass, field, asdict
 import os, random
 import tensorflow as tf
-
-@dataclass
-class HiddenLayerConfig:
-    type: str
-    units: int
-    activation: str
-    act_regularizer: Dict[str, Any] = field(default_factory=dict)
-    dropout_rate: float = 0.0
-
-@dataclass
-class OutputLayerConfig:
-    name: str
-    type: str
-    units: int
-    kernel_initializer: str
-    activation: str
-    act_regularizer: Dict[str, Any] = field(default_factory=dict)
-
-@dataclass
-class CompilerConfig:
-    optimizer: str
-    lr: float
-    loss: str
-
-@dataclass
-class FitConfig:
-    batch_size: int
-    epochs: int
-    validation_split: float
+import yaml
 
 @dataclass
 class ModelConfig:
@@ -47,18 +19,56 @@ class ModelConfig:
     input_vars: Union[str, List[str]]
     architecture_in_yml: bool
     residual_network: bool
-    hiddenlayers: List[HiddenLayerConfig]
-    outputlayers: List[OutputLayerConfig]
-    compiler: CompilerConfig
-    fit: FitConfig
+    hiddenlayers: List['ModelConfig.HiddenLayerConfig'] = field(default_factory=list)
+    outputlayers: List['ModelConfig.OutputLayerConfig'] = field(default_factory=list)
+    compiler: 'ModelConfig.CompilerConfig' = None
+    fit: 'ModelConfig.FitConfig' = None
     training_events: Dict[str, Any] = field(default_factory=dict)
     testing_events: Dict[str, Any] = field(default_factory=dict)
+
+
+    def __post_init__(self):
+        self.hiddenlayers = [ModelConfig.HiddenLayerConfig(**layer) if isinstance(layer, dict) else layer for layer in self.hiddenlayers]
+        self.outputlayers = [ModelConfig.OutputLayerConfig(**layer) if isinstance(layer, dict) else layer for layer in self.outputlayers]
+        if isinstance(self.compiler, dict):
+            self.compiler = ModelConfig.CompilerConfig(**self.compiler)
+        if isinstance(self.fit, dict):
+            self.fit = ModelConfig.FitConfig(**self.fit)
 
     def __getstate__(self):
         return asdict(self)
 
     def __repr__(self):
         return yaml.dump(self.__getstate__(), sort_keys=False)
+
+    @dataclass
+    class HiddenLayerConfig:
+        type: str
+        units: int
+        activation: str
+        act_regularizer: Dict[str, Any] = field(default_factory=dict)
+        dropout_rate: float = 0.0
+
+    @dataclass
+    class OutputLayerConfig:
+        name: str
+        type: str
+        units: int
+        kernel_initializer: str
+        activation: str
+        act_regularizer: Dict[str, Any] = field(default_factory=dict)
+
+    @dataclass
+    class CompilerConfig:
+        optimizer: str
+        lr: float
+        loss: str
+
+    @dataclass
+    class FitConfig:
+        batch_size: int
+        epochs: int
+        validation_split: float
 
 def fix_random_seed(seed_value = 42):
     """

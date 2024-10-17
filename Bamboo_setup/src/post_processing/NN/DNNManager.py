@@ -9,8 +9,7 @@ import yaml
 import uproot
 from post_processing.NN.DNNModel import DNNModel
 from post_processing import References as Refs
-from post_processing.NN.utils import HiddenLayerConfig, OutputLayerConfig, CompilerConfig, FitConfig, ModelConfig
-from post_processing.NN.utils import fix_random_seed
+from post_processing.NN.utils import ModelConfig, fix_random_seed
 from typing import Set
 
 
@@ -21,7 +20,7 @@ class DNNManager:
     assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
     MODE_MAPPING =  {'train_eval': '_train_eval', 'ca': '_kfold', 'multi': '_multi', 'eval': '_eval'}
 
-    def __init__(self, workdir: str, sel_name: str, models_yml: str, total_inputs: str, DNNManagerdir: str = None, verbose=2):
+    def __init__(self, workdir: str, sel_name: str, total_inputs: str, models_yml: str = None, DNNManagerdir: str = None, verbose=2):
         self.FIXED_RANDOM_SEED = False
         self.N_MAX_TRAINING = 1000000
         self.N_MAX_HH_TRAINING = -1  # -1 for using all available events
@@ -35,7 +34,7 @@ class DNNManager:
         self.DNNMANAGERDIR.mkdir(parents=True, exist_ok=True)
 
         self.sel_name = sel_name
-        self.models_yml = self.POSTPROCESSING_NN_FOLDER / models_yml
+        self.models_yml = self.POSTPROCESSING_NN_FOLDER / models_yml if models_yml is not None else None
         self.total_inputs = self.POSTPROCESSING_NN_FOLDER / total_inputs
         self.mode = None
         self.verbose = verbose  # Set the verbosity level (0 = silent, 1 = basic, 2 = detailed)
@@ -47,7 +46,7 @@ class DNNManager:
         self._print(f"\tRESULTSDIR:{self.RESULTSDIR}", level=1)
         self._print(f"\tDNNMANAGERDIR:{self.DNNMANAGERDIR}", level=1)
         self._print(f"\tTotal inputs file: {self.total_inputs}", level=1)
-        self._print(f"\tTest models file: {self.models_yml}", level=1)
+        self._print(f"\tConfig models file: {self.models_yml}", level=1)
 
     def _print(self, message, level=1):
         if self.verbose >= level: print(message)
@@ -62,6 +61,9 @@ class DNNManager:
             fix_random_seed()
 
     def load_model_configs(self, models_yml: Path):
+
+        if models_yml is None: return None
+
         # i.e. Check allowed model types, processes, inputs, etc
         self._print(f"\nLoading model configs from: {models_yml.name}", level=1)
 
@@ -88,10 +90,10 @@ class DNNManager:
                 input_vars=model_data['input_vars'],
                 architecture_in_yml=model_data['input_vars'],
                 residual_network=model_data['residual_network'],
-                hiddenlayers=[HiddenLayerConfig(**layer) for layer in model_data['layers']],
-                outputlayers=[OutputLayerConfig(**output) for output in model_data['outputs']],
-                compiler=CompilerConfig(**model_data['compiler']),
-                fit=FitConfig(**model_data['fit'])
+                hiddenlayers=model_data.get('layers', []),
+                outputlayers=model_data.get('outputs', []),
+                compiler=model_data['compiler'],
+                fit=model_data['fit']
             )
 
             processes = [proc for proc_list in model_config.categorization.values() for proc in proc_list]
@@ -363,9 +365,9 @@ if __name__ == '__main__':
     '''
     Example:
     
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_1013/Reco -my config/NN_tm_custom.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager -m train_eval
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/Reco -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager -m train_eval
 
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_ca -m ca --n_splits 5
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/Reco -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_ca -m ca --n_splits 5
 
-    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5 -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_multi -m multi --n_iterations 3
+    python3 src/post_processing/NN/DNNManager.py -w $Z_OUTPUT_eos/Reco -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_multi -m multi --n_iterations 3
     '''

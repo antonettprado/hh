@@ -4,7 +4,6 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
 import tensorflow.keras.backend as K
-from post_processing.NN.utils import CompilerConfig
     
 
 def setup_architecture_from_yml(config, input_layer, normalized_input):
@@ -81,7 +80,7 @@ def get_activity_regularizer(act_reg: dict):
         reg = None
     return reg
 
-def get_optimizer(config: CompilerConfig):
+def get_optimizer(config):
     optimizer_name = config.optimizer.lower()
     optimizers = {'adam': Adam, 'sgd': SGD, 'rmsprop': RMSprop}
     if optimizer_name in optimizers:
