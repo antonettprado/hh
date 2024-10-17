@@ -4,59 +4,60 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
 import tensorflow.keras.backend as K
+from post_processing.NN.utils import CompilerConfig
     
 
-def setup_architecture_from_yml(params, input_layer, normalized_input):
+def setup_architecture_from_yml(config, input_layer, normalized_input):
     print(f"\t\tSetting up architecture from yml ...")
 
     x = normalized_input
-    for n_layer, layer in enumerate(params['layers']):
-        if layer['type'] == 'Dense':
-            reg = get_activity_regularizer(layer['act_regularizer'])
-            if params['residual_network']:
+    for n_layer, layer in enumerate(config.hiddenlayers):
+        if layer.type == 'Dense':
+            reg = get_activity_regularizer(layer.act_regularizer)
+            if config.residual_network:
                 if n_layer == 0:
                     x = Dense(
-                        units=layer['units'], 
-                        activation=layer['activation'], 
+                        units=layer.units, 
+                        activation=layer.activation, 
                         activity_regularizer=reg,
                         name="layer_%d"%n_layer)(x)
                 elif n_layer%2 != 0:
                     x_input = x
                     x = Dense(
-                        units=layer['units'], 
-                        activation=layer['activation'], 
+                        units=layer.units, 
+                        activation=layer.activation, 
                         activity_regularizer=reg,
                         name="layer_%d"%n_layer)(x)
                 else:
                     x = Add(name="add_%d" % n_layer)([x, x_input])
                     x = Dense(
-                        units=layer['units'], 
-                        activation=layer['activation'], 
+                        units=layer.units, 
+                        activation=layer.activation, 
                         activity_regularizer=reg,
                         name="layer_%d"%n_layer)(x)
                     #x = Activation(layer['activation'],
                     #    name="activation_%d"%n_layer)(x)
             else:
                 x = Dense(
-                    units=layer['units'], 
-                    activation=layer['activation'], 
+                    units=layer.units, 
+                    activation=layer.activation, 
                     activity_regularizer=reg,
                     name="layer_%d"%n_layer)(x)    
             x = BatchNormalization()(x)
-            x = Dropout(float(layer['dropout_rate']))(x)  
+            x = Dropout(float(layer.dropout_rate))(x)  
 
     outputs = []
-    for layer in params['outputs']:
-        if layer['type'] == 'Dense':
+    for layer in config.outputlayers:
+        if layer.type == 'Dense':
             output = Dense(
-                units=layer['units'],
-                kernel_initializer=layer['kernel_initializer'], 
-                activation=layer['activation'], 
+                units=layer.units,
+                kernel_initializer=layer.kernel_initializer, 
+                activation=layer.activation, 
                 activity_regularizer=reg, 
-                name=layer['name'])(x)
+                name=layer.name)(x)
             outputs.append(output)
         
-    return Model(inputs=input_layer, outputs=outputs, name=params['name'])
+    return Model(inputs=input_layer, outputs=outputs, name=config.name)
 
 def setup_architecture_from_fnc(arch_fnc_name, nodes_per_layer, input_layer, normalized_input, n_classifierNodes):
     print(f"\t\tSetting up architecture from built-int function {arch_fnc_name}...")
@@ -80,12 +81,12 @@ def get_activity_regularizer(act_reg: dict):
         reg = None
     return reg
 
-def get_optimizer(config: dict):
-    optimizer_name = config['optimizer'].lower()
+def get_optimizer(config: CompilerConfig):
+    optimizer_name = config.optimizer.lower()
     optimizers = {'adam': Adam, 'sgd': SGD, 'rmsprop': RMSprop}
     if optimizer_name in optimizers:
         optimizer_class = optimizers[optimizer_name]
-        return optimizer_class(learning_rate=float(config['lr']))
+        return optimizer_class(learning_rate=float(config.lr))
     else:
         raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
 
@@ -102,7 +103,7 @@ def get_loss(loss_name):
     loss_fnc = loss_dict[loss_name]
     return loss_fnc
 
-def get_metrics(classes=None):
+def get_metrics(classes: list[str]=None):
         '''
         Global metrics:
             - Accuracy: ratio of correctly predicted instances to total instances (does not need averaging)

@@ -15,19 +15,19 @@ from contextlib import redirect_stdout
 import post_processing.References as Refs
 import post_processing.NN.model_builder as model_builder
 import  post_processing.NN.utils as utils
-
+from post_processing.NN.utils import ModelConfig
 
 class DNNModel:
 
-    def __init__(self, params: dict, modeldir: Path = None):
-        self.params = params
-        self.name = params['name']
-        self.type = params['type']
-        self.categorization = params['categorization']
-        self.training_weight_sf = params['training_weight_sf']
-        self.input_vars = params['input_vars']
-        self.classes = [class_i for class_i in params['categorization'].keys() if class_i]
-        self.processes = [proc for proc_list in params['categorization'].values() for proc in proc_list]
+    def __init__(self, model_config: ModelConfig, modeldir: Path = None):
+        self.config = model_config
+        self.name = model_config.name
+        self.type = model_config.type
+        self.categorization = model_config.categorization
+        self.training_weight_sf = model_config.training_weight_sf
+        self.input_vars = model_config.input_vars
+        self.classes = [class_i for class_i in model_config.categorization.keys() if class_i]
+        self.processes = [proc for proc_list in model_config.categorization.values() for proc in proc_list]
         self.model_df = None
         self.model = None
         self.history = None
@@ -37,7 +37,7 @@ class DNNModel:
 
         if self.type == 'binary': self._validate_categorization_for_binary()
             
-        print(f"Model: {self.name}")
+        print(f"Initializing model: {self.name}")
 
     def _validate_categorization_for_binary(self):
         if len(self.categorization) !=2 : 
@@ -62,12 +62,11 @@ class DNNModel:
 
         model_df = total_df.copy()
 
-        input_vars = self.params['input_vars']
-        if input_vars != 'All':
+        if self.input_vars != 'All':
             # To do: Resolve if input_vars not found  in df
-            columns_to_keep = ['event', 'gen_Weight']
+            columns_to_keep = ['event', 'genWeight']
             columns_to_keep.extend(col for col in model_df.columns if col.startswith('Process_'))
-            model_df = model_df[input_vars + columns_to_keep]
+            model_df = model_df[self.input_vars + columns_to_keep]
             
         # Keep only events corresponding to any of the training processes indicated ------
         condition = False
@@ -76,17 +75,17 @@ class DNNModel:
         model_df = model_df[condition]
 
         # Adding training weights (normalized per process) -------------------------------
-        model_df["sample_weight"] = model_df['gen_Weight'].copy()
+        model_df["sample_weight"] = model_df['genWeight'].copy()
         hh_total_weight = 0
 
         # Apply training weights ---------------------------------------------------------
         if 'HH' in self.processes:
             hh_mask = (model_df["Process_HH"] == 1)
-            hh_total_weight = model_df[hh_mask]["gen_Weight"].sum()
+            hh_total_weight = model_df[hh_mask]["genWeight"].sum()
 
         for process in self.processes:
             process_mask = (model_df[f"Process_{process}"] == 1)
-            process_total_sum = model_df[process_mask]["gen_Weight"].sum()
+            process_total_sum = model_df[process_mask]["genWeight"].sum()
             scaling_factor = 1
             if process in self.training_weight_sf:
                 scaling_factor = self.training_weight_sf[process]
@@ -103,9 +102,9 @@ class DNNModel:
             column_name = f"Process_{process}"
             print(column_name)
             process_mask = model_df[column_name] == 1
-            process_total_gen_weight = model_df[process_mask]['gen_Weight'].sum()
+            process_total_genWeight = model_df[process_mask]['genWeight'].sum()
             process_total_sample_weight = model_df[process_mask]['sample_weight'].sum()
-            print(f"Total sum of gen_Weights for {process}: {process_total_gen_weight} ")
+            print(f"Total sum of genWeights for {process}: {process_total_genWeight} ")
             print(f"Total sum of sample_weights for {process}: {process_total_sample_weight} ")
 
         # Drop 'Process_' columns
@@ -121,7 +120,7 @@ class DNNModel:
     @staticmethod
     def get_X_and_Y_from_model_df(model_df):
         classes = [cls_i for cls_i in model_df.columns if cls_i.startswith('Class_')]
-        also_drop_from_X = ["event", "gen_Weight", "sample_weight"]
+        also_drop_from_X = ["event", "genWeight", "sample_weight"]
         X_df = model_df.drop(columns=classes + also_drop_from_X)
         Y_df = model_df[classes]
         events = model_df["event"]
@@ -168,17 +167,17 @@ class DNNModel:
             np.random.seed(seed_value)
             random.seed(seed_value)
 
-        if self.params['architecture_in_yml']:
-            model = model_builder.setup_architecture_from_yml(self.params, input_layer, normalized_input)
+        if self.config.architecture_in_yml:
+            model = model_builder.setup_architecture_from_yml(self.config, input_layer, normalized_input)
         else:
-            arch_fnc_name = self.params['architecture_name']
-            nodes_per_layer = self.params['nodes_per_layer']
+            arch_fnc_name = self.config.architecture_name
+            nodes_per_layer = self.config.nodes_per_layer
             model = model_builder.setup_architecture_from_fnc(arch_fnc_name, nodes_per_layer, input_layer, normalized_input, len(self.classes))
 
-        loss = model_builder.get_loss(self.params['compiler']['loss'])
+        loss = model_builder.get_loss(self.config.compiler.loss)
 
         model.compile(
-            optimizer=model_builder.get_optimizer(self.params['compiler']),
+            optimizer=model_builder.get_optimizer(self.config.compiler),
             loss=loss,
             metrics = model_builder.get_metrics(self.classes),
             weighted_metrics = []
@@ -205,10 +204,10 @@ class DNNModel:
             X_train, 
             Y_train, 
             verbose = 2,
-            batch_size = self.params['fit']['batch_size'], 
-            epochs = self.params['fit']['epochs'], 
+            batch_size = self.config.fit.batch_size, 
+            epochs = self.config.fit.epochs, 
             sample_weight = sw_train,
-            validation_split = self.params['fit']['validation_split'],  
+            validation_split = self.config.fit.validation_split,  
             callbacks = [early_stopping, reduce_plateau, terminate_on_nan])
 
         self.history = history
@@ -231,15 +230,16 @@ class DNNModel:
             for name in input_names:
                 file.write(name + '\n')
 
-        self.params['Training Events'] = {'Total': len(Y_train)}
-        self.params['Testing Events'] = {'Total': len(Y_test)}
+        self.config.training_events['Total'] = len(Y_train)
+        self.config.testing_events['Total'] = len(Y_test)
         for cls_i in self.classes:
-            self.params['Training Events'][cls_i] = int(Y_train['Class_'+cls_i].value_counts()[1])
-            self.params['Testing Events'][cls_i] = int(Y_test['Class_'+cls_i].value_counts()[1])
+            self.config.training_events[cls_i] = int(Y_train['Class_'+cls_i].value_counts()[1])
+            self.config.testing_events[cls_i] = int(Y_test['Class_'+cls_i].value_counts()[1])
 
         out_yml = self.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
-            yaml.dump(self.params, file, sort_keys=False)
+            yaml.dump(self.config.__getstate__(), file, sort_keys=False)
+
 
     def evaluate_and_predict(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
         print(f"\tEvaluating model and predicting ...")

@@ -15,7 +15,12 @@ import utils.variable_definition as var_defs
 class SL_DL_NN(NanoBaseHHbbWW):
     def __init__(self, args):
         super(SL_DL_NN, self).__init__(args)
-        self.event_nr_sel = "all" # set to odd manually if needed
+        self.event_nr_sel = "odd" # set to odd manually if needed
+
+        if self.args.superNNdir is not None:
+            self.modeldir_list = [modeldir.resolve() for modeldir in Path(self.args.superNNdir).iterdir() if modeldir.is_dir()]
+        else:
+            self.modeldir_list = self.args.NNdirs    
 
     def addArgs(self, parser):
         super(SL_DL_NN, self).addArgs(parser)
@@ -27,17 +32,17 @@ class SL_DL_NN(NanoBaseHHbbWW):
         parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the llr correction file is')
 
     @staticmethod
-    def get_NN_model(NNdir: str):
-        NNdir = Path(NNdir)
+    def get_DNN_model(modeldir: str):
+        modeldir = Path(modeldir)
         feature_names = []
-        input_vars_file = NNdir / 'input_variables.txt'
+        input_vars_file = modeldir / 'input_variables.txt'
         with open(input_vars_file, 'r') as file:
             for line in file:
                 feature_names.append(line.strip())
-        model_path = NNdir / "dnn_model.onnx"
+        model_path = modeldir / "dnn_model.onnx"
         model = mvaEvaluator(model_path, mvaType='ONNXRuntime', otherArgs = ("output"))
 
-        model_info_file = NNdir / 'model_info.yml'
+        model_info_file = modeldir / 'model_info.yml'
         with open(model_info_file, 'r') as file:
             model_info = yaml.safe_load(file)
 
@@ -90,12 +95,12 @@ class SL_DL_NN(NanoBaseHHbbWW):
         return input_vars
 
     @staticmethod
-    def get_DNN(NNdir:str, sel_name, objects, llr_corr_workdir=None):
+    def get_DNN(modeldir:str, sel_name, objects, llr_corr_workdir=None):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
         selections = var_defs.get_selections_subset(subcat_names)
 
-        model, model_name, feature_names, classes, processes = SL_DL_NN.get_NN_model(NNdir)
+        model, model_name, feature_names, classes, processes = SL_DL_NN.get_DNN_model(modeldir)
         input_vars = SL_DL_NN.gather_input_vars(sel_name, feature_names, objects, selections, llr_corr_workdir)
         data = model(*input_vars)
         data = {sel_name_i: data for sel_name_i in selections.keys()}
@@ -147,27 +152,9 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
         sel_name = self.args.sel_name
 
-        if self.args.superNNdir is not None:
-            NNdir_list = [NNdir.resolve() for NNdir in Path(self.args.superNNdir).iterdir() if NNdir.is_dir()]
-        else:
-            NNdir_list = self.args.NNdirs    
-
         self.DNN_LIST = []
-        for NNdir in NNdir_list:
-            if self.args.cross_app:
-                NNsubdir_list = [NNsubdir.resolve() for NNsubdir in NNdir.iterdir() if NNsubdir.is_dir()]
-                n_splits = len(NNsubdir_list)
-                event_nr = tree.event
-                NN_match_index = -9999
-                for i,NNsubdir in enumerate(NNsubdir_list):
-                    NN_postfix = int(NNsubdir.name.split("_")[-1])
-                    NN_match_index = op.switch(
-                        event_nr%n_splits == NN_postfix,
-                        op.c_int(i),
-                        op.c_int(NN_match_index)
-                    )
-                NNdir = NNsubdir_list[NN_match_index]
-            DNN = SL_DL_NN.get_DNN(NNdir, sel_name, objects, self.args.llr_corr_workdir)
+        for modeldir in self.modeldir_list:
+            DNN = SL_DL_NN.get_DNN(modeldir, sel_name, objects, self.args.llr_corr_workdir)
             DNN = DNN[sel_name]
 
             scores = DNN.data
