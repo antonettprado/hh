@@ -1,10 +1,13 @@
-import subprocess
+import os
+import sys
+import time
+import queue
 import argparse
 import threading
-import queue
-import time
+import subprocess
 from pathlib import Path
 
+USER: str = os.environ["USER"]
 NURSE_MAX_CONDOR_ITERATIONS: int = 5
 NURSE_MAX_LOCAL_ITERATIONS: int = 3
 LOCAL_RUN_THRESHOLD: int = 4
@@ -15,10 +18,9 @@ LOCK = threading.Lock()
 def parse_args(): 
     parser = argparse.ArgumentParser(description="Wrapper for bambooRun to improve error handling and resubmission")
     parser.add_argument("module", type=Path, help="Module to run (example: src/SL_DL_event_selection.py). Can also add module-specific arguments")
-    parser.add_argument("output", type=Path, help="Output directory name. Cannot overwrite an existing directory. Applies both in EOS and AFS (example: total_vars_reco)")
+    parser.add_argument("--output", "-o", type=Path, default=Path(f"/eos/user/{USER[0]}/{USER}/test"), help=f"Output directory name. Cannot overwrite an existing directory (default: /eos/user/{USER[0]}/{USER}/test)")
     parser.add_argument("--config", "-c", type=Path, default=Path("config/analysis_2022_test.yml"), help="Analysis configuration file (default: config/analysis_2022_test.yml)")
     parser.add_argument("--env-config", type=Path, default=Path("config/cern.ini"), help="Environment configuration file (default: config/cern.ini)")
-    parser.add_argument("--afs-only", "-a", action="store_true", help="Forces output root files to be stored in AFS (default: False)")
     parser.add_argument("--total", "-t", action="store_true", help="Sets config to analysis_2022.yml (equivalent to -c config/analysis_2022.yml)")
     parser.add_argument("--driver", "-d", action="store_const", default="", const="--distributed=driver", help="Run in batch mode on HTCondor")
     parser.add_argument("--finalize", "-f", action="store_const", default="", const="--distributed=finalize", help="Run finalization only")
@@ -27,7 +29,7 @@ def parse_args():
 
 def generate_cmd(args, mod_args) -> tuple[str, Path, Path]:
     root: Path = Path(__file__).resolve().parent
-    user: str = subprocess.check_output(["whoami"], text=True).strip()
+    user: str = USER
 
     if args.total:
         args.config = Path("config/analysis_2022.yml")
@@ -40,13 +42,11 @@ def generate_cmd(args, mod_args) -> tuple[str, Path, Path]:
     config: Path = root / args.config
     cmd.extend([config])
 
-    afs_output: Path = root / "Z_OUTPUT" / args.output
-    cmd.extend(["-o", afs_output])
+    eos_output: Path = args.output
+    cmd.extend(["-o", eos_output])
 
-    eos_output: Path = afs_output 
-    if not args.afs_only:
-        eos_output: Path = Path("/eos/user") / user[0] / user / args.output
-        cmd.extend(["-oR", eos_output])
+    afs_output: Path = Path("Z_OUTPUT") / eos_output.stem
+    cmd.extend(["-oB", afs_output])
     
     env_config: Path = root / args.env_config 
     cmd.extend(["--envConfig", env_config])
@@ -264,6 +264,10 @@ def test_thread(errid: int):
 def main(args, mod_args):
     cmd, afs_output, eos_output = generate_cmd(args, mod_args)
     print(cmd)
+
+    if not (args.driver or args.finalize):
+        subprocess.run(cmd, shell=True, text=True)
+        sys.exit(0)
     
     condor_queue = queue.Queue()
     nurses_failed: dict[int, bool] = {}
@@ -347,7 +351,7 @@ def main(args, mod_args):
                     print("Not too many jobs in hospital remaining. Running the rest locally")
                     run_local_flag.set()
 
-            if near_end and (sum( nurse.is_alive() for nurse in nurses ) < LOCAL_RUN_THRESHOLD):
+            if near_end and (sum( nurse.is_alive() for nurse in nurses ) <= LOCAL_RUN_THRESHOLD):
                 print("Not too many jobs in hospital remaining. Running the rest locally")
                 run_local_flag.set()
                 
