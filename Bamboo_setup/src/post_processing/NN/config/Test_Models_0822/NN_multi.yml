@@ -1,0 +1,58 @@
+Models:
+  # # ==================== Binary Models ====================
+
+  - name: 'multi_HH_ttbar_tW_f1loss'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'f1loss'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_u368_f1loss'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 256, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'f1loss'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_u368'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}

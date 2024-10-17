@@ -1,0 +1,145 @@
+Models:  
+  # - name: 'multi_HH_ttbar_tW'
+  #   type: 'multi'
+  #   categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+  #   training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+  #   input_vars: 'All'
+  #   architecture_in_yml: True
+  #   residual_network: True
+  #   layers: 
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #   outputs: 
+  #     - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+  #   compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+  #   fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  # - name: 'multi_HH_ttbar_tW_v2'
+  #   type: 'multi'
+  #   categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "ttbar": ["ttbar"], "tW": ["tW"]}
+  #   training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+  #   input_vars: 'All'
+  #   architecture_in_yml: True
+  #   residual_network: True
+  #   layers: 
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #   outputs: 
+  #     - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+  #   compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+  #   fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  # - name: 'multi_HH_ttbar_tW_NOresnet'
+  #   type: 'multi'
+  #   categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+  #   training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+  #   input_vars: 'All'
+  #   architecture_in_yml: True
+  #   residual_network: False
+  #   layers: 
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #   outputs: 
+  #     - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+  #   compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+  #   fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  # - name: 'multi_HH_ttbar_tW_tw111'
+  #   type: 'multi'
+  #   categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+  #   training_weight_sf: {"HH": 1.0, "ttbar": 1.0, "tW": 1.0}
+  #   input_vars: 'All'
+  #   architecture_in_yml: True
+  #   residual_network: True
+  #   layers: 
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #     - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+  #   outputs: 
+  #     - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+  #   compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+  #   fit: {batch_size: 1024, epochs: 100, validation_split: 0.25} 
+  
+  - name: 'multi_HH_ttbar_tW_af_softplus'
+    type: 'multi'
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: True
+    residual_network: True
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'softplus', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'softplus', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'softplus', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_l2reg3'
+    type: 'multi'
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: True
+    residual_network: True
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-3}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-3}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-3}, dropout_rate: 0.4}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-3}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_vs0p2'
+    type: 'multi'
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: True
+    residual_network: True
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.20}
+
+  - name: 'multi_HH_ttbar_tW_vs0p1'
+    type: 'multi'
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: True
+    residual_network: True
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.10}
+
+  - name: 'multi_HH_ttbar_tW_lr0p005'
+    type: 'multi'
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: True
+    residual_network: True
+    layers: 
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.005, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+

@@ -1,0 +1,166 @@
+Models:
+  - name: 'default_model'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, 'tW': 4.0}
+    input_vars: 'All'
+    architecture_in_yml: True
+    layers: 
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+      - {type: 'Dense', units: 64, activation: 'relu', l2: 1e-4, dropout_rate: 0.3}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  # Include res blocks; u256 ------------
+  - name: 'default_model_with_1resblock_u256'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_1resblock'
+    nodes_per_layer: 256
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'default_model_with_3resblocks_u256'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_3resblocks'
+    nodes_per_layer: 256
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'default_model_with_6resblocks_u256'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_6resblocks'
+    nodes_per_layer: 256
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  # Include res blocks; u128 --------------
+  - name: 'default_model_with_1resblock_u128'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_1resblock'
+    nodes_per_layer: 128
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+
+  - name: 'default_model_with_3resblocks_u128'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_3resblocks'
+    nodes_per_layer: 128
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+
+  - name: 'default_model_with_6resblocks_u128'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_6resblocks'
+    nodes_per_layer: 128
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'default_model_with_9resblocks_u128'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_9resblocks'
+    nodes_per_layer: 128
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  # Include res blocks; u64 --------------
+  - name: 'default_model_with_1resblock_u64'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_1resblock'
+    nodes_per_layer: 64
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+
+  - name: 'default_model_with_3resblocks_u64'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_3resblocks'
+    nodes_per_layer: 64
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+
+  - name: 'default_model_with_6resblocks_u64'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_6resblocks'
+    nodes_per_layer: 64
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'default_model_with_9resblocks_u64'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_9resblocks'
+    nodes_per_layer: 64
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  # Include res blocks; u32 --------------
+  - name: 'default_model_with_6resblocks_u32'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_6resblocks'
+    nodes_per_layer: 32
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}
+
+  - name: 'default_model_with_9resblocks_u32'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    input_vars: 'All'
+    architecture_in_yml: False
+    architecture_name: 'default_model_with_9resblocks'
+    nodes_per_layer: 32
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 100, validation_split: 0.25}

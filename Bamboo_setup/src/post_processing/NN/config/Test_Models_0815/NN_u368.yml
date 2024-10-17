@@ -1,0 +1,302 @@
+Models:
+  # # ======================================================
+  # # ==================== Binary Models ===================
+  # # ======================================================
+
+  - name: 'binary_HH_ttbar_HH1ttbar10'
+    type: 'binary'
+    processes: ["HH", "ttbar"]
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'binary_HH_ttbar_HH1ttbar20'
+    type: 'binary'
+    processes: ["HH", "ttbar"]
+    training_weight_sf: {"HH": 1.0, "ttbar": 20.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'binary_HH_ttbar_HH1ttbar30'
+    type: 'binary'
+    processes: ["HH", "ttbar"]
+    training_weight_sf: {"HH": 1.0, "ttbar": 30.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  # # ======================================================
+  # # ================= Multiclass Models ==================
+  # # ======================================================
+  
+  # # multi_HH_ttbar_2classes ------------------------------
+  - name: 'multi_HH_ttbar_2classes_HH1ttbar10'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_2classes_HH1ttbar10_bs5k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 5000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_2classes_HH1ttbar10_bs10k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 10000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_2classes_HH1ttbar10_bs50k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 50000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_2classes_HH1ttbar10_bs100k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 100000, epochs: 1000, validation_split: 0.25}
+
+  # # multi_HH_ttbar_tW_3classes ----------------------------
+  - name: 'multi_HH_ttbar_tW_3classes_HH1ttbar10tW5'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_3classes_HH1ttbar10tW5_bs10k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 10000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_3classes_HH1ttbar10tW5_bs100k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 100000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others1'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others1_bs10k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 10000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others1_bs100k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 100000, epochs: 1000, validation_split: 0.25}
+
+
+  # multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others1_bs500k RUN GOT KILLED
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others1_bs500k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 500000, epochs: 1000, validation_split: 0.25}
+
+
+
+
+
+
+
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others2'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 2.0, "VV": 2.0, "WJets": 2.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others2_bs10k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 2.0, "VV": 2.0, "WJets": 2.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 10000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others2_bs100k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 2.0, "VV": 2.0, "WJets": 2.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 100000, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others2_bs500k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 2.0, "VV": 2.0, "WJets": 2.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 500000, epochs: 1000, validation_split: 0.25}
+
+
+  # # trying at the end just in case
+  - name: 'multi_All_3classes_HH_Top_Others_HH1ttbar10tW5Others1_bs500k'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 368, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 500000, epochs: 1000, validation_split: 0.25}

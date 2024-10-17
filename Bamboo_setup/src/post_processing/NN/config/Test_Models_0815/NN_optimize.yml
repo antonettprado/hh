@@ -1,0 +1,14 @@
+Models:
+  - name: 'multi_HH_ttbar_tW_3classes_u224'
+    type: 'multi'
+    categorization: {"HH": ["HH"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH": 1.0, "ttbar": 10.0, "tW": 5.0}
+    input_vars: 'All'
+    layers: 
+      - {type: 'Dense', units: 224, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 224, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+      - {type: 'Dense', units: 224, activation: 'relu', l2: 1e-4, dropout_rate: 0.2}
+    outputs: 
+      - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', l2: 1e-4, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
