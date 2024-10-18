@@ -306,3 +306,9 @@ class DNNModel:
         cm_norm_true, cm_norm_pred, diag_names = utils.draw_all_stats(DNN_type=self.type, history=self.history, output_df=output_df, modeldir=self.modeldir, classes=self.classes)
         if rank_features: self.feature_ranking(X_test, Y_test)
         return model_metrics, cm_norm_true, cm_norm_pred, diag_names
+
+    def RunModel(self, total_df):
+        model_df = self.set_model_df_from_total_df(total_df)
+        X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.Full_Splitting(model_df)
+        self.Train(X_train, Y_train, sw_train, Y_test)
+        model_metrics, cm_norm_true, cm_norm_pred, diag_names = self.Evaluate(X_test, Y_test, evs_test, rank_features=False)

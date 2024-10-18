@@ -3,13 +3,11 @@ import numpy as np
 from pathlib import Path
 from argparse import ArgumentParser
 from sklearn.model_selection import StratifiedKFold
-import tensorflow as tf
-import random, os
 import yaml
-import uproot
 from post_processing.NN.DNNModel import DNNModel
 from post_processing import References as Refs
 from post_processing.NN.utils import ModelConfig, fix_random_seed
+from post_processing.NN.DataHandler import DataHandler
 from typing import Set
 
 
@@ -34,22 +32,18 @@ class DNNManager:
         self.DNNMANAGERDIR.mkdir(parents=True, exist_ok=True)
 
         self.sel_name = sel_name
-        self.models_yml = self.POSTPROCESSING_NN_FOLDER / models_yml if models_yml is not None else None
+        self.models_yml = self.POSTPROCESSING_NN_FOLDER / models_yml if models_yml else None
         self.total_inputs = self.POSTPROCESSING_NN_FOLDER / total_inputs
         self.mode = None
         self.verbose = verbose  # Set the verbosity level (0 = silent, 1 = basic, 2 = detailed)
         self.print_welcome()
 
     def print_welcome(self):
-        self._print(f"DNN Manager instantiated:", level=1)
-        self._print(f"\tWORKDIR:{self.WORKDIR}", level=1)
-        self._print(f"\tRESULTSDIR:{self.RESULTSDIR}", level=1)
-        self._print(f"\tDNNMANAGERDIR:{self.DNNMANAGERDIR}", level=1)
-        self._print(f"\tTotal inputs file: {self.total_inputs}", level=1)
-        self._print(f"\tConfig models file: {self.models_yml}", level=1)
-
-    def _print(self, message, level=1):
-        if self.verbose >= level: print(message)
+        print(f"DNN Manager instantiated:")
+        print(f"\tWORKDIR:{self.WORKDIR}")
+        print(f"\tDNNMANAGERDIR:{self.DNNMANAGERDIR}")
+        print(f"\tTotal inputs file: {self.total_inputs}")
+        print(f"\tConfig models file: {self.models_yml}")
 
     def set_mode(self, mode: str, **kwargs):
         if mode not in DNNManager.MODE_MAPPING:
@@ -65,7 +59,7 @@ class DNNManager:
         if models_yml is None: return None
 
         # i.e. Check allowed model types, processes, inputs, etc
-        self._print(f"\nLoading model configs from: {models_yml.name}", level=1)
+        print(f"\nLoading model configs from: {models_yml.name}")
 
         with open(models_yml, 'r') as file:
             yaml_data = yaml.safe_load(file)
@@ -88,7 +82,7 @@ class DNNManager:
                 categorization=model_data['categorization'],
                 training_weight_sf=model_data['training_weight_sf'],
                 input_vars=model_data['input_vars'],
-                architecture_in_yml=model_data['input_vars'],
+                architecture_in_yml=model_data['architecture_in_yml'],
                 residual_network=model_data['residual_network'],
                 hiddenlayers=model_data.get('layers', []),
                 outputlayers=model_data.get('outputs', []),
@@ -104,135 +98,12 @@ class DNNManager:
 
         return model_configs
 
-    def load_data(self) -> list[pd.DataFrame]:
-        self._print(f"\nLoading data ...", level=1)
-
-        processes_available = Refs._find_processes(self.RESULTSDIR)
-        root_files_available = Refs._find_root_files(self.RESULTSDIR)
-
-        if self.total_inputs is not None:
-            with open(self.total_inputs) as file:
-                branches = [line.strip() for line in file]
-            array_extractor = lambda upfile, sel_name: upfile[sel_name].arrays(branches, library="pd")
-        else:
-            array_extractor = lambda upfile, sel_name: upfile[sel_name].arrays(library="pd")
-
-        df_list = []
-        for process in processes_available:
-            process_df = pd.DataFrame()
-            process_files = [file for file in root_files_available if file.stem in Refs.PROCESSES_FILES[process]]
-            for file in process_files:
-                upfile = uproot.open(file)
-                upfile_df = array_extractor(upfile, self.sel_name)
-                if process == "HH" and self.N_MAX_HH_TRAINING != -1:
-                    if len(upfile_df) > self.N_MAX_HH_TRAINING:
-                        upfile_df = upfile_df.sample(n=self.N_MAX_HH_TRAINING, random_state=1)
-                if len(upfile_df) > self.N_MAX_TRAINING:
-                    upfile_df = upfile_df.sample(n=self.N_MAX_TRAINING, random_state=1)
-                if self.verbose:
-                    self._print(f'Number of events read from {file.stem}: {len(upfile_df)}', level=2)
-                process_df = pd.concat([process_df, upfile_df], ignore_index=True)
-            process_df['Process'] = process
-            df_list.append(process_df)
-
-        total_df = pd.concat(df_list, ignore_index=True)
-        total_df.reset_index(inplace=True)
-        total_df.sort_values(by=['event', 'index'], inplace=True)
-        total_df.drop(columns='index', inplace=True)
-
-        self._print(f"Total_df:\n{total_df}", level=2)
-        
-        return total_df
-
-    def preprocess_data(self, df: pd.DataFrame):
-        self._print(f"\nPreprocessing data ...", level=1)
-
-        # Drop exact duplicates
-        df = df.drop_duplicates(keep='first')
-
-        # Removing events with negative weights
-        df = df[df.genWeight > 0].copy()
-
-
-        self._print(f"After removing events with negative weights:", level=2)
-        for col in df.columns:
-            if col.startswith('Process_'):
-                count = df[df[col] == 1].shape[0]
-                self._print(f"Number of events in process {col}: {count}", level=2)
-
-        llr_columns = [col for col in df.columns if col.endswith('_llr')]
-        if llr_columns:
-            self._print("LLRs were found in the loaded data.", level=2)
-            df[llr_columns] = df[llr_columns].clip(lower=-20, upper=20)
-        
-        inf_replacement = 1e9
-        df.replace(-np.inf, -inf_replacement, inplace=True)
-        df.replace(np.inf, inf_replacement, inplace=True)
-
-        self._print(f"Replacing problematic values", level=2)
-        invalid_value_replacement = -9999
-        df.replace(np.nan, invalid_value_replacement, inplace=True)
-
-        # One hot encoding of processes
-        df = pd.get_dummies(df, columns=['Process'])
-
-        self._print(f"Total_df:\n{df}", level=2)
-
-        return df
-
-    def data_quality_summary(self, df: pd.DataFrame):
-        self._print(f"\nData Quality Summary ...", level=1)
-        from scipy.stats import zscore
-        
-        z_scores = np.abs(zscore(df.select_dtypes(include=[np.number]), nan_policy='omit'))
-        sigma_thresholds = [3, 4, 5]
-        outlier_percentages = {}
-        for sigma in sigma_thresholds:
-            outlier_percentages[f"Outliers Percentage (Z-score > {sigma})"] = (z_scores > sigma).mean(axis=0) * 100
-
-        # Combine all summaries into single dataframe
-        summary = pd.DataFrame({
-            "NaN Count": df.isna().sum(),
-            "-9999 Count": (df == -9999).sum(),
-            "-Inf Count": (df == -np.inf).sum(),
-            "Inf Count": (df == np.inf).sum(),
-            "Mode": df.mode().iloc[0],
-            **outlier_percentages
-        }).fillna(0)
-
-        # Add the basic statistics to the summary
-        stats_summary = df.describe().transpose()
-        summary = summary.join(stats_summary)
-
-        self._print(summary, level=2)
-
-        summary_path = self.DNNMANAGERDIR / 'data_quality_summary.txt'
-        with open(summary_path, 'w') as file:
-            file.write(summary.to_string())
-        self._print(f"Data quality summary saved to: {summary_path}\n\n", level=2)
-
-    def load_model(dir: str):
-        import onnx
-        from onnx_tf.backend import prepare
-        NNdir = Path(dir)
-        # Load onnx model
-        onnx_model_path = NNdir / 'dnn_model.onnx'
-        onnx_model = onnx.load(NNdir)
-        # Convert onnx model to Tensorflow model
-        tf_rep = prepare(onnx_model)
-        tf_model = tf_rep.tf_module
-
-        model_info_file = NNdir / 'model_info.yml'
-        with open(model_info_file, 'r') as file:
-            model_info = yaml.safe_load(file)
-            
-        return tf_model, model_info
-
     def start(self):
         model_configs = self.load_model_configs(self.models_yml)
-        total_df = self.load_data()
-        total_df = self.preprocess_data(total_df)
-        self.data_quality_summary(total_df)
+        datahandler = DataHandler(workdir=self.WORKDIR.resolve(), tree_name=self.sel_name, total_inputs=self.total_inputs.resolve())
+        total_df = datahandler.load_data()
+        total_df = datahandler.preprocess_data(total_df)
+        datahandler.data_quality_summary(total_df)
         return total_df, model_configs
 
     def Run(self):
@@ -240,7 +111,7 @@ class DNNManager:
         mode_function_name = DNNManager.MODE_MAPPING.get(self.mode)
         mode_function = getattr(self, mode_function_name)
         mode_function(total_df, model_configs, **self.kwargs)
-        self._print(f"The DNN models tested were saved in {self.DNNMANAGERDIR.resolve()}", level=1)
+        print(f"The DNN models tested were saved in {self.DNNMANAGERDIR.resolve()}")
 
     def _train_eval(self, total_df, model_configs, rank_features, **kwargs):
         for model_config in model_configs:
@@ -264,7 +135,7 @@ class DNNManager:
             model_name = model_config.name
             Y_df_single = Y_df.squeeze() if DNN_base.type == 'binary' else Y_df.idxmax(axis=1)
             for fold_i, (train_index, test_index) in enumerate(skf.split(X_df, Y_df_single)):
-                self._print(f"Running fold {fold_i+1}/{skf.get_n_splits()}", level=2)
+                print(f"Running fold {fold_i+1}/{skf.get_n_splits()}", level=2)
                 model_config.name = model_name + f'_Fold{fold_i}'
                 DNN_fold_i = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / modelsuperdir / model_config.name)
                 X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNNModel.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='skf', train_index=train_index, test_index=test_index)
@@ -293,7 +164,25 @@ class DNNManager:
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
     def _eval(self, inputNNdir, **kwargs):
-        tf_model, model_params = self.load_model(inputNNdir)
+
+        def load_model(dir: str):
+            import onnx
+            from onnx_tf.backend import prepare
+            NNdir = Path(dir)
+            # Load onnx model
+            onnx_model_path = NNdir / 'dnn_model.onnx'
+            onnx_model = onnx.load(NNdir)
+            # Convert onnx model to Tensorflow model
+            tf_rep = prepare(onnx_model)
+            tf_model = tf_rep.tf_module
+
+            model_info_file = NNdir / 'model_info.yml'
+            with open(model_info_file, 'r') as file:
+                model_info = yaml.safe_load(file)
+                
+            return tf_model, model_info
+        
+        tf_model, model_params = load_model(inputNNdir)
         DNN = DNNModel(params=model_params)
         DNN.model = tf_model
         # model_metrics, _, _, _ = DNN.Evaluate(X_test, Y_test, evs_test, rank_features)
@@ -329,7 +218,7 @@ class DNNManager:
             df = df._append(new_row, ignore_index=True)
 
         df.to_csv(models_summary, index=False)
-        self._print(df, level=2)
+        print(df)
 
    
 if __name__ == '__main__':
