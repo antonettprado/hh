@@ -38,13 +38,20 @@ def modify_dc_yml(NN_name, processes, classes):
     dc_yml_data = {
         'Processes': {}, 
         'Channels': {}}
-    for i, process in enumerate(processes):
-        dc_yml_data['Processes'][process] = {'index': i, 'samples': Refs.PROCESSES_FILES[process]}
+    index = 0
+    for process in processes:
+        if 'HH' in process:
+            dc_yml_data['Processes']['HH'] = {'index': 0, 'samples': ['bbWW_sl', 'bbWW_dl', 'bbtautau']}
+        else:
+            index = index + 1
+            dc_yml_data['Processes'][process] = {'index': index, 'samples': Refs.PROCESSES_FILES[process]}
     for class_i in classes:
         channel_name = 'SL_res_2b_x_DNN_' + class_i
         dc_yml_data['Channels'][channel_name] = [f"Score{class_i}_Model{NN_name}"]
     with open(PATHS['DC_YML'], "w") as file:
         yaml.dump(dc_yml_data, file, sort_keys=False)
+
+    print(f"yaml datacard:\ndc_yml_data")
 
     return dc_yml_data
 
@@ -153,6 +160,7 @@ def main(workdir: str, nndir:str, configFile: str, processes_for_fitting:str, as
         elif processes_for_fitting == 'all':
             processes = all_processes
 
+        print(f"Processes: {processes}")
         UL = Run(NN_name, model_type, configFile, processes, classes, asimov_only)
         NN_results['UL'] = UL
 
