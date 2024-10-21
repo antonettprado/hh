@@ -7,27 +7,26 @@ import numpy as np
 class DataHandler:
 
     POSTPROCESSING_NN_FOLDER = Path(__file__).parent
-    input_names = {'genWeight': 'gen_Weight'}
 
-    def __init__(self, workdir: str, tree_name: str, total_inputs: str):
+    def __init__(self, workdir: Path, tree_name: str, total_inputs: Path = None):
         self.tree_name = tree_name
-        self.total_inputs = self.POSTPROCESSING_NN_FOLDER / total_inputs if total_inputs else None
-        self.WORKDIR = Path(workdir)
+        self.total_inputs = total_inputs
+        self.WORKDIR = workdir
         self.RESULTSDIR = self.WORKDIR / 'results'
-        self.MAX_EVENTS_PER_PROCESS = 1000000
+        self.MAX_EVENTS_PER_FILE = 1000000
 
     def load_data(self) -> pd.DataFrame:
-        print(f"\tLoading data ...")
+        print(f"\tLoading data...")
 
         processes_available = Refs._find_processes(self.RESULTSDIR)
         root_files_available = Refs._find_root_files(self.RESULTSDIR)
 
-        if self.total_inputs is not None:
+        if self.total_inputs is None:
+            array_extractor = lambda upfile, tree_name: upfile[tree_name].arrays(library="pd")
+        else:
             with open(self.total_inputs) as file:
                 branches = [line.strip() for line in file]
             array_extractor = lambda upfile, tree_name: upfile[tree_name].arrays(branches, library="pd")
-        else:
-            array_extractor = lambda upfile, tree_name: upfile[tree_name].arrays(library="pd")
 
         df_list = []
         for process in processes_available:
@@ -36,8 +35,9 @@ class DataHandler:
             for file in process_files:
                 upfile = uproot.open(file)
                 upfile_df = array_extractor(upfile, self.tree_name)
-                if len(upfile_df) > self.MAX_EVENTS_PER_PROCESS:
-                    upfile_df = upfile_df.sample(n=self.MAX_EVENTS_PER_PROCESS, random_state=1)
+                if len(upfile_df) > self.MAX_EVENTS_PER_FILE:
+                    upfile_df = upfile_df.sample(n=self.MAX_EVENTS_PER_FILE, random_state=1)
+                print(f"\t\t{file.stem}: {len(upfile_df)}")
                 upfile_df['File'] = file.stem
                 process_df = pd.concat([process_df, upfile_df], ignore_index=True)
             process_df['Process'] = process
@@ -52,7 +52,7 @@ class DataHandler:
         
         return total_df
 
-    def fix_mismatch(self, df) -> pd.DataFrame:
+    def fix_any_mismatch(self, df) -> pd.DataFrame:
         if 'gen_Weight' in df.columns:
             df.rename(columns={'gen_Weight': 'genWeight'}, inplace=True)
         return df
@@ -81,13 +81,13 @@ class DataHandler:
         df.replace(-np.inf, -inf_replacement, inplace=True)
         df.replace(np.inf, inf_replacement, inplace=True)
 
-        print(f"Replacing nan values with {nan_replacement}")
+        print(f"Replacing any nan values with {nan_replacement}")
         df.replace(np.nan, nan_replacement, inplace=True)
 
         # One hot encoding of processes
         df = pd.get_dummies(df, columns=['Process'])
 
-        print(f"Total_df:\n{df}")
+        print(f"Preprocessed Total_df:\n{df}")
 
         return df
 

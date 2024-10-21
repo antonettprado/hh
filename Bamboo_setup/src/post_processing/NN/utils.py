@@ -7,7 +7,6 @@ from sklearn.metrics import roc_curve, auc, confusion_matrix
 from typing import List, Dict, Union, Any
 from dataclasses import dataclass, field, asdict
 import os, random
-import tensorflow as tf
 import yaml
 
 @dataclass
@@ -71,6 +70,7 @@ class ModelConfig:
         validation_split: float
 
 def fix_random_seed(seed_value = 42):
+    import tensorflow as tf
     """
     Sets the random seed for reproducibility across various libraries.
     """

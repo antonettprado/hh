@@ -18,24 +18,18 @@ class DNNManager:
     assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
     MODE_MAPPING =  {'train_eval': '_train_eval', 'ca': '_kfold', 'multi': '_multi', 'eval': '_eval'}
 
-    def __init__(self, workdir: str, sel_name: str, total_inputs: str, models_yml: str = None, DNNManagerdir: str = None, verbose=2):
-        self.FIXED_RANDOM_SEED = False
-        self.N_MAX_TRAINING = 1000000
-        self.N_MAX_HH_TRAINING = -1  # -1 for using all available events
-
+    def __init__(self, workdir: str, sel_name: str, models_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None):
+        self.mode = None
         self.WORKDIR = Path(workdir)
-        self.RESULTSDIR = self.WORKDIR / 'results'
-        if DNNManagerdir is not None:
-            self.DNNMANAGERDIR = self.WORKDIR / DNNManagerdir
-        else:
-            self.DNNMANAGERDIR = self.WORKDIR /  f"Neural_Nets_{sel_name}"
-        self.DNNMANAGERDIR.mkdir(parents=True, exist_ok=True)
-
         self.sel_name = sel_name
         self.models_yml = self.POSTPROCESSING_NN_FOLDER / models_yml if models_yml else None
-        self.total_inputs = self.POSTPROCESSING_NN_FOLDER / total_inputs
-        self.mode = None
-        self.verbose = verbose  # Set the verbosity level (0 = silent, 1 = basic, 2 = detailed)
+        self.total_inputs = self.POSTPROCESSING_NN_FOLDER / total_inputs if total_inputs else None
+        self.RESULTSDIR = self.WORKDIR / 'results'
+        if DNNManagerdir is None:
+            self.DNNMANAGERDIR = self.WORKDIR /  f"Neural_Nets_{sel_name}"
+        else:
+            self.DNNMANAGERDIR = self.WORKDIR / DNNManagerdir
+        self.DNNMANAGERDIR.mkdir(parents=True, exist_ok=True)
         self.print_welcome()
 
     def print_welcome(self):
@@ -51,7 +45,6 @@ class DNNManager:
         self.mode = mode
         self.kwargs = kwargs
         if self.mode != 'multi': 
-            self.FIXED_RANDOM_SEED = True
             fix_random_seed()
 
     def load_model_configs(self, models_yml: Path):
@@ -100,8 +93,9 @@ class DNNManager:
 
     def start(self):
         model_configs = self.load_model_configs(self.models_yml)
-        datahandler = DataHandler(workdir=self.WORKDIR.resolve(), tree_name=self.sel_name, total_inputs=self.total_inputs.resolve())
+        datahandler = DataHandler(workdir=self.WORKDIR, tree_name=self.sel_name, total_inputs=self.total_inputs)
         total_df = datahandler.load_data()
+        total_df = datahandler.fix_any_mismatch(total_df)
         total_df = datahandler.preprocess_data(total_df)
         datahandler.data_quality_summary(total_df)
         return total_df, model_configs
@@ -114,15 +108,14 @@ class DNNManager:
         print(f"The DNN models tested were saved in {self.DNNMANAGERDIR.resolve()}")
 
     def _train_eval(self, total_df, model_configs, rank_features, **kwargs):
+        print("\n\n\tRunning Mode: train and evaluate")
         for model_config in model_configs:
             DNN = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / model_config.name)
-            model_df = DNN.set_model_df_from_total_df(total_df)
-            X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNN.Full_Splitting(model_df)
-            DNN.Train(X_train, Y_train, sw_train, Y_test)
-            model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Evaluate(X_test, Y_test, evs_test, rank_features)
+            model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=True, rank_features=rank_features)
             self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
     def _kfold(self, total_df, model_configs, n_splits, **kwargs):
+        print("\n\n\tRunning Mode: kfold")
         for model_config in model_configs:
 
             skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -151,19 +144,18 @@ class DNNManager:
                 fold_test_data.to_csv(test_indices_csv, index=False)
 
     def _multi(self, total_df, model_configs, n_iterations, **kwargs):
+        print("\n\n\tRunning Mode: multi")
         for model_config in model_configs:
             modelsuperdir = model_config.name
             model_name = model_config.name
             for iteration in range(n_iterations):
                 model_config.name = model_name + f'_{iteration}'
                 DNN = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / modelsuperdir / model_config.name)
-                DNN.set_model_df_from_total_df(total_df)
-                X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNN.Full_Splitting(DNN.model_df)
-                DNN.Train(X_train, Y_train, sw_train, Y_test, fixed_random_seed = self.FIXED_RANDOM_SEED)
-                model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Evaluate(X_test, Y_test, evs_test)
+                model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=False, rank_features=False)
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
     def _eval(self, inputNNdir, **kwargs):
+        print("\n\n\tRunning Mode: evaluate only")
 
         def load_model(dir: str):
             import onnx

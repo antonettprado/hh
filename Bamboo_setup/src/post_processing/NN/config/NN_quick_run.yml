@@ -3,7 +3,7 @@ Models:
     type: 'multi'
     categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
-    input_vars: ['ak4_btag0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_dR', 'bjets_mbb', 'mjj', 'trijet_mInv', 'trijet_pt_rat']
+    input_vars: 'All'
     architecture_in_yml: True
     residual_network: True
     layers: 
