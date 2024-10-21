@@ -19,7 +19,7 @@ from post_processing.NN.utils import ModelConfig
 
 class DNNModel:
 
-    def __init__(self, model_config: ModelConfig, modeldir: Path = None):
+    def __init__(self, model_config: ModelConfig, modeldir: Path):
         self.config = model_config
         self.name = model_config.name
         self.type = model_config.type
@@ -32,8 +32,7 @@ class DNNModel:
         self.model = None
         self.history = None
         self.modeldir = modeldir
-        if modeldir is not None:
-            self.modeldir.mkdir(parents=True, exist_ok=True)
+        self.modeldir.mkdir(parents=True, exist_ok=True)
 
         if self.type == 'binary': self._validate_categorization_for_binary()
             
@@ -109,7 +108,8 @@ class DNNModel:
 
         # Drop 'Process_' columns
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
-        model_df = model_df.drop(columns=columns_to_drop)
+        others_to_drop = ['File']
+        model_df = model_df.drop(columns=columns_to_drop+others_to_drop)
 
         self.model_df = model_df
 
@@ -143,8 +143,9 @@ class DNNModel:
 
         return X_train, X_test, Y_train, Y_test, evs_test, sw_train
 
-    @staticmethod
-    def input_preprocessing(X_train):
+    def input_preprocessing(self, X_train):
+        print(f"\tPreprocessing input ...")
+
         ndim = len(X_train.columns)
         input_layer = Input(shape=(ndim, ), name="input")
         masked_inputs = Masking(mask_value=-9999)(input_layer)
@@ -194,7 +195,7 @@ class DNNModel:
         print(f"\tTraining model ...")
 
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=20, verbose=0, mode='min', restore_best_weights=True)
-        reduce_plateau = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=0.001, patience=0, min_lr=1e-8, verbose=0, mode='min')
+        reduce_plateau = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=0.001, patience=10, min_lr=1e-8, verbose=0, mode='min')
         terminate_on_nan = tf.keras.callbacks.TerminateOnNaN()
 
         Y_train = Y_train.astype('float32')
@@ -203,17 +204,16 @@ class DNNModel:
         history = self.model.fit(
             X_train, 
             Y_train, 
-            verbose = 2,
-            batch_size = self.config.fit.batch_size, 
-            epochs = self.config.fit.epochs, 
-            sample_weight = sw_train,
-            validation_split = self.config.fit.validation_split,  
-            callbacks = [early_stopping, reduce_plateau, terminate_on_nan])
+            batch_size=self.config.fit.batch_size, 
+            epochs=self.config.fit.epochs, 
+            sample_weight=sw_train,
+            validation_split=self.config.fit.validation_split,  
+            callbacks=[early_stopping, reduce_plateau, terminate_on_nan])
 
         self.history = history
 
-        return self.history
-
+        return history
+    
     def save_model_info(self, features, Y_train, Y_test):
         print(f"\tSaving model info ...")
         model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
@@ -239,7 +239,6 @@ class DNNModel:
         out_yml = self.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
             yaml.dump(self.config.__getstate__(), file, sort_keys=False)
-
 
     def evaluate_and_predict(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
         print(f"\tEvaluating model and predicting ...")
@@ -296,7 +295,7 @@ class DNNModel:
         return X_train, X_test, Y_train, Y_test, evs_test, sw_train
 
     def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed: bool = True):
-        input_layer, normalized_input = DNNModel.input_preprocessing(X_train)
+        input_layer, normalized_input = self.input_preprocessing(X_train)
         self.build_model(input_layer=input_layer, normalized_input=normalized_input, fixed_random_seed=fixed_random_seed)
         self.train_model(X_train, Y_train, sw_train)
         self.save_model_info(X_train.columns, Y_train, Y_test)
@@ -305,4 +304,11 @@ class DNNModel:
         output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
         cm_norm_true, cm_norm_pred, diag_names = utils.draw_all_stats(DNN_type=self.type, history=self.history, output_df=output_df, modeldir=self.modeldir, classes=self.classes)
         if rank_features: self.feature_ranking(X_test, Y_test)
+        return model_metrics, cm_norm_true, cm_norm_pred, diag_names
+
+    def Run(self, total_df, fixed_random_seed, rank_features=False):
+        model_df = self.set_model_df_from_total_df(total_df)
+        X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.Full_Splitting(model_df)
+        self.Train(X_train, Y_train, sw_train, Y_test, fixed_random_seed)
+        model_metrics, cm_norm_true, cm_norm_pred, diag_names = self.Evaluate(X_test, Y_test, evs_test, rank_features)
         return model_metrics, cm_norm_true, cm_norm_pred, diag_names
