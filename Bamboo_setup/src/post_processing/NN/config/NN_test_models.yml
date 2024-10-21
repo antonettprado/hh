@@ -2,8 +2,8 @@ Models:
   # # ==================== Binary Models ====================
   - name: 'binary_HH_ttbar'
     type: 'binary'
-    categorization: {"isSignal": ["HH_bbWW", "HH_bbtautau"], "":["ttbar"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0}
+    categorization: {"isSignal": ["HH_bbWW"], "":["ttbar"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -19,8 +19,8 @@ Models:
 
   - name: 'binary_HH_ttbar_tW'
     type: 'binary'
-    categorization: {"isSignal": ["HH_bbWW", "HH_bbtautau"], "":["ttbar", "tW"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    categorization: {"isSignal": ["HH_bbWW"], "":["ttbar", "tW"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -36,8 +36,8 @@ Models:
 
   - name: 'binary_HH_ttbar_tW_WJets'
     type: 'binary'
-    categorization: {"isSignal": ["HH_bbWW", "HH_bbtautau"], "":["ttbar", "tW", "WJets"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
+    categorization: {"isSignal": ["HH_bbWW"], "":["ttbar", "tW", "WJets"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -53,8 +53,8 @@ Models:
 
   - name: 'binary_All'
     type: 'binary'
-    categorization: {"isSignal": ["HH_bbWW", "HH_bbtautau"], "":["ttbar", "tW", "WJets", "VV"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    categorization: {"isSignal": ["HH_bbWW"], "":["ttbar", "tW", "WJets", "VV"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -71,8 +71,8 @@ Models:
   # # ================= Multiclass Models =================
   - name: 'multi_HH_ttbar'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "ttbar": ["ttbar"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0}
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -88,8 +88,8 @@ Models:
 
   - name: 'multi_HH_ttbar_tW'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "ttbar": ["ttbar"], "tW": ["tW"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -105,8 +105,8 @@ Models:
 
   - name: 'multi_HH_ttbar_tW_WJets'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -122,8 +122,8 @@ Models:
 
   - name: 'multi_HH_ttbar_tW_WJets_Others'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"], "Others": ["DY", "VV"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"], "Others": ["DY", "VV"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -139,8 +139,8 @@ Models:
 
   - name: 'multi_HH_Top'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "Top": ["ttbar", "tW"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
+    categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -156,8 +156,8 @@ Models:
 
   - name: 'multi_HH_Top_WJets'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "Top": ["ttbar", "tW"], "WJets": ["WJets"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
+    categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"], "WJets": ["WJets"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -173,8 +173,8 @@ Models:
 
   - name: 'multi_HH_Top_WJets_Others'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "Top": ["ttbar", "tW"], "WJets": ["WJets"], "Others": ["DY", "VV"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"], "WJets": ["WJets"], "Others": ["DY", "VV"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
@@ -190,8 +190,8 @@ Models:
 
   - name: 'multi_HH_Top_Others'
     type: 'multi'
-    categorization: {"HH": ["HH_bbWW", "HH_bbtautau"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
-    training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+    categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+    training_weight_sf: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
     #input_vars: 'All'
     input_vars: ["nAK4", "nAK4_btag", "lep0_pt", "lep0_eta", "lep0_phi", "ak4_jet0_pt", "ak4_jet0_eta", "ak4_jet0_phi", "ak4_jet1_pt", "ak4_jet1_eta", "ak4_jet1_phi", "ak4_jet2_pt", "ak4_jet2_eta", "ak4_jet2_phi", "ak4_btag0_pt", "ak4_btag0_eta", "ak4_btag0_phi", "ak4_btag1_pt", "ak4_btag1_eta", "ak4_btag1_phi", "met_pt", "met_phi", "bjets_mbb", "bjets_dPhi", "bjets_dR", "bjets_pt_bb", "trijet_mInv", "trijet_pt", "trijet_pt_rat", "blnu_mT", "blnu_pt", "trijet_bijet_dR", "trijet_bijet_dPhi", "bjet_bijet_dR", "bjet_bijet_dPhi", "all_pt", "all_mInv", "all_jets_HT"]
     architecture_in_yml: True
