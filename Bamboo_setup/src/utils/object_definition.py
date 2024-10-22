@@ -235,7 +235,7 @@ def electron_cleaning(electrons, muons, deltar_cut=0.3):
 
 def tau_selection(taus, era):
     def get_idDeepTau_cut(tau, era):
-            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if era != 2017 else (1)
+            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if era != '2017' else (1)
             return idDeepTau_cut
 
     return op.select(taus, lambda tau: op.AND(
@@ -302,11 +302,45 @@ def ak4_vbf_jet_cleaning(vbf_jets, jets, btags, deltar_cut, type):
         )
     )
 
-def ak4_btag_selection(jets, era):
-    if  "2016" in era or "2017" in era or "2018" in era:
-        return op.select(jets, lambda jet: jet.btagDeepFlavB > 0.2770) # DeepJet WP_M
+def ak4_loose_btag_selection(jets, era):
+    # https://btv-wiki.docs.cern.ch/ScaleFactors/Run3Summer23BPix/
+    if  era == "2016" or era == "2017" or era == "2018":
+        # These eras do not strictly have the correct WPs
+        tagger = lambda jet: jet.btagDeepFlavB > 0.0490
     else:
-        return op.select(jets, lambda jet: jet.btagPNetB > 0.2450) # PNet WP_M
+        if era == "2022":
+            wp = 0.047
+        elif era == "2022EE":
+            wp = 0.0499
+        elif era == "2023":
+            wp = 0.0358
+        elif era == "2023BPix":
+            wp = 0.0359
+        else: 
+            raise ValueError(f"{era=} is not expected")
+        tagger = lambda jet: jet.btagPNetB > wp
+
+    return op.select(jets, tagger)
+
+def ak4_btag_selection(jets, era):
+    # https://btv-wiki.docs.cern.ch/ScaleFactors/Run3Summer23BPix/
+    if  era == "2016" or era == "2017" or era == "2018":
+        # These eras do not strictly have the correct WPs
+        tagger = lambda jet: jet.btagDeepFlavB > 0.2783
+    else:
+        if era == "2022":
+            wp = 0.245
+        elif era == "2022EE":
+            wp = 0.2605
+        elif era == "2023":
+            wp = 0.1917
+        elif era == "2023BPix":
+            wp = 0.1919
+        else: 
+            raise ValueError(f"{era=} is not expected")
+        tagger = lambda jet: jet.btagPNetB > wp
+
+    return  op.select(jets, tagger)
 
 def ak4_true_bjet_selection(jets):
     return op.select(jets, lambda jet: jet.hadronFlavour == 5)

@@ -41,9 +41,15 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         objects = SL_DL_event_selection.get_objects(tree, era)
         ak4_jets = objects["cleaned_ak4_jets"]
         ak4_btags = objects["cleaned_ak4_btags"]
+        ak4_loose_btags = objects["cleaned_ak4_loose_btags"]
         ak8_btags = objects["cleaned_ak8_btags"]
         objects['ak4_nonbtags'] = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
-        objects['sorted_ak4_btags'] = op.sort(ak4_btags, lambda jet: -jet.btagPNetB)
+        if era in ["2016", "2017", "2018"]:
+            bjet_sorter = lambda jet: -jet.btagDeepFlavB
+        elif era in ["2022", "2022EE", "2023", "2023BPix"]:
+            bjet_sorter = lambda jet: -jet.btagPNetB
+        objects['sorted_ak4_loose_btags'] = op.sort(ak4_loose_btags, bjet_sorter)
+        objects['sorted_ak4_btags'] = op.sort(ak4_btags, bjet_sorter)
         objects['sorted_ak4_nonbtags'] = op.sort(objects['ak4_nonbtags'], lambda jet: -jet.pt)
         objects['sorted_ak8_btags'] = op.sort(ak8_btags, lambda jet: -jet.pt)
 
@@ -138,7 +144,6 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-
         super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
@@ -161,5 +166,3 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         llrPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes=which_processes)
         llr_functions.compute_llrs(plotter=llrPlotter, outfilename='corrections_llr_'+postfix, which_processes=which_processes)
-
-
