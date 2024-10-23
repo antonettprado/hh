@@ -12,7 +12,6 @@ from tensorflow.keras.layers import Input, Masking, Normalization
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.utils import plot_model
 from contextlib import redirect_stdout
-import post_processing.References as Refs
 import post_processing.NN.model_builder as model_builder
 import  post_processing.NN.utils as utils
 from post_processing.NN.utils import ModelConfig
@@ -97,14 +96,14 @@ class DNNModel:
                 model_df.loc[model_df[f"Process_{proc}"] == 1, f"Class_{class_i}"] = 1
 
         # Printing only ------------------------------------------------------------------
-        for process in self.processes:
-            column_name = f"Process_{process}"
-            print(column_name)
-            process_mask = model_df[column_name] == 1
-            process_total_genWeight = model_df[process_mask]['genWeight'].sum()
-            process_total_sample_weight = model_df[process_mask]['sample_weight'].sum()
-            print(f"Total sum of genWeights for {process}: {process_total_genWeight} ")
-            print(f"Total sum of sample_weights for {process}: {process_total_sample_weight} ")
+        # for process in self.processes:
+        #     column_name = f"Process_{process}"
+        #     print(column_name)
+        #     process_mask = model_df[column_name] == 1
+        #     process_total_genWeight = model_df[process_mask]['genWeight'].sum()
+        #     process_total_sample_weight = model_df[process_mask]['sample_weight'].sum()
+        #     print(f"Total sum of genWeights for {process}: {process_total_genWeight} ")
+        #     print(f"Total sum of sample_weights for {process}: {process_total_sample_weight} ")
 
         # Drop 'Process_' columns
         columns_to_drop = [col for col in model_df.columns if col.startswith('Process_')]
@@ -294,16 +293,18 @@ class DNNModel:
         X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNNModel.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='train_test_split')
         return X_train, X_test, Y_train, Y_test, evs_test, sw_train
 
-    def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed: bool = True):
+    def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed=True, save=True):
         input_layer, normalized_input = self.input_preprocessing(X_train)
         self.build_model(input_layer=input_layer, normalized_input=normalized_input, fixed_random_seed=fixed_random_seed)
         self.train_model(X_train, Y_train, sw_train)
-        self.save_model_info(X_train.columns, Y_train, Y_test)
+        if save: 
+            self.save_model_info(X_train.columns, Y_train, Y_test)
 
     def Evaluate(self, X_test, Y_test, evs_test, rank_features=False):
         output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
         cm_norm_true, cm_norm_pred, diag_names = utils.draw_all_stats(DNN_type=self.type, history=self.history, output_df=output_df, modeldir=self.modeldir, classes=self.classes)
-        if rank_features: self.feature_ranking(X_test, Y_test)
+        if rank_features: 
+            self.feature_ranking(X_test, Y_test)
         return model_metrics, cm_norm_true, cm_norm_pred, diag_names
 
     def Run(self, total_df, fixed_random_seed, rank_features=False):
