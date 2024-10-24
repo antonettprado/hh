@@ -293,11 +293,11 @@ class DNNModel:
         X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNNModel.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='train_test_split')
         return X_train, X_test, Y_train, Y_test, evs_test, sw_train
 
-    def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed=True, save=True):
+    def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed=True, save_model_info=True):
         input_layer, normalized_input = self.input_preprocessing(X_train)
         self.build_model(input_layer=input_layer, normalized_input=normalized_input, fixed_random_seed=fixed_random_seed)
         self.train_model(X_train, Y_train, sw_train)
-        if save: 
+        if save_model_info: 
             self.save_model_info(X_train.columns, Y_train, Y_test)
 
     def Evaluate(self, X_test, Y_test, evs_test, rank_features=False):
@@ -307,9 +307,9 @@ class DNNModel:
             self.feature_ranking(X_test, Y_test)
         return model_metrics, cm_norm_true, cm_norm_pred, diag_names
 
-    def Run(self, total_df, fixed_random_seed, rank_features=False):
+    def Run(self, total_df, fixed_random_seed, rank_features=False, save_model_info=True):
         model_df = self.set_model_df_from_total_df(total_df)
         X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.Full_Splitting(model_df)
-        self.Train(X_train, Y_train, sw_train, Y_test, fixed_random_seed)
+        self.Train(X_train, Y_train, sw_train, Y_test, fixed_random_seed, save_model_info)
         model_metrics, cm_norm_true, cm_norm_pred, diag_names = self.Evaluate(X_test, Y_test, evs_test, rank_features)
         return model_metrics, cm_norm_true, cm_norm_pred, diag_names
