@@ -19,6 +19,7 @@ from post_processing.NN.utils import ModelConfig
 class DNNModel:
 
     def __init__(self, model_config: ModelConfig, modeldir: Path):
+    def __init__(self, model_config: ModelConfig, modeldir: Path):
         self.config = model_config
         self.name = model_config.name
         self.type = model_config.type

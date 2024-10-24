@@ -49,15 +49,12 @@ class BasePlotter:
                 sample_name: sample_data['cross-section'] if sample_data['type'] == 'mc' else 0
                 for sample_name, sample_data in yaml_data['samples'].items() }
         
-        print(f"{self.CROSS_SECTIONS=}")
-
     def _set_refs_file_and_refs(self, ref_workdir: Path):
         '''
         For either a dirtype of 'workdir' or 'superworkdir' set a reference reference root file to pull all references from
         '''
         _find_root_files = lambda dir: [file for file in dir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
         self.refs_file = _find_root_files(ref_workdir/'results')[0]
-        print(_find_root_files(ref_workdir/'results'))
         tfile = TFile.Open(str(self.refs_file), 'read')
         refs = []
         for key in tfile.GetListOfKeys():
@@ -135,7 +132,6 @@ class Plotter(BasePlotter):
         if not resultsdir:
             resultsdir = self.dir / 'results'
         self.resultsdir = Path(resultsdir)
-        print(f"{self.resultsdir.parent=}")
         self.dirprocesses = Refs._find_processes(self.resultsdir)
         self.SUM_WEIGHTS: dict[str, float] = {}
         self.tfiles: dict[str, list[TFile]] = {}
@@ -143,7 +139,6 @@ class Plotter(BasePlotter):
         super()._set_configFile_info(Path(configFile))
         processes_to_run_on = self.decide_processes_to_run_on(which_processes)
         self.open_process_tfiles(processes_to_run_on) 
-        print(f"Initialized Plotter and opened files: {self.tfiles}")
 
     def decide_processes_to_run_on(self, which_processes: Union[str, list[str]]) -> list[str]:
         if which_processes == 'All':
