@@ -67,6 +67,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             cleaned_ak4_btags = object_defs.ak4_true_bjet_selection(cleaned_ak4_jets)
         else:
             cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets, era)
+        cleaned_ak4_loose_btags = object_defs.ak4_loose_btag_selection(cleaned_ak4_btags, era)
 
         # Select AK8 Jets
         ak8_jets = object_defs.ak8_jet_selection(tree.FatJet, tree.SubJet)
@@ -110,6 +111,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             "cleaned_taus": cleaned_taus,
             "cleaned_ak4_jets": cleaned_ak4_jets,
             "cleaned_ak4_btags": cleaned_ak4_btags,
+            "cleaned_ak4_loose_btags": cleaned_ak4_loose_btags,
             "cleaned_ak8_btags": cleaned_ak8_btags,
             "ak8_subjets": ak8_subjets,
             "met": met,
