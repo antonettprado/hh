@@ -69,7 +69,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         else:
             cleaned_ak4_loose_btags = object_defs.ak4_loose_btag_selection(cleaned_ak4_jets, era)
             cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets, era)
-        cleaned_ak4_loose_btags = object_defs.ak4_loose_btag_selection(cleaned_ak4_btags, era)
 
 
         # Select AK8 Jets
@@ -113,7 +112,6 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             "tight_muons": tight_muons,
             "cleaned_taus": cleaned_taus,
             "cleaned_ak4_jets": cleaned_ak4_jets,
-            "cleaned_ak4_loose_btags": cleaned_ak4_loose_btags,
             "cleaned_ak4_btags": cleaned_ak4_btags,
             "cleaned_ak4_loose_btags": cleaned_ak4_loose_btags,
             "cleaned_ak8_btags": cleaned_ak8_btags,
