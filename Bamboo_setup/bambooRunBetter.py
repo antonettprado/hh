@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import queue
+import shutil
 import argparse
 import threading
 import subprocess
@@ -261,8 +262,24 @@ def test_thread(errid: int):
     nurse.join()
     print("End")
 
+def check_output_dirs(afs_output: Path, eos_output: Path, args):
+    if not (args.finalize or args.onlypost):
+        overwrite: bool = True
+        if args.driver:
+            answer: str = ''
+            while answer.lower() not in ['y', 'n']:
+                answer: str = input("Do you want to overwrite {eos_output} and {afs_output}? (y/n): ")
+            overwrite = answer == 'y'
+        if not overwrite:
+            print("Re-run with a new output path name")
+            sys.exit(0)
+        if afs_output.is_dir(): shutil.rmtree(afs_output)
+        if eos_output.is_dir(): shutil.rmtree(eos_output)
+
 def main(args, mod_args):
     cmd, afs_output, eos_output = generate_cmd(args, mod_args)
+    check_output_dirs(afs_output, eos_output, args)
+
     print(cmd)
 
     if not (args.driver or args.finalize):
