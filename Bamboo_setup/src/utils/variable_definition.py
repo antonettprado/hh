@@ -4,6 +4,7 @@ from utils.variables import Variable, Variable1D, Variable2D, Variable3D
 import utils.object_definition as object_defs
 
 SELECTIONS = None
+NULL: int = -9999
 
 # =====================================================================
 # ================== IMPORTANT ========================================
@@ -14,7 +15,7 @@ def set_selections_for_vars(selections: dict):
     SELECTIONS = selections
 
 # Returns dictionary of only elements in self.jet_subcats with keys in subcats
-def get_selections_subset(subcats: 'list[str]'):
+def get_selections_subset(subcats: list[str]):
     return { name: SELECTIONS[name] for name in subcats }
 
 '''
@@ -28,19 +29,19 @@ Note that these definitions are only necessary for 1D variables, 2D variables ca
 # ========================== EXAMPLE OF ADDING A NEW VARIABLE ================================
 def _get_bjets_vars_data(objects):
     # Define relevant objects
-    ak4_nonbtags = objects["ak4_nonbtags"]
     ak8_subjets = objects["ak8_subjets"]
     sorted_ak4_btags = objects["sorted_ak4_btags"]
     sorted_ak8_btags = objects['sorted_ak8_btags']
 
     # Define the variable for each subcat separately
-    # In this case, the only difference is in res/boost, but in principle you can do this for all subcats individually
     res_bjet0, res_bjet1 = sorted_ak4_btags[0], sorted_ak4_btags[1]
-    best_nonbtag = op.sort(ak4_nonbtags, lambda jet: -jet.btagDeepFlavB)[0]
+
+    two_btags = op.rng_len(sorted_ak4_btags) >= 2
+
     fatjet = sorted_ak8_btags[0]
     fat_subjets = object_defs.find_subjets(fatjet, ak8_subjets)
     boost_bjet0, boost_bjet1 = fat_subjets[0], fat_subjets[1]
-    return res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag
+    return res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags
     
 # For each reco variable, define the variable data using objects and get_selection_subset
 # Add the data to the variable object using Variable1D.populate() and return the variable object
@@ -53,17 +54,17 @@ def get_bjets_mbb(objects) -> Variable1D:
     selections = get_selections_subset(subcat_names) # gets a sub-dictionary of self.jet_subcats
 
     # Helper function for the bjets variables, returns the bjets
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects) # res_lbjet, use_lbtag = _get_bjets_vars_data(objects)
 
     # Define the variable (bjets_mbb)
-    res1b_data = op.invariant_mass(res_bjet0.p4, best_nonbtag.p4)
-    res2b_data = op.invariant_mass(res_bjet0.p4, res_bjet1.p4)
+    res_data = op.switch(two_btags, op.invariant_mass(res_bjet0.p4, res_bjet1.p4), NULL)
+    
     boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)
     
     # Must have exactly the same keys as selections!!
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
 
     # Populate the Variable1D object with the data dictionary and the selections dictionary
     bjets_mbb.populate(data, selections)
@@ -75,13 +76,12 @@ def get_bjets_dPhi(objects) -> Variable1D:
     bjets_dPhi = Variable1D('bjets_dPhi')
     subcat_names = bjets_dPhi.subcats
     selections = get_selections_subset(subcat_names)
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = op.deltaPhi(res_bjet0.p4, best_nonbtag.p4)
-    res2b_data = op.deltaPhi(res_bjet0.p4, res_bjet1.p4)
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects) # res_lbjet, use_lbtag = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, op.deltaPhi(res_bjet0.p4, res_bjet1.p4), NULL)
     boost_data = op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4)
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjets_dPhi.populate(data, selections)
     return bjets_dPhi
 
@@ -89,13 +89,12 @@ def get_bjets_dPhi_abs(objects) -> Variable1D:
     bjets_dPhi_abs = Variable1D('bjets_dPhi_abs')
     subcat_names = bjets_dPhi_abs.subcats
     selections = get_selections_subset(subcat_names)
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = op.abs(op.deltaPhi(res_bjet0.p4, best_nonbtag.p4))
-    res2b_data = op.abs(op.deltaPhi(res_bjet0.p4, res_bjet1.p4))
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, op.abs(op.deltaPhi(res_bjet0.p4, res_bjet1.p4)), NULL)
     boost_data = op.abs(op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4))
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjets_dPhi_abs.populate(data, selections)
     return bjets_dPhi_abs
 
@@ -103,13 +102,12 @@ def get_bjets_dEta(objects) -> Variable1D:
     bjets_dEta = Variable1D('bjets_dEta')
     subcat_names = bjets_dEta.subcats
     selections = get_selections_subset(subcat_names)
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = res_bjet0.eta - best_nonbtag.eta
-    res2b_data = res_bjet0.eta - res_bjet1.eta
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, res_bjet0.eta - res_bjet1.eta, NULL)
     boost_data = boost_bjet0.eta - boost_bjet1.eta
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjets_dEta.populate(data, selections)
     return bjets_dEta
 
@@ -117,13 +115,12 @@ def get_bjets_dEta_abs(objects) -> Variable1D:
     bjets_dEta_abs = Variable1D('bjets_dEta_abs')
     subcat_names = bjets_dEta_abs.subcats
     selections = get_selections_subset(subcat_names)
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = op.abs(res_bjet0.eta - best_nonbtag.eta)
-    res2b_data = op.abs(res_bjet0.eta - res_bjet1.eta)
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, op.abs(res_bjet0.eta - res_bjet1.eta), NULL)
     boost_data = op.abs(boost_bjet0.eta - boost_bjet1.eta)
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjets_dEta_abs.populate(data, selections)
     return bjets_dEta_abs
 
@@ -131,13 +128,12 @@ def get_bjets_dR(objects) -> Variable1D:
     bjets_dR = Variable1D('bjets_dR')
     subcat_names = bjets_dR.subcats
     selections = get_selections_subset(subcat_names)
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = op.deltaR(res_bjet0.p4, best_nonbtag.p4) 
-    res2b_data = op.deltaR(res_bjet0.p4, res_bjet1.p4) 
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, op.deltaR(res_bjet0.p4, res_bjet1.p4), NULL)
     boost_data = op.deltaR(boost_bjet0.p4, boost_bjet1.p4) 
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjets_dR.populate(data, selections)
     return bjets_dR
 
@@ -145,13 +141,12 @@ def get_bjets_pt_bb(objects) -> Variable1D:
     bjets_pt_bb = Variable1D('bjets_pt_bb')
     subcat_names = bjets_pt_bb.subcats
     selections = get_selections_subset(subcat_names)
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = (res_bjet0.p4 + best_nonbtag.p4).Pt() 
-    res2b_data = (res_bjet0.p4 + res_bjet1.p4).Pt() 
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, (res_bjet0.p4 + res_bjet1.p4).Pt(), NULL)
     boost_data = (boost_bjet0.p4 + boost_bjet1.p4).Pt()
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjets_pt_bb.populate(data, selections)
     return bjets_pt_bb
 
@@ -160,12 +155,11 @@ def get_bjet0_pt(objects) -> Variable1D:
     subcat_names = bjet0_pt.subcats
     selections = get_selections_subset(subcat_names)
     res_bjet0, _, boost_bjet0, _, _ = _get_bjets_vars_data(objects)
-    res1b_data = res_bjet0.pt
-    res2b_data = res_bjet0.pt
+    res_data = res_bjet0.pt
     boost_data = boost_bjet0.pt
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjet0_pt.populate(data, selections)
     return bjet0_pt
 
@@ -173,13 +167,12 @@ def get_bjet1_pt(objects) -> Variable1D:
     bjet1_pt = Variable1D('bjet1_pt')
     subcat_names = bjet1_pt.subcats
     selections = get_selections_subset(subcat_names)
-    _, res_bjet1, _, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = best_nonbtag.pt
-    res2b_data = res_bjet1.pt
+    _, res_bjet1, _, boost_bjet1, two_btags = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, res_bjet1.pt, NULL)
     boost_data = boost_bjet1.pt
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjet1_pt.populate(data, selections)
     return bjet1_pt
 
@@ -187,13 +180,12 @@ def get_bjets_mean_pt(objects) -> Variable1D:
     bjets_mean_pt = Variable1D('bjets_mean_pt')
     subcat_names = bjets_mean_pt.subcats
     selections = get_selections_subset(subcat_names)
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, best_nonbtag = _get_bjets_vars_data(objects)
-    res1b_data = (res_bjet0.pt + best_nonbtag.pt)/2
-    res2b_data = (res_bjet0.pt + res_bjet1.pt)/2
+    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_vars_data(objects)
+    res_data = op.switch(two_btags, (res_bjet0.pt + res_bjet1.pt)/2, NULL)
     boost_data = (boost_bjet0.pt + boost_bjet1.pt)/2
-    data = {'SL_res_1b': res1b_data, 'SL_res_2b': res2b_data, 'SL_boosted': boost_data,
-        'DL_res_1b': res1b_data, 'DL_res_2b': res2b_data, 'DL_boosted': boost_data,
-        'SL_res_2b_x': res2b_data }
+    data = {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
+            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
+            'SL_res_2b_x': res_data }
     bjets_mean_pt.populate(data, selections)
     return bjets_mean_pt
 
@@ -236,31 +228,31 @@ def gather_bjet_vars(objects) -> list[Variable1D]:
     return bjet_vars
 
 def _get_jj_W(objects):
-    sorted_nonbjets = objects['sorted_ak4_nonbtags']
-    jj_combos = op.combine((sorted_nonbjets), N=2)
-    jj_combos_mjj = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Pt())
-    jj_mjj_mW = jj_combos[op.rng_max_element_index(jj_combos_mjj, lambda combo_mjj: combo_mjj)]
-    return jj_mjj_mW
+    nonbjets = objects['ak4_nonbtags']
+    two_nonbtags = op.rng_len(nonbjets) >= 2
+    jj_combos = op.combine((nonbjets), N=2)
+    jj_combos_pt = op.map(jj_combos, lambda combo: (combo[0].p4 + combo[1].p4).Pt()) # max pt
+    jj_W = jj_combos[op.rng_max_element_index(jj_combos_pt, lambda combo_mjj: combo_mjj)]
+    return jj_W, two_nonbtags
 
 def get_mjj(objects) -> Variable1D:
     mjj = Variable1D('mjj')
     subcat_names = mjj.subcats
     selections = get_selections_subset(subcat_names)
 
-    jj_mjj_mW = _get_jj_W(objects)
-    data = op.invariant_mass(jj_mjj_mW[0].p4, jj_mjj_mW[1].p4)
-    data = { 'SL_res_2b_x': data }
+    jj_W, two_nonbtags = _get_jj_W(objects)
+    res_data = op.switch(two_nonbtags, op.invariant_mass(jj_W[0].p4, jj_W[1].p4), NULL)
+    data = { 'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_res_2b_x': res_data }
     mjj.populate(data, selections)
     return mjj
 
 def _get_trijet_data(objects):
     sorted_bjets = objects['sorted_ak4_btags']
 
-    jj_W = _get_jj_W(objects)
-    b1_jj_combos_mjj_mW_pt = op.map(sorted_bjets, lambda b1: (b1.p4 + jj_W[0].p4 + jj_W[1].p4).Pt())
-    t1_combo_max_pt_mjj_mW_index = op.rng_max_element_index(b1_jj_combos_mjj_mW_pt, lambda combo_pt: combo_pt)
-    trijet_bjet = sorted_bjets[t1_combo_max_pt_mjj_mW_index]
-    return jj_W[0], jj_W[1], trijet_bjet
+    jj_W, two_nonbtags = _get_jj_W(objects)
+    bjet_combos_jj_W_pt = op.map(sorted_bjets, lambda b1: op.switch(two_nonbtags, (b1.p4 + jj_W[0].p4 + jj_W[1].p4).Pt(), 0))
+    trijet_bjet = sorted_bjets[op.rng_max_element_index(bjet_combos_jj_W_pt)]
+    return jj_W[0], jj_W[1], trijet_bjet, two_nonbtags
 
 def _get_blnu_data(objects):
     electrons = objects['tight_electrons']
@@ -268,26 +260,26 @@ def _get_blnu_data(objects):
     MET = objects['met']
     sorted_bjets = objects['sorted_ak4_btags']
 
-    _, _, bjet = _get_trijet_data(objects)
-    non_hadronic_top_bjets = op.select(sorted_bjets, lambda b: op.NOT(b.idx == bjet.idx))
+    _, _, bjet, trijet_defined = _get_trijet_data(objects)
+    non_hadronic_top_bjets = op.select(sorted_bjets, lambda b: op.NOT(op.AND(trijet_defined, b.idx == bjet.idx)))
+    blnu_defined = op.rng_len(non_hadronic_top_bjets) >= 1
     lep_p4 = op.multiSwitch(
         (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].p4),
         (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].p4),
         op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
     )
     potential_blnu_pts = op.map(non_hadronic_top_bjets, lambda b2: (b2.p4 + lep_p4 + MET.p4).Pt())
-    blnu_bjet_max_pt_index = op.rng_max_element_index(potential_blnu_pts, lambda blnu_pt: blnu_pt)
-    blnu_bjet = non_hadronic_top_bjets[blnu_bjet_max_pt_index]
-    return lep_p4, MET, blnu_bjet
+    blnu_bjet = non_hadronic_top_bjets[op.rng_max_element_index(potential_blnu_pts)]
+    return lep_p4, MET, blnu_bjet, blnu_defined
 
 def get_trijet_mInv(objects) -> Variable1D:
     trijet_mInv = Variable1D('trijet_mInv')
     subcat_names = trijet_mInv.subcats
     selections = get_selections_subset(subcat_names)
 
-    j0, j1, bjet = _get_trijet_data(objects)
-    data = op.invariant_mass(j0.p4, j1.p4, bjet.p4)
-    data = { 'SL_res_2b_x': data }
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
+    data = op.switch(trijet_defined, op.invariant_mass(j0.p4, j1.p4, bjet.p4), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     trijet_mInv.populate(data, selections)
     return trijet_mInv 
 
@@ -296,9 +288,9 @@ def get_trijet_pt(objects) -> Variable1D:
     subcat_names = trijet_pt.subcats
     selections = get_selections_subset(subcat_names)
     
-    j0, j1, bjet = _get_trijet_data(objects)
-    data = (j0.p4 + j1.p4 + bjet.p4).Pt()
-    data = { 'SL_res_2b_x': data }
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
+    data = op.switch(trijet_defined, (j0.p4 + j1.p4 + bjet.p4).Pt(), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     trijet_pt.populate(data, selections)
     return trijet_pt 
 
@@ -307,10 +299,10 @@ def get_trijet_pt_rat(objects) -> Variable1D:
     subcat_names = trijet_pt_rat.subcats
     selections = get_selections_subset(subcat_names)
 
-    j0, j1, bjet = _get_trijet_data(objects)
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
     trijet = j0.p4 + j1.p4 + bjet.p4
-    data = trijet.Pt() / (j0.pt + j1.pt + bjet.pt)
-    data = { 'SL_res_2b_x': data }
+    data = op.switch(trijet_defined, trijet.Pt() / (j0.pt + j1.pt + bjet.pt), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     trijet_pt_rat.populate(data, selections)
     return trijet_pt_rat
 
@@ -319,9 +311,9 @@ def get_blnu_mT(objects) -> Variable1D:
     subcat_names = blnu_mT.subcats
     selections = get_selections_subset(subcat_names)
 
-    l_p4, nu, bjet = _get_blnu_data(objects)
-    data = (l_p4 + nu.p4 + bjet.p4).Mt()
-    data = { 'SL_res_2b_x': data }
+    l_p4, nu, bjet, blnu_defined = _get_blnu_data(objects)
+    data = op.switch(blnu_defined, (l_p4 + nu.p4 + bjet.p4).Mt(), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     blnu_mT.populate(data, selections)
     return blnu_mT 
 
@@ -330,9 +322,9 @@ def get_blnu_pt(objects) -> Variable1D:
     subcat_names = blnu_pt.subcats
     selections = get_selections_subset(subcat_names)
 
-    l_p4, nu, bjet = _get_blnu_data(objects)
-    data = (l_p4 + nu.p4 + bjet.p4).Pt()
-    data = { 'SL_res_2b_x': data }
+    l_p4, nu, bjet, blnu_defined = _get_blnu_data(objects)
+    data = op.switch(blnu_defined, (l_p4 + nu.p4 + bjet.p4).Pt(), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     blnu_pt.populate(data, selections)
     return blnu_pt 
 
@@ -340,11 +332,11 @@ def get_trijet_bijet_dR(objects) -> Variable1D:
     trijet_bijet_dR = Variable1D('trijet_bijet_dR')
     selections = get_selections_subset(trijet_bijet_dR.subcats)
 
-    j0, j1, bjet = _get_trijet_data(objects)
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
     bijet = j0.p4 + j1.p4
     trijet = bijet + bjet.p4
-    data = op.deltaR(bijet, trijet)
-    data = { 'SL_res_2b_x':data }
+    data = op.switch(trijet_defined, op.deltaR(bijet, trijet), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     trijet_bijet_dR.populate(data, selections)
     return trijet_bijet_dR
 
@@ -352,11 +344,11 @@ def get_trijet_bijet_dPhi(objects) -> Variable1D:
     trijet_bijet_dPhi = Variable1D('trijet_bijet_dPhi')
     selections = get_selections_subset(trijet_bijet_dPhi.subcats)
 
-    j0, j1, bjet = _get_trijet_data(objects)
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
     bijet = j0.p4 + j1.p4
     trijet = bijet + bjet.p4
-    data = op.deltaPhi(trijet, bijet)
-    data = { 'SL_res_2b_x':data }
+    data = op.switch(trijet_defined, op.deltaPhi(trijet, bijet), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     trijet_bijet_dPhi.populate(data, selections)
     return trijet_bijet_dPhi
 
@@ -364,11 +356,11 @@ def get_trijet_bijet_dEta(objects) -> Variable1D:
     trijet_bijet_dEta = Variable1D('trijet_bijet_dEta')
     selections = get_selections_subset(trijet_bijet_dEta.subcats)
 
-    j0, j1, bjet = _get_trijet_data(objects)
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
     bijet = j0.p4 + j1.p4
     trijet = bijet + bjet.p4
-    data = trijet.Eta() - bijet.Eta()
-    data = { 'SL_res_2b_x':data }
+    data = op.switch(trijet_defined, trijet.Eta() - bijet.Eta(), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     trijet_bijet_dEta.populate(data, selections)
     return trijet_bijet_dEta
 
@@ -376,10 +368,10 @@ def get_bjet_bijet_dR(objects) -> Variable1D:
     bjet_bijet_dR = Variable1D('bjet_bijet_dR')
     selections = get_selections_subset(bjet_bijet_dR.subcats)
 
-    j0, j1, bjet = _get_trijet_data(objects)
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
     bijet = j0.p4 + j1.p4
-    data = op.deltaR(bjet.p4, bijet)
-    data = { 'SL_res_2b_x':data }
+    data = op.switch(trijet_defined, op.deltaR(bjet.p4, bijet), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     bjet_bijet_dR.populate(data, selections)
     return bjet_bijet_dR
 
@@ -387,10 +379,10 @@ def get_bjet_bijet_dPhi(objects) -> Variable1D:
     bjet_bijet_dPhi = Variable1D('bjet_bijet_dPhi')
     selections = get_selections_subset(bjet_bijet_dPhi.subcats)
 
-    j0, j1, bjet = _get_trijet_data(objects)
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
     bijet = j0.p4 + j1.p4
-    data = op.deltaPhi(bjet.p4, bijet)
-    data = { 'SL_res_2b_x':data }
+    data = op.switch(trijet_defined, op.deltaPhi(bjet.p4, bijet), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     bjet_bijet_dPhi.populate(data, selections)
     return bjet_bijet_dPhi
 
@@ -398,10 +390,10 @@ def get_bjet_bijet_dEta(objects) -> Variable1D:
     bjet_bijet_dEta = Variable1D('bjet_bijet_dEta')
     selections = get_selections_subset(bjet_bijet_dEta.subcats)
 
-    j0, j1, bjet = _get_trijet_data(objects)
+    j0, j1, bjet, trijet_defined = _get_trijet_data(objects)
     bijet = j0.p4 + j1.p4
-    data = bjet.p4.Eta() - bijet.Eta()
-    data = { 'SL_res_2b_x':data }
+    data = op.switch(trijet_defined, bjet.p4.Eta() - bijet.Eta(), NULL)
+    data = { 'SL_res_1b': data, 'SL_res_2b': data, 'SL_res_2b_x': data }
     bjet_bijet_dEta.populate(data, selections)
     return bjet_bijet_dEta
 
@@ -414,7 +406,7 @@ def gather_top_vars(objects) -> list[Variable1D]:
         get_blnu_pt(objects),
         get_trijet_bijet_dR(objects),
         get_trijet_bijet_dPhi(objects),
-        get_trijet_bijet_dEta(objects), 
+        get_trijet_bijet_dEta(objects),
         get_bjet_bijet_dR(objects),
         get_bjet_bijet_dPhi(objects),
         get_bjet_bijet_dEta(objects)]
@@ -549,12 +541,13 @@ def get_WW_mInv(objects) -> Variable1D:
     selections = get_selections_subset(subcat_names)
 
     met = objects['met']
-    jj_W = _get_jj_W(objects)
+    jj_W, two_nonbtags = _get_jj_W(objects)
     j0, j1 = jj_W[0], jj_W[1]
     lep0_p4, lep1_p4 = _get_leptons_p4(objects)
-    sl_data = (j0.p4 + j1.p4 + lep0_p4 + met.p4).M()
+    sl_data = op.switch(two_nonbtags, (j0.p4 + j1.p4 + lep0_p4 + met.p4).M(), NULL)
     dl_data = (lep0_p4 + lep1_p4 + met.p4).M()
-    data = { 'SL_res_2b_x':sl_data, 'DL_res_1b':dl_data, 'DL_res_2b':dl_data }
+    data = { 'SL_res_1b': sl_data, 'SL_res_2b': sl_data, 'SL_res_2b_x': sl_data, 
+             'DL_res_1b': dl_data, 'DL_res_2b': dl_data }
     WW_mInv.populate(data, selections)
     return WW_mInv
 
@@ -564,19 +557,21 @@ def get_WW_pt(objects) -> Variable1D:
     selections = get_selections_subset(subcat_names)
 
     met = objects['met']
-    jj_W = _get_jj_W(objects)
+    jj_W, two_nonbtags = _get_jj_W(objects)
     j0, j1 = jj_W[0], jj_W[1]
     lep0_p4, lep1_p4 = _get_leptons_p4(objects)
-    sl_data = (j0.p4 + j1.p4 + lep0_p4 + met.p4).Pt()
+    sl_data = op.switch(two_nonbtags, (j0.p4 + j1.p4 + lep0_p4 + met.p4).Pt(), NULL)
     dl_data = (lep0_p4 + lep1_p4 + met.p4).Pt()
-    data = { 'SL_res_2b_x':sl_data, 'DL_res_1b':dl_data, 'DL_res_2b':dl_data }
+    data = { 'SL_res_1b': sl_data, 'SL_res_2b': sl_data, 'SL_res_2b_x': sl_data, 
+             'DL_res_1b': dl_data, 'DL_res_2b': dl_data }
     WW_pt.populate(data, selections)
     return WW_pt
-        
+    
 def gather_misc_vars(objects) -> list[Variable1D]:
     vars = [
         get_mjj(objects),
-        get_WW_mInv(objects)
+        get_WW_mInv(objects),
+        get_WW_pt(objects)
     ]
     return vars
 
@@ -946,7 +941,7 @@ def get_nAK4_nonbtag(objects):
     subcat_names = nAK4_nonbtag.subcats
     selections = get_selections_subset(subcat_names)
 
-    data = op.static_cast("UInt_t",op.rng_len(objects["ak4_nonbtags"]))
+    data = op.static_cast("UInt_t", op.rng_len(objects["ak4_nonbtags"]))
     data = {sel_name: data for sel_name in selections.keys()}
     nAK4_nonbtag.populate(data, selections)
     return nAK4_nonbtag
