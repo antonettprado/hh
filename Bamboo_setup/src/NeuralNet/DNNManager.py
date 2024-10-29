@@ -4,17 +4,17 @@ from pathlib import Path
 from argparse import ArgumentParser
 from sklearn.model_selection import StratifiedKFold
 import yaml
-from post_processing.NN.DNNModel import DNNModel
+from NeuralNet.DNNModel import DNNModel
 from post_processing import References as Refs
-from post_processing.NN.utils import ModelConfig, fix_random_seed, get_logger
-from post_processing.NN.DataHandler import DataHandler
+from NeuralNet.utils import ModelConfig, fix_random_seed, get_logger
+from NeuralNet.DataHandler import DataHandler
 from typing import Set
 import logging
 
 class DNNManager:
 
     POSTPROCESSING_NN_FOLDER = Path(__file__).parent
-    BAMBOO_SETUP = POSTPROCESSING_NN_FOLDER.parents[2]
+    BAMBOO_SETUP = POSTPROCESSING_NN_FOLDER.parents[1]
     assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
     MODE_MAPPING =  {'train_eval': '_train_eval', 'ca': '_kfold', 'multi': '_multi', 'eval': '_eval'}
 

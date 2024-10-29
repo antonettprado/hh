@@ -4,8 +4,9 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
 import tensorflow.keras.backend as K
-from .utils import get_logger
-logger = get_logger(__name__)
+from NeuralNet import utils
+
+logger = utils.get_logger(__name__)
 
 def setup_architecture_from_yml(config, input_layer, normalized_input):
     logger.debug(f"\tSetting up architecture from yml ...")

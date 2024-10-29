@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
-from post_processing.NN import utils
+from NeuralNet import utils
 
 class DataHandler:
 
