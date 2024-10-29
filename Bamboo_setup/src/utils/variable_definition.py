@@ -413,7 +413,7 @@ def gather_top_vars(objects) -> list[Variable1D]:
 
     return top_vars
 
-def _gather_total_vars_data(objects):
+def _get_total_vars_data(objects):
     electrons = objects['tight_electrons']
     muons = objects['tight_muons']
     met = objects['met']
@@ -421,7 +421,7 @@ def _gather_total_vars_data(objects):
     return electrons, muons, met, jets
 
 def _get_total_4vec(objects):
-    electrons, muons, met, jets = _gather_total_vars_data(objects)
+    electrons, muons, met, jets = _get_total_vars_data(objects)
     zero_p4 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float>>",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
     total_el_p4 = op.rng_sum(electrons, lambda el: el.p4, start=zero_p4)
     total_mu_p4 = op.rng_sum(muons, lambda mu:mu.p4, start=zero_p4)
@@ -433,12 +433,12 @@ def get_all_sT(objects) -> Variable1D:
     subcat_names = all_sT.subcats
     selections = get_selections_subset(subcat_names)
 
-    electrons, muons, met, jets = _gather_total_vars_data(objects)
+    electrons, muons, met, jets = _get_total_vars_data(objects)
     total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
     total_mu_pt = op.rng_sum(muons, lambda mu: mu.pt)
     total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
     data = op.sum(total_e_pt, total_mu_pt, total_jet_pt, met.pt)
-    data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
+    data = { "SL_res_1b": data, "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
     all_sT.populate(data, selections)
     return all_sT
 
@@ -447,7 +447,7 @@ def get_all_sT_50_cut(objects) -> Variable1D:
     subcat_names = all_sT_50_cut.subcats
     selections = get_selections_subset(subcat_names)
 
-    electrons, muons, met, jets = _gather_total_vars_data(objects)
+    electrons, muons, met, jets = _get_total_vars_data(objects)
     e_pt_50 = op.select(electrons, lambda el: el.pt>50)
     mu_pt_50 = op.select(muons, lambda mu: mu.pt>50)
     jet_pt_50 = op.select(jets, lambda jet: jet.pt>50)
@@ -456,8 +456,8 @@ def get_all_sT_50_cut(objects) -> Variable1D:
     total_jet_pt_50 = op.switch(op.rng_count(jet_pt_50)>0, op.rng_sum(jet_pt_50, lambda jet: jet.pt, start=op.c_float(0.)), op.c_float(0.))
     all_sT_50_no_met = op.sum(total_e_pt_50, total_mu_pt_50, total_jet_pt_50)
     all_sT_50 = op.switch(met.pt > 50, all_sT_50_no_met + met.pt, all_sT_50_no_met)
-    data = op.switch(all_sT_50 == 0, -9999, all_sT_50)
-    data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
+    data = op.switch(all_sT_50 == 0, NULL, all_sT_50)
+    data = { "SL_res_1b": data, "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
     all_sT_50_cut.populate(data, selections)
     return all_sT_50_cut
 
@@ -468,7 +468,7 @@ def get_all_mInv(objects) -> Variable1D:
 
     total_4vec = _get_total_4vec(objects)
     data = total_4vec.M()
-    data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
+    data = { "SL_res_1b": data, "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
     all_mInv.populate(data, selections)
     return all_mInv
 
@@ -479,7 +479,7 @@ def get_all_mT(objects) -> Variable1D:
 
     total_4vec = _get_total_4vec(objects)
     data = total_4vec.Mt()
-    data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
+    data = { "SL_res_1b": data, "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
     all_mT.populate(data, selections)
     return all_mT
     
@@ -488,10 +488,10 @@ def get_all_jets_HT(objects) -> Variable1D:
     subcat_names = all_jets_HT.subcats
     selections = get_selections_subset(subcat_names)
 
-    electrons, muons, met, jets = _gather_total_vars_data(objects)
+    electrons, muons, met, jets = _get_total_vars_data(objects)
     total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
     data = total_jet_pt
-    data = { "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
+    data = { "SL_res_1b": data, "SL_res_2b_x": data, 'SL_res_2b': data,"DL_res_2b": data }
     all_jets_HT.populate(data, selections)
     return all_jets_HT
             
@@ -502,7 +502,7 @@ def get_all_pt(objects) -> Variable1D:
 
     total_4vec = _get_total_4vec(objects)
     data = total_4vec.Pt()
-    data = { "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
+    data = { "SL_res_1b": data, "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
     all_pt.populate(data, selections)
     return all_pt
 
@@ -899,7 +899,7 @@ def get_met_pt(objects) -> Variable1D:
     subcat_names = met_pt.subcats
     selections = get_selections_subset(subcat_names)
 
-    electrons, muons, met, jets = _gather_total_vars_data(objects)
+    met = objects['met']
     data = met.pt
     data = {sel_name: data for sel_name in selections.keys()}
     met_pt.populate(data, selections)
@@ -910,7 +910,7 @@ def get_met_phi(objects) -> Variable1D:
     subcat_names = met_phi.subcats
     selections = get_selections_subset(subcat_names)
 
-    electrons, muons, met, jets = _gather_total_vars_data(objects)
+    met = objects['met']
     data = met.phi
     data = {sel_name: data for sel_name in selections.keys()}
     met_phi.populate(data, selections)

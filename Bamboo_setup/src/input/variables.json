@@ -186,7 +186,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "all_sT_50_cut",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_sT":
@@ -196,7 +196,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "all_sT",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_mInv":
@@ -206,7 +206,7 @@
             "max": 2000,
             "unit": "GeV",
             "title": "all_mInv",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_mT":
@@ -216,7 +216,7 @@
             "max": 2000,
             "unit": "GeV",
             "title": "all_mT",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_pt":
@@ -226,7 +226,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "all_pt",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_jets_HT":
@@ -236,7 +236,7 @@
             "max": 1500,
             "unit": "GeV",
             "title": "all_jet_HT",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "mjj":
