@@ -6,10 +6,10 @@ from sklearn.model_selection import StratifiedKFold
 import yaml
 from post_processing.NN.DNNModel import DNNModel
 from post_processing import References as Refs
-from post_processing.NN.utils import ModelConfig, fix_random_seed
+from post_processing.NN.utils import ModelConfig, fix_random_seed, get_logger
 from post_processing.NN.DataHandler import DataHandler
 from typing import Set
-
+import logging
 
 class DNNManager:
 
@@ -18,7 +18,7 @@ class DNNManager:
     assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
     MODE_MAPPING =  {'train_eval': '_train_eval', 'ca': '_kfold', 'multi': '_multi', 'eval': '_eval'}
 
-    def __init__(self, workdir: str, sel_name: str, models_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None):
+    def __init__(self, workdir: str, sel_name: str, models_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None, log_level = logging.INFO):
         self.mode = None
         self.WORKDIR = Path(workdir)
         self.sel_name = sel_name
@@ -30,14 +30,16 @@ class DNNManager:
         else:
             self.DNNMANAGERDIR = self.WORKDIR / DNNManagerdir
         self.DNNMANAGERDIR.mkdir(parents=True, exist_ok=True)
+        self.logger = get_logger(self.__class__.__name__)
+        self.logger.setLevel(log_level)
         self.print_welcome()
 
     def print_welcome(self):
-        print(f"DNN Manager instantiated:")
-        print(f"\tWORKDIR:{self.WORKDIR}")
-        print(f"\tDNNMANAGERDIR:{self.DNNMANAGERDIR}")
-        print(f"\tTotal inputs file: {self.total_inputs}")
-        print(f"\tConfig models file: {self.models_yml}")
+        self.logger.info(f"DNN Manager instantiated:")
+        self.logger.info(f"\tWORKDIR:{self.WORKDIR}")
+        self.logger.info(f"\tDNNMANAGERDIR:{self.DNNMANAGERDIR}")
+        self.logger.info(f"\tTotal inputs file: {self.total_inputs}")
+        self.logger.info(f"\tConfig models file: {self.models_yml}")
 
     def set_mode(self, mode: str, **kwargs):
         if mode not in DNNManager.MODE_MAPPING:
@@ -52,7 +54,7 @@ class DNNManager:
         if models_yml is None: return None
 
         # i.e. Check allowed model types, processes, inputs, etc
-        print(f"\nLoading model configs from: {models_yml.name}")
+        self.logger.info(f"\nLoading model configs from: {models_yml.name}")
 
         with open(models_yml, 'r') as file:
             yaml_data = yaml.safe_load(file)
@@ -93,11 +95,16 @@ class DNNManager:
 
     def start(self):
         model_configs = self.load_model_configs(self.models_yml)
+
         datahandler = DataHandler(workdir=self.WORKDIR, tree_name=self.sel_name, total_inputs=self.total_inputs)
-        total_df = datahandler.load_data()
-        total_df = datahandler.fix_any_mismatch(total_df)
-        total_df = datahandler.preprocess_data(total_df)
-        datahandler.data_quality_summary(total_df)
+        total_df_unprep = datahandler.load_data()
+        total_df_unprep = datahandler.fix_column_names_mismatch(total_df_unprep)
+        datahandler.data_inspection(total_df_unprep)
+
+        total_df = datahandler.preprocess_data(total_df_unprep)
+        datahandler.data_inspection(total_df)
+        datahandler.data_summary(total_df)
+
         return total_df, model_configs
 
     def Run(self):
@@ -105,17 +112,17 @@ class DNNManager:
         mode_function_name = DNNManager.MODE_MAPPING.get(self.mode)
         mode_function = getattr(self, mode_function_name)
         mode_function(total_df, model_configs, **self.kwargs)
-        print(f"The DNN models tested were saved in {self.DNNMANAGERDIR.resolve()}")
+        self.logger.info(f"The DNN models tested were saved in {self.DNNMANAGERDIR.resolve()}")
 
     def _train_eval(self, total_df, model_configs, rank_features, **kwargs):
-        print("\n\n\tRunning Mode: train and evaluate")
+        self.logger.info("\n\tRunning Mode: train and evaluate")
         for model_config in model_configs:
             DNN = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / model_config.name)
             model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=True, rank_features=rank_features)
             self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
     def _kfold(self, total_df, model_configs, n_splits, **kwargs):
-        print("\n\n\tRunning Mode: kfold")
+        self.logger.info("\n\tRunning Mode: kfold")
         for model_config in model_configs:
 
             skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -128,7 +135,7 @@ class DNNManager:
             model_name = model_config.name
             Y_df_single = Y_df.squeeze() if DNN_base.type == 'binary' else Y_df.idxmax(axis=1)
             for fold_i, (train_index, test_index) in enumerate(skf.split(X_df, Y_df_single)):
-                print(f"Running fold {fold_i+1}/{skf.get_n_splits()}", level=2)
+                self.logger.info(f"Running fold {fold_i+1}/{skf.get_n_splits()}", level=2)
                 model_config.name = model_name + f'_Fold{fold_i}'
                 DNN_fold_i = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / modelsuperdir / model_config.name)
                 X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNNModel.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='skf', train_index=train_index, test_index=test_index)
@@ -144,7 +151,7 @@ class DNNManager:
                 fold_test_data.to_csv(test_indices_csv, index=False)
 
     def _multi(self, total_df, model_configs, n_iterations, **kwargs):
-        print("\n\n\tRunning Mode: multi")
+        self.logger.info("s\n\tRunning Mode: multi")
         for model_config in model_configs:
             modelsuperdir = model_config.name
             model_name = model_config.name
@@ -155,7 +162,7 @@ class DNNManager:
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
     def _eval(self, inputNNdir, **kwargs):
-        print("\n\n\tRunning Mode: evaluate only")
+        self.logger.info("\n\tRunning Mode: evaluate only")
 
         def load_model(dir: str):
             import onnx
@@ -210,7 +217,7 @@ class DNNManager:
             df = df._append(new_row, ignore_index=True)
 
         df.to_csv(models_summary, index=False)
-        print(df)
+        self.logger.debug(df)
 
    
 if __name__ == '__main__':
