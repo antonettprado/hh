@@ -50,7 +50,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, era, use_mvaTTH)
 
         # Select Taus
-        taus = object_defs.tau_selection(tree.Tau, int(era))
+        taus = object_defs.tau_selection(tree.Tau, era)
         taus = op.sort(taus, lambda tau: -tau.pt)
         cleaned_taus = object_defs.tau_cleaning(taus, fakeable_electrons, 0.3)
         cleaned_taus = object_defs.tau_cleaning(cleaned_taus, fakeable_muons, 0.3)
@@ -63,10 +63,13 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_jets, cleaned_taus)
 
         # Select AK4 b-tags
-        if MC_bjets is True:
+        if MC_bjets:
+            cleaned_ak4_loose_btags = object_defs.ak4_true_bjet_selection(cleaned_ak4_jets)
             cleaned_ak4_btags = object_defs.ak4_true_bjet_selection(cleaned_ak4_jets)
         else:
+            cleaned_ak4_loose_btags = object_defs.ak4_loose_btag_selection(cleaned_ak4_jets, era)
             cleaned_ak4_btags = object_defs.ak4_btag_selection(cleaned_ak4_jets, era)
+
 
         # Select AK8 Jets
         ak8_jets = object_defs.ak8_jet_selection(tree.FatJet, tree.SubJet)
@@ -110,6 +113,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
             "cleaned_taus": cleaned_taus,
             "cleaned_ak4_jets": cleaned_ak4_jets,
             "cleaned_ak4_btags": cleaned_ak4_btags,
+            "cleaned_ak4_loose_btags": cleaned_ak4_loose_btags,
             "cleaned_ak8_btags": cleaned_ak8_btags,
             "ak8_subjets": ak8_subjets,
             "met": met,
@@ -131,6 +135,7 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         tight_muons = objects["tight_muons"]
         cleaned_taus = objects["cleaned_taus"]
         cleaned_ak4_jets = objects["cleaned_ak4_jets"]
+        cleaned_ak4_loose_btags = objects["cleaned_ak4_loose_btags"]
         cleaned_ak4_btags = objects["cleaned_ak4_btags"]
         cleaned_ak8_btags = objects["cleaned_ak8_btags"]
         ak8_subjets = objects["ak8_subjets"]

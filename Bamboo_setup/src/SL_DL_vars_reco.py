@@ -43,15 +43,29 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         ak4_btags = objects["cleaned_ak4_btags"]
         ak4_loose_btags = objects["cleaned_ak4_loose_btags"]
         ak8_btags = objects["cleaned_ak8_btags"]
-        objects['ak4_nonbtags'] = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
+        ak4_non_medbtags = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
         if era in ["2016", "2017", "2018"]:
             bjet_sorter = lambda jet: -jet.btagDeepFlavB
         elif era in ["2022", "2022EE", "2023", "2023BPix"]:
             bjet_sorter = lambda jet: -jet.btagPNetB
-        objects['sorted_ak4_loose_btags'] = op.sort(ak4_loose_btags, bjet_sorter)
-        objects['sorted_ak4_btags'] = op.sort(ak4_btags, bjet_sorter)
-        objects['sorted_ak4_nonbtags'] = op.sort(objects['ak4_nonbtags'], lambda jet: -jet.pt)
+        sorted_ak4_loose_btags = op.sort(ak4_loose_btags, bjet_sorter)
         objects['sorted_ak8_btags'] = op.sort(ak8_btags, lambda jet: -jet.pt)
+        # objects['sorted_ak4_btags'] = op.sort(ak4_btags, bjet_sorter)
+        # objects['ak4_nonbtags'] = ak4_non_medbtags
+        # Redefine the ak4 jets in a mutually exclusive way
+        ak4_nonbtags = op.select(
+            ak4_non_medbtags, 
+            lambda jet: op.NOT(
+                op.AND(
+                    op.rng_len(ak4_btags) == 1,
+                    op.rng_len(sorted_ak4_loose_btags) >= 2,
+                    jet.idx == sorted_ak4_loose_btags[1].idx 
+                )
+            )
+        )
+        ak4_btags_redef = op.select(ak4_jets, lambda jet: op.NOT(op.rng_any(ak4_nonbtags, lambda nbjet: jet.idx == nbjet.idx)))
+        objects['sorted_ak4_btags'] = op.sort(ak4_btags_redef, bjet_sorter)
+        objects['ak4_nonbtags'] = ak4_nonbtags
 
         return objects
 

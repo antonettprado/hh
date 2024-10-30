@@ -146,7 +146,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "hadronic top mass",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
         
         "trijet_pt":
@@ -156,7 +156,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "hadronic top p_{T}",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "blnu_mT":
@@ -166,7 +166,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "leptonic top m_{T}",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "blnu_pt":
@@ -176,7 +176,7 @@
             "max": 400,
             "unit": "GeV",
             "title": "leptonic p_{T}",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
         
         "all_sT_50_cut":
@@ -186,7 +186,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "all_sT_50_cut",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_sT":
@@ -196,7 +196,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "all_sT",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_mInv":
@@ -206,7 +206,7 @@
             "max": 2000,
             "unit": "GeV",
             "title": "all_mInv",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_mT":
@@ -216,7 +216,7 @@
             "max": 2000,
             "unit": "GeV",
             "title": "all_mT",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_pt":
@@ -226,7 +226,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "all_pt",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_jets_HT":
@@ -236,7 +236,7 @@
             "max": 1500,
             "unit": "GeV",
             "title": "all_jet_HT",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "mjj":
@@ -246,7 +246,7 @@
             "max": 300,
             "unit": "GeV",
             "title": "mjj",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_2b", "SL_res_1b", "SL_res_2b_x"]
         },
 
         "trijet_pt_rat":
@@ -256,7 +256,7 @@
             "max": 1.1,
             "unit": "",
             "title": "trijet_pt_rat",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "trijet_bijet_dR":
@@ -266,7 +266,7 @@
             "max": 6,
             "unit": "",
             "title": "#DeltaR(bjj, jj)",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "trijet_bijet_dPhi":
@@ -276,7 +276,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(bjj, jj)",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
         
         "trijet_bijet_dEta":
@@ -286,7 +286,7 @@
             "max": 7,
             "unit": "",
             "title": "#Delta#eta(bjj, jj)",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "bjet_bijet_dR":
@@ -296,7 +296,7 @@
             "max": 5.5,
             "unit": "",
             "title": "#DeltaR(b, jj)",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "bjet_bijet_dPhi":
@@ -306,7 +306,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(b, jj)",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "bjet_bijet_dEta":
@@ -316,7 +316,7 @@
             "max": 7,
             "unit": "",
             "title": "#Delta#eta(b, jj)",
-            "subcats": ["SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
         "WW_mInv":
@@ -326,17 +326,17 @@
             "max": 1000,
             "unit": "GeV",
             "title": "m_{WW}",
-            "subcats": ["SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "WW_pt":
         {
             "nbins": 150,
-            "min": 50,
-            "max": 200,
+            "min": 0,
+            "max": 600,
             "unit": "GeV",
             "title": "WW p_T",
-            "subcats": ["SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "lep0_pt":
