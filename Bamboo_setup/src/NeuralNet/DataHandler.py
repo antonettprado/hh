@@ -188,7 +188,6 @@ class DataHandler:
 
         return df
 
-    # =============== Still to fully implement ===============================
     def extract_numeric_features_only(self, df: pd.DataFrame):
         df_features = df.drop(columns=self.NON_FEATURE_COLUMNS)
         df_non_numeric_features = df_features.select_dtypes(exclude=[np.number])

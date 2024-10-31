@@ -153,7 +153,7 @@ class DNNModel:
             np.random.seed(seed_value)
             random.seed(seed_value)
 
-        model = model_builder.Build(self.config, X_train, len(self.classes), self.normalizer_type)
+        model = model_builder.Build(self.config, X_train, len(self.classes))
 
         loss = model_builder.get_loss(self.config.compiler.loss)
 
@@ -287,8 +287,8 @@ class DNNModel:
 
     # ===================== Facade Methods ============================
     def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed=True, save_model_info=True):
-        normalizer = self.setup_normalizer(X_train)
-        self.build_model(normalizer, fixed_random_seed)
+ 
+        self.build_model(X_train, fixed_random_seed)
         self.train_model(X_train, Y_train, sw_train)
         if save_model_info: 
             self.save_model_info(X_train.columns, Y_train, Y_test)

@@ -34,4 +34,5 @@ Bamboo_setup/config/analysis_2023_arthur.yml
 Bamboo_setup/config/analysis_2022_local.yml
 Bamboo_setup/mydir/*
 *.cc
+Bamboo_setup/src/NeuralNet/myNotebooks
 

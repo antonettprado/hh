@@ -15,8 +15,7 @@ class ModelConfig:
     training_weight_sf: Dict[str, float]
     input_vars: Union[str, List[str]]
     architecture: str
-    architecture_params: Dict[str, Any] = field(default_factory=dict)
-    residual_network: bool = None
+    residual_network: bool = False
     hiddenlayers: List['ModelConfig.HiddenLayerConfig'] = field(default_factory=list)
     outputlayers: List['ModelConfig.OutputLayerConfig'] = field(default_factory=list)
     compiler: 'ModelConfig.CompilerConfig' = None

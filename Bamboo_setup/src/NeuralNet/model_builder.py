@@ -320,27 +320,29 @@ def defaul_model_NoResNet(ndim, normalizer, n_classes):
     
     return Model(inputs = input_layer, outputs=[output], name='default_model')
 
-
-def default_model(ndim, normalizer, n_classes):
-
-    units = 256
+@ModelRegistry.register
+def default_model_fast(ndim, normalizer, n_classes):
+    units = 16
     reg_l2 = regularizers.l2(1e-4)
     dropout_rate = 0.4
 
     input_layer = Input(shape=(ndim,))
     normalized_input = normalizer(input_layer)
+    x = normalized_input
 
     # Layer 1
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(normalized_input)
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
 
-    # Layer 2
+    # Layer 2 (store input for residual connection)
+    x_input = x
     x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_1')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
 
-    # Layer 3
+    # Layer 3 (add residual connection)
+    x = Add(name='add_1')([x, x_input])
     x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_2')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
@@ -351,5 +353,5 @@ def default_model(ndim, normalizer, n_classes):
         activation='softmax', 
         activity_regularizer=reg_l2, 
         name='output')(x)
-
-    model = Model(inputs = input_layer, outputs=[output], name='default_model')
+    
+    return Model(inputs = input_layer, outputs=[output], name='default_model')
