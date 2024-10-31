@@ -10,7 +10,7 @@ from pathlib import Path
 
 USER: str = os.environ["USER"]
 NURSE_MAX_CONDOR_ITERATIONS: int = 5
-NURSE_MAX_LOCAL_ITERATIONS: int = 3
+NURSE_MAX_LOCAL_ITERATIONS: int = 4
 LOCAL_RUN_THRESHOLD: int = 4
 MAX_JOB_RESUBMISSION: int = 50
 HALTED_BATCH_REPORT_THRESHOLD: int = 4
@@ -139,6 +139,7 @@ def handle_error(errid: int, condor_queue: queue.Queue, opt_path: Path, local_ru
     niterations: int = 0
     max_iterations: int = NURSE_MAX_CONDOR_ITERATIONS
     error: bool = True
+    first_local_run: bool = True
     # Delete the contents of the log file so we know it's being worked on
     open(logfile, 'w').close()
     loglines: list[str] = []
@@ -150,11 +151,14 @@ def handle_error(errid: int, condor_queue: queue.Queue, opt_path: Path, local_ru
         fix_errors(errfile)
 
         if not run_local:
-            print(f"Submitting job {errid} from hospital to HTCondor. Iteration {niterations}")
+            with LOCK:
+                print(f"Submitting job {errid} from hospital to HTCondor. Iteration {niterations}")
             condor_queue.put(' '.join(cmd))
             loud_error, loglines = wait_for_condor(logfile)
         else: # run_local
-            max_iterations = niterations + NURSE_MAX_LOCAL_ITERATIONS
+            if first_local_run:
+                max_iterations = niterations + NURSE_MAX_LOCAL_ITERATIONS
+                first_local_run = False
             shfile: Path = opt_path / "batch" / "input" / f"condor_{errid}.sh"
             print(f"Running job {errid} from hospital locally. Iteration {niterations}")
             res = subprocess.run(f". {shfile}", shell=True, text=True, capture_output=True)
@@ -164,7 +168,7 @@ def handle_error(errid: int, condor_queue: queue.Queue, opt_path: Path, local_ru
             loud_error = bool(res.returncode)
             loglines = ["Job ran locally and terminated with success"]
 
-        quiet_error: bool = test_quiet_error(errfile)    
+        quiet_error: bool = test_quiet_error(errfile)
         error = loud_error or quiet_error
         
     with open(logfile, 'w') as f:
@@ -177,7 +181,7 @@ def handle_error(errid: int, condor_queue: queue.Queue, opt_path: Path, local_ru
         print(f"Sucessfully solved error for job {errid} on iteration {niterations}")
     with LOCK:
         nurses_failed[errid] = error
-        
+
 def fix_errors(errfile: Path):
     try:
         with open(errfile, 'r') as f:
@@ -241,12 +245,14 @@ def wait_for_condor(logfile: Path) -> tuple[bool, list[str]]:
 
 def wait_for_remaining_jobs(nurses: list[threading.Thread], condor_queue: queue.Queue, run_local_flag: threading.Event) -> None:
     while active_nurses := sum( nurse.is_alive() for nurse in nurses ):
+        print(f"Failed jobs still running: {[ int(nurse._name) for nurse in nurses if nurse.is_alive() ]}")
+        print(f"Resolved jobs: {[ int(nurse._name) for nurse in nurses if not nurse.is_alive() ]}")
         time.sleep(10)
         if active_nurses <= LOCAL_RUN_THRESHOLD:
             run_local_flag.set()  
         while not condor_queue.empty():
             resubmit_cmd: str = condor_queue.get()
-            print(subprocess.check_output(resubmit_cmd, shell=True, text=True, stderr=subprocess.STDOUT))
+            subprocess.check_output(resubmit_cmd, shell=True, text=True, stderr=subprocess.STDOUT)
     for nurse in nurses:
         nurse.join()
 
@@ -263,18 +269,27 @@ def test_thread(errid: int):
     print("End")
 
 def check_output_dirs(afs_output: Path, eos_output: Path, args):
-    if not (args.finalize or args.onlypost):
+    if not (args.finalize or args.onlypost) and (afs_output.is_dir() or eos_output.is_dir()):
         overwrite: bool = True
         if args.driver:
             answer: str = ''
             while answer.lower() not in ['y', 'n']:
-                answer: str = input("Do you want to overwrite {eos_output} and {afs_output}? (y/n): ")
+                answer: str = input(f"Do you want to overwrite {eos_output} and {afs_output}? (y/n): ")
             overwrite = answer == 'y'
         if not overwrite:
             print("Re-run with a new output path name")
             sys.exit(0)
         if afs_output.is_dir(): shutil.rmtree(afs_output)
         if eos_output.is_dir(): shutil.rmtree(eos_output)
+
+def print_checkup(failed_jobs, nurses, nurses_failed, hospital):
+    if failed_jobs:
+        print(f"Number of failed jobs (including quiet failures): {len(failed_jobs)}")
+        print(f"Failed jobs still running: { [ int(nurse._name) for nurse in nurses if nurse.is_alive() ] + list(failed_jobs - hospital) }")
+        print(f"Resolved jobs: {[ int(nurse._name) for nurse in nurses if not nurse.is_alive() ]}")
+        with LOCK:
+            if nurses_failed := [ k for k,v in nurses_failed.items() if v ]:
+                print(f"Jobs that failed again and need resubmission: {nurses_failed}")
 
 def main(args, mod_args):
     cmd, afs_output, eos_output = generate_cmd(args, mod_args)
@@ -303,11 +318,11 @@ def main(args, mod_args):
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, shell=True) as proc:
         out = []
         for line in proc.stdout:
-            if line.startswith("WARNING:bamboo.analysisutils:PFN"):
+            # Bamboo lines to not print
+            if line.startswith("WARNING:bamboo.analysisutils:PFN") or "hadd -f" in line or line.startswith("ERROR:bamboo.batch") or line.startswith("INFO:bamboo.batch:Finalized "):
                 continue
             print(line, end='')
             failed_jobs: set[int] = set()
-            run_local:bool = False
             initial_submission_line: bool = line.startswith("INFO:bamboo.batch_htcondor:Submitting")
             job_id_line: bool = line.startswith("INFO:bamboo.batch_htcondor:Submitted, job ID is")
             batch_monitor_line: bool = line.startswith("INFO:bamboo.batch:[")
@@ -325,7 +340,12 @@ def main(args, mod_args):
                 # Check if there are any new (loud) failures
                 if "failed" in line:
                     failed_jobs: set[int] = { int(x) for x in line.split()[-2].split(",") }
-                    
+
+                # Terminate early if all jobs are failing
+                if "COMPLETED" not in line and len(failed_jobs) > MAX_JOB_RESUBMISSION:
+                    print("It looks like all your jobs are failing\nCheck the error files of the failed jobs for more information\nRemoving remaining condor jobs...")
+                    end_res = subprocess.run(['condor_rm', str(condor_id)], text=True, check=True)
+
                 # Add any quiet failures to list
                 failed_jobs.update(find_quiet_errors(afs_output))
 
@@ -344,7 +364,7 @@ def main(args, mod_args):
                     print("Condor is holding jobs against your will. I will free them")
                     subprocess.run(['condor_release', str(condor_id)], text=True, check=True)
 
-                print(f"Failed jobs (including quiet failures): {failed_jobs}")
+                print_checkup(failed_jobs, nurses, nurses_failed, hospital)
             
             # Finalize is run but there are incomplete jobs
             if finalize_resubmit_line:
@@ -381,7 +401,7 @@ def main(args, mod_args):
             # Submit new condor jobs if necessary
             while not condor_queue.empty():
                 resubmit_cmd: str = condor_queue.get()
-                print(subprocess.check_output(resubmit_cmd, shell=True, text=True, stderr=subprocess.STDOUT))
+                subprocess.check_output(resubmit_cmd, shell=True, text=True, stderr=subprocess.STDOUT)
 
             out.append(line)
     result = subprocess.CompletedProcess(cmd, proc.returncode, stdout=''.join(out))
