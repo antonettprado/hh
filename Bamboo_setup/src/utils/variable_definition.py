@@ -696,170 +696,26 @@ def _get_jet_objects(objects):
     ak8_btags = objects["cleaned_ak8_btags"]
     return ak4_jets, ak4_btags, ak8_btags
 
-def get_ak4_jet0_pt(objects) -> Variable1D:
-    ak4_jet0_pt = Variable1D('ak4_jet0_pt')
-    subcat_names = ak4_jet0_pt.subcats
-    selections = get_selections_subset(subcat_names)
+def get_low_level_ak4_jet_vars(objects) -> list[Variable1D]:
+    ak4_jets = objects["sorted_ak4_jets"]
+    num_jets: int = 6
+    ak4_jet_vars: list[Variable1D] = []
+    for i in range(num_jets):
+        pt = op.switch(op.rng_len(ak4_jets) > i, ak4_jets[i].pt, NULL)
+        phi = op.switch(op.rng_len(ak4_jets) > i, ak4_jets[i].phi, NULL)
+        eta = op.switch(op.rng_len(ak4_jets) > i, ak4_jets[i].eta, NULL)
+        bscore = op.switch(op.rng_len(ak4_jets) > i, ak4_jets[i].btagPNetB, NULL)
+        name: str = f"ak4_jet{i}_"
+        this_jet_vars = [ Variable1D(name+'pt'), Variable1D(name+'phi'), Variable1D(name+'eta'), Variable1D(name+'bscore') ]
+        this_jet_data = [ pt, phi, eta, bscore ]
+        for var, data in zip(this_jet_vars, this_jet_data):
+            subcat_names = var.subcats
+            selections = get_selections_subset(subcat_names)
+            data = { sel_name: data for sel_name in selections.keys() }
+            var.populate(data, selections)
 
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[0].pt
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet0_pt.populate(data, selections)
-    return ak4_jet0_pt
-
-def get_ak4_jet0_eta(objects) -> Variable1D:
-    ak4_jet0_eta = Variable1D('ak4_jet0_eta')
-    subcat_names = ak4_jet0_eta.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[0].eta
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet0_eta.populate(data, selections)
-    return ak4_jet0_eta
-
-def get_ak4_jet0_phi(objects) -> Variable1D:
-    ak4_jet0_phi = Variable1D('ak4_jet0_phi')
-    subcat_names = ak4_jet0_phi.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[0].phi
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet0_phi.populate(data, selections)
-    return ak4_jet0_phi
-
-def get_ak4_jet1_pt(objects) -> Variable1D:
-    ak4_jet1_pt = Variable1D('ak4_jet1_pt')
-    subcat_names = ak4_jet1_pt.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[1].pt
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet1_pt.populate(data, selections)
-    return ak4_jet1_pt
-
-def get_ak4_jet1_eta(objects) -> Variable1D:
-    ak4_jet1_eta = Variable1D('ak4_jet1_eta')
-    subcat_names = ak4_jet1_eta.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[1].eta
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet1_eta.populate(data, selections)
-    return ak4_jet1_eta
-
-def get_ak4_jet1_phi(objects) -> Variable1D:
-    ak4_jet1_phi = Variable1D('ak4_jet1_phi')
-    subcat_names = ak4_jet1_phi.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[1].phi
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet1_phi.populate(data, selections)
-    return ak4_jet1_phi
-
-def get_ak4_jet2_pt(objects) -> Variable1D:
-    ak4_jet2_pt = Variable1D('ak4_jet2_pt')
-    subcat_names = ak4_jet2_pt.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[2].pt
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet2_pt.populate(data, selections)
-    return ak4_jet2_pt
-
-def get_ak4_jet2_eta(objects) -> Variable1D:
-    ak4_jet2_eta = Variable1D('ak4_jet2_eta')
-    subcat_names = ak4_jet2_eta.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[2].eta
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet2_eta.populate(data, selections)
-    return ak4_jet2_eta
-
-def get_ak4_jet2_phi(objects) -> Variable1D:
-    ak4_jet2_phi = Variable1D('ak4_jet2_phi')
-    subcat_names = ak4_jet2_phi.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_jets[2].phi
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_jet2_phi.populate(data, selections)
-    return ak4_jet2_phi
-
-def get_ak4_btag0_pt(objects) -> Variable1D:
-    ak4_btag0_pt = Variable1D('ak4_btag0_pt')
-    subcat_names = ak4_btag0_pt.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_btags[0].pt
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_btag0_pt.populate(data, selections)
-    return ak4_btag0_pt
-
-def get_ak4_btag0_eta(objects) -> Variable1D:
-    ak4_btag0_eta = Variable1D('ak4_btag0_eta')
-    subcat_names = ak4_btag0_eta.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_btags[0].eta
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_btag0_eta.populate(data, selections)
-    return ak4_btag0_eta
-
-def get_ak4_btag0_phi(objects) -> Variable1D:
-    ak4_btag0_phi = Variable1D('ak4_btag0_phi')
-    subcat_names = ak4_btag0_phi.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_btags[0].phi
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_btag0_phi.populate(data, selections)
-    return ak4_btag0_phi
-
-def get_ak4_btag1_pt(objects) -> Variable1D:
-    ak4_btag1_pt = Variable1D('ak4_btag1_pt')
-    subcat_names = ak4_btag1_pt.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_btags[1].pt
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_btag1_pt.populate(data, selections)
-    return ak4_btag1_pt
-
-def get_ak4_btag1_eta(objects) -> Variable1D:
-    ak4_btag1_eta = Variable1D('ak4_btag1_eta')
-    subcat_names = ak4_btag1_eta.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_btags[1].eta
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_btag1_eta.populate(data, selections)
-    return ak4_btag1_eta
-
-def get_ak4_btag1_phi(objects) -> Variable1D:
-    ak4_btag1_phi = Variable1D('ak4_btag1_phi')
-    subcat_names = ak4_btag1_phi.subcats
-    selections = get_selections_subset(subcat_names)
-
-    ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objects)
-    data = ak4_btags[1].phi
-    data = {sel_name: data for sel_name in selections.keys()}
-    ak4_btag1_phi.populate(data, selections)
-    return ak4_btag1_phi
+        ak4_jet_vars.extend(this_jet_vars)
+    return ak4_jet_vars
 
 def get_ak8_btag0_pt(objects) -> Variable1D:
     ak8_btag0_pt = Variable1D('ak8_btag0_pt')
@@ -964,21 +820,21 @@ def gather_object_vars(objects) -> list[Variable1D]:
         get_lep1_pt(objects),
         get_lep1_eta(objects),
         get_lep1_phi(objects),
-        get_ak4_jet0_pt(objects),
-        get_ak4_jet0_eta(objects),
-        get_ak4_jet0_phi(objects),
-        get_ak4_jet1_pt(objects),
-        get_ak4_jet1_eta(objects),
-        get_ak4_jet1_phi(objects),
-        get_ak4_jet2_pt(objects),
-        get_ak4_jet2_eta(objects),
-        get_ak4_jet2_phi(objects),
-        get_ak4_btag0_pt(objects),
-        get_ak4_btag0_eta(objects),
-        get_ak4_btag0_phi(objects),
-        get_ak4_btag1_pt(objects),
-        get_ak4_btag1_eta(objects),
-        get_ak4_btag1_phi(objects),
+        # get_ak4_jet0_pt(objects),
+        # get_ak4_jet0_eta(objects),
+        # get_ak4_jet0_phi(objects),
+        # get_ak4_jet1_pt(objects),
+        # get_ak4_jet1_eta(objects),
+        # get_ak4_jet1_phi(objects),
+        # get_ak4_jet2_pt(objects),
+        # get_ak4_jet2_eta(objects),
+        # get_ak4_jet2_phi(objects),
+        # get_ak4_btag0_pt(objects),
+        # get_ak4_btag0_eta(objects),
+        # get_ak4_btag0_phi(objects),
+        # get_ak4_btag1_pt(objects),
+        # get_ak4_btag1_eta(objects),
+        # get_ak4_btag1_phi(objects),
         get_ak8_btag0_pt(objects),
         get_ak8_btag0_eta(objects),
         get_ak8_btag0_phi(objects),
@@ -988,7 +844,7 @@ def gather_object_vars(objects) -> list[Variable1D]:
         get_nAK4_btag(objects),
         get_nAK4_nonbtag(objects),
         get_nAK8_btag(objects)
-    ]
+    ] + get_low_level_ak4_jet_vars(objects)
     return object_vars
 
 # ========================= ll variables ============================
@@ -1095,5 +951,5 @@ def gathers_vars_dict(objects, selections) -> dict[str, dict[str, Variable]]:
         if sel_name not in ["SL", "DL"]:
             vars1D_dict = {sub_var.name: sub_var for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
             sel_vars_dict[sel_name] = vars1D_dict
-
+    
     return sel_vars_dict

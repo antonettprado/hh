@@ -406,7 +406,57 @@
             "max": 500,
             "unit": "GeV",
             "title": "AK4_0 pt",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        }, 
+        
+        "ak4_jet1_pt":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "AK4_1 pt",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        }, 
+
+        "ak4_jet2_pt":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "AK4_2 pt",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        }, 
+
+        "ak4_jet3_pt":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "AK4_3 pt",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        }, 
+        
+        "ak4_jet4_pt":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "AK4_4 pt",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        }, 
+
+        "ak4_jet5_pt":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 500,
+            "unit": "GeV",
+            "title": "AK4_5 pt",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         }, 
 
         "ak4_jet0_eta":
@@ -416,7 +466,57 @@
             "max": 4,
             "unit": "",
             "title": "AK4_0 #eta",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet1_eta":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_1 #eta",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet2_eta":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_2 #eta",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet3_eta":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_3 #eta",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet4_eta":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_4 #eta",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet5_eta":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_5 #eta",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet0_phi":
@@ -426,27 +526,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_0 #phi",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b"]
-        },
-
-        "ak4_jet1_pt":
-        {
-            "nbins": 50,
-            "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "AK4_1 pt",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
-        }, 
-
-        "ak4_jet1_eta":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
-            "unit": "",
-            "title": "AK4_1 #eta",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet1_phi":
@@ -456,27 +536,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_1 #phi",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
-        },
-
-        "ak4_jet2_pt":
-        {
-            "nbins": 50,
-            "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "AK4_2 pt",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
-        }, 
-
-        "ak4_jet2_eta":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
-            "unit": "",
-            "title": "AK4_2 #eta",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet2_phi":
@@ -486,68 +546,97 @@
             "max": 4,
             "unit": "",
             "title": "AK4_2 #phi",
-            "subcats": [ "SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
-        "ak4_btag0_pt":
+        "ak4_jet3_phi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_3 #phi",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet4_phi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_4 #phi",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet5_phi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "AK4_5 #phi",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet0_bscore":
         {
             "nbins": 50,
             "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "AK4_btag0 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
-        }, 
-
-        "ak4_btag0_eta":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
+            "max": 1,
             "unit": "",
-            "title": "AK4_btag0 #eta",
+            "title": "AK4_0 btag score",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
-        "ak4_btag0_phi":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
-            "unit": "",
-            "title": "AK4_btag0 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
-        },
-
-
-        "ak4_btag1_pt":
+        "ak4_jet1_bscore":
         {
             "nbins": 50,
             "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "AK4_btag1 pt",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
-        }, 
-
-        "ak4_btag1_eta":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
+            "max": 1,
             "unit": "",
-            "title": "AK4_btag1 #eta",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "title": "AK4_1 btag score",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
-        "ak4_btag1_phi":
+        "ak4_jet2_bscore":
         {
             "nbins": 50,
-            "min": -4,
-            "max": 4,
+            "min": 0,
+            "max": 1,
             "unit": "",
-            "title": "AK4_btag1 #phi",
-            "subcats": ["SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "title": "AK4_2 btag score",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet3_bscore":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 1,
+            "unit": "",
+            "title": "AK4_3 btag score",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet4_bscore":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 1,
+            "unit": "",
+            "title": "AK4_4 btag score",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "ak4_jet5_bscore":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 1,
+            "unit": "",
+            "title": "AK4_5 btag score",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak8_btag0_pt":
