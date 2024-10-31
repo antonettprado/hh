@@ -153,6 +153,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         if not self.args.no_skim:
             plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_1b"], "SL_res_1b"))
             plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_2b"], "SL_res_2b"))
+            plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_2b_x"], "SL_res_2b_x"))
 
         return plots
 
