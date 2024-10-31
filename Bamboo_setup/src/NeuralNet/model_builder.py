@@ -4,10 +4,12 @@ from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalizat
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
 import tensorflow.keras.backend as K
-    
+from NeuralNet import utils
+
+logger = utils.get_logger(__name__)
 
 def setup_architecture_from_yml(config, input_layer, normalized_input):
-    print(f"\t\tSetting up architecture from yml ...")
+    logger.debug(f"\tSetting up architecture from yml ...")
 
     x = normalized_input
     for n_layer, layer in enumerate(config.hiddenlayers):
@@ -59,7 +61,7 @@ def setup_architecture_from_yml(config, input_layer, normalized_input):
     return Model(inputs=input_layer, outputs=outputs, name=config.name)
 
 def setup_architecture_from_fnc(arch_fnc_name, nodes_per_layer, input_layer, normalized_input, n_classifierNodes):
-    print(f"\t\tSetting up architecture from built-int function {arch_fnc_name}...")
+    logger.debug(f"\tSetting up architecture from built-int function {arch_fnc_name}...")
     architecture_dict = {
         'default_model': default_model,
         'default_model_with_1resblock': default_model_with_1resblock,
@@ -90,7 +92,7 @@ def get_optimizer(config):
         raise ValueError(f"Unsupported optimizer type: {config['optimizer']}")
 
 def get_loss(loss_name):
-    print(f"\t\tGetting loss {loss_name}...")
+    logger.debug(f"\t\tGetting loss {loss_name}...")
     loss_dict = {
         'binary_crossentropy': 'binary_crossentropy',
         'categorical_crossentropy': 'categorical_crossentropy',

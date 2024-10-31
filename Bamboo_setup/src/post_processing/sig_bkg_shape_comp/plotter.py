@@ -467,7 +467,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     '''
-    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022_LLR_products7to11 -c config/analysis_2022.yml -e 2022 -o Official
+    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/2022_even_1013/NN_DNNManager -c config/analysis_2022.yml -e 2022 -o plotter
 
     python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/Vars_2022_NEW_All -c config/analysis_2022_all.yml -e 2022
     '''
