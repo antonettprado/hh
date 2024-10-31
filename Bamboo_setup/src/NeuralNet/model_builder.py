@@ -3,14 +3,34 @@ from tensorflow.keras import Model, regularizers
 from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking, Add
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
+from tensorflow.keras import losses as tf_losses
 import tensorflow.keras.backend as K
 from NeuralNet import utils
 
 logger = utils.get_logger(__name__)
 
-def setup_architecture_from_yml(config, input_layer, normalized_input):
+def Build(config, X_train, n_classes=None, normalizer_type: str = 'normalization'):
+
+    ndim = X_train.shape[1]
+    normalizer = setup_normalizer(X_train, normalizer_type)
+    if config.architecture == 'defined_here':
+        return build_custom_arch(config, ndim, normalizer)
+    else:
+        return build_registered_arch(config, ndim, normalizer, n_classes)
+    
+def setup_normalizer(X_train, type: str = 'normalization'):
+    if type == 'normalization':
+        normalizer = Normalization(
+            mean=X_train.mean(axis=0).to_numpy(),
+            variance=X_train.var(axis=0).to_numpy(),
+            name='normalization')
+    return normalizer
+
+def build_custom_arch(config, ndim, normalizer):
     logger.debug(f"\tSetting up architecture from yml ...")
 
+    input_layer = Input(shape=(ndim,))
+    normalized_input = normalizer(input_layer)
     x = normalized_input
     for n_layer, layer in enumerate(config.hiddenlayers):
         if layer.type == 'Dense':
@@ -60,16 +80,12 @@ def setup_architecture_from_yml(config, input_layer, normalized_input):
         
     return Model(inputs=input_layer, outputs=outputs, name=config.name)
 
-def setup_architecture_from_fnc(arch_fnc_name, nodes_per_layer, input_layer, normalized_input, n_classifierNodes):
-    logger.debug(f"\tSetting up architecture from built-int function {arch_fnc_name}...")
-    architecture_dict = {
-        'default_model': default_model,
-        'default_model_with_1resblock': default_model_with_1resblock,
-        'default_model_with_1resblock_3hl': default_model_with_1resblock_3hl
-        }
-    assert arch_fnc_name in architecture_dict.keys()
-    fnc = architecture_dict[arch_fnc_name]
-    return fnc(input_layer, normalized_input, n_classifierNodes, nodes_per_layer)
+def build_registered_arch(config, ndim, normalizer, n_classes):
+    logger.debug(f"\tSetting up architecture from built-int function {config.architecture}...")
+
+    model_fn = ModelRegistry.get(config.architecture)
+    model = model_fn(ndim, normalizer, n_classes)
+    return model
 
 def get_activity_regularizer(act_reg: dict):
     if 'l1' in act_reg and 'l2' in act_reg:
@@ -93,15 +109,7 @@ def get_optimizer(config):
 
 def get_loss(loss_name):
     logger.debug(f"\t\tGetting loss {loss_name}...")
-    loss_dict = {
-        'binary_crossentropy': 'binary_crossentropy',
-        'categorical_crossentropy': 'categorical_crossentropy',
-        'categorical_focal_crossentropy': 'categorical_focal_crossentropy',
-        'custom_ul_loss': custom_ul_loss,
-        'custom_ul_loss_acc_with_sampleweights': custom_ul_loss_acc_with_sampleweights
-        }
-    assert loss_name in loss_dict.keys(), f"Loss name '{loss_name}' not found in available loss functions"
-    loss_fnc = loss_dict[loss_name]
+    loss_fnc = LossRegistry.get(loss_name)
     return loss_fnc
 
 def get_metrics(classes: list[str]=None):
@@ -131,49 +139,6 @@ def get_metrics(classes: list[str]=None):
         
         return metrics
 
-# =================================================================
-# ================= Custom loss functions =========================
-# =================================================================
-
-def custom_ul_loss(y_true, y_pred):
-    # Manually calculate recall: TP / (TP + FN)
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-
-    # Manually calculate AUC-PR using TensorFlow's tf.metrics.auc function (on-the-fly calculation)
-    auc_pr = tf.reduce_mean(y_pred)  # Simplified for illustration; replace with correct PR AUC logic
-
-    # Apply the coefficients from the linear regression equation
-    ul_loss = -2555.22 * recall + 2463.51 * auc_pr + 53.91
-
-    return ul_loss
-
-def custom_ul_loss_acc_with_sampleweights(y_true, y_pred, sample_weight=None):
-    # --- Accurate Recall Calculation ---
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-
-    # --- AUC-PR Calculation ---
-    # Using PrecisionAtRecall metric from Keras
-    precision_at_recall = tf.keras.metrics.PrecisionAtRecall(recall=0.8)  # Use an appropriate recall threshold (0.8 as an example)
-    precision_at_recall.update_state(y_true, y_pred)
-    precision = precision_at_recall.result()
-
-    # Apply the coefficients from the linear regression equation
-    ul_loss = -2555.22 * recall + 2463.51 * precision + 53.91
-
-    # --- Incorporate Sample Weights ---
-    if sample_weight is not None:
-        ul_loss = ul_loss * sample_weight
-
-    return ul_loss
-
-# =================================================================
-# ================= Custom architectures= =========================
-# =================================================================
-
 def residual_block(x, units, reg_l2, dropout_rate):
     # Each residual block consists of 2 Dense layers,
 
@@ -196,95 +161,195 @@ def residual_block(x, units, reg_l2, dropout_rate):
     
     return x
 
-def default_model(input_layer, normalized_input, n_outnodes, nodes_per_layer):
+# =================================================================
+# ================= Registries ====================================
+# =================================================================
+
+from typing import Dict, Callable
+from functools import wraps
+
+class Registry:
+    ''' Registry for model architectures '''
+    _registry: Dict[str, Callable] = {}
+    _registry_type: str = None  
+
+    @classmethod
+    def register(cls, func: Callable):
+        cls._registry[func.__name__] = func
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+    @classmethod
+    def get(cls, name: str) -> Callable:
+        if name not in cls._registry:
+            raise ValueError(f"{cls._registry_type}: {name} not found. The following are available: {cls._registry.keys()}")
+        return cls._registry[name]
+    @classmethod
+    def get_all(cls):
+        return list(cls._registry.keys())
+
+# ================== Loss Registry ===============================
+
+class LossRegistry(Registry):
+    _registry: Dict[str, Callable] = {}
+    _registry_type = 'Loss'
+    @classmethod
+    def get(cls, name: str):
+        try:
+            # First try to get from tf.keras.losses
+            return tf_losses.get(name)
+        except AttributeError:
+            # Then try to get from custom registry
+            if name in cls._registry:
+                return cls._registry[name]
+            else:
+                raise ValueError(f"Loss {name} not found in tf.keras.losses or custom registry")
+    # Implement a get_all() method
+
+@LossRegistry.register
+def custom_ul_loss(y_true, y_pred):
+    # Manually calculate recall: TP / (TP + FN)
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+
+    # Manually calculate AUC-PR using TensorFlow's tf.metrics.auc function (on-the-fly calculation)
+    auc_pr = tf.reduce_mean(y_pred)  # Simplified for illustration; replace with correct PR AUC logic
+
+    # Apply the coefficients from the linear regression equation
+    ul_loss = -2555.22 * recall + 2463.51 * auc_pr + 53.91
+
+    return ul_loss
+
+@LossRegistry.register
+def custom_ul_loss_acc_with_sampleweights(y_true, y_pred, sample_weight=None):
+    # --- Accurate Recall Calculation ---
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+
+    # --- AUC-PR Calculation ---
+    # Using PrecisionAtRecall metric from Keras
+    precision_at_recall = tf.keras.metrics.PrecisionAtRecall(recall=0.8)  # Use an appropriate recall threshold (0.8 as an example)
+    precision_at_recall.update_state(y_true, y_pred)
+    precision = precision_at_recall.result()
+
+    # Apply the coefficients from the linear regression equation
+    ul_loss = -2555.22 * recall + 2463.51 * precision + 53.91
+
+    # --- Incorporate Sample Weights ---
+    if sample_weight is not None:
+        ul_loss = ul_loss * sample_weight
+
+    return ul_loss
+
+# ================== Model Registry ===============================
+
+class ModelRegistry(Registry):
+    _registry: Dict[str, Callable] = {}
+    _registry_type = 'Model'
+
+@ModelRegistry.register
+def default_model(ndim, normalizer, n_classes):
     units = 256
-    reg_l2 = regularizers.l2(1e-6)
-    dropout_rate = 0.3
+    reg_l2 = regularizers.l2(1e-4)
+    dropout_rate = 0.4
 
+    input_layer = Input(shape=(ndim,))
+    normalized_input = normalizer(input_layer)
     x = normalized_input
-    # First layer
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
+
+    # Layer 1
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
 
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
+    # Layer 2 (store input for residual connection)
+    x_input = x
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_1')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
 
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
+    # Layer 3 (add residual connection)
+    x = Add(name='add_1')([x, x_input])
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_2')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
 
     output = Dense(
-        units=n_outnodes, 
+        units=n_classes, 
         kernel_initializer = 'normal', 
         activation='softmax', 
         activity_regularizer=reg_l2, 
         name='output')(x)
     
-    default_model = Model(inputs = input_layer, outputs=[output], name='default_model')
+    return Model(inputs = input_layer, outputs=[output], name='default_model')
 
-    return default_model
-
-def default_model_with_1resblock(input_layer, normalized_input, n_outnodes, nodes_per_layer):
-    # Total number of Dense layers = 1 + 2 + 1 + 1 = 5 Dense layers.
-    units = nodes_per_layer
+@ModelRegistry.register
+def defaul_model_NoResNet(ndim, normalizer, n_classes):
+    units = 256
     reg_l2 = regularizers.l2(1e-4)
     dropout_rate = 0.4
 
+    input_layer = Input(shape=(ndim,))
+    normalized_input = normalizer(input_layer)
     x = normalized_input
 
-    # Initial Dense Layer
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
+     # Layer 1
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
-    
-    # Apply 1 Residual Block
-    x = residual_block(x, units, reg_l2, dropout_rate)
 
-    # One more Dense layer after the residual block
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
+    # Layer 2 (store input for residual connection)
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_1')(x)
     x = BatchNormalization()(x)
     x = Dropout(dropout_rate)(x)
-    
-    # Final Dense Layer for output
+
+    # Layer 3 (add residual connection)
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_2')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout_rate)(x)
+
     output = Dense(
-        units=n_outnodes, 
-        kernel_initializer='normal', 
+        units=n_classes, 
+        kernel_initializer = 'normal', 
+        activation='softmax', 
+        activity_regularizer=reg_l2, 
+        name='output')(x)
+    
+    return Model(inputs = input_layer, outputs=[output], name='default_model')
+
+
+def default_model(ndim, normalizer, n_classes):
+
+    units = 256
+    reg_l2 = regularizers.l2(1e-4)
+    dropout_rate = 0.4
+
+    input_layer = Input(shape=(ndim,))
+    normalized_input = normalizer(input_layer)
+
+    # Layer 1
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(normalized_input)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout_rate)(x)
+
+    # Layer 2
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_1')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout_rate)(x)
+
+    # Layer 3
+    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_2')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(dropout_rate)(x)
+
+    output = Dense(
+        units=n_classes, 
+        kernel_initializer = 'normal', 
         activation='softmax', 
         activity_regularizer=reg_l2, 
         name='output')(x)
 
-    # Create the Model
-    model = Model(inputs=input_layer, outputs=[output], name='model_with_1_residual_block')
-
-    return model
-
-def default_model_with_1resblock_3hl(input_layer, normalized_input, n_outnodes, nodes_per_layer):
-    # Total number of Dense layers = 1 + 2 + 1 = 4 Dense layers.
-    units = nodes_per_layer
-    reg_l2 = regularizers.l2(1e-4)
-    dropout_rate = 0.4
-
-    x = normalized_input
-
-    # Initial Dense Layer
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2)(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-    
-    # Apply 1 Residual Block
-    x = residual_block(x, units, reg_l2, dropout_rate)
-    
-    # Final Dense Layer for output
-    output = Dense(
-        units=n_outnodes, 
-        kernel_initializer='normal', 
-        activation='softmax', 
-        activity_regularizer=reg_l2, 
-        name='output')(x)
-
-    # Create the Model
-    model = Model(inputs=input_layer, outputs=[output], name='model_with_1_residual_block')
-
-    return model
+    model = Model(inputs = input_layer, outputs=[output], name='default_model')

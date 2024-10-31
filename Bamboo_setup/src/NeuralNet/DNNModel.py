@@ -9,12 +9,11 @@ import logging
 from sklearn.inspection import permutation_importance
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.layers import Input, Masking, Normalization
+from tensorflow.keras.layers import Normalization
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.utils import plot_model
-from contextlib import redirect_stdout
 import NeuralNet.model_builder as model_builder
-import  NeuralNet.utils as utils
+import NeuralNet.utils as utils
 from NeuralNet.utils import ModelConfig
 
 class DNNModel:
@@ -143,21 +142,8 @@ class DNNModel:
             sw_train, sw_test = sample_weights.iloc[train_index], sample_weights.iloc[test_index]
 
         return X_train, X_test, Y_train, Y_test, evs_test, sw_train
-
-    def input_preprocessing(self, X_train):
-        self.logger.info(f"\nPreprocessing input ...")
-
-        ndim = len(X_train.columns)
-        input_layer = Input(shape=(ndim, ), name="input")
-        normalizer = Normalization(
-                        mean=X_train.mean(axis=0).to_numpy(),
-                        variance=X_train.var(axis=0).to_numpy(),
-                        name='normalization')
-        normalized_input = normalizer(input_layer)
-
-        return input_layer, normalized_input
-
-    def build_model(self, input_layer, normalized_input, fixed_random_seed: bool = True):
+  
+    def build_model(self, X_train, fixed_random_seed: bool = True):
         self.logger.info(f'\nBuilding model ...')
 
         if fixed_random_seed:
@@ -167,12 +153,7 @@ class DNNModel:
             np.random.seed(seed_value)
             random.seed(seed_value)
 
-        if self.config.architecture_in_yml:
-            model = model_builder.setup_architecture_from_yml(self.config, input_layer, normalized_input)
-        else:
-            arch_fnc_name = self.config.architecture_name
-            nodes_per_layer = self.config.nodes_per_layer
-            model = model_builder.setup_architecture_from_fnc(arch_fnc_name, nodes_per_layer, input_layer, normalized_input, len(self.classes))
+        model = model_builder.Build(self.config, X_train, len(self.classes), self.normalizer_type)
 
         loss = model_builder.get_loss(self.config.compiler.loss)
 
@@ -185,7 +166,6 @@ class DNNModel:
 
         self.logger.debug(f"Sumary of model compiled")
         self.logger.debug(model.summary())
-
         self.model = model
 
         return model
@@ -216,7 +196,7 @@ class DNNModel:
     def save_model_info(self, features, Y_train, Y_test):
         self.logger.info(f"\nSaving model info ...")
 
-        # model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
+        model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
 
         plot_model(self.model, to_file=self.modeldir/'model_plot.png', show_shapes=True, show_layer_names=True)
 
@@ -237,8 +217,8 @@ class DNNModel:
         with open(out_yml, 'w') as file:
             yaml.dump(self.config.__getstate__(), file, sort_keys=False)
 
-    def evaluate_and_predict(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
-        self.logger.info(f"\nEvaluating model and predicting ...")
+    def evaluate(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
+        self.logger.info(f"\nEvaluating model ...")
 
         Y_test = Y_test.astype('float32') 
         model_metrics = self.model.evaluate(X_test, Y_test, verbose=0, return_dict=True)  
@@ -247,7 +227,10 @@ class DNNModel:
             raise ValueError(f"Nan detected in evaluation for model {self.name}")
         
         self.logger.info(f"\tModel metrics: {model_metrics}")
+        return model_metrics
 
+    def predict(self, X_test, Y_test, events_test):
+        self.logger.info(f"\nPredicting ...")
         # Reset indices for consistent concatenation
         events_test.reset_index(drop=True, inplace=True)
         Y_test.reset_index(drop=True, inplace=True)
@@ -267,7 +250,7 @@ class DNNModel:
         self.logger.debug(f"\tPredictions:\n{output_df.head()}")
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
 
-        return output_df, model_metrics
+        return output_df
    
     def feature_ranking(self, X_test, Y_test):
         self.logger.info(f"\nFeature Ranking ...")
@@ -304,14 +287,15 @@ class DNNModel:
 
     # ===================== Facade Methods ============================
     def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed=True, save_model_info=True):
-        input_layer, normalized_input = self.input_preprocessing(X_train)
-        self.build_model(input_layer=input_layer, normalized_input=normalized_input, fixed_random_seed=fixed_random_seed)
+        normalizer = self.setup_normalizer(X_train)
+        self.build_model(normalizer, fixed_random_seed)
         self.train_model(X_train, Y_train, sw_train)
         if save_model_info: 
             self.save_model_info(X_train.columns, Y_train, Y_test)
 
     def Evaluate(self, X_test, Y_test, evs_test, rank_features=False):
-        output_df, model_metrics = self.evaluate_and_predict(X_test, Y_test, evs_test)
+        model_metrics = self.evaluate(X_test, Y_test, evs_test)
+        output_df = self.predict(X_test, Y_test, evs_test)
         cm_norm_true, cm_norm_pred, diag_names = draw_all_stats(DNN_type=self.type, history=self.history, output_df=output_df, modeldir=self.modeldir, classes=self.classes)
         if rank_features: 
             self.feature_ranking(X_test, Y_test)
