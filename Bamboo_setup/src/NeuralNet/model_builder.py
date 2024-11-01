@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking, Add
+from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking, Add, Lambda
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
 from tensorflow.keras import losses as tf_losses
@@ -9,27 +9,19 @@ from NeuralNet import utils
 
 logger = utils.get_logger(__name__)
 
-def Build(config, X_train, n_classes=None, normalizer_type: str = 'normalization'):
+def Build(config, X_train, n_classes=None):
 
-    ndim = X_train.shape[1]
-    normalizer = setup_normalizer(X_train, normalizer_type)
     if config.architecture == 'defined_here':
-        return build_custom_arch(config, ndim, normalizer)
+        return build_custom_arch(config, X_train)
     else:
-        return build_registered_arch(config, ndim, normalizer, n_classes)
+        return build_registered_arch(config, X_train, n_classes)
     
-def setup_normalizer(X_train, type: str = 'normalization'):
-    if type == 'normalization':
-        normalizer = Normalization(
-            mean=X_train.mean(axis=0).to_numpy(),
-            variance=X_train.var(axis=0).to_numpy(),
-            name='normalization')
-    return normalizer
-
-def build_custom_arch(config, ndim, normalizer):
+def build_custom_arch(config, X_train):
     logger.debug(f"\tSetting up architecture from yml ...")
 
+    ndim = X_train.shape[1]
     input_layer = Input(shape=(ndim,))
+    normalizer = setup_normalizer(X_train)
     normalized_input = normalizer(input_layer)
     x = normalized_input
     for n_layer, layer in enumerate(config.hiddenlayers):
@@ -80,12 +72,20 @@ def build_custom_arch(config, ndim, normalizer):
         
     return Model(inputs=input_layer, outputs=outputs, name=config.name)
 
-def build_registered_arch(config, ndim, normalizer, n_classes):
+def build_registered_arch(config, X_train, n_classes):
     logger.debug(f"\tSetting up architecture from built-int function {config.architecture}...")
 
     model_fn = ModelRegistry.get(config.architecture)
-    model = model_fn(ndim, normalizer, n_classes)
+    model = model_fn(X_train, n_classes)
     return model
+
+def setup_normalizer(X_train, type: str = 'normalization'):
+    if type == 'normalization':
+        normalizer = Normalization(
+            mean=X_train.mean(axis=0).to_numpy(),
+            variance=X_train.var(axis=0).to_numpy(),
+            name='normalization')
+    return normalizer
 
 def get_activity_regularizer(act_reg: dict):
     if 'l1' in act_reg and 'l2' in act_reg:
@@ -251,82 +251,14 @@ class ModelRegistry(Registry):
     _registry_type = 'Model'
 
 @ModelRegistry.register
-def default_model(ndim, normalizer, n_classes):
+def default_model(X_train, n_classes):
     units = 256
     reg_l2 = regularizers.l2(1e-4)
     dropout_rate = 0.4
 
+    ndim = X_train.shape[1]
     input_layer = Input(shape=(ndim,))
-    normalized_input = normalizer(input_layer)
-    x = normalized_input
-
-    # Layer 1
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    # Layer 2 (store input for residual connection)
-    x_input = x
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_1')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    # Layer 3 (add residual connection)
-    x = Add(name='add_1')([x, x_input])
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_2')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    output = Dense(
-        units=n_classes, 
-        kernel_initializer = 'normal', 
-        activation='softmax', 
-        activity_regularizer=reg_l2, 
-        name='output')(x)
-    
-    return Model(inputs = input_layer, outputs=[output], name='default_model')
-
-@ModelRegistry.register
-def defaul_model_NoResNet(ndim, normalizer, n_classes):
-    units = 256
-    reg_l2 = regularizers.l2(1e-4)
-    dropout_rate = 0.4
-
-    input_layer = Input(shape=(ndim,))
-    normalized_input = normalizer(input_layer)
-    x = normalized_input
-
-     # Layer 1
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    # Layer 2 (store input for residual connection)
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_1')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    # Layer 3 (add residual connection)
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_2')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    output = Dense(
-        units=n_classes, 
-        kernel_initializer = 'normal', 
-        activation='softmax', 
-        activity_regularizer=reg_l2, 
-        name='output')(x)
-    
-    return Model(inputs = input_layer, outputs=[output], name='default_model')
-
-@ModelRegistry.register
-def default_model_fast(ndim, normalizer, n_classes):
-    units = 16
-    reg_l2 = regularizers.l2(1e-4)
-    dropout_rate = 0.4
-
-    input_layer = Input(shape=(ndim,))
+    normalizer = setup_normalizer(X_train)
     normalized_input = normalizer(input_layer)
     x = normalized_input
 

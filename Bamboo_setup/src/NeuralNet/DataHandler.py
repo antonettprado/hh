@@ -210,7 +210,6 @@ class DataHandler:
     def plot_feature_distribution(self, df: pd.DataFrame, columns: list = None):
         """Plots the distribution of the features, including histograms and KDE plots."""
         self.logger.info(f"Plotting feature distributions ...")
-        df = self.extract_numeric_features_only(df)
         if columns is None:
             columns = df.columns  # Use all columns if not specified
         for col in columns:
