@@ -369,6 +369,16 @@
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
+        "lep0_iso":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 1,
+            "unit": "",
+            "title": "Lepton0 isolation",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
+
         "lep1_pt":
         {
             "nbins": 50,
@@ -376,7 +386,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "Lepton1 pt",
-            "subcats": [ "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "lep1_eta":
@@ -386,7 +396,7 @@
             "max": 2.5,
             "unit": "",
             "title": "Lepton1 #eta",
-            "subcats": [ "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "lep1_phi":
@@ -396,7 +406,17 @@
             "max": 4,
             "unit": "",
             "title": "Lepton1 #phi",
-            "subcats": [ "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
+
+        "lep1_iso":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 1,
+            "unit": "",
+            "title": "Lepton1 isolation",
+            "subcats": ["DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "ak4_jet0_pt":

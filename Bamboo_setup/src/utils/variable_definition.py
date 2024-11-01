@@ -263,11 +263,7 @@ def _get_blnu_data(objects):
     _, _, bjet, trijet_defined = _get_trijet_data(objects)
     non_hadronic_top_bjets = op.select(sorted_bjets, lambda b: op.NOT(op.AND(trijet_defined, b.idx == bjet.idx)))
     blnu_defined = op.rng_len(non_hadronic_top_bjets) >= 1
-    lep_p4 = op.multiSwitch(
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].p4),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].p4),
-        op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
-    )
+    lep_p4, _ = _get_leptons_p4(objects)
     potential_blnu_pts = op.map(non_hadronic_top_bjets, lambda b2: (b2.p4 + lep_p4 + MET.p4).Pt())
     blnu_bjet = non_hadronic_top_bjets[op.rng_max_element_index(potential_blnu_pts)]
     return lep_p4, MET, blnu_bjet, blnu_defined
@@ -520,17 +516,17 @@ def gather_total_vars(objects) -> list[Variable1D]:
 def _get_leptons_p4(objects):
     electrons, muons = objects['tight_electrons'], objects['tight_muons']
     lep0_p4 = op.multiSwitch(
-        (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 1), muons[0].p4),
-        (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 2), muons[0].p4),
-        (op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0), electrons[0].p4),
-        (op.AND(op.rng_len(electrons) == 2, op.rng_len(muons) == 0), electrons[0].p4),
+        (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) >= 1), muons[0].p4),
+        (op.AND(op.rng_len(electrons) >= 1, op.rng_len(muons) == 0), electrons[0].p4),
+        (electrons[0].pt > muons[0].pt, electrons[0].p4),
         muons[0].p4
     )
+    vec0 = op.construct("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >",([op.c_float(0.),op.c_float(0.),op.c_float(0.),op.c_float(0.)]))
     lep1_p4 = op.multiSwitch(
-        (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 1), muons[0].p4),
+        (op.rng_len(electrons) + op.rng_len(muons) == 1, vec0),
         (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 2), muons[1].p4),
-        (op.AND(op.rng_len(electrons) == 1, op.rng_len(muons) == 0), electrons[0].p4),
         (op.AND(op.rng_len(electrons) == 2, op.rng_len(muons) == 0), electrons[1].p4),
+        (electrons[0].pt > muons[0].pt, muons[0].p4),
         electrons[0].p4
     )
     return lep0_p4, lep1_p4
@@ -576,120 +572,45 @@ def gather_misc_vars(objects) -> list[Variable1D]:
     return vars
 
 # ====================== Object Vars ==========================================
-def get_lep0_pt(objects) -> Variable1D:
-    lep0_pt = Variable1D('lep0_pt')
-    subcat_names = lep0_pt.subcats
-    selections = get_selections_subset(subcat_names)
-
+def _get_leptons_iso(objects):
     electrons, muons = objects['tight_electrons'], objects['tight_muons']
-    data = op.multiSwitch(
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].pt),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].pt),
-        (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[0].pt),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[0].pt),
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
-            op.switch(electrons[0].pt > muons[0].pt, electrons[0].pt, muons[0].pt)),
-        0
+    lep0_p4 = op.multiSwitch(
+        (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) >= 1), muons[0].miniPFRelIso_all),
+        (op.AND(op.rng_len(electrons) >= 1, op.rng_len(muons) == 0), electrons[0].miniPFRelIso_all),
+        (electrons[0].pt > muons[0].pt, electrons[0].miniPFRelIso_all),
+        muons[0].miniPFRelIso_all
     )
-    data = {'SL_res_1b': data, 'SL_res_2b': data, 'SL_boosted': data,
-            'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data,
-            'SL_res_2b_x': data }
-    lep0_pt.populate(data, selections)
-    return lep0_pt
-
-def get_lep0_eta(objects) -> Variable1D:
-    lep0_eta = Variable1D('lep0_eta')
-    subcat_names = lep0_eta.subcats
-    selections = get_selections_subset(subcat_names)
-
-    electrons, muons = objects['tight_electrons'], objects['tight_muons']
-    data = op.multiSwitch(
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].eta),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].eta),
-        (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[0].eta),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[0].eta),
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
-            op.switch(electrons[0].pt > muons[0].pt, electrons[0].eta, muons[0].eta)),
-        0
+    lep1_p4 = op.multiSwitch(
+        (op.rng_len(electrons) + op.rng_len(muons) == 1, 0),
+        (op.AND(op.rng_len(electrons) == 0, op.rng_len(muons) == 2), muons[1].miniPFRelIso_all),
+        (op.AND(op.rng_len(electrons) == 2, op.rng_len(muons) == 0), electrons[1].miniPFRelIso_all),
+        (electrons[0].pt > muons[0].pt, muons[0].miniPFRelIso_all),
+        electrons[0].miniPFRelIso_all
     )
-    data = {'SL_res_1b': data, 'SL_res_2b': data, 'SL_boosted': data,
-            'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data,
-            'SL_res_2b_x': data }
-    lep0_eta.populate(data, selections)
-    return lep0_eta
+    return lep0_p4, lep1_p4
 
-def get_lep0_phi(objects) -> Variable1D:
-    lep0_phi = Variable1D('lep0_phi')
-    subcat_names = lep0_phi.subcats
-    selections = get_selections_subset(subcat_names)
+def get_low_level_lepton_vars(objects) -> list[Variable1D]:
+    leps_p4: tuple = _get_leptons_p4(objects)
+    leps_iso: tuple = _get_leptons_iso(objects)
+    num_lep: int = 2
+    lepton_vars: list[Variable1D] = []
+    for i in range(num_lep):
+        pt = leps_p4[i].Pt()
+        phi = leps_p4[i].Phi()
+        eta = leps_p4[i].Eta()
+        iso = leps_iso[i]
+        name: str = f"lep{i}_"
+        this_lep_vars = [ Variable1D(name+'pt'), Variable1D(name+'phi'), Variable1D(name+'eta'), Variable1D(name+'iso') ]
+        this_lep_data = [ pt, phi, eta, iso ]
+        for var, data in zip(this_lep_vars, this_lep_data):
+            subcat_names = var.subcats
+            selections = get_selections_subset(subcat_names)
+            data = { sel_name: data for sel_name in selections.keys() }
+            var.populate(data, selections)
 
-    electrons, muons = objects['tight_electrons'], objects['tight_muons']
-    data = op.multiSwitch(
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==0), electrons[0].phi),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==1), muons[0].phi),
-        (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[0].phi),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[0].phi),
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
-            op.switch(electrons[0].pt > muons[0].pt, electrons[0].phi, muons[0].phi)),
-        0
-    )
-    data = {'SL_res_1b': data, 'SL_res_2b': data, 'SL_boosted': data,
-            'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data,
-            'SL_res_2b_x': data }
-    lep0_phi.populate(data, selections)
-    return lep0_phi
+        lepton_vars.extend(this_lep_vars)
+    return lepton_vars
 
-def get_lep1_pt(objects) -> Variable1D:
-    lep1_pt = Variable1D('lep1_pt')
-    subcat_names = lep1_pt.subcats
-    selections = get_selections_subset(subcat_names)
-
-    electrons, muons = objects['tight_electrons'], objects['tight_muons']
-    data = op.multiSwitch(
-        (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[1].pt),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[1].pt),
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
-            op.switch(electrons[0].pt > muons[0].pt, muons[0].pt, electrons[0].pt)),
-        0
-    )
-    data = {'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data}
-    lep1_pt.populate(data, selections)
-    return lep1_pt
-
-def get_lep1_eta(objects) -> Variable1D:
-    lep1_eta = Variable1D('lep1_eta')
-    subcat_names = lep1_eta.subcats
-    selections = get_selections_subset(subcat_names)
-
-    electrons, muons = objects['tight_electrons'], objects['tight_muons']
-    data = op.multiSwitch(
-        (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[1].eta),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[1].eta),
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
-            op.switch(electrons[0].pt > muons[0].pt, muons[0].eta, electrons[0].eta)),
-        0
-    )
-    data = {'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data}
-    lep1_eta.populate(data, selections)
-    return lep1_eta
-
-def get_lep1_phi(objects) -> Variable1D:
-    lep1_phi = Variable1D('lep1_phi')
-    subcat_names = lep1_phi.subcats
-    selections = get_selections_subset(subcat_names)
-
-    electrons, muons = objects['tight_electrons'], objects['tight_muons']
-    data = op.multiSwitch(
-        (op.AND(op.rng_len(electrons)==2, op.rng_len(muons)==0), electrons[1].phi),
-        (op.AND(op.rng_len(electrons)==0, op.rng_len(muons)==2), muons[1].phi),
-        (op.AND(op.rng_len(electrons)==1, op.rng_len(muons)==1), 
-            op.switch(electrons[0].pt > muons[0].pt, muons[0].phi, electrons[0].phi)),
-        0
-    )
-    data = {'DL_res_1b': data, 'DL_res_2b': data, 'DL_boosted': data}
-    lep1_phi.populate(data, selections)
-    return lep1_phi
-    
 def _get_jet_objects(objects):
     ak4_jets = objects["cleaned_ak4_jets"]
     ak4_btags = objects["cleaned_ak4_btags"]
@@ -772,7 +693,7 @@ def get_met_phi(objects) -> Variable1D:
     met_phi.populate(data, selections)
     return met_phi
 
-def get_nAK4(objects):
+def get_nAK4(objects) -> Variable1D:
     nAK4 = Variable1D('nAK4')
     subcat_names = nAK4.subcats
     selections = get_selections_subset(subcat_names)
@@ -782,7 +703,7 @@ def get_nAK4(objects):
     nAK4.populate(data, selections)
     return nAK4
 
-def get_nAK4_btag(objects):
+def get_nAK4_btag(objects) -> Variable1D:
     nAK4_btag = Variable1D('nAK4_btag')
     subcat_names = nAK4_btag.subcats
     selections = get_selections_subset(subcat_names)
@@ -792,7 +713,7 @@ def get_nAK4_btag(objects):
     nAK4_btag.populate(data, selections)
     return nAK4_btag
 
-def get_nAK4_nonbtag(objects):
+def get_nAK4_nonbtag(objects) -> Variable1D:
     nAK4_nonbtag = Variable1D('nAK4_nonbtag')
     subcat_names = nAK4_nonbtag.subcats
     selections = get_selections_subset(subcat_names)
@@ -802,7 +723,7 @@ def get_nAK4_nonbtag(objects):
     nAK4_nonbtag.populate(data, selections)
     return nAK4_nonbtag
 
-def get_nAK8_btag(objects):
+def get_nAK8_btag(objects) -> Variable1D:
     nAK8_btag = Variable1D('nAK8_btag')
     subcat_names = nAK8_btag.subcats
     selections = get_selections_subset(subcat_names)
@@ -814,27 +735,6 @@ def get_nAK8_btag(objects):
 
 def gather_object_vars(objects) -> list[Variable1D]:
     object_vars = [
-        get_lep0_pt(objects),
-        get_lep0_eta(objects),
-        get_lep0_phi(objects),
-        get_lep1_pt(objects),
-        get_lep1_eta(objects),
-        get_lep1_phi(objects),
-        # get_ak4_jet0_pt(objects),
-        # get_ak4_jet0_eta(objects),
-        # get_ak4_jet0_phi(objects),
-        # get_ak4_jet1_pt(objects),
-        # get_ak4_jet1_eta(objects),
-        # get_ak4_jet1_phi(objects),
-        # get_ak4_jet2_pt(objects),
-        # get_ak4_jet2_eta(objects),
-        # get_ak4_jet2_phi(objects),
-        # get_ak4_btag0_pt(objects),
-        # get_ak4_btag0_eta(objects),
-        # get_ak4_btag0_phi(objects),
-        # get_ak4_btag1_pt(objects),
-        # get_ak4_btag1_eta(objects),
-        # get_ak4_btag1_phi(objects),
         get_ak8_btag0_pt(objects),
         get_ak8_btag0_eta(objects),
         get_ak8_btag0_phi(objects),
@@ -844,7 +744,7 @@ def gather_object_vars(objects) -> list[Variable1D]:
         get_nAK4_btag(objects),
         get_nAK4_nonbtag(objects),
         get_nAK8_btag(objects)
-    ] + get_low_level_ak4_jet_vars(objects)
+    ] + get_low_level_ak4_jet_vars(objects) + get_low_level_lepton_vars(objects)
     return object_vars
 
 # ========================= ll variables ============================
@@ -914,7 +814,14 @@ def gather_ll_vars(objects) -> list[Variable1D]:
     return ll_vars
 
 def gather_all_1D_variables(objects) -> list[Variable1D]:
-    vars = gather_object_vars(objects) + gather_bjet_vars(objects) + gather_top_vars(objects) + gather_total_vars(objects) + gather_misc_vars(objects) + gather_ll_vars(objects)
+    vars = (
+        gather_object_vars(objects) + 
+        gather_top_vars(objects) + 
+        gather_total_vars(objects) +
+        gather_misc_vars(objects) + 
+        gather_ll_vars(objects) +
+        gather_bjet_vars(objects) 
+    )
     return vars
 
 def gather_all_2D_variables(objects) -> list[Variable2D]:
@@ -942,14 +849,3 @@ def gather_all_3D_variables(objects) -> list[Variable3D]:
         var3D.populate(xvar, yvar, zvar)
 
     return vars3D
-
-# Returns a dictionary, ex: sel_vars_dict = {SL_res_2b_x: {'bjets_mbb': bjets_mbb}}
-def gathers_vars_dict(objects, selections) -> dict[str, dict[str, Variable]]:
-    vars1D = gather_all_1D_variables(objects)
-    sel_vars_dict = {}
-    for sel_name, sel in selections.items():
-        if sel_name not in ["SL", "DL"]:
-            vars1D_dict = {sub_var.name: sub_var for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
-            sel_vars_dict[sel_name] = vars1D_dict
-    
-    return sel_vars_dict
