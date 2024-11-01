@@ -8,10 +8,6 @@ import utils.variable_definition as var_defs
 from utils.variables import Variable
 
 from pathlib import Path
-import os
-import correctionlib.schemav2 as cs
-import ROOT
-import numpy as np
 
 class SL_DL_vars_reco(NanoBaseHHbbWW):
 
@@ -119,24 +115,25 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         var_defs.set_selections_for_vars(selections)
 
+        reco_vars = var_defs.gather_all_1D_variables(objects)
+        # reco_2D_vars = var_defs.gather_all_2D_variables(objects)
+        # reco_3D_vars = var_defs.gather_all_3D_variables(objects)
+
         # ===============================================================================
         # ================================== Plots ======================================
         # ===============================================================================
         
-        reco_vars = var_defs.gather_all_1D_variables(objects)
         hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
         plots.extend(hists_1D)
 
-        # reco_2D_vars = var_defs.gather_all_2D_variables(objects)
         # hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
         # plots.extend(hists_2D)
 
-        # reco_3D_vars = var_defs.gather_all_3D_variables(objects)
         # hists_3D = [ Plot.make3D(i.ref, [i.xdata, i.ydata, i.zdata], i.selection, [i.xeqbin, i.yeqbin, i.zeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title, zTitle=i.zfull_title) for var in reco_3D_vars for i in var]
         # plots.extend(hists_3D)
 
         # ===============================================================================
-        # ============================= Cutflow Report ==================================
+        # ================================== Yields =====================================
         # ===============================================================================
         
         self.yields.add(selections['SL_res_1b'], 'SL_res_1b')
@@ -150,9 +147,14 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
 
+        # ===============================================================================
+        # ================================== Skims ======================================
+        # ===============================================================================
+
+        # Temporary solution, comment/uncomment lines here for skims. Cannot run SL_res_2b and SL_res_2b_x skims at the same time
         if not self.args.no_skim:
-            plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_1b"], "SL_res_1b"))
-            plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_2b"], "SL_res_2b"))
+            # plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_1b"], "SL_res_1b"))
+            # plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_2b"], "SL_res_2b"))
             plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_2b_x"], "SL_res_2b_x"))
 
         return plots
