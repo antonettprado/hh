@@ -71,14 +71,19 @@ class DNNManager:
                 raise ValueError(f"Duplicate model name found: {model_name}")
             model_names.add(model_name)
 
+            # Check if architecture is 'defined_here'
+            if model_data['architecture'] == 'defined_here':
+                # Require layers and outputs
+                assert 'layers' in model_data and 'outputs' in model_data, "Layers and outputs are required when architecture is 'defined_here'"
+
             model_config = ModelConfig(
                 name=model_name,
                 type=model_data['type'],
                 categorization=model_data['categorization'],
                 training_weight_sf=model_data['training_weight_sf'],
                 input_vars=model_data['input_vars'],
-                architecture_in_yml=model_data['architecture_in_yml'],
-                residual_network=model_data['residual_network'],
+                architecture=model_data['architecture'],
+                residual_network=model_data.get('residual_network', False),
                 hiddenlayers=model_data.get('layers', []),
                 outputlayers=model_data.get('outputs', []),
                 compiler=model_data['compiler'],

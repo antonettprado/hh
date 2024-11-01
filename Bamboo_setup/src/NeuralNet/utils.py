@@ -14,8 +14,8 @@ class ModelConfig:
     categorization: Dict[str, List[str]]
     training_weight_sf: Dict[str, float]
     input_vars: Union[str, List[str]]
-    architecture_in_yml: bool
-    residual_network: bool
+    architecture: str
+    residual_network: bool = False
     hiddenlayers: List['ModelConfig.HiddenLayerConfig'] = field(default_factory=list)
     outputlayers: List['ModelConfig.OutputLayerConfig'] = field(default_factory=list)
     compiler: 'ModelConfig.CompilerConfig' = None
@@ -23,10 +23,24 @@ class ModelConfig:
     training_events: Dict[str, Any] = field(default_factory=dict)
     testing_events: Dict[str, Any] = field(default_factory=dict)
 
-
     def __post_init__(self):
-        self.hiddenlayers = [ModelConfig.HiddenLayerConfig(**layer) if isinstance(layer, dict) else layer for layer in self.hiddenlayers]
-        self.outputlayers = [ModelConfig.OutputLayerConfig(**layer) if isinstance(layer, dict) else layer for layer in self.outputlayers]
+        if self.architecture == 'defined_here':
+            # Check for required parameters for manual architecture
+            if not self.hiddenlayers or not self.outputlayers:
+                raise ValueError("When using 'defined_here' architecture, hiddenlayers and outputlayers must be provided")
+            if self.residual_network is None:
+                raise ValueError("When using 'defined_here' architecture, residual_network bool value must be provided")
+            
+            # Convert layer configurations
+            self.hiddenlayers = [ModelConfig.HiddenLayerConfig(**layer) if isinstance(layer, dict) else layer 
+                               for layer in self.hiddenlayers]
+            self.outputlayers = [ModelConfig.OutputLayerConfig(**layer) if isinstance(layer, dict) else layer 
+                               for layer in self.outputlayers]
+        else:
+            if self.hiddenlayers or self.outputlayers:
+                raise ValueError(f"When using registered architecture '{self.architecture}', "
+                              "hiddenlayers, outputlayers, and residual_network should not be provided")
+
         if isinstance(self.compiler, dict):
             self.compiler = ModelConfig.CompilerConfig(**self.compiler)
         if isinstance(self.fit, dict):
