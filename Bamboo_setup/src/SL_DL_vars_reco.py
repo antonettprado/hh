@@ -13,7 +13,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     def __init__(self, args):
         super(SL_DL_vars_reco, self).__init__(args)
-        self.event_nr_sel = "all"
+        self.event_nr_sel = "even"
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
@@ -21,7 +21,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         
     def addArgs(self, parser):
         super(SL_DL_vars_reco, self).addArgs(parser)
-        parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
+        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=False, help='Not producing skims')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in References.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
@@ -152,10 +152,11 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         # ===============================================================================
 
         # Temporary solution, comment/uncomment lines here for skims. Cannot run SL_res_2b and SL_res_2b_x skims at the same time
-        if not self.args.no_skim:
-            # plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_1b"], "SL_res_1b"))
-            # plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_2b"], "SL_res_2b"))
-            plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections["SL_res_2b_x"], "SL_res_2b_x"))
+        if self.args.skim_selections:
+            # Verify that the skim selections in the list self.args.skim_selections are in selections
+            assert all(skim_sel in selections for skim_sel in self.args.skim_selections), f"Skim selections {self.args.skim_selections} not in selections"
+            for skim_selection in self.args.skim_selections:
+                plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections[skim_selection], skim_selection))
 
         return plots
 
