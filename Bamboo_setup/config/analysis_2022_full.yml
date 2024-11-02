@@ -21,7 +21,7 @@ samples:
     type: mc
     cross-section:  0.00334825583
     generated-events: genEventSumw
-    split: 15
+    split: 7
 
   bbWW_sl_2022EE:
     group: "HH_bbWW"
@@ -30,7 +30,7 @@ samples:
     type: mc
     cross-section:  0.00334825583
     generated-events: genEventSumw
-    split: 20
+    split: 15
   
   bbWW_dl_2022:
     group: "HH_bbWW"
@@ -48,7 +48,7 @@ samples:
     type: mc
     cross-section: 0.000777396389
     generated-events: genEventSumw
-    split: 25
+    split: 35
 
   bbtautau_2022:
    group: "HH_bbtautau"
@@ -66,7 +66,7 @@ samples:
    type: mc
    cross-section: 0.0022695357
    generated-events: genEventSumw
-   split: 50
+   split: 60
 
   ######################################################################################################################################################################################################
   # VBF HH
@@ -88,7 +88,7 @@ samples:
     type: mc
     cross-section: 366
     generated-events: genEventSumw
-    split: 100
+    split: 250
 
   TTbar_sl_2022EE:
     group: "TTbar"
@@ -100,7 +100,7 @@ samples:
     type: mc
     cross-section: 366
     generated-events: genEventSumw
-    split: 200
+    split: 1000
 
   TTbar_dl_2022:
     group: "TTbar"
@@ -112,7 +112,7 @@ samples:
     type: mc
     cross-section: 88.4
     generated-events: genEventSumw
-    split: 50
+    split: 120
 
   TTbar_dl_2022EE:
     group: "TTbar"
@@ -124,7 +124,7 @@ samples:
     type: mc
     cross-section: 88.4
     generated-events: genEventSumw
-    split: 50
+    split: 380
 
   ######################################################################################################################################################################################################
   # tW
@@ -150,7 +150,7 @@ samples:
     type: mc
     cross-section: 19.307618 # xsec(TW) / 2 (since t and tbar is included) x BR(W->l nu) x BR(W->qq) x 2 (since there are two W bosons) = 87.9 / 2 x 0.3259 x 0.6741
     generated-events: genEventSumw
-    split: 50
+    split: 180
 
   tbarWplus_dl_2022:
     group: "tW"
@@ -174,7 +174,7 @@ samples:
     type: mc
     cross-section: 4.6651009 # xsec(TW) / 2 (since t and tbar is included) x BR(W->l nu)^2 x 2 (since there are two W bosons) = 87.9 / 2 x 0.3259^2 x 2
     generated-events: genEventSumw
-    split: 20
+    split: 65
 
   tWminus_sl_2022:
     group: "tW"
@@ -198,7 +198,7 @@ samples:
     type: mc
     cross-section: 19.307618
     generated-events: genEventSumw
-    split: 50
+    split: 170
 
   tWminus_dl_2022:
     group: "tW"
@@ -222,7 +222,7 @@ samples:
     type: mc
     cross-section: 4.6651009
     generated-events: genEventSumw
-    split: 20
+    split: 65
 
   ######################################################################################################################################################################################################
   # W+jets
@@ -233,7 +233,7 @@ samples:
     type: mc
     cross-section: 5.557e+04
     generated-events: genEventSumw
-    split: 100
+    split: 200
   
   Wjets_0J_2022EE:
     group: "WJets"
@@ -242,7 +242,7 @@ samples:
     type: mc
     cross-section: 5.557e+04
     generated-events: genEventSumw
-    split: 200
+    split: 700
 
   Wjets_1J_2022:
     group: "WJets"
@@ -251,7 +251,7 @@ samples:
     type: mc
     cross-section: 9.420e+03
     generated-events: genEventSumw
-    split: 100
+    split: 350
   
   Wjets_1J_2022EE:
     group: "WJets"
@@ -260,7 +260,7 @@ samples:
     type: mc
     cross-section: 9.420e+03
     generated-events: genEventSumw
-    split: 200
+    split: 1350
 
   Wjets_2J_2022:
     group: "WJets"
@@ -269,7 +269,7 @@ samples:
     type: mc
     cross-section: 3.616e+03
     generated-events: genEventSumw
-    split: 100
+    split: 400
   
   Wjets_2J_2022EE:
     group: "WJets"
@@ -278,7 +278,7 @@ samples:
     type: mc
     cross-section: 3.616e+03
     generated-events: genEventSumw
-    split: 200
+    split: 1350
 
   ######################################################################################################################################################################################################
   # DY
@@ -289,7 +289,7 @@ samples:
     type: mc
     cross-section: 19982.5
     generated-events: genEventSumw
-    split: 20
+    split: 50
 
   DY_dl_mll_10to50_2022EE:
     group: "DY"
@@ -298,7 +298,7 @@ samples:
     type: mc
     cross-section: 19982.5
     generated-events: genEventSumw
-    split: 20
+    split: 150
 
   DY_dl_mll_50_0J_2022:
     group: "DY"
@@ -307,7 +307,7 @@ samples:
     type: mc
     cross-section: 5.401e+03
     generated-events: genEventSumw
-    split: 20
+    split: 85
 
   DY_dl_mll_50_0J_2022EE:
     group: "DY"
@@ -316,7 +316,7 @@ samples:
     type: mc
     cross-section: 5.401e+03
     generated-events: genEventSumw
-    split: 20
+    split: 250
 
   DY_dl_mll_50_1J_2022:
     group: "DY"
@@ -325,7 +325,7 @@ samples:
     type: mc
     cross-section: 1.005e+03
     generated-events: genEventSumw
-    split: 20
+    split: 60
   
   DY_dl_mll_50_1J_2022EE:
     group: "DY"
@@ -334,7 +334,7 @@ samples:
     type: mc
     cross-section: 1.005e+03
     generated-events: genEventSumw
-    split: 20
+    split: 190
 
   DY_dl_mll_50_2J_2022:
     group: "DY"
@@ -343,7 +343,7 @@ samples:
     type: mc
     cross-section: 3.845e+02
     generated-events: genEventSumw
-    split: 20
+    split: 60
   
   DY_dl_mll_50_2J_2022EE:
     group: "DY"
@@ -352,7 +352,7 @@ samples:
     type: mc
     cross-section: 3.845e+02
     generated-events: genEventSumw
-    split: 20
+    split: 200
 
   ######################################################################################################################################################################################################
   # VV
@@ -363,7 +363,7 @@ samples:
     type: mc
     cross-section: 80.18
     generated-events: genEventSumw
-    split: 10
+    split: 20
   
   WW_2022EE:
     group: "VV"
@@ -372,7 +372,7 @@ samples:
     type: mc
     cross-section: 80.18
     generated-events: genEventSumw
-    split: 10
+    split: 60
 
   WZ_2022:
     group: "VV"
@@ -390,7 +390,7 @@ samples:
     type: mc
     cross-section: 29.1
     generated-events: genEventSumw
-    split: 10
+    split: 30
 
   ZZ_2022:
     group: "VV"
@@ -408,7 +408,7 @@ samples:
     type: mc
     cross-section: 12.75
     generated-events: genEventSumw
-    split: 10
+    split: 30
 
   ######################################################################################################################################################################################################
   # VVV

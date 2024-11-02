@@ -245,8 +245,12 @@ def wait_for_condor(logfile: Path) -> tuple[bool, list[str]]:
 
 def wait_for_remaining_jobs(nurses: list[threading.Thread], condor_queue: queue.Queue, run_local_flag: threading.Event) -> None:
     while active_nurses := sum( nurse.is_alive() for nurse in nurses ):
-        print(f"Failed jobs still running: {[ int(nurse._name) for nurse in nurses if nurse.is_alive() ]}")
-        print(f"Resolved jobs: {[ int(nurse._name) for nurse in nurses if not nurse.is_alive() ]}")
+        dont_update = 0
+        if not dont_update:
+            print(f"Failed jobs still running: {[ int(nurse._name) for nurse in nurses if nurse.is_alive() ]}")
+            print(f"Resolved jobs: {[ int(nurse._name) for nurse in nurses if not nurse.is_alive() ]}")
+            dont_update += 1
+            dont_update %= 18 # Update every 180 seconds
         time.sleep(10)
         if active_nurses <= LOCAL_RUN_THRESHOLD:
             run_local_flag.set()  

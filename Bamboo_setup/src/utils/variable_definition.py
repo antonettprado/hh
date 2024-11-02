@@ -213,7 +213,8 @@ def get_bfatjet_msoftdrop(objects) -> Variable1D:
 
 # Helper function for returning a list of all bjet-related variables for iteration
 def gather_bjet_vars(objects) -> list[Variable1D]:
-    bjet_vars = [get_bjets_mbb(objects),
+    bjet_vars = [
+        get_bjets_mbb(objects),
         get_bjets_dPhi(objects),
         get_bjets_dPhi_abs(objects),
         get_bjets_dEta(objects),
@@ -224,7 +225,8 @@ def gather_bjet_vars(objects) -> list[Variable1D]:
         get_bjet1_pt(objects),
         get_bjets_mean_pt(objects),
         get_bfatjet_mass(objects),
-        get_bfatjet_msoftdrop(objects)]
+        get_bfatjet_msoftdrop(objects)
+    ]
     return bjet_vars
 
 def _get_jj_W(objects):
@@ -815,12 +817,12 @@ def gather_ll_vars(objects) -> list[Variable1D]:
 
 def gather_all_1D_variables(objects) -> list[Variable1D]:
     vars = (
+        gather_bjet_vars(objects) +
         gather_object_vars(objects) + 
         gather_top_vars(objects) + 
         gather_total_vars(objects) +
         gather_misc_vars(objects) + 
-        gather_ll_vars(objects) +
-        gather_bjet_vars(objects) 
+        gather_ll_vars(objects)
     )
     return vars
 
