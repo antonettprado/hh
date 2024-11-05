@@ -3,6 +3,7 @@ import pandas as pd
 from post_processing import References as Refs
 import uproot
 import numpy as np
+import logging
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -13,21 +14,21 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
-from NeuralNet.utils import get_logger
-
-NON_FEATURE_COLUMNS = ['event', 'run', 'luminosityBlock', 'genWeight', 'bunchCrossing', 'genTtbarId', 
-                        'File', 'Process']
+from NeuralNet import utils
 
 class DataHandler:
 
-    def __init__(self, workdir: Path, tree_name: str, total_inputs: Path = None, log_level='info'):
+    POSTPROCESSING_NN_FOLDER = Path(__file__).parent
+    NON_FEATURE_COLUMNS = ['event', 'genWeight', 'File', 'Process']
+
+    def __init__(self, workdir: Path, tree_name: str, total_inputs: Path = None, log_level=logging.INFO):
         self.tree_name = tree_name
         self.total_inputs = total_inputs
         self.WORKDIR = workdir
         self.RESULTSDIR = self.WORKDIR / 'results'
         self.MAX_EVENTS_PER_FILE = 1000000
-        self.logger = get_logger(self.__class__.__name__, log_level)
-        self.log_level = log_level
+        self.logger = utils.get_logger(self.__class__.__name__)
+        self.logger.setLevel(log_level)
 
     def load_data(self) -> pd.DataFrame:
         self.logger.info(f"\nLoading data...")
@@ -62,8 +63,7 @@ class DataHandler:
         total_df.sort_values(by=['event', 'index'], inplace=True)
         total_df.drop(columns='index', inplace=True)
 
-        self.logger.debug(f"\tTotal_df:")
-        self.logger.debug(f"\t\t" + total_df.to_string(max_rows=12, max_cols=15).replace('\n', '\n\t\t'))
+        self.logger.debug(f"\tTotal_df:\n{total_df}")
         
         return total_df
 
@@ -117,7 +117,7 @@ class DataHandler:
         if num_events_w_large_values > 0:
             self.logger.warning(f"\t\tNumber of events with values larger than {large_values_threshold}: {num_events_w_large_values}")
         else:
-            self.logger.info(f"\t\tNo events with features larger than abs({large_values_threshold}) found.")
+            self.logger.info(f"\t\tNo events with values larger than abs({large_values_threshold}) found.")
 
         return
     
@@ -132,7 +132,7 @@ class DataHandler:
         # Stats summary
         stats_summary = df_finite.describe().round(2)
         self.logger.info(f"\tStats summary:")
-        self.logger.info(f"\t\t" + stats_summary.T.to_string().replace('\n', '\n\t\t'))
+        self.logger.info(f"{stats_summary.T}")
 
         # Outlier detection
         z_threshold = 5
@@ -190,8 +190,7 @@ class DataHandler:
 
     # =============== Still to fully implement ===============================
     def extract_numeric_features_only(self, df: pd.DataFrame):
-
-        df_features = df.drop(columns=[col for col in NON_FEATURE_COLUMNS if col in df.columns])
+        df_features = df.drop(columns=self.NON_FEATURE_COLUMNS)
         df_non_numeric_features = df_features.select_dtypes(exclude=[np.number])
         columns_non_numeric_features = df_non_numeric_features.columns
         if len(columns_non_numeric_features) > 0:
@@ -200,7 +199,7 @@ class DataHandler:
         return df_numeric_features
 
     def check_class_balance(self, df: pd.DataFrame, target_column: str):
-
+        """Checks the balance of the classes in the dataset and creates a bar plot."""
         class_counts = df[target_column].value_counts()
         self.logger.info(f"Class distribution:\n{class_counts}")
         # plt.figure(figsize=(8, 6))
@@ -210,9 +209,7 @@ class DataHandler:
         plt.show()
 
     def plot_feature_distribution(self, df: pd.DataFrame, columns: list = None):
-        """
-        Plots the distribution of the features, including histograms and KDE plots
-        """
+        """Plots the distribution of the features, including histograms and KDE plots."""
         self.logger.info(f"Plotting feature distributions ...")
         df = self.extract_numeric_features_only(df)
         if columns is None:
@@ -229,9 +226,9 @@ class DataHandler:
         df = self.extract_numeric_features_only(df)
         corr = df.corr()
         corr = corr.round(2)
-        # mask = np.triu(np.ones_like(corr, dtype=bool))
+        mask = np.triu(np.ones_like(corr, dtype=bool))
         plt.figure(figsize=(32, 16))
-        sns.heatmap(corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+        sns.heatmap(corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1, mask=mask)
         plt.title("Correlation Matrix")
         plt.show()
 
@@ -255,20 +252,98 @@ class DataHandler:
 
         return df_cleaned
 
+    # def visualize_llr_columns(self, df: pd.DataFrame):
+    #     """Visualizes the distribution of LLR columns if they exist in the data."""
+    #     llr_columns = [col for col in df.columns if col.endswith('_llr')]
+    #     if llr_columns:
+    #         self._print("Visualizing LLR distributions...", level=2)
+    #         self.plot_feature_distribution(df, llr_columns)
+
+    # def plot_feature_pairs(self, df: pd.DataFrame, columns: list = None, hue_column: str = None):
+    #     """Creates pair plots for feature interaction visualization."""
+    #     if columns is None:
+    #         columns = df.columns
+
+    #     plt.figure(figsize=(14, 10))
+    #     sns.pairplot(df[columns], hue=hue_column, corner=True)
+    #     plt.title("Pair Plot of Features")
+    #     plt.show()
+
+
+    # ### New Feature: Data Normalization/Scaling ###
+    # def normalize_data(self, df: pd.DataFrame, method='standard'):
+    #     """Normalize or scale the data."""
+    #     self._print(f"Normalizing data using {method} method...", level=2)
+
+    #     scaler = StandardScaler() if method == 'standard' else MinMaxScaler()
+    #     numeric_columns = df.select_dtypes(include=[np.number]).columns
+    #     df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
+
+    #     return df
+
+    # ### New Feature: Missing Value Handling ###
+    # def handle_missing_values(self, df: pd.DataFrame, strategy='mean'):
+    #     """Handle missing values by filling them in with different strategies."""
+    #     self._print(f"Handling missing values with {strategy} strategy...", level=2)
+
+    #     imputer = SimpleImputer(strategy=strategy)
+    #     df_imputed = pd.DataFrame(imputer.fit_transform(df), columns=df.columns)
+
+    #     return df_imputed
+
+    # ### New Feature: PCA Plotting for Dimensionality Reduction ###
+    # def plot_pca(self, df: pd.DataFrame, n_components=2, hue_column: str = None):
+    #     """Perform PCA and plot the reduced dimensions."""
+    #     self._print(f"Performing PCA with {n_components} components...", level=2)
+
+    #     numeric_columns = df.select_dtypes(include=[np.number]).columns
+    #     pca = PCA(n_components=n_components)
+    #     pca_result = pca.fit_transform(df[numeric_columns])
+
+    #     pca_df = pd.DataFrame(pca_result, columns=[f'PC{i}' for i in range(1, n_components+1)])
+    #     if hue_column:
+    #         pca_df[hue_column] = df[hue_column]
+
+    #     sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue=hue_column)
+    #     plt.title("PCA Plot")
+    #     plt.show()
+
+    # ### New Feature: Feature Importance with Random Forest ###
+    # def plot_feature_importance(self, df: pd.DataFrame, target_column: str):
+    #     """Use a Random Forest model to compute and plot feature importance."""
+    #     self._print(f"Calculating feature importance using Random Forest...", level=2)
+
+    #     X = df.drop(columns=[target_column])
+    #     y = df[target_column]
+
+    #     rf = RandomForestClassifier(n_estimators=100, random_state=42)
+    #     rf.fit(X, y)
+
+    #     feature_importances = pd.Series(rf.feature_importances_, index=X.columns)
+    #     feature_importances = feature_importances.sort_values(ascending=False)
+
+    #     plt.figure(figsize=(10, 6))
+    #     sns.barplot(x=feature_importances, y=feature_importances.index)
+    #     plt.title("Feature Importance from Random Forest")
+    #     plt.show()
+
     ### Start Method to Chain Processes ###
     def start(self, apply_outlier_removal=False, scaling_method=None, missing_value_strategy=None):
         self.logger.info(f"Starting data handler ...")
         total_df = self.load_data()
         total_df = self.fix_column_names_mismatch(total_df)
         self.data_inspection(total_df)
-        total_df = self.preprocess_data(total_df)
-        self.data_inspection(total_df)
 
         # if apply_outlier_removal:
         #     total_df = self.detect_and_remove_outliers(total_df)
 
+        # total_df = self.preprocess_data(total_df)
+
         # if missing_value_strategy:
         #     total_df = self.handle_missing_values(total_df, strategy=missing_value_strategy)
+
+        # if scaling_method:
+        #     total_df = self.normalize_data(total_df, method=scaling_method)
 
         # summary = self.data_quality_summary(total_df)
         return total_df

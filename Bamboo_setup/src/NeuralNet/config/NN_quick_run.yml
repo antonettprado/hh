@@ -15,11 +15,11 @@ Models:
     compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 5, validation_split: 0.25}
 
-  - name: 'multi_HH_ttbar_tW_registered_model'
+  - name: 'multi_HH_ttbar_tW'
     type: 'multi'
     categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
     training_weight_sf: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}
     input_vars: 'All'
-    architecture: "default_model_fast"
+    architecture: 'default_model_fast'
     compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
     fit: {batch_size: 1024, epochs: 5, validation_split: 0.25}

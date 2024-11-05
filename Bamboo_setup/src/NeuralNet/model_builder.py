@@ -1,27 +1,36 @@
 import tensorflow as tf
 from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking, Add, Lambda
+from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking, Add
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
-from tensorflow.keras import losses as tf_losses
 import tensorflow.keras.backend as K
 from NeuralNet import utils
+from NeuralNet.registry_losses import LossRegistry
+from NeuralNet.registry_models import ModelRegistry
 
-logger = utils.get_logger(__name__)
+logger = utils.get_logger(__name__, log_level='debug')
 
-def Build(config, X_train, n_classes=None):
+def Build(config, X_train, n_classes=None, normalizer_type: str = 'normalization'):
 
     if config.architecture == 'defined_here':
-        return build_custom_arch(config, X_train)
+        ndim = X_train.shape[1]
+        normalizer = setup_normalizer(X_train, normalizer_type)
+        return build_custom_arch(config, ndim, normalizer)
     else:
         return build_registered_arch(config, X_train, n_classes)
     
-def build_custom_arch(config, X_train):
+def setup_normalizer(X_train, type: str = 'normalization'):
+    if type == 'normalization':
+        normalizer = Normalization(
+            mean=X_train.mean(axis=0).to_numpy(),
+            variance=X_train.var(axis=0).to_numpy(),
+            name='normalization')
+    return normalizer
+
+def build_custom_arch(config, ndim, normalizer):
     logger.debug(f"\tSetting up architecture from yml ...")
 
-    ndim = X_train.shape[1]
     input_layer = Input(shape=(ndim,))
-    normalizer = setup_normalizer(X_train)
     normalized_input = normalizer(input_layer)
     x = normalized_input
     for n_layer, layer in enumerate(config.hiddenlayers):
@@ -73,19 +82,11 @@ def build_custom_arch(config, X_train):
     return Model(inputs=input_layer, outputs=outputs, name=config.name)
 
 def build_registered_arch(config, X_train, n_classes):
-    logger.debug(f"\tSetting up architecture from built-int function {config.architecture}...")
+    logger.debug(f"\tSetting up architecture from built-int function: {config.architecture}...")
 
     model_fn = ModelRegistry.get(config.architecture)
     model = model_fn(X_train, n_classes)
     return model
-
-def setup_normalizer(X_train, type: str = 'normalization'):
-    if type == 'normalization':
-        normalizer = Normalization(
-            mean=X_train.mean(axis=0).to_numpy(),
-            variance=X_train.var(axis=0).to_numpy(),
-            name='normalization')
-    return normalizer
 
 def get_activity_regularizer(act_reg: dict):
     if 'l1' in act_reg and 'l2' in act_reg:
@@ -160,130 +161,3 @@ def residual_block(x, units, reg_l2, dropout_rate):
     x = Activation('relu')(x)
     
     return x
-
-# =================================================================
-# ================= Registries ====================================
-# =================================================================
-
-from typing import Dict, Callable
-from functools import wraps
-
-class Registry:
-    ''' Registry for model architectures '''
-    _registry: Dict[str, Callable] = {}
-    _registry_type: str = None  
-
-    @classmethod
-    def register(cls, func: Callable):
-        cls._registry[func.__name__] = func
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-        return wrapper
-    @classmethod
-    def get(cls, name: str) -> Callable:
-        if name not in cls._registry:
-            raise ValueError(f"{cls._registry_type}: {name} not found. The following are available: {cls._registry.keys()}")
-        return cls._registry[name]
-    @classmethod
-    def get_all(cls):
-        return list(cls._registry.keys())
-
-# ================== Loss Registry ===============================
-
-class LossRegistry(Registry):
-    _registry: Dict[str, Callable] = {}
-    _registry_type = 'Loss'
-    @classmethod
-    def get(cls, name: str):
-        try:
-            # First try to get from tf.keras.losses
-            return tf_losses.get(name)
-        except AttributeError:
-            # Then try to get from custom registry
-            if name in cls._registry:
-                return cls._registry[name]
-            else:
-                raise ValueError(f"Loss {name} not found in tf.keras.losses or custom registry")
-    # Implement a get_all() method
-
-@LossRegistry.register
-def custom_ul_loss(y_true, y_pred):
-    # Manually calculate recall: TP / (TP + FN)
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-
-    # Manually calculate AUC-PR using TensorFlow's tf.metrics.auc function (on-the-fly calculation)
-    auc_pr = tf.reduce_mean(y_pred)  # Simplified for illustration; replace with correct PR AUC logic
-
-    # Apply the coefficients from the linear regression equation
-    ul_loss = -2555.22 * recall + 2463.51 * auc_pr + 53.91
-
-    return ul_loss
-
-@LossRegistry.register
-def custom_ul_loss_acc_with_sampleweights(y_true, y_pred, sample_weight=None):
-    # --- Accurate Recall Calculation ---
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-
-    # --- AUC-PR Calculation ---
-    # Using PrecisionAtRecall metric from Keras
-    precision_at_recall = tf.keras.metrics.PrecisionAtRecall(recall=0.8)  # Use an appropriate recall threshold (0.8 as an example)
-    precision_at_recall.update_state(y_true, y_pred)
-    precision = precision_at_recall.result()
-
-    # Apply the coefficients from the linear regression equation
-    ul_loss = -2555.22 * recall + 2463.51 * precision + 53.91
-
-    # --- Incorporate Sample Weights ---
-    if sample_weight is not None:
-        ul_loss = ul_loss * sample_weight
-
-    return ul_loss
-
-# ================== Model Registry ===============================
-
-class ModelRegistry(Registry):
-    _registry: Dict[str, Callable] = {}
-    _registry_type = 'Model'
-
-@ModelRegistry.register
-def default_model(X_train, n_classes):
-    units = 256
-    reg_l2 = regularizers.l2(1e-4)
-    dropout_rate = 0.4
-
-    ndim = X_train.shape[1]
-    input_layer = Input(shape=(ndim,))
-    normalizer = setup_normalizer(X_train)
-    normalized_input = normalizer(input_layer)
-    x = normalized_input
-
-    # Layer 1
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_0')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    # Layer 2 (store input for residual connection)
-    x_input = x
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_1')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    # Layer 3 (add residual connection)
-    x = Add(name='add_1')([x, x_input])
-    x = Dense(units=units, activation='relu', activity_regularizer=reg_l2, name='layer_2')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(dropout_rate)(x)
-
-    output = Dense(
-        units=n_classes, 
-        kernel_initializer = 'normal', 
-        activation='softmax', 
-        activity_regularizer=reg_l2, 
-        name='output')(x)
-    
-    return Model(inputs = input_layer, outputs=[output], name='default_model')

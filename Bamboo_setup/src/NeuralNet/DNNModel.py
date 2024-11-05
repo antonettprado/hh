@@ -13,12 +13,12 @@ from tensorflow.keras.layers import Normalization
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.utils import plot_model
 import NeuralNet.model_builder as model_builder
-import NeuralNet.utils as utils
-from NeuralNet.utils import ModelConfig
+from NeuralNet.utils import ModelConfig, get_logger
+from NeuralNet.DataHandler import NON_FEATURE_COLUMNS
 
 class DNNModel:
 
-    def __init__(self, model_config: ModelConfig, modeldir: Path, log_level=logging.INFO):
+    def __init__(self, model_config: ModelConfig, modeldir: Path, log_level='info'):
         self.config = model_config
         self.name = model_config.name
         self.type = model_config.type
@@ -32,12 +32,12 @@ class DNNModel:
         self.history = None
         self.modeldir = modeldir
         self.modeldir.mkdir(parents=True, exist_ok=True)
-        self.logger = utils.get_logger(self.__class__.__name__)
-        self.logger.setLevel(log_level)
+        self.logger = get_logger(self.__class__.__name__, log_level)
+        self.log_level = log_level
 
         if self.type == 'binary': self._validate_categorization_for_binary()
             
-        self.logger.info(f"Initializing model: {self.name}")
+        self.logger.info(f"\n\n\tInitializing model: {self.name}")
 
     def _validate_categorization_for_binary(self):
         if len(self.categorization) !=2 : 
@@ -50,6 +50,7 @@ class DNNModel:
         self.logger.debug(f"self.categorization: {self.categorization}")
 
     def set_model_df_from_total_df(self, total_df: pd.DataFrame = None):
+        self.logger.info(f"\n\tSetting model dataframe from total dataframe ...")
         '''
         This function does the following: 
             - Picks only the features (or input variables) noted in 'input_vars'
@@ -59,14 +60,19 @@ class DNNModel:
 
         model_df = total_df.copy()
 
+        all_non_features = [col for col in NON_FEATURE_COLUMNS if col in model_df.columns]
+        all_features = [col for col in model_df.columns if col not in all_non_features]
+        non_features_to_keep = ['event', 'genWeight', 'Process', 'File']
+        if self.input_vars == 'All':
+            columns_to_keep = non_features_to_keep + all_features
+        else:
+            columns_to_keep = non_features_to_keep + self.input_vars 
+        model_df = model_df[columns_to_keep]
+
         # Verify all processes exist in the dataframe -------------------------------------
         unique_processes = model_df['Process'].unique()
         for process in self.processes:
             assert process in unique_processes, f"Process {process} was not found in the total dataframe"
-
-        if self.input_vars != 'All':
-            columns_to_keep = ['event', 'genWeight', 'Process', 'File']
-            model_df = model_df[self.input_vars + columns_to_keep]
             
         # Keep only events corresponding to any of the training processes indicated ------
         model_df = model_df[model_df['Process'].isin(self.processes)]
@@ -98,17 +104,22 @@ class DNNModel:
             raise ValueError(f"Some processes were not assigned to any class: {unassigned_processes}")
 
         # Printing only ------------------------------------------------------------------
+        self.logger.debug(f"\t\tProcess weights:")
         for process in self.processes:
-            self.logger.debug(process)
+            self.logger.debug(f"\t\t{process}")
             process_mask = model_df['Process'] == process
             process_total_genWeight = model_df[process_mask]['genWeight'].sum()
             process_total_sample_weight = model_df[process_mask]['sample_weight'].sum()
-            self.logger.debug(f"Total sum of genWeights for {process}: {process_total_genWeight} ")
-            self.logger.debug(f"Total sum of sample_weights for {process}: {process_total_sample_weight} ")
+            self.logger.debug(f"\t\t\tTotal sum of genWeights for {process}: {process_total_genWeight} ")
+            self.logger.debug(f"\t\t\tTotal sum of sample_weights for {process}: {process_total_sample_weight} ")
 
-        model_df = model_df.drop(columns=['Process', 'File'])
+        columns_to_drop = ['Process', 'File']
+        model_df = model_df.drop(columns=columns_to_drop)
 
         self.model_df = model_df
+
+        self.logger.debug(f"\t\tModel dataframe:")
+        self.logger.debug(f"\t\t\t" + model_df.to_string(max_rows=12, max_cols=15).replace('\n', '\n\t\t\t'))
 
         return model_df
     
@@ -144,7 +155,7 @@ class DNNModel:
         return X_train, X_test, Y_train, Y_test, evs_test, sw_train
   
     def build_model(self, X_train, fixed_random_seed: bool = True):
-        self.logger.info(f'\nBuilding model ...')
+        self.logger.info(f'\n\tBuilding model ...')
 
         if fixed_random_seed:
             # Set seeds for reproducibility
@@ -164,14 +175,16 @@ class DNNModel:
             weighted_metrics = []
         )
 
-        self.logger.debug(f"Sumary of model compiled")
-        self.logger.debug(model.summary())
+        stringlist = []
+        model.summary(print_fn=lambda x: stringlist.append(x))
+        self.logger.debug("\t\t\t" + '\n\t\t\t'.join(stringlist))
+        
         self.model = model
 
         return model
 
     def train_model(self, X_train, Y_train, sw_train):
-        self.logger.info(f"\nTraining model ...")
+        self.logger.info(f"\n\tTraining model ...")
 
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=0, mode='min', restore_best_weights=True)
         reduce_plateau = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=0.001, patience=10, min_lr=1e-8, verbose=0, mode='min')
@@ -194,7 +207,7 @@ class DNNModel:
         return history
     
     def save_model_info(self, features, Y_train, Y_test):
-        self.logger.info(f"\nSaving model info ...")
+        self.logger.info(f"\n\tSaving model info ...")
 
         model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
 
@@ -218,7 +231,7 @@ class DNNModel:
             yaml.dump(self.config.__getstate__(), file, sort_keys=False)
 
     def evaluate(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
-        self.logger.info(f"\nEvaluating model ...")
+        self.logger.info(f"\n\tEvaluating model ...")
 
         Y_test = Y_test.astype('float32') 
         model_metrics = self.model.evaluate(X_test, Y_test, verbose=0, return_dict=True)  
@@ -226,11 +239,12 @@ class DNNModel:
         if np.isnan(model_metrics['loss']):
             raise ValueError(f"Nan detected in evaluation for model {self.name}")
         
-        self.logger.info(f"\tModel metrics: {model_metrics}")
+        self.logger.info(f"\t\tModel metrics:")
+        self.logger.info(f"\t\t\t{model_metrics}")
         return model_metrics
 
     def predict(self, X_test, Y_test, events_test):
-        self.logger.info(f"\nPredicting ...")
+        self.logger.info(f"\n\tPredicting ...")
         # Reset indices for consistent concatenation
         events_test.reset_index(drop=True, inplace=True)
         Y_test.reset_index(drop=True, inplace=True)
@@ -247,7 +261,8 @@ class DNNModel:
         for i, cls_i in enumerate(Y_test.columns):
             output_df[f'Score_{cls_i.removeprefix("Class_")}'] = Y_pred_score[:, i]
 
-        self.logger.debug(f"\tPredictions:\n{output_df.head()}")
+        self.logger.debug(f"\t\tEvent Predictions:")
+        self.logger.debug("\t\t\t" + output_df.to_string(max_rows=12, max_cols=15).replace('\n', '\n\t\t\t'))
         output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
 
         return output_df
@@ -287,7 +302,6 @@ class DNNModel:
 
     # ===================== Facade Methods ============================
     def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed=True, save_model_info=True):
- 
         self.build_model(X_train, fixed_random_seed)
         self.train_model(X_train, Y_train, sw_train)
         if save_model_info: 

@@ -5,7 +5,60 @@ import os, random
 import yaml
 import logging
 from colorlog import ColoredFormatter
+from typing import Dict, Callable
+from functools import wraps
 
+def get_logger(name: str, log_level='info') -> logging.Logger:
+    '''
+    Returns a logger with colored formatting
+    Args: name: name of the logger(usually __name__ or the class name)
+    '''
+    level_map = {'info': logging.INFO, 'debug': logging.DEBUG, 'warning': logging.WARNING, 'error': logging.ERROR}
+    if log_level in level_map:
+        log_level = level_map[log_level]
+    else:
+        print(f"Invalid log level: {log_level}. Setting to INFO")
+        log_level = logging.INFO
+
+    logger = logging.getLogger(name)
+    formatter = ColoredFormatter(
+        "%(log_color)s%(message)s%(reset)s",
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'red,bg_white'
+        }
+    )
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    logger.setLevel(log_level)
+
+    return logger
+
+def fix_random_seed(seed_value = 42):
+    import tensorflow as tf
+    """
+    Sets the random seed for reproducibility across various libraries.
+    """
+    # Fix seeds for reproducibility
+    os.environ['PYTHONHASHSEED'] = str(seed_value)
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    tf.random.set_seed(seed_value)
+
+    # Set TensorFlow to use deterministic operations
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
+    os.environ['TF_NUM_INTEROP_THREADS'] = '1'
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
 
 @dataclass
 class ModelConfig:
@@ -81,45 +134,23 @@ class ModelConfig:
         epochs: int
         validation_split: float
 
-def fix_random_seed(seed_value = 42):
-    import tensorflow as tf
-    """
-    Sets the random seed for reproducibility across various libraries.
-    """
-    # Fix seeds for reproducibility
-    os.environ['PYTHONHASHSEED'] = str(seed_value)
-    random.seed(seed_value)
-    np.random.seed(seed_value)
-    tf.random.set_seed(seed_value)
+class Registry:
+    ''' Registry for model architectures '''
+    _registry: Dict[str, Callable] = {}
+    _registry_type: str = None  
 
-    # Set TensorFlow to use deterministic operations
-    os.environ['TF_DETERMINISTIC_OPS'] = '1'
-    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
-    os.environ['OMP_NUM_THREADS'] = '1'
-    os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
-    os.environ['TF_NUM_INTEROP_THREADS'] = '1'
-    tf.config.threading.set_intra_op_parallelism_threads(1)
-    tf.config.threading.set_inter_op_parallelism_threads(1)
-
-def get_logger(name: str) -> logging.Logger:
-    '''
-    Returns a logger with colored formatting
-    Args: name: name of the logger(usually __name__ or the class name)
-    '''
-    logger = logging.getLogger(name)
-    formatter = ColoredFormatter(
-        "%(log_color)s%(message)s%(reset)s",
-        log_colors={
-            'DEBUG': 'white',
-            'INFO': 'green',
-            'WARNING': 'yellow',
-            'ERROR': 'red',
-            'CRITICAL': 'red,bg_white'
-        }
-    )
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
-    return logger
+    @classmethod
+    def register(cls, func: Callable):
+        cls._registry[func.__name__] = func
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+    @classmethod
+    def get(cls, name: str) -> Callable:
+        if name not in cls._registry:
+            raise ValueError(f"{cls._registry_type}: {name} not found. The following are available: {cls._registry.keys()}")
+        return cls._registry[name]
+    @classmethod
+    def get_all(cls):
+        return list(cls._registry.keys())
