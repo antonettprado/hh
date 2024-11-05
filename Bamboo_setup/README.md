@@ -159,7 +159,7 @@ index 5baa3e4..b322663 100644
                      logger.debug(f"Output directory for {mName} not found: {outdir} (command: {cmd})")
                      id_noOut.append(sjId)
 diff --git a/bamboo/workflow.py b/bamboo/workflow.py
-index 097ed4d..a76ca53 100644
+index 097ed4d..2ec0cd5 100644
 --- a/bamboo/workflow.py
 +++ b/bamboo/workflow.py
 @@ -288,6 +288,8 @@ def buildVersions(mod, withRemote=True, checkPolicy=None):
@@ -189,6 +189,15 @@ index 097ed4d..a76ca53 100644
              if id_noOut:
                  logger.error(
                      "Missing outputs for subjobs {}, so no postprocessing will be run".format(
+@@ -603,7 +611,7 @@ def run_notworker(mod):
+                             f"({len(outFiles):d}/{nExpected:d} found), cannot finalize")
+                         aProblem = True
+                     else:
+-                        haddCmd = ["hadd", "-f", os.path.join(resultsdir, outFileName)] + outFiles
++                        haddCmd = ["hadd", "-f", "-j", os.path.join(resultsdir, outFileName)] + outFiles
+                         import subprocess
+                         try:
+                             logger.debug(
 @@ -841,9 +849,13 @@ def run_notworker(mod):
                      chunks = splitInChunks(
                          tsk.inputFiles, chunkLength=max(1, min(-split, len(tsk.inputFiles))))
@@ -205,6 +214,15 @@ index 097ed4d..a76ca53 100644
                          tsk.kwargs["sample"], i))
                      writeFileList(chunk, cfn)
                      cmds.append(" ".join(
+@@ -852,7 +864,7 @@ def run_notworker(mod):
+                         + [f"--{key}={value}" for key, value in tsk.kwargs.items()]
+                     ))
+                 beTasks.append(SplitAggregationTask(
+-                    cmds, finalizeAction=HaddAction(cmds, outDir=resultsdir, options=["-f"])))
++                    cmds, finalizeAction=HaddAction(cmds, outDir=resultsdir, options=["-f", "-j"])))
+             # submit to backend
+             backend = mod.envConfig["batch"]["backend"]
+             batchBackend = getBackend(backend)
 @@ -860,9 +872,15 @@ def run_notworker(mod):
              # make sure we request N CPUs/job when using N threads
              if mod.args.threads:
@@ -223,7 +241,6 @@ index 097ed4d..a76ca53 100644
              for j in clusJobs:
                  j.submit()
              logger.info(
-
 ```
 
 After all this is applied resinstall bamboo using: `pip install . --upgrade` (again, within the main bamboo directory)
