@@ -1,19 +1,16 @@
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport, Skim
-from bamboo.plots import EquidistantBinning as EqBin
 
 from base_selection import NanoBaseHHbbWW
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.variable_definition as var_defs
 from utils.variables import Variable
 
-from pathlib import Path
-
 class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     def __init__(self, args):
         super(SL_DL_vars_reco, self).__init__(args)
-        self.event_nr_sel = "all"
+        self.event_nr_sel = "even"
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
