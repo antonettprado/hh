@@ -1,13 +1,10 @@
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport, Skim
-from bamboo.plots import EquidistantBinning as EqBin
 
 from base_selection import NanoBaseHHbbWW
 from SL_DL_event_selection import SL_DL_event_selection
 import utils.variable_definition as var_defs
 from utils.variables import Variable
-
-from pathlib import Path
 
 class SL_DL_vars_reco(NanoBaseHHbbWW):
 
