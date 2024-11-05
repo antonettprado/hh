@@ -16,6 +16,8 @@ MAX_JOB_RESUBMISSION: int = 50
 HALTED_BATCH_REPORT_THRESHOLD: int = 4
 LOCK = threading.Lock()
 
+# There may still be an issue with corrupted root files on certain storage nodes returning sgmentation violations in the jobs
+
 def parse_args(): 
     parser = argparse.ArgumentParser(description="Wrapper for bambooRun to improve error handling and resubmission")
     parser.add_argument("module", type=Path, help="Module to run (example: src/SL_DL_event_selection.py). Can also add module-specific arguments")
@@ -228,29 +230,42 @@ def fix_xrootd_error(rfile: str, iptfile: Path):
 
 def wait_for_condor(logfile: Path) -> tuple[bool, list[str]]:
     error: bool = True
+    job_term: bool = False
     while True:
         time.sleep(10)
         if logfile.stat().st_size == 0:
             continue
         with open(logfile, 'r') as f:
             loglines = f.readlines()
+            joined_loglines = ''.join(loglines)
             # if there is the job termination line, read the exit code and break
-            if len(loglines) > 2:
-                for line in loglines:
-                    if line.strip().startswith("Job terminated of its own accord"):
+            if len(loglines) > 14 and ("Job terminated." in joined_loglines or "Job was aborted." in joined_loglines):
+                for line in loglines[::-1]:
+                    line = line.strip()
+                    if line.startswith("Job terminated of its own accord"):
                         error = bool(int(line.strip()[-2]))
-                open(logfile, 'w').close() # Delete the log file again quickly
-                break 
+                    if line.startswith("005") and line.endswith("Job terminated."):
+                        open(logfile, 'w').close() # Delete the log file again quickly
+                        job_term = True
+                        break
+                    if line.startswith("009") and line.endswith("Job was aborted."):
+                        open(logfile, 'w').close() # Delete the log file again quickly
+                        error = True
+                        job_term = True
+                        break
+                if job_term:
+                    break
+                print("ERROR: log file is long but we have not broken")
     return error, loglines
 
 def wait_for_remaining_jobs(nurses: list[threading.Thread], condor_queue: queue.Queue, run_local_flag: threading.Event) -> None:
+    dont_update = 0
     while active_nurses := sum( nurse.is_alive() for nurse in nurses ):
-        dont_update = 0
         if not dont_update:
             print(f"Failed jobs still running: {[ int(nurse._name) for nurse in nurses if nurse.is_alive() ]}")
             print(f"Resolved jobs: {[ int(nurse._name) for nurse in nurses if not nurse.is_alive() ]}")
-            dont_update += 1
-            dont_update %= 18 # Update every 180 seconds
+        dont_update += 1
+        dont_update %= 18 # Update every 180 seconds
         time.sleep(10)
         if active_nurses <= LOCAL_RUN_THRESHOLD:
             run_local_flag.set()  
@@ -323,7 +338,7 @@ def main(args, mod_args):
         out = []
         for line in proc.stdout:
             # Bamboo lines to not print
-            if line.startswith("WARNING:bamboo.analysisutils:PFN") or "hadd -f" in line or line.startswith("ERROR:bamboo.batch") or line.startswith("INFO:bamboo.batch:Finalized "):
+            if line.startswith("WARNING:bamboo.analysisutils:PFN") or "hadd -f" in line or line.startswith("ERROR:bamboo.batch") or line.startswith("INFO:bamboo.batch:Finalized ") or line.startswith("Error: could not parse the number of processes to run in parallel passed after -j:"):
                 continue
             print(line, end='')
             failed_jobs: set[int] = set()
@@ -357,7 +372,7 @@ def main(args, mod_args):
                 if "IDLE" not in line and "RUNNING" in line:
                     running: int = int(line.split()[line.replace(',', '').split().index("RUNNING") - 1])
                     running_jobs.append(running)
-                    if len(running_jobs) >= HALTED_BATCH_REPORT_THRESHOLD and len(set(running_jobs[-HALTED_BATCH_REPORT_THRESHOLD:])) == 1 and running <= LOCAL_RUN_THRESHOLD:
+                    if len(running_jobs) >= HALTED_BATCH_REPORT_THRESHOLD and len(set(running_jobs[-HALTED_BATCH_REPORT_THRESHOLD:])) == 1 and running <= LOCAL_RUN_THRESHOLD and not sum(nurse.is_alive() for nurse in nurses):
                         halted_jobs: set[int] = find_halted_jobs(afs_output, jobs, running)
                         failed_jobs.update(halted_jobs)
                         print(f"{len(halted_jobs)} jobs seem to have halted. Running them locally...")
