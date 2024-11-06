@@ -40,7 +40,7 @@ class BasePlotter:
         self.eras: list[str] 
         self.LUMINOSITY:dict[str, float] = dict()         # dict{era: era_lumi}
         self.CROSS_SECTIONS: dict[str, float] = dict()    # dict{subprocess: subprocess_crosssection}
-        self.SAMPLES: dict[str, str] = dict()             # dict{subprocess: era}
+        # self.SAMPLES: dict[str, str] = dict()             # dict{subprocess: era}
 
     def _set_configFile_info(self, configFile: Path):
         with open(configFile, "r") as yaml_file:
@@ -48,9 +48,10 @@ class BasePlotter:
             self.eras = list(yaml_data['eras'].keys())
             for era in self.eras:
                 self.LUMINOSITY[era] = yaml_data['eras'][era]['luminosity']
-            for subprocess_name, subprocess_data in yaml_data['samples'].items():
-                self.CROSS_SECTIONS[subprocess_name] = subprocess_data['cross-section'] if subprocess_data['type'] == 'mc' else None
-                self.SAMPLES[subprocess_name] = subprocess_data['era']
+            for sample_name, sample_data in yaml_data['samples'].items():
+                subprocess = sample_name.rsplit('_', 1)[0]
+                self.CROSS_SECTIONS[subprocess] = sample_data['cross-section'] if sample_data['type'] == 'mc' else None
+
         print(f"CROSS_SECTIONS: {self.CROSS_SECTIONS}")
         print(f"LUMINOSITY: {self.LUMINOSITY}")
         

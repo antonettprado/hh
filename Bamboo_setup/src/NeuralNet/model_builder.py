@@ -1,38 +1,43 @@
 import tensorflow as tf
 from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Masking, Add
+from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Add, Rescaling
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
 import tensorflow.keras.backend as K
+import numpy as np
 from NeuralNet import utils
 from NeuralNet.registry_losses import LossRegistry
 from NeuralNet.registry_models import ModelRegistry
 
 logger = utils.get_logger(__name__, log_level='debug')
 
-def Build(config, X_train, n_classes=None, normalizer_type: str = 'normalization'):
+def Build(config, X_train, n_classes=None, prep_type: str = 'scaled0to1_excOutliers5per'):
 
     if config.architecture == 'defined_here':
         ndim = X_train.shape[1]
-        normalizer = setup_normalizer(X_train, normalizer_type)
-        return build_custom_arch(config, ndim, normalizer)
+        preprocesser = get_preprocesser(X_train, prep_type)
+        return build_custom_arch(config, ndim, preprocesser)
     else:
         return build_registered_arch(config, X_train, n_classes)
     
-def setup_normalizer(X_train, type: str = 'normalization'):
+def get_preprocesser(X_train, type: str = 'normalization'):
     if type == 'normalization':
-        normalizer = Normalization(
-            mean=X_train.mean(axis=0).to_numpy(),
-            variance=X_train.var(axis=0).to_numpy(),
-            name='normalization')
-    return normalizer
+        preprocesser = Normalization(name='normalization')
+        preprocesser.adapt(X_train)
+    elif type == 'scaled0to1_excOutliers5per':
+        x_min = np.percentile(X_train, 5, axis=0)
+        x_max = np.percentile(X_train, 95, axis=0)
+        scale = 1.0/(x_max - x_min)
+        offset = -x_min/(x_max - x_min)
+        preprocesser = Rescaling(scale=scale, offset=offset)
+    return preprocesser
 
-def build_custom_arch(config, ndim, normalizer):
+def build_custom_arch(config, ndim, preprocesser):
     logger.debug(f"\tSetting up architecture from yml ...")
 
     input_layer = Input(shape=(ndim,))
-    normalized_input = normalizer(input_layer)
-    x = normalized_input
+    preprocessed_input = preprocesser(input_layer)
+    x = preprocessed_input
     for n_layer, layer in enumerate(config.hiddenlayers):
         if layer.type == 'Dense':
             reg = get_activity_regularizer(layer.act_regularizer)
