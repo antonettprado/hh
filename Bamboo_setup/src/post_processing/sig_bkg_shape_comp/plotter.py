@@ -10,51 +10,55 @@ from pathlib import Path
 import argparse
 import math
 from typing import Union
-import pandas as pd
-import json, yaml
+import yaml
 from utils import variables
 from post_processing import References as Refs
+from itertools import product
+from collections import defaultdict
+from dataclasses import dataclass, field
 
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
 ROOT.gErrorIgnoreLevel = ROOT.kError
 
-ALL_PROCESS_FILES = {file for process_files in Refs.PROCESSES_FILES.values() for file in process_files}
-
 BAMBOO_SETUP = Path(__file__).parents[3]
+
 
 class BasePlotter:
 
-    def __init__(self, dir: str, configFile: str, era:str, outdir:str,  dirtype: str):
-        assert Path(dir).exists(), f"{dir} does not exist"
+    def __init__(self, basedir: str, configFile: str, outdir:str,  dirtype: str):
+        assert Path(basedir).exists(), f"{basedir} does not exist"
         assert Path(configFile).exists(), f"{configFile} does not exist"
         assert dirtype in ['workdir', 'superworkdir']
 
-        self.dir = Path(dir)
+        self.basedir = Path(basedir)
         self.dirtype = dirtype
-        self.plotterdir = self.dir / outdir
-        self.era = era
+        self.plotterdir = self.basedir / outdir
 
         self.refs_file = None
         self.refs = None
-        self.LUMINOSITY = None
-        self.CROSS_SECTIONS = None
+        self.eras: list[str] 
+        self.LUMINOSITY:dict[str, float] = dict()         # dict{era: era_lumi}
+        self.CROSS_SECTIONS: dict[str, float] = dict()    # dict{subprocess: subprocess_crosssection}
+        self.SAMPLES: dict[str, str] = dict()             # dict{subprocess: era}
 
     def _set_configFile_info(self, configFile: Path):
         with open(configFile, "r") as yaml_file:
             yaml_data = yaml.safe_load(yaml_file)
-            if self.era is None: self.era = list(yaml_data['eras'].keys())[0]
-            self.LUMINOSITY: float = yaml_data['eras'][self.era]['luminosity']
-            self.CROSS_SECTIONS: 'dict[str, float]' = { 
-                sample_name: sample_data['cross-section'] if sample_data['type'] == 'mc' else 0
-                for sample_name, sample_data in yaml_data['samples'].items() }
+            self.eras = list(yaml_data['eras'].keys())
+            for era in self.eras:
+                self.LUMINOSITY[era] = yaml_data['eras'][era]['luminosity']
+            for subprocess_name, subprocess_data in yaml_data['samples'].items():
+                self.CROSS_SECTIONS[subprocess_name] = subprocess_data['cross-section'] if subprocess_data['type'] == 'mc' else None
+                self.SAMPLES[subprocess_name] = subprocess_data['era']
+        print(f"CROSS_SECTIONS: {self.CROSS_SECTIONS}")
+        print(f"LUMINOSITY: {self.LUMINOSITY}")
         
     def _set_refs_file_and_refs(self, ref_workdir: Path):
         '''
-        For either a dirtype of 'workdir' or 'superworkdir' set a reference reference root file to pull all references from
+        For either a dirtype of 'workdir' or 'superworkdir' set a reference root file to pull all references from
         '''
-        _find_root_files = lambda dir: [file for file in dir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
-        self.refs_file = _find_root_files(ref_workdir/'results')[0]
+        self.refs_file = Refs._find_root_files(ref_workdir/'results')[0]
         tfile = TFile.Open(str(self.refs_file), 'read')
         refs = []
         for key in tfile.GetListOfKeys():
@@ -66,8 +70,7 @@ class BasePlotter:
 
         self.refs = refs
 
-    # Helper utility function for getting the weights stored in root files
-    def open_root_files(self, resultsdir, names: list[str]) -> list[TFile]:
+    def open_root_files(self, resultsdir: Path, sample_names: list[Path]) -> dict[TFile, float]:
         '''
         Opens a group of ROOT files and extracts the total sum of weights saved to the yield histogram
         called "genEventSumWeight". The histogram is saved with the sum of MC weights over the whole sample,
@@ -75,107 +78,78 @@ class BasePlotter:
         reading a histogram to scale it appropriately
 
         Args:
-            names (list[str]): the names of the root files
+            sample_names (list[str]): the sample_names of the root files
             path (str): the path to the directory containing the root files
         '''
-        files = []
+        tfiles_info = {} # dict{TFile: sumWeight}
         try:
-            for name in names:
-                if (resultsdir / name).exists():
-                    file = TFile.Open(str(resultsdir / name), 'read')
+            for sample_name in sample_names:
+                if (resultsdir / sample_name).exists():
+                    file = TFile.Open(str(resultsdir / sample_name), 'read')
                     if file:
-                        files.append(file)
+                        yld_hist = file.Get('yields_genEventSumWeight')
+                        if yld_hist:
+                            sumw = yld_hist.Integral()
+                        else:
+                            print(f"Warning: yields_genEventSumWeight not found in {file.GetName()}")
+                    tfiles_info[file] = sumw
                 else:
-                    print(f"{name} does not exist: skipping")
-            
-            for file in files:
-                sample_name = Path(file.GetName()).stem
-                yld_hist = file.Get('yields_genEventSumWeight')
-                if yld_hist:
-                    sumw = yld_hist.Integral()
-                    self.SUM_WEIGHTS[sample_name] = sumw
-                else:
-                    print(f"Warning: yields_genEventSumWeight not found in {file.GetName()}")
+                    print(f"{sample_name} does not exist: skipping")
         except Exception as e:
             print(f"Error opening files: {e}")
 
-        return files
+        return tfiles_info
 
+    def get_hist_from_file(self, ref: str, era: str, file: TFile, sumWeight: float) -> ROOT.TH1:
+        file_name = Path(file.GetName()).stem
+        subprocess_name = file_name.rsplit('_', 1)[0]
 
-    def get_hist_from_file(self, ref: str, file: TFile) -> ROOT.TH1:
-        sample_name = Path(file.GetName()).stem
         try:
             hist: ROOT.TH1 = file.Get(ref)
             if hist:
                 hist.SetDirectory(0)
             else:
-                raise KeyError(f"'{ref}' not found in {sample_name}")
+                raise KeyError(f"'{ref}' not found in {file_name}")
         except AttributeError as err:
-            raise KeyError(f"'{ref}' not found in {sample_name}") from err
+            raise KeyError(f"'{ref}' not found in {file_name}") from err
         
-        if sample_name in self.CROSS_SECTIONS:
-            if self.CROSS_SECTIONS[sample_name] != 0:
-                scale_factor = self.CROSS_SECTIONS[sample_name] * self.LUMINOSITY / self.SUM_WEIGHTS[sample_name]
+        if subprocess_name in self.CROSS_SECTIONS.keys():
+            if self.CROSS_SECTIONS[subprocess_name] != 0:
+                scale_factor = self.CROSS_SECTIONS[subprocess_name] * self.LUMINOSITY[era] / sumWeight
             else:
                 scale_factor = 1.0
             hist.Scale(scale_factor)
         else:
-            raise KeyError(f"{sample_name} was not found in the configFile")
+            raise KeyError(f"{subprocess_name} is not part of the CROSS_SECTIONS dict")
         
         return hist
 
-
 class Plotter(BasePlotter):
 
-    def __init__(self, dir: str, configFile: str, era=None, outdir:str='plotter', which_processes: Union[str, list[str]]="All", resultsdir: str=None):
-        super().__init__(dir, configFile, era, outdir, dirtype='workdir')
-        if not resultsdir:
-            resultsdir = self.dir / 'results'
-        self.resultsdir = Path(resultsdir)
-        self.dirprocesses = Refs._find_processes(self.resultsdir)
-        self.SUM_WEIGHTS: dict[str, float] = {}
-        self.tfiles: dict[str, list[TFile]] = {}
-        super()._set_refs_file_and_refs(ref_workdir=self.resultsdir.parent)
+    def __init__(self, workdir: str, configFile: str, outdir:str='plotter', which_processes: Union[str, list[str]]="All"):
+        super().__init__(workdir, configFile, outdir, dirtype='workdir')
+        self.workdir = Path(workdir)
+        self.resultsdir = self.workdir / 'results'
+        self.present_processes = Refs._find_processes(self.resultsdir)
+        self.active_processes = self.present_processes if which_processes == 'All' else which_processes
+        self.tfiles_info: dict[TFile, float] = {}            # dict{TFile: sumWeight}
+        self._post_init_(configFile)
+        print(f"Active processes: {self.active_processes}")
+        print(f"Eras: {self.eras}")
+
+    def _post_init_(self, configFile):
         super()._set_configFile_info(Path(configFile))
-        processes_to_run_on = self.decide_processes_to_run_on(which_processes)
-        self.open_process_tfiles(processes_to_run_on) 
-
-    def decide_processes_to_run_on(self, which_processes: Union[str, list[str]]) -> list[str]:
-        if which_processes == 'All':
-            processes_to_run_on = self.dirprocesses
-        else:
-            assert isinstance(which_processes, list)
-            for proc in which_processes:
-                assert proc in Refs.PROCESSES_FILES.keys(), f"{proc} is not in Refs.PROCESSES_FILES.keys()"
-            processes_to_run_on = [proc for proc in which_processes if proc in self.dirprocesses]
-        return processes_to_run_on
-
-    # Opens all files corresponding to processes to run on. Saves them to self.tfiles: dict[str: list[TFile]]
-    def open_process_tfiles(self, processes_to_run_on: list[str]) -> None:
-        for proc in processes_to_run_on:
-            proc_filenames = [ stem + ".root" for stem in Refs.PROCESSES_FILES[proc] ]
-            opened_proc_files: list[TFile] = super().open_root_files(self.resultsdir, proc_filenames)
-            self.tfiles[proc] = opened_proc_files 
-
-    # Looks up TFiles from self.tfiles for a given process (eg. HH). Returns histogram of that ref for that process combined over TFiles
-    def get_process_hist(self, ref: str, proc: str) -> ROOT.TH1:
-        tfiles = self.tfiles[proc]
-
-        total_hist: ROOT.TH1 = self.get_hist_from_file(ref, tfiles[0])
-        if total_hist:
-            for i_file in tfiles[1:]:
-                hist = self.get_hist_from_file(ref, i_file)
-                
-                if hist:
-                    total_hist.Add(hist)
-                else:
-                    print(f"Warning: Histogram for file {i_file.GetName()} and ref {ref} is None")
-        else:
-            print(f"Warning: Initial histogram for ref {ref} is None")
-            
-        total_hist.SetLineColor(Refs._get_color_for(proc, ROOT_b=True))
-        return total_hist 
-
+        super()._set_refs_file_and_refs(ref_workdir=self.workdir)
+        sample_names = []
+        root_files = Refs._find_root_files(self.resultsdir)
+        for file in root_files:
+            file_name = file.stem
+            proc_file, era = file_name.rsplit('_', 1)[0], file_name.rsplit('_', 1)[1]
+            proc_present = any(proc_file in proc_files for proc in self.active_processes for proc_files in Refs.PROCESSES_FILES[proc])
+            era_present = era in self.eras
+            if proc_present and era_present:
+                sample_names.append(file)
+        self.tfiles_info = super().open_root_files(self.resultsdir, sample_names)
     
     def get_signal_and_backg_hists(self, ref: str, process_hist_dict: dict[str, ROOT.TH1]) -> dict[str, ROOT.TH1]:
         hist_dict = {proc: hist.Clone(f"{ref}_{proc}") for proc, hist in process_hist_dict.items()}
@@ -244,42 +218,17 @@ class Plotter(BasePlotter):
             # PROBLEMATIC_VARIABLES.append([ss_var.ref, i_bin, i_signal, i_backg])
             return hist_sen_dict, line_maxsen_dict
 
-    def _get_ref_outdir(self, ref, normalization):
-        '''
-        Returns: 
-                ref_outdir: Path of object of output path (including name) for ref. Example: 'plotter/SL_res_2b_x/Variables/norm_lumi' 
-                dist_name: name of the distribution or variable (after stripping the selection prefix)
-        '''
-        outpath_sel = None
-        dist_name  = None
-        for sel in Refs.SELECTIONS:
-            if ref.startswith(sel):
-                outpath_sel = self.plotterdir / sel
-                dist_name = ref.removeprefix(sel+'_')
-                break
-        if outpath_sel is None:
-            outpath_sel = self.plotterdir / 'Others'
-            dist_name = ref
-        
-        if '_llr' in dist_name:
-            outpath_type = outpath_sel / 'LLR'
-        else:
-            outpath_type = outpath_sel / 'Variables'
+    def _draw_1Dhists_on_one_canvas(self, ref, hist_dict: dict[str, ROOT.TH1], line_dict: dict[str, ROOT.TLine]):
 
-        if normalization == 'lumi': ref_outdir = outpath_type / 'norm_lumi'
-        elif normalization == 'unity': ref_outdir = outpath_type / 'norm_unity'
-
-        return ref_outdir, dist_name
-
-    def _draw_1Dhists_on_one_canvas(self, ref, dist_name, ref_outdir:Path, hist_dict: dict, line_dict: dict, normalization='lumi'):
-        canvas = ROOT.TCanvas(f'canvas{ref}', ref, 200, 200)
+        canvas = ROOT.TCanvas(f'canvas{ref.ref}', ref.ref, 200, 200)
         leg = ROOT.TLegend(0.55, 0.75, 0.9, 0.9)
         canvas.SetGrid()
         leg.SetTextSize(0.025)
 
-        if 'llr' in dist_name:
-            dist_name = dist_name.replace('_llr', '')
-            varnames = dist_name.split('_x_')
+        # Based on variable type, set the x-axis range and label    
+        if 'llr' in ref.dist_name:
+            dist_name = ref.dist_name
+            varnames = dist_name.replace('_llr', '').split('_x_')
             var = variables.LikelihoodRatio(varnames)
             xlabel = 'Log-likelihood Ratio'
             max_bin_list, min_bin_list = [], []
@@ -298,21 +247,21 @@ class Plotter(BasePlotter):
             max_bin = min(var.nbins, max(*[max_bin_j + right_padding for max_bin_j in max_bin_list]))
             min_bin = max(1, min(*[min_bin_j - left_padding for min_bin_j in min_bin_list]))
             list(hist_dict.values())[0].GetXaxis().SetRange(min_bin, max_bin)
-        elif dist_name in variables.ALL_VARNAMES_1D:
-            var = variables.Variable1D(dist_name)
+        elif ref.dist_name in variables.ALL_VARNAMES_1D:
+            var = variables.Variable1D(ref.dist_name)
             xlabel = var.full_title
-        elif 'isSignal' in dist_name:
+        elif 'isSignal' in ref.dist_name:
             xlabel = 'DNN Score'
         else: 
-            xlabel = dist_name
+            xlabel = ref.dist_name
             
-        if normalization == 'lumi':
+        # Based on normalization type, set the y-axis range and label
+        if ref.norm_type == 'lumi':
             canvas.SetLogy()
             maximum = 100*max([hist_i.GetMaximum() for hist_i in hist_dict.values()])
-            # maximum = 1e6
             minimum = 1e-5
             ylabel = 'events'
-        elif normalization == 'unity':
+        elif ref.norm_type == 'unity':
             for hist in hist_dict.values():
                 integral = hist.Integral()
                 if integral != 0.0:
@@ -345,15 +294,16 @@ class Plotter(BasePlotter):
         leg.Draw()
         canvas.SetLeftMargin(0.13)
         canvas.Update()
-        if not ref_outdir.exists(): ref_outdir.mkdir(exist_ok=True, parents=True)
-        ref_outfilename = f"{dist_name}.pdf"
-        canvas.SaveAs(str(ref_outdir / ref_outfilename))
+        final_dir = self.plotterdir / ref.outdir
+        final_dir.mkdir(exist_ok=True, parents=True)
+        full_filepath = f"{str(final_dir / ref.dist_name)}.pdf"
+        canvas.SaveAs(full_filepath)
         canvas.Close()
 
-    def _draw_2D_hist_on_one_canvas(self, ref, dist_name, ref_outdir:Path, hist, leg):
+    def _draw_2D_hist_on_one_canvas(self, ref, hist, leg):
 
-        if dist_name in variables.ALL_VARNAMES_2D:
-            var = variables.Variable2D(dist_name)
+        if ref.dist_name in variables.ALL_VARNAMES_2D:
+            var = variables.Variable2D(ref.dist_name)
             xlabel = var.xfull_title
             ylabel = var.yfull_title
         else:
@@ -367,58 +317,64 @@ class Plotter(BasePlotter):
         hist.GetXaxis().SetTitle(xlabel)
         hist.GetYaxis().SetTitle(ylabel)
         canvas.Update()
-        if not ref_outdir.exists(): ref_outdir.mkdir(exist_ok=True, parents=True)
-        ref_outfilename = f"{leg}.pdf"
-        canvas.SaveAs(str(ref_outdir / ref_outfilename))
+        ref.update()
+        final_dir = self.plotterdir / ref.outdir / ref.dist_name
+        final_dir.mkdir(exist_ok=True, parents=True)
+        full_filepath = f"{str(final_dir / leg)}.pdf"
+        canvas.SaveAs(full_filepath)
         canvas.Close()
 
-    def Draw_Processes(self, refs:list = None, normalization='lumi', combine_backs=False, sen_info=True, refs_endingwith=None):
+    def Draw_Refs(self, refs:list = None, normalization='lumi', combine_backgs=False, sen_info=True, refs_endingwith=None, combine_eras=False):
         '''
         Args: 
+            refs: list of references exactly as they appear in the root files
             normalization: either 'lumi' or 'unity'
-            combine_backs: combines bacground processes
+            combine_backgs: combines bacground processes
             sen_info: plots s/sqrt(b) histogram and max-sensitivity 
         '''
+        selected_refs = (
+            self.refs if refs and not refs_endingwith
+            else filter(lambda r: r.endswith(refs_endingwith), refs) if refs and refs_endingwith
+            else filter(lambda r: r.endswith(refs_endingwith), self.refs) if not refs and refs_endingwith
+            else self.refs
+        )
 
-        if refs is None and refs_endingwith is None: 
-            refs = self.refs
-        elif refs is None and refs_endingwith is not None:
-            refs = [ref for ref in self.refs if ref.endswith(refs_endingwith)]
-
-        for i, ref in enumerate(refs):
-            print(f"Ref: {ref}")
-            process_hist_dict: dict[str, ROOT.TH1] = {} # eg. {"HH": ROOT.TH1D, ...}
-            for process in self.tfiles.keys():
-                process_hist = self.get_process_hist(ref, process)
-                process_hist_dict[process] = process_hist
-
-            sig_back_dict = self.get_signal_and_backg_hists(ref, process_hist_dict)
-            
-            hist_dict, line_dict = {}, {} 
-            if combine_backs:
-                hist_dict =  sig_back_dict
+        for ref in selected_refs:
+            print(f"Processing reference: {ref}")
+            Ref = Reference(ref, self, combine_eras, normalization)
+            if combine_eras:
+                process_hist_dict = Ref.assemble_for_combined_eras()
+                self.draw_processes(Ref, process_hist_dict, combine_backgs, sen_info)
             else:
-                hist_dict = process_hist_dict
+                for era in self.eras:
+                    process_hist_dict = Ref.assemble_for_era(era)
+                    self.draw_processes(Ref, process_hist_dict, combine_backgs, sen_info)
 
-            ref_outdir, dist_name = self._get_ref_outdir(ref, normalization)
+    def draw_processes(self, ref, process_hist_dict, combine_backgs, sen_info):
 
-            hist_0 = list(hist_dict.values())[0]
-            if isinstance(hist_0, ROOT.TH1) and not isinstance(hist_0, ROOT.TH2) and not isinstance(hist_0, ROOT.TH3):
-                if sen_info:
-                    hist_sen_dict, line_sen_dict = self.get_sensitivity_dict(ref, sig_back_dict)
-                    hist_dict.update(hist_sen_dict)
-                    line_dict.update(line_sen_dict)
-                self._draw_1Dhists_on_one_canvas(ref=ref, dist_name=dist_name, ref_outdir=ref_outdir, hist_dict=hist_dict, line_dict=line_dict, normalization=normalization)
-            if isinstance(hist_0, ROOT.TH2):
-                ref_outdir = ref_outdir / dist_name
-                for leg_i, hist_i in hist_dict.items():
-                    self._draw_2D_hist_on_one_canvas(ref=ref, dist_name=dist_name, ref_outdir=ref_outdir, hist=hist_i, leg=leg_i)
+        sig_back_dict = self.get_signal_and_backg_hists(ref, process_hist_dict)
+        
+        line_dict = {} 
+        hist_dict =  sig_back_dict if combine_backgs else process_hist_dict
+
+        hist_0 = list(hist_dict.values())[0]
+        if isinstance(hist_0, ROOT.TH1) and not isinstance(hist_0, ROOT.TH2) and not isinstance(hist_0, ROOT.TH3):
+            if sen_info:
+                hist_sen_dict, line_sen_dict = self.get_sensitivity_dict(ref, sig_back_dict)
+                hist_dict.update(hist_sen_dict)
+                line_dict.update(line_sen_dict)
+            self._draw_1Dhists_on_one_canvas(ref=ref, hist_dict=hist_dict, line_dict=line_dict)
+        if isinstance(hist_0, ROOT.TH2):
+            for leg_i, hist_i in hist_dict.items():
+                self._draw_2D_hist_on_one_canvas(ref=ref, hist=hist_i, leg=leg_i)
                     
     def Get_Signal_Background_for_ref(self, ref:str, normalized:bool=True) -> dict[str, ROOT.TH1]:
 
+        ref_histograms = self.RefHistograms(ref, self)
+
         process_hist_dict: dict[str, ROOT.TH1] = {} # eg. {"HH": ROOT.TH1D, ...}
         for process in self.tfiles.keys():
-            process_hist = self.get_process_hist(ref, process)
+            process_hist = self.get_process_hist_for_era(ref, process, era)
             process_hist_dict[process] = process_hist
 
         sig_back_dict: dict[str, ROOT.TH1] = self.get_signal_and_backg_hists(ref, process_hist_dict)
@@ -432,15 +388,95 @@ class Plotter(BasePlotter):
                     print(f"Warning: Integral for {hist.GetName()} is zero.")
 
         return sig_back_dict
-    
 
 # ==== SuperPlotter class NOT YET COMPLETED =====================
 
+@dataclass
+class Reference():
+    ref: str
+    plotter: Plotter 
+    combine_eras: bool
+    norm_type: str
+
+    def __post_init__(self):
+        self.processes = self.plotter.active_processes
+        self.eras = self.plotter.eras
+        self.selection = self._set_selection()
+        self.dist_name = self._set_dist_name()
+        self.histograms = defaultdict(lambda: defaultdict(dict))
+        self._set_histograms()
+
+    def _set_selection(self):
+        return next((sel for sel in Refs.SELECTIONS if self.ref.startswith(sel)), 'Others')
+
+    def _set_dist_name(self):
+        prefix = f"{self.selection}_" if self.selection != 'Others' else ''
+        return self.ref.removeprefix(prefix)
+    
+    def _set_histograms(self):
+        for process, era in product(self.processes, self.eras):
+            hist = self._get_process_hist_for_era(process, era)
+            if hist:
+                self.histograms[process][era] = hist
+            else:
+                print(f"Warning: Histogram for process {process} and era {era} is None")
+
+    def _get_process_hist_for_era(self, proc: str, era:str) -> ROOT.TH1:
+        era_tfiles = {tfile: sumWeight for tfile, sumWeight in self.plotter.tfiles_info.items() if tfile.GetName().endswith(f"{era}.root")}
+        era_process_tfiles = {tfile: sumWeight for tfile, sumWeight in era_tfiles.items() if any(Path(tfile.GetName()).stem.startswith(process_file) for process_file in Refs.PROCESSES_FILES[proc])}
+
+        tfile_0, sumWeight_0 = list(era_process_tfiles.items())[0]
+        total_hist: ROOT.TH1 = self.plotter.get_hist_from_file(self.ref, era, tfile_0, sumWeight_0)
+
+        if total_hist:
+            for tfile, sumWeight in list(era_process_tfiles.items())[1:]:
+                hist = self.plotter.get_hist_from_file(self.ref, era, tfile, sumWeight)
+                if hist:
+                    total_hist.Add(hist)
+                else:
+                    print(f"Warning: Histogram for file {tfile.GetName()} and ref {self.ref} is None")
+        else:
+            print(f"Warning: Initial histogram for ref {self.ref} is None")
+        total_hist.SetLineColor(Refs._get_color_for(proc, ROOT_b=True))
+        return total_hist
+
+    def __repr__(self):
+        return f"Reference(ref={self.ref}, plotter={self.plotter}, combine_eras={self.combine_eras}, norm_type={self.norm_type}, outdir={self.outdir}, dist_name={self.dist_name})"
+
+    def assemble_for_combined_eras(self) -> dict[str, ROOT.TH1]:
+        self.outdir = self._set_outdir()
+        process_hist_dict = {}
+        for process in self.processes:          
+            total_hist = self.histograms[process][self.eras[0]]
+            for era in self.eras[1:]:
+                total_hist.Add(self.histograms[process][era])
+            process_hist_dict[process] = total_hist
+        return process_hist_dict
+
+    def assemble_for_era(self, era:str) -> dict[str, ROOT.TH1]:
+        self.outdir = self._set_outdir(era)
+        process_hist_dict = {}
+        for process in self.processes:
+            process_hist_dict[process] = self.histograms[process][era]
+        return process_hist_dict
+
+    def _set_outdir(self, era:str=None):
+        ref_type = 'LLR' if '_llr' in self.dist_name else 'Variables'
+        if self.combine_eras:
+            era_type = 'Combined'
+            for era_i in self.eras:
+                era_type = f"{era_type}_{era_i}"
+        else:
+            era_type = era
+        return Path(self.selection) / ref_type / era_type/ self.norm_type 
+
+
 class SuperPlotter(BasePlotter):
 
-    def __init__(self, dir: str, configFile: str, era=None):
-        super().__init__(dir, configFile, era, dirtype='superworkdir')
-        self.workdirs = [item for item in self.dir if (item/'results').is_dir()]
+    def __init__(self, superworkdir: str, configFile: str, eras:list[str]=None):
+        super().__init__(superworkdir, configFile, eras, dirtype='superworkdir')
+        self.superworkdir = Path(superworkdir)
+        self.workdirs = [item for item in self.superworkdir if (item/'results').is_dir()]
         self.dirprocesses = set([proc for proc, files in Refs.PROCESSES_FILES.items() for f in self.resultsdir.iterdir() if f.stem in files ])
         self.SUM_WEIGHTS = {}
         super().__set_refs_file_and_refs(ref_workdir=self.workdirs[0])
@@ -462,26 +498,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Comparing signal vs background")
     parser.add_argument("-i", "--inputdir", action="store", help="work directory. Ex: Z_OUTPUT/Local_VarsReco")
     parser.add_argument("-c", "--configFile", default='config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
-    parser.add_argument("-e", "--era", default=None, help="Era year; else default will be the first option under 'eras' in configFile")
-    parser.add_argument("-o", "--outdir", default=None, help="Output directory name. Default: 'plotter'")
+    parser.add_argument("-o", "--outdir", default='plotter', help="Output directory name. Default: 'plotter'")
+    parser.add_argument("-ce", "--combine_eras", action="store_true", default=False, help="Combine eras. Default: False")
     args = parser.parse_args()
 
-    '''
-    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/2022_even_1013/NN_DNNManager -c config/analysis_2022.yml -e 2022 -o plotter
-
-    python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/Vars_2022_NEW_All -c config/analysis_2022_all.yml -e 2022
-    '''
-
-    myPlotter = Plotter(args.inputdir, args.configFile, args.era, args.outdir)
-    myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
-    myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
-    # myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, which_processes=['HH', 'ttbar'])
+    myPlotter = Plotter(args.inputdir, args.configFile, args.outdir)
+    myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True, combine_eras=args.combine_eras)
+    myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False, combine_eras=args.combine_eras)
+    # myPlotter.Draw_Processes(normalization='unity', combine_backgs=False, sen_info=False, which_processes=['HH', 'ttbar'])
+    
     '''
     Examples of use from script:
-        myPlotter = Plotter(dir=Z_OUTPUT/TOTAL_VarsReco_2022, dirtype='workdir', configFile=config/analysis_2022.yml, era='2022)
+        myPlotter = Plotter(dir=Z_OUTPUT/TOTAL_VarsReco_2022, dirtype='workdir', configFile=config/analysis_2022.yml, eras=[2022, 2022EE])
         myPlotter.Draw_Processes(normalization='unity')
         myPlotter.Draw_Processes(normalization='lumi')
 
     Example of use from command line:
-        python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/TOTAL_VarsReco_2022_3backs -c config/analysis_2022_3backs.yml
+        python3 src/post_processing/sig_bkg_shape_comp/plotter.py -i $Z_OUTPUT_eos/2022_even_1013/DNNManager_model_registry -c config/analysis_2022.yml
     '''

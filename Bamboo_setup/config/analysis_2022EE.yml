@@ -12,7 +12,7 @@ samples:
   ######################################################################################################################################################################################################
   # ggF HH
 
-  bbWW_sl:
+  bbWW_sl_2022EE:
     era: "2022EE"
     group: "HH_bbWW"
     db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v3/NANOAODSIM
@@ -21,7 +21,7 @@ samples:
     generated-events: genEventSumw
     split: 15
   
-  bbWW_dl:
+  bbWW_dl_2022EE:
     era: "2022EE"
     group: "HH_bbWW"
     db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -30,7 +30,7 @@ samples:
     generated-events: genEventSumw
     split: 25
 
-  bbtautau:
+  bbtautau_2022EE:
    era: "2022EE"
    group: "HH_bbtautau"
    db: das:/GluGlutoHHto2B2Tau_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v3/NANOAODSIM
@@ -49,7 +49,7 @@ samples:
   ######################################################################################################################################################################################################
   # ttbar
 
-  TTbar_sl:
+  TTbar_sl_2022EE:
     era: "2022EE"
     group: "TTbar"
     db: [das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
@@ -60,7 +60,7 @@ samples:
     generated-events: genEventSumw
     split: 200
 
-  TTbar_dl:
+  TTbar_dl_2022EE:
     era: "2022EE"
     group: "TTbar"
     db: [das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
@@ -73,7 +73,7 @@ samples:
   
   ######################################################################################################################################################################################################
   # tW
-  tbarWplus_sl:
+  tbarWplus_sl_2022EE:
     era: "2022EE"
     group: "tW"
     db: [das:/TbarWplustoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
@@ -84,7 +84,7 @@ samples:
     generated-events: genEventSumw
     split: 50
 
-  tbarWplus_dl:
+  tbarWplus_dl_2022EE:
     era: "2022EE"
     group: "tW"
     db: [das:/TbarWplusto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
@@ -95,7 +95,7 @@ samples:
     generated-events: genEventSumw
     split: 20
 
-  tWminus_sl:
+  tWminus_sl_2022EE:
     era: "2022EE"
     group: "tW"
     db: [das:/TWminustoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
@@ -106,7 +106,7 @@ samples:
     generated-events: genEventSumw
     split: 50
 
-  tWminus_dl:
+  tWminus_dl_2022EE:
     era: "2022EE"
     group: "tW"
     db: [das:/TWminusto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
@@ -119,7 +119,7 @@ samples:
 
   ######################################################################################################################################################################################################
   # W+jets
-  Wjets_0J:
+  Wjets_0J_2022EE:
     era: "2022EE"
     group: "WJets"
     db: das:/WtoLNu-2Jets_0J_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v3/NANOAODSIM # 3432 files
@@ -128,7 +128,7 @@ samples:
     generated-events: genEventSumw
     split: 200
 
-  Wjets_1J:
+  Wjets_1J_2022EE:
     era: "2022EE"
     group: "WJets"
     db: das:/WtoLNu-2Jets_1J_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM # 2669 files
@@ -137,7 +137,7 @@ samples:
     generated-events: genEventSumw
     split: 200
 
-  Wjets_2J:
+  Wjets_2J_2022EE:
     era: "2022EE"
     group: "WJets"
     db: das:/WtoLNu-2Jets_2J_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM # 2135 files
@@ -148,7 +148,7 @@ samples:
 
   ######################################################################################################################################################################################################
   # DY
-  DY_dl_mll_10to50:
+  DY_dl_mll_10to50_2022EE:
     era: "2022EE"
     group: "DY"
     db: das:/DYto2L-2Jets_MLL-10to50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -157,7 +157,7 @@ samples:
     generated-events: genEventSumw
     split: 20
 
-  DY_dl_mll_50_0J:
+  DY_dl_mll_50_0J_2022EE:
     era: "2022EE"
     group: "DY"
     db: das:/DYto2L-2Jets_MLL-50_0J_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM # 452 files
@@ -166,7 +166,7 @@ samples:
     generated-events: genEventSumw
     split: 20
 
-  DY_dl_mll_50_1J:
+  DY_dl_mll_50_1J_2022EE:
     era: "2022EE"
     group: "DY"
     db: das:/DYto2L-2Jets_MLL-50_1J_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM # 454 files
@@ -175,7 +175,7 @@ samples:
     generated-events: genEventSumw
     split: 20
 
-  DY_dl_mll_50_2J:
+  DY_dl_mll_50_2J_2022EE:
     era: "2022EE"
     group: "DY"
     db: das:/DYto2L-2Jets_MLL-50_2J_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM # 386 files
@@ -186,7 +186,7 @@ samples:
 
   ######################################################################################################################################################################################################
   # VV
-  WW:
+  WW_2022EE:
     era: "2022EE"
     group: "VV"
     db: das:/WW_TuneCP5_13p6TeV_pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -195,7 +195,7 @@ samples:
     generated-events: genEventSumw
     split: 10
 
-  WZ:
+  WZ_2022EE:
     era: "2022EE"
     group: "VV"
     db: das:/WZ_TuneCP5_13p6TeV_pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -204,7 +204,7 @@ samples:
     generated-events: genEventSumw
     split: 10
 
-  ZZ:
+  ZZ_2022EE:
     era: "2022EE"
     group: "VV"
     db: das:/ZZ_TuneCP5_13p6TeV_pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
