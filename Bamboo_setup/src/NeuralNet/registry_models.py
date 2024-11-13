@@ -1,7 +1,9 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Lambda, Dropout, Add, Rescaling
+from keras import Model, regularizers
+from keras.layers import Input, BatchNormalization, Dense, Normalization, Lambda, Dropout, Add, Rescaling
+# from tensorflow.keras import Model, regularizers
+# from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Lambda, Dropout, Add, Rescaling
 from NeuralNet.utils import Registry
 from typing import Dict, Callable
 

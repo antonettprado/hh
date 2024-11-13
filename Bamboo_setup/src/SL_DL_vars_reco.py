@@ -162,9 +162,9 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
 
-        myPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes="All")
-        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
-        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
+        myPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes="All")
+        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
+        myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)
 
 
         from post_processing import llr_functions
@@ -178,5 +178,5 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             which_processes = ['HH'] + self.args.llr_backgrounds
             postfix = ''.join(self.args.llr_backgrounds)
 
-        llrPlotter: Plotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, which_processes=which_processes)
+        llrPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes=which_processes)
         llr_functions.compute_llrs(plotter=llrPlotter, outfilename='corrections_llr_'+postfix, which_processes=which_processes)

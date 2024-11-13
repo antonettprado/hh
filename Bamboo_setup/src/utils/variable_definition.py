@@ -7,7 +7,7 @@ SELECTIONS = None
 NULL: int = -9999
 
 # =====================================================================
-# ================== IMPORTANT ========================================
+# =========================== IMPORTANT ===============================
 # =====================================================================
 # Must set selections for vars before using any function in this script
 def set_selections_for_vars(selections: dict):
