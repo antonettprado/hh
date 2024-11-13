@@ -266,32 +266,6 @@ cp $(voms-proxy-info -p) ~/private/x509up
 export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
-### Additional options
-
-Sam likes the following executable scripts in his `~/bamboodev/bamboovenv/bin` directory.
-
-**br**: Faster way of typing `python -u bambooRunBetter.py [args] &> afs_outdir/out.txt &`, which runs bambooRunBetter in the background and pipes the output to the specified afs directory. 
-Eg: from `Bamboo_setup`: `br src/SL_DL_event_selection.py total_event_selection -td`
-```bash
-#!/usr/bin/env bash
-
-[ -d Z_OUTPUT/$2 ] || mkdir Z_OUTPUT/$2 2> /dev/null
-OUTFILE="Z_OUTPUT/$2/out.txt"
-python -u bambooRunBetter.py $@ &> $OUTFILE &
-echo Output is being redirected to $OUTFILE
-```
-
-**clean**: Removes files in afs and eos area at the same time. Use carefully as files are not recoverable. 
-Eg: from `Bamboo_setup`: `clean total_vars_reco`
-```bash
-#!/usr/bin/env bash
-
-if [ -z "$1" ]; then
-        exit 1
-fi
-rm -rf Z_OUTPUT/$1 /eos/user/s/scrossle/$1
-```
-
 # ------------------------------ Analysis -------------------------------
 ## To Use bambooRunBetter.py
 ```bash
