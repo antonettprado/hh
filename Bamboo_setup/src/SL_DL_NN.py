@@ -64,8 +64,8 @@ class SL_DL_NN(NanoBaseHHbbWW):
         llr_names = [s for s in feature_names if s.endswith('_llr')]
         input_vars = []
 
-        sel_subvars_dict = var_defs.gathers_vars_dict(objects, selections)
-        subvars_dict = sel_subvars_dict[sel_name]
+        reco_vars = var_defs.gather_all_1D_variables(objects)
+        subvars_dict = { var.name: var[sel_name] for var in reco_vars if sel_name in var.subcats }
 
         # Variables
         if var_names:
@@ -209,20 +209,20 @@ class SL_DL_NN(NanoBaseHHbbWW):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_DL_NN, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        # super(SL_DL_NN, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
-        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
-        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
-        myPlotter.Draw_Processes(normalization='unity', combine_backs=True, sen_info=False)
+        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0])
+        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
+        myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False)
 
 
         # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory
         for dnn_var in self.DNN_LIST:   
             print(f"{dnn_var.model_name}") 
-            customPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, outdir=f'plotter_onlyOnTrainedProcesses/{dnn_var.model_name}', which_processes=dnn_var.processes)
-            customPlotter.Draw_Processes(normalization='lumi', combine_backs=False, sen_info=True, refs_endingwith=dnn_var.model_name)
-            customPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False, refs_endingwith=dnn_var.model_name)
+            customPlotter = Plotter(workdir=workdir, configFile=self.args.input[0], outdir=f'plotter_onlyOnTrainedProcesses/{dnn_var.model_name}', which_processes=dnn_var.processes)
+            customPlotter.Draw_Refs(normalization='lumi', combine_backgs=False, sen_info=True, refs_endingwith=dnn_var.model_name)
+            customPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False, refs_endingwith=dnn_var.model_name)
 
         # for dnn_var in self.DNN_LIST:   
         #     print(f"{dnn_var.model_name}") 

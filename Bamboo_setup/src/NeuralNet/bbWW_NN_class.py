@@ -18,7 +18,7 @@ from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, P
 import yaml
 import random, os, sys, math
 import tf2onnx
-from post_processing import References as Refs
+from post_processing import references as Refs
 
 FIXED_RANDOM_SEED = True
 N_MAX_TRAINING = 1000000

@@ -260,7 +260,6 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         plots.append(self.yields)
-        plots.extend(self.base_plots)
 
         objects = SL_DL_vars_reco.get_objects(tree, self.era)
         selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
@@ -276,8 +275,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         # llrs_for_vars_2D = self.get_llrs_for_vars_2D(objects)
         # llrs_for_vars_3D = self.get_llrs_for_vars_3D(objects)
         # llrs_for_vars_1D_2combos = self.get_llrs_for_vars_1D_2combos(objects)
-        llrs_for_vars_custom_combos = SL_DL_likelihood_ratio.get_llrs_for_vars_custom_combos(self.args.llr_corr_workdir, objects)
-        all_llrs = llrs_for_vars_1D + llrs_for_vars_custom_combos
+        # llrs_for_vars_custom_combos = SL_DL_likelihood_ratio.get_llrs_for_vars_custom_combos(self.args.llr_corr_workdir, objects)
+        all_llrs = llrs_for_vars_1D
         plots.extend([Plot.make1D(subcat_llr.ref, subcat_llr.data, subcat_llr.selection, lr.eqbin) for lr in all_llrs for subcat_llr in lr if subcat_llr.subcat == sel_name])
         
         # ===============================================================================
@@ -296,8 +295,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         self.yields.add(selections['DL'], 'DL')
 
 
-        if not self.args.no_skim:
-            plots = SL_DL_likelihood_ratio.get_skims(all_llrs, objects, selections, plots)
+        # if not self.args.no_skim:
+        #     plots = SL_DL_likelihood_ratio.get_skims(all_llrs, objects, selections, plots)
 
         return plots
 
@@ -306,7 +305,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from post_processing.sig_bkg_shape_comp.plotter import Plotter
-        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
+        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, resultsdir=resultsdir)
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
 

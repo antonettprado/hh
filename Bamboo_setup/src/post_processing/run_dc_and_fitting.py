@@ -5,7 +5,7 @@ import subprocess
 import argparse
 import math
 import numpy as np
-from post_processing import References as Refs
+from post_processing import references as Refs
 
 FIT_BAMBOO = Path(__file__).parents[2]
 

@@ -51,9 +51,4 @@ if __name__ == "__main__":
     combine_datacard_command += " > %s/combined_datacard.txt"%output_dir
     os.system(combine_datacard_command)
     print ()
-
-        
-
-        
-       
-           
+    

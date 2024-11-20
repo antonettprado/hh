@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from sklearn.model_selection import StratifiedKFold
 import yaml
 from NeuralNet.DNNModel import DNNModel
-from post_processing import References as Refs
+from post_processing import references as Refs
 from NeuralNet.utils import ModelConfig, fix_random_seed, get_logger
 from NeuralNet.DataHandler import DataHandler
 from typing import Set
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     parser.add_argument("-ti", "--total_inputs", type=str, required=False, default=None, help='Loads only the inputs listed on the txt file to the total_df')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for DNNManager')
     parser.add_argument("-m", "--mode", choices=['train_eval', 'ca', 'multi', 'eval'], required=True, help='Train and Evaluate, evaluate only, cross-application, cross-validate, multiple')
-    parser.add_argument("-l", "--log_level", choices=['info', 'debug', 'warning', 'error'], default='info', help='Log level')
+    parser.add_argument("-l", "--log_level", choices=['info', 'debug', 'warning', 'error'], default='debug', help='Log level')
     args, unknown = parser.parse_known_args()
     if args.mode == 'train_eval':
         parser.add_argument("-r", "--rank_features", action="store_true", help="set to get input feature ranking")

@@ -19,7 +19,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
     def addArgs(self, parser):
         super(SL_DL_vars_reco, self).addArgs(parser)
         parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=False, help='Not producing skims')
-        parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in References.py) to go into LLR denominator. Default is All")
+        parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         tree, baseSel, backend, lumiArgs = super(SL_DL_vars_reco, self).prepareTree(tree=tree,
@@ -174,7 +174,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             postfix = which_processes
         else:
             processes_available = myPlotter.dirprocesses
-            assert all(llr_back in processes_available for llr_back in self.args.llr_backgrounds), f"Refer to References.py for allowed processes' names"
+            assert all(llr_back in processes_available for llr_back in self.args.llr_backgrounds), f"Refer to references.py for allowed processes' names"
             which_processes = ['HH'] + self.args.llr_backgrounds
             postfix = ''.join(self.args.llr_backgrounds)
 

@@ -27,6 +27,7 @@ class DNNModel:
         self.input_vars = model_config.input_vars
         self.classes = [class_i for class_i in model_config.categorization.keys() if class_i]
         self.processes = [proc for proc_list in model_config.categorization.values() for proc in proc_list]
+        print(self.processes)
         self.model_df = None
         self.model = None
         self.history = None
@@ -71,6 +72,7 @@ class DNNModel:
 
         # Verify all processes exist in the dataframe -------------------------------------
         unique_processes = model_df['Process'].unique()
+        print(unique_processes)
         for process in self.processes:
             assert process in unique_processes, f"Process {process} was not found in the total dataframe"
             
@@ -326,7 +328,7 @@ class DNNModel:
 # ============= Post-training Plotting utilities ==================
 # =================================================================
 import matplotlib.pyplot as plt
-from post_processing import References as Refs
+from post_processing import references as Refs
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 
 

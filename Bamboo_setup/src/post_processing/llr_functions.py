@@ -157,7 +157,7 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--inputdir", action="store", help="work directory. Ex: Z_OUTPUT/VarsReco")
     parser.add_argument("-c", "--configFile", default='config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
     parser.add_argument("-e", "--era", default=None, help="Era year; else default will be the first option under 'eras' in configFile")
-    parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in References.py) to go into LLR denominator. Default is All")
+    parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
     parser.add_argument("-o", "--outfilename", default='corrections_llr', action='store', help='Name of json output file within results dir')
     args = parser.parse_args()
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         postfix = which_processes
     else:
         processes_available = myPlotter.dirprocesses
-        assert all(llr_back in processes_available for llr_back in self.args.llr_backgrounds), f"Refer to References.py for allowed processes' names"
+        assert all(llr_back in processes_available for llr_back in self.args.llr_backgrounds), f"Refer to references.py for allowed processes' names"
         which_processes = ['HH'] + self.args.llr_backgrounds
     
     llrPlotter = Plotter(dir=args.inputdir, configFile=args.configFile, era=args.era, which_processes=which_processes)

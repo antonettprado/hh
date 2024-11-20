@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from post_processing import References as Refs
+from post_processing import references as Refs
 import uproot
 import numpy as np
 
@@ -33,6 +33,7 @@ class DataHandler:
         self.logger.info(f"\nLoading data...")
 
         processes_available = Refs._find_processes(self.RESULTSDIR)
+        print(processes_available)
         root_files_available = Refs._find_root_files(self.RESULTSDIR)
 
         if self.total_inputs is None:
@@ -41,7 +42,6 @@ class DataHandler:
             with open(self.total_inputs) as file:
                 branches = [line.strip() for line in file]
             array_extractor = lambda upfile, tree_name: upfile[tree_name].arrays(branches, library="pd")
-
         df_list = []
         for process in processes_available:
             process_df = pd.DataFrame()
@@ -59,7 +59,7 @@ class DataHandler:
 
         total_df = pd.concat(df_list, ignore_index=True)
         total_df.reset_index(inplace=True)
-        total_df.sort_values(by=['event', 'index'], inplace=True)
+        # total_df.sort_values(by=['event', 'index'], inplace=True)
         total_df.drop(columns='index', inplace=True)
 
         self.logger.debug(f"\tTotal_df:")
