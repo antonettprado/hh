@@ -1,46 +1,56 @@
 import os, sys
-import argparse
 import yaml
 import ROOT
+import argparse
+import subprocess
 from pathlib import Path
 from tabulate import tabulate
 
 def generate_datacard_text(rfile_path: Path, obs_process: str, obs_rate: float, model_process_rates: dict[str, float], channel: str, hist_suffix: str) -> str:
     ''' Updates to datacards (e.g. systematics) go here '''
+    separator: str = '\n' + '-'*130 + '\n'
+    def tab(tabular_data) -> str:
+        tabstr: str = separator
+        tabstr += tabulate(tabular_data, tablefmt='plain')
+        return tabstr
+
     preamble: str = (
         f'# Shape input card for HH to bbWW non-resonant analysis for channel {channel} and discriminant {hist_suffix}\n' +
         'imax 1 number of channels\n'
         'jmax * number of background\n'
-        'kmax * number of nuisance parameters\n'
+        'kmax * number of nuisance parameters'
     )
 
-    shapes: str = tabulate([
+    shapes: str = tab([
         ["shapes", "*", "*", rfile_path, "$PROCESS", "PROCESS_SYSTEMATIC"],
         ["shapes", "data_obs", "*", rfile_path, obs_process]
-    ]).rstrip('- ')
+    ])
     
-    observation: str = tabulate([
+    observation: str = tab([
         ["bin", channel],
         ["observation", f'{obs_rate:.4f}']
-    ]).rstrip('- ')
+    ])
 
     num_model_processes = len(model_process_rates)
-    rates: str = tabulate([
-        ["bin"] + [channel] * num_model_processes,
-        ["process"] + [ proc for proc in model_process_rates.keys() ],
-        ["process"] + [ i for i in range(num_model_processes) ],
-        ["rate"] + [ f'{rate:.4f}' for rate in model_process_rates.values() ]
-    ]).rstrip('- ')
-    
-    systematics: str = tabulate([
-        ["lumi_13p6_2022", 'lnN'] + [1.020] * num_model_processes,
-    ]).rstrip('- ')
+    rates: list[list[str]] = [
+        ["bin", ""] + [channel] * num_model_processes,
+        ["process", ""] + [ proc for proc in model_process_rates.keys() ],
+        ["process", ""] + [ i for i in range(num_model_processes) ],
+        ["rate", ""] + [ f'{rate:.4f}' for rate in model_process_rates.values() ],        
+    ]
 
-    stats: str = tabulate([
+    # Sytematics go here
+    systematics: list[list[str]] = [
+        ["lumi_13p6_2022", "lnN"] + [1.020] * num_model_processes,
+    ]
+
+    rates_and_systematics: str = tab(rates + systematics)
+
+    stats: str = tab([
         [channel, 'autoMCStats', 10, 0, 1]
-    ]).rstrip('- ')
+    ])
 
-    return preamble + shapes + observation + rates + systematics + stats
+    return preamble + shapes + observation + rates_and_systematics + stats
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Make datacards")
@@ -99,7 +109,7 @@ def make_datacard_root_file(rfile_path: Path, root_files: dict[str, ROOT.TFile],
         asimov_hist.Write()
         process_rates['asimov'] = asimov_hist.Integral()
     outfile.Close()
-
+    
     return process_rates
 
 def make_datacard_text_file(datacard: Path, rfile_path: Path, process_rates: dict[str, float], channel: str, hist_suffix: str, is_asimov: bool):
@@ -108,8 +118,14 @@ def make_datacard_text_file(datacard: Path, rfile_path: Path, process_rates: dic
     obs_rate: float = process_rates[obs_process]
     model_process_rates: dict[str, float] = { proc: rate for proc, rate in process_rates.items() if proc is not obs_process }
     dc_text: str = generate_datacard_text(rfile_path, obs_process, obs_rate, model_process_rates, channel, hist_suffix)
-    with open(datacard, 'w') as dc:
-        dc.write(dc_text)
+    datacard.write_text(dc_text)
+    return datacard
+
+def make_combined_datacards(combined_datacard: Path, datacards: list[Path]) -> None:
+    ''' Makes combined datacard text file for a list of datacards using `/HiggsAnalysis/CombinedLimit/scripts/combineCards.py` '''
+    command: str = ['combineCards.py'] + [ f'{dc.parent.name}={str(dc)}' for dc in datacards ]
+    dc_text = subprocess.check_output(command)
+    combined_datacard.write_bytes(dc_text)
     
 def main(input_dir: Path, model_name: str, lumis: dict[str, float], channels: dict[str, str], processes: dict[str, list[str]]) -> None:
     '''
@@ -128,8 +144,10 @@ def main(input_dir: Path, model_name: str, lumis: dict[str, float], channels: di
     print(f"Datacards stored in: {dc_dir}")
     print(f"Using {'asimov '*is_asimov}data as observation")
 
+    era_datacards: list[Path] = []
     for era in eras:
         root_files: dict[str, ROOT.TFile] = get_root_files_from_era(results_dir, era)
+        datacards: list[Path] = []
         for channel, hist_suffix in channels.items():
             channel_dir = dc_dir / era / channel
             channel_dir.mkdir(parents=True, exist_ok=True)
@@ -138,8 +156,16 @@ def main(input_dir: Path, model_name: str, lumis: dict[str, float], channels: di
             hist_name = '_'.join((channel, hist_suffix))
             process_rates = make_datacard_root_file(rfile_path, root_files, hist_name, processes, is_asimov)
             make_datacard_text_file(datacard, rfile_path, process_rates, channel, hist_suffix, is_asimov)
+            datacards.append(datacard)
             
         for file in root_files.values(): file.Close()
+        era_datacard: Path = dc_dir / era / 'datacard.txt'
+        make_combined_datacards(era_datacard, datacards)
+        era_datacards.append(era_datacard)
+    
+    model_datacard: Path = dc_dir / 'datacard.txt'
+    make_combined_datacards(model_datacard, era_datacards)
+    
 
 
 if __name__ == "__main__":
@@ -186,4 +212,3 @@ if __name__ == "__main__":
         channels=chans,
         processes=procs,
     )
-     
