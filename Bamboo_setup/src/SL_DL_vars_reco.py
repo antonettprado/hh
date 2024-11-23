@@ -81,7 +81,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         ak4_jets = objects["cleaned_ak4_jets"]
         ak4_btags = objects["cleaned_ak4_btags"]
         SL_res_1b_x = selections["SL_res_1b"].refine("Nonbjets>=2 for SL_res_1b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
-        SL_res_2b_x = selections["SL_res_2b"].refine("Nonbjets>=2 for SL_res_2b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
+        SL_res_2b_x = selections["SL_res_2b"].refine("Nonbjets>=2 for SL_res_2b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2]) # Define in SL_DL_event_selection based on SL_only, not SL_res_2b
         selections.update({
             'SL_res_1b_x':SL_res_1b_x, 
             'SL_res_2b_x':SL_res_2b_x})
