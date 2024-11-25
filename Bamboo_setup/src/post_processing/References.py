@@ -1,4 +1,4 @@
-import ROOT
+import ROOT, json
 from pathlib import Path
 
 #Sort list by length and in descending order (most specific ones first)
@@ -25,6 +25,11 @@ PROCESSES_FILES = dict(
     #Fakes=[]
     )
 
+VARPATH = Path(__file__).parents[1] / 'input' / 'variables.json'
+with open(VARPATH, 'r') as f:
+    ALL_JSON_DATA = json.load(f)
+    ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
+
 # Function for new convention of sample naming (E.g. bbWW_sl_2022, bbWW_sl_2022EE)
 def _find_root_files(resultsdir: Path) -> list[Path]:
     return [file for file in resultsdir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
@@ -40,6 +45,12 @@ def _find_eras(resultsdir: Path) -> list[str]:
     present_eras = sorted(list(set([f.stem.rsplit('_', 1)[1] for f in present_files])))
     valid_eras = [era for era in ERAS if era in present_eras]
     return valid_eras
+
+def get_process_from_subprocess(subprocess):
+    for process, subprocesses in PROCESSES_FILES.items():
+        if subprocess in subprocesses:
+            return process
+    return None
 
 # Color scheme for plotting processes -----------------
 
