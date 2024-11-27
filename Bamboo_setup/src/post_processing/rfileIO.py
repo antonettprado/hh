@@ -1,0 +1,112 @@
+import yaml
+import ROOT
+from pathlib import Path
+import references as refs
+from typing import Iterable
+from collections import defaultdict
+
+def compute_rates(histos: dict[str, ROOT.TFile]) -> dict[str, float]:
+    return { proc: h.Integral() for proc, h in histos.items() }
+
+def write_datacard_rfile(path: Path, histos: dict[str, ROOT.TFile], write_asimov: bool=True) -> None:
+    outfile = ROOT.TFile.Open(str(path), "RECREATE")
+    outfile.cd()
+    for name, hist in histos.items():
+        hist.SetName(name)
+        hist.SetDirectory(outfile)
+        if write_asimov or name != 'asimov':
+            hist.Write()
+    outfile.Close()
+
+def sum_histos_over_subprocesses(histos, asimov: bool=True):
+    process_summed_histos: defaultdict[str, dict[str, ROOT.TFile]] = defaultdict(dict)
+    for k, hs in histos.items():
+        name, process = k.rsplit('_', 1)
+        summed_hist = hs[0].Clone(k)
+        for h in hs[1:]: 
+            summed_hist.Add(h)
+        process_summed_histos[name][process] = summed_hist
+
+
+    for process_histo_dict in process_summed_histos.values():
+        iterhists: Iterable = filter(lambda v: v[0]!='data', process_histo_dict.items())
+        init_hist = next(iterhists)[1]
+        asimov_hist = init_hist.Clone(init_hist.GetName().rsplit('_',1)[0]+'_asimov')
+        for _, h in iterhists:
+            asimov_hist.Add(h)
+        process_histo_dict['asimov'] = asimov_hist
+
+    return process_summed_histos
+
+def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict[str, str], xs: dict[str, str], lumi: float, hist_names: list[str]=None):
+    ''' 
+    Takes in all the root files from a given era and combines the histograms from files corresponding to the same process.
+    Returns a two-dimensional dictionary: e.g. {'histogram_name': {'HH': <ROOT.TH1D>, 'ttbar': <ROOT.TH1D>, 'asimov': <ROOT.TH1D>, ...}, ...}
+    `hist_names` is an optional argument which filters only histograms with certain names. By default we combine over all histograms except yields, gen_sum_corrected and the Runs TTree
+    '''
+    def hist_name_filter(hist_key) -> bool:
+        hist_name = hist_key.GetName()
+        default = not (hist_name in ["Runs", "generated_sum_corrected"] or hist_name.startswith('yields'))
+        return default if hist_names is None else hist_name in hist_names
+    
+    histos: defaultdict[str, list[ROOT.TH1D]] = defaultdict(list) 
+    for f in root_files:
+        subprocess_era = f.stem
+        subprocess = subprocess_era.rsplit('_', 1)[0]
+        x = xs[subprocess_era]
+        process = process_map[subprocess]
+
+        tfile = ROOT.TFile.Open(str(f))
+
+        weight = (x * lumi)/tfile.Get('yields_genEventSumWeight').GetBinContent(1) if process != 'data' else 1
+        hist_keys = filter(hist_name_filter, tfile.GetListOfKeys())
+        for k in hist_keys:
+            h: ROOT.TH1D = k.ReadObj()
+            name = h.GetName()
+            if h.ClassName() != 'TH1D': 
+                print(f'{name} could not be parsed as a histogram')
+                continue
+            scaled_hist = h.Clone(name+f':{subprocess}')
+            scaled_hist.Scale(weight)
+            scaled_hist.SetDirectory(0)
+            histos[name+'_'+process].append(scaled_hist)
+        tfile.Close()
+
+    process_summed_histos = sum_histos_over_subprocesses(histos)
+        
+    # for k, v in process_summed_histos.items():
+    #     print(k)
+    #     for k, h in v.items():
+    #         print(f'\t{k:6s} : {str(h)}')
+
+    return process_summed_histos
+
+
+def combine_results(results_dir: Path, hist_names: list[str]=None) -> dict:
+    files: list[Path] = refs._find_root_files(results_dir)
+    eras: list[str] = refs._find_eras(results_dir)
+
+    with open('config/analysis_2022_full.yml') as file:
+        config = yaml.safe_load(file)
+        lumis = { era: v['luminosity'] for era, v in config['eras'].items() if era in eras }
+        xs = { subprocess_era: v['cross-section'] for subprocess_era, v in config['samples'].items() }
+    
+    process_map = { sub: process.replace('HH_bbWW', 'HH').replace('HH_bbtautau', 'HH') 
+                 for process, sub_processes in refs.PROCESSES_FILES.items()
+                   for sub in sub_processes }
+
+    combined_results: dict = {}
+    for era in eras:
+        era_root_files = filter(lambda f: f.stem.endswith(era), files)
+        lumi = lumis[era]
+        era_combined_results = combine_histos_from_root_files(era_root_files, process_map, xs, lumi, hist_names=hist_names)
+        combined_results[era] = era_combined_results
+
+    return combined_results
+
+def main(results_dir: Path) -> None:
+    combine_results(results_dir)
+
+
+if __name__=='__main__':
+    main(Path('/eos/user/s/scrossle/NN2bx/results'))
