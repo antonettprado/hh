@@ -25,10 +25,10 @@ This module provides tools for handling neural network training and evaluation, 
 
 
 To run the DNNManager you must provide the following:
-- the working directory where the data is located, e.g. [Snippet identifier=working_dir]-w Z_OUTPUT/Reco[/Snippet]
-- a set of model configurations, e.g. [Snippet identifier=config_file]-c NN_roster.yml[/Snippet]
-- the selection of events, e.g. [Snippet identifier=selection_single]-s SL_res_2b_x[/Snippet], or: [Snippet identifier=selection_multiple]-s SL_res_1b SL_res_2b[/Snippet]
-- the desired operation mode, e.g. [Snippet identifier=mode]-m train_eval[/Snippet], or: [Snippet identifier=mode]-m cross-validation[/Snippet], or: [Snippet identifier=mode]-m multi[/Snippet]
+- the working directory where the data is located, e.g. `-w Z_OUTPUT/Reco`
+- a set of model configurations, e.g. `-c NN_roster.yml`
+- the selection of events, e.g. `-s SL_res_2b_x`, or: `-s SL_res_1b SL_res_2b`
+- the desired operation mode, e.g. `-m train_eval`, or: `-m cross-validation`, or: `-m multi`
 Examples:
 ```bash
     # Mode: Train and evalute
