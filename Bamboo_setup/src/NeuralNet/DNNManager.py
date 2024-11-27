@@ -12,17 +12,17 @@ from typing import Set, Optional
 
 class DNNManager:
 
-    POSTPROCESSING_NN_FOLDER = Path(__file__).parent
-    BAMBOO_SETUP = POSTPROCESSING_NN_FOLDER.parents[1]
+    NEURALNET = Path(__file__).parent
+    BAMBOO_SETUP = NEURALNET.parents[1]
     assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
     MODE_MAPPING =  {'train_eval': '_train_eval', 'ca': '_kfold', 'multi': '_multi', 'eval': '_eval'}
 
-    def __init__(self, workdir: str, sel_names: str, models_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None, log_level = 'debug'):
+    def __init__(self, workdir: str, sel_names: list[str], config_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None, log_level = 'debug'):
         self.mode = None
         self.WORKDIR = Path(workdir)
         self.sel_names = sel_names
-        self.models_yml = self.POSTPROCESSING_NN_FOLDER / models_yml if models_yml else None
-        self.total_inputs = self.POSTPROCESSING_NN_FOLDER / total_inputs if total_inputs else None
+        self.config_yml = self.NEURALNET / 'config' / config_yml if config_yml else None
+        self.total_inputs = self.NEURALNET / 'inputs' / total_inputs if total_inputs else None
         self.RESULTSDIR = self.WORKDIR / 'results'
         if DNNManagerdir is None:
             sels = '_'.join(sel_names)
@@ -39,7 +39,7 @@ class DNNManager:
         self.logger.info(f"WORKDIR:{self.WORKDIR}")
         self.logger.info(f"DNNMANAGERDIR:{self.DNNMANAGERDIR}")
         self.logger.info(f"Total inputs file: {self.total_inputs}")
-        self.logger.info(f"Config models file: {self.models_yml}")
+        self.logger.info(f"Config models file: {self.config_yml}")
 
     def set_mode(self, mode: str, **kwargs):
         if mode not in DNNManager.MODE_MAPPING:
@@ -50,14 +50,14 @@ class DNNManager:
             fix_random_seed()
 
     @log_context("Loading model configurations")
-    def load_model_configs(self, models_yml: Path):
+    def load_model_configs(self):
 
-        if models_yml is None: return None
+        if self.config_yml is None: return None
 
         # i.e. Check allowed model types, processes, inputs, etc
-        self.logger.info(f"File: {models_yml.name}")
+        self.logger.info(f"File: {self.config_yml.name}")
 
-        with open(models_yml, 'r') as file:
+        with open(self.config_yml, 'r') as file:
             yaml_data = yaml.safe_load(file)
 
         # To track unique model names
@@ -90,7 +90,7 @@ class DNNManager:
         return model_configs
 
     def start(self):
-        model_configs = self.load_model_configs(self.models_yml)
+        model_configs = self.load_model_configs()
 
         total_df_unprep = data_utils.load_root_data(workdir=self.WORKDIR, tree_names=self.sel_names, total_inputs=self.total_inputs, logger=self.logger)
         total_df_unprep = data_utils.fix_column_names_mismatch(df=total_df_unprep)
@@ -217,7 +217,7 @@ class DNNManager:
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", action="store", required=True, help="Ex: Z_OUTPUT/TOTAL_VarsReco_2022")
-    parser.add_argument("-c", "--config", action="store", required=False, default="NN_roster.yml")
+    parser.add_argument("-c", "--config_yml", action="store", required=False, default="NN_roster.yml")
     parser.add_argument("-s", "--sel_names", action="store", nargs="+", required=True, help="Ex: SL_res_2b_x")
     parser.add_argument("-ti", "--total_inputs", type=str, required=False, default=None, help='Loads only the inputs listed on the txt file to the total_df')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for DNNManager')
@@ -235,7 +235,7 @@ if __name__ == '__main__':
         parser.add_argument("-r", "--rank_features", action="store_true", help="set to get input feature ranking")
     args = parser.parse_args()
 
-    DNNMngr = DNNManager(workdir=args.workdir, sel_names=args.sel_names, models_yml=args.config, total_inputs=args.total_inputs, DNNManagerdir=args.outdir, log_level=args.log_level)
+    DNNMngr = DNNManager(workdir=args.workdir, sel_names=args.sel_names, config_yml=args.config_yml, total_inputs=args.total_inputs, DNNManagerdir=args.outdir, log_level=args.log_level)
     DNNMngr.set_mode(
         mode=args.mode, 
         rank_features=getattr(args, 'rank_features', False),  # Use getattr to handle undefined attributes safely
@@ -248,11 +248,11 @@ if __name__ == '__main__':
     '''
     Example:
     
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -my config/NN_test_models.yml -c SL_res_2b_x -m train_eval
+    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -m train_eval
 
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager -m train_eval
+    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -ti vars40.txt -o DNNManager -m train_eval
 
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_ca -m ca --n_splits 5
+    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -ti vars40.txt -o DNNManager_ca -m ca --n_splits 5
 
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -my config/NN_test_models.yml -c SL_res_2b_x -ti input/vars40.txt -o DNNManager_multi -m multi --n_iterations 3
+    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -ti vars40.txt -o DNNManager_multi -m multi --n_iterations 3
     '''

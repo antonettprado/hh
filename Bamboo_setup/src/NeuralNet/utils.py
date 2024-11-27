@@ -139,7 +139,7 @@ class ContextAwareLogger:
 # Singleton for ContextAwareLogger
 _shared_logger = None
 
-def get_context_aware_logger(name: str, log_level='debug', log_file: Path=None) -> ContextAwareLogger:
+def get_context_aware_logger(name: str='free', log_level='debug', log_file: Path=None) -> ContextAwareLogger:
     global _shared_logger
     if _shared_logger is not None:
         return _shared_logger

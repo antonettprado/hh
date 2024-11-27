@@ -1,5 +1,3 @@
-event
-gen_Weight
 bjets_pt_bb_llr
 bjets_dR_llr
 bjet_bijet_dPhi_llr

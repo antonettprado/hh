@@ -23,20 +23,30 @@ This module provides tools for handling neural network training and evaluation, 
   - Handles model saving/loading and ONNX conversion
   - Implements feature importance analysis
 
-Think of DNNManager as the "conductor" that orchestrates the entire ML pipeline, while DNNModel is the "musician" that performs the actual model operations. DNNManager makes high-level decisions about what to do, while DNNModel implements how to do it.
 
-To run the DNNManager, use the following command:
+To run the DNNManager you must provide the following:
+- the working directory where the data is located, e.g. [Snippet identifier=working_dir]-w Z_OUTPUT/Reco[/Snippet]
+- a set of model configurations, e.g. [Snippet identifier=config_file]-c NN_roster.yml[/Snippet]
+- the selection of events, e.g. [Snippet identifier=selection_single]-s SL_res_2b_x[/Snippet], or: [Snippet identifier=selection_multiple]-s SL_res_1b SL_res_2b[/Snippet]
+- the desired operation mode, e.g. [Snippet identifier=mode]-m train_eval[/Snippet], or: [Snippet identifier=mode]-m cross-validation[/Snippet], or: [Snippet identifier=mode]-m multi[/Snippet]
+Examples:
 ```bash
-python src/NeuralNet/DNNManager.py -c config/NN_roster.yml -w Z_OUTPUT/Reco -s SL_res_1b SL_res_2b  -m train_eval
+    # Mode: Train and evalute
+    python3 src/NeuralNet/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m train_eval
+
+    # Mode: Cross-application
+    python3 src/NeuralNet/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m ca --n_splits 5
+
+    # Mode: Multi-model training
+    python3 src/NeuralNet/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m multi --n_iterations 3
 ```
-The above command will train and evaluate the models in NN_roster.yml using SL_res_1b and SL_res_2b events from the Z_OUTPUT/Reco directory.
+
 Other parameters are optional, such as:
 ```bash
     -o output_dir_name          # Name of the output directory. Defaults to 'Neural_Nets_<selections>'
-    -ti input/input_vars.txt    # This file indicats all variables to load into total_df. The input_vars in config yaml must then be a subset of this total input list
+    -ti input_vars.txt          # This file within 'inputs' indicats all variables to load into total_df. The input_vars in config yaml must then be a subset of this total input list
     -l log_level                # Logging level to be output to console and log file. Defaults to 'debug'
 ```
-Other operation modes are available, such as cross-validation and multi-model training.
 
 The model configuration YAML files should be formatted as follows:
 
@@ -49,7 +59,7 @@ Models:
       weights: {"HH": 1.0, "ttbar": 8.0, "tW": 4.0}                                               
       input_vars: 'All'         # 'All' or a list of variables, i.e. ['var1', 'var2', 'var3']
     architecture: 
-        preprocessor: 'Scaled0to1_excOutlier5per'   # Use one of the registered preprocessors (registry_preprocessors.py)
+        preprocessor: 'Standardize'   # Use one of the registered preprocessors (registry_preprocessors.py)
         use_flags: True                         
         sentinel_replacement: -9
         format: 'defined_here'                      # Use 'defined_here' or a registered model  (registry_models.py)

@@ -37,9 +37,13 @@ def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[
     #     logger = get_context_aware_logger('load_root_data', 'debug')
         
     root_files_available = Refs._find_root_files(results_dir)
-    branches = [line.strip() for line in open(total_inputs)] if total_inputs else None
-    df_list = []
+    if total_inputs:
+        branches = ['event','run','luminosityBlock','genWeight','bunchCrossing','genTtbarId']
+        branches.extend([line.strip() for line in open(total_inputs)])
+    else:
+        branches = None
     
+    df_list = []
     for root_file in root_files_available:
         logger.debug(f"Processing {root_file.stem}")
         sample_name = root_file.stem

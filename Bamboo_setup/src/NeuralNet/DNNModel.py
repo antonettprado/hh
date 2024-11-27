@@ -47,11 +47,9 @@ class DNNModel:
         has_non_empty_key = any(k for k in training_setup.categorization.keys() )
         if not (has_empty_key and has_non_empty_key):
             raise ValueError("Dictionary must be of the form {'isSignal': ['HH'], "": ['ttbar', 'tW']}")
-        self.training_setup = {k: v for k, v in training_setup.categorization.items() if k}
-        self.logger.debug(f"{training_setup.categorization=}")
 
     @log_context("Setting model dataframe ...")
-    def set_model_df_from_total_df(self, training_setup, total_df: pd.DataFrame = None):
+    def set_model_df_from_total_df(self, total_df: pd.DataFrame = None):
         '''
         This function does the following: 
             - Picks only the features (or input variables) noted in 'input_vars'
@@ -63,7 +61,7 @@ class DNNModel:
 
         all_features = [col for col in model_df.columns if col in Refs.ALL_VARNAMES_1D]
         all_non_features = [col for col in model_df.columns if col not in all_features]
-        model_features = all_features if training_setup.input_vars == 'All' else training_setup.input_vars 
+        model_features = all_features if self.training_setup.input_vars == 'All' else self.training_setup.input_vars 
         columns_to_keep = model_features + all_non_features
         model_df = model_df[columns_to_keep]
 
@@ -79,7 +77,7 @@ class DNNModel:
         for process in self.processes:
             process_mask = (model_df[f"Process"] == process)
             process_total_genWeight = model_df[process_mask]["genWeight"].sum()
-            scaling_factor = training_setup.weights.get(process, 1)
+            scaling_factor = self.training_setup.weights.get(process, 1)
             model_df.loc[process_mask, "sample_weight"] = model_df["genWeight"] * model_df.shape[0] * scaling_factor / process_total_genWeight
             process_total_sample_weight = model_df[process_mask]['sample_weight'].sum()
             self.logger.debug(f"Process weights:")
@@ -87,9 +85,17 @@ class DNNModel:
             self.logger.debug(f"Total sum of sample_weights for {process}: {process_total_sample_weight} ")
 
         # Create classes as specified in categorization ----------------------------------
-        for class_name, class_processes in training_setup.categorization.items():
-            class_mask = model_df['Process'].isin(class_processes)
-            model_df.loc[class_mask, 'Class'] = class_name
+        if self.type == 'binary':
+            # For binary classification, assign 1 to signal events (isSignal) and 0 to background events
+            signal_processes = self.training_setup.categorization.get('isSignal', [])
+            model_df['Class'] = 0  # Default all to background
+            signal_mask = model_df['Process'].isin(signal_processes)
+            model_df.loc[signal_mask, 'Class'] = 1
+        else:
+            # For multiclass, keep original behavior
+            for class_name, class_processes in self.training_setup.categorization.items():
+                class_mask = model_df['Process'].isin(class_processes)
+                model_df.loc[class_mask, 'Class'] = class_name
 
         # Verify all events have been assigned to a class
         unassigned = (model_df['Class'] == "") | model_df['Class'].isna()
@@ -115,8 +121,12 @@ class DNNModel:
         X_df = model_df.drop(columns=drop_cols)
 
         # Y_df must be one-hot encoded
-        Y_df = pd.get_dummies(model_df["Class"], prefix="Class")
-        Y_df = Y_df.reindex(columns=[f"Class_{cls_i}" for cls_i in self.classes], fill_value=0)
+        if self.type == 'multi':
+            # Y_df must be one-hot encoded
+            Y_df = pd.get_dummies(model_df["Class"], prefix="Class")
+            Y_df = Y_df.reindex(columns=[f"Class_{cls_i}" for cls_i in self.classes], fill_value=0)
+        elif self.type == 'binary':
+            Y_df = model_df["Class"].rename("Class_isSignal")
 
         events = model_df["event"]
         sample_weights = model_df["sample_weight"]
@@ -127,7 +137,14 @@ class DNNModel:
 
         if split_type == 'train_test_split':
             test_size = 0.2
-            X_train, X_test, Y_train, Y_test, evs_train, evs_test, sw_train, sw_test = train_test_split(X_df, Y_df, events, sample_weights, test_size=test_size, random_state=7, stratify=Y_df.idxmax(axis=1))
+            # Handle both binary and multiclass cases
+            stratify_by = Y_df if isinstance(Y_df, pd.Series) else Y_df.idxmax(axis=1)
+            X_train, X_test, Y_train, Y_test, evs_train, evs_test, sw_train, sw_test = train_test_split(
+                X_df, Y_df, events, sample_weights, 
+                test_size=test_size, 
+                random_state=7, 
+                stratify=stratify_by
+            )
         elif split_type == 'skf':
             assert all(idx is not None for idx in [train_index, test_index])
             X_train, X_test = X_df.iloc[train_index], X_df.iloc[test_index]
@@ -207,9 +224,17 @@ class DNNModel:
         # Event counting
         self.config.training_events['Total'] = len(Y_train)
         self.config.testing_events['Total'] = len(Y_test)
-        for cls_i in self.classes:
-            self.config.training_events[cls_i] = int(Y_train[f'Class_{cls_i}'].sum())
-            self.config.testing_events[cls_i] = int(Y_test[f'Class_{cls_i}'].sum())
+
+        if self.type == 'binary':
+            # Count signal (1s) and background (0s) events
+            self.config.training_events['isSignal Positive'] = int((Y_train == 1).sum())
+            self.config.training_events['isSignal Negative'] = int((Y_train == 0).sum())
+            self.config.testing_events['isSignal Positive'] = int((Y_test == 1).sum())
+            self.config.testing_events['isSignal Negative'] = int((Y_test == 0).sum())
+        else:
+            for cls_i in self.classes:
+                self.config.training_events[cls_i] = int(Y_train[f'Class_{cls_i}'].sum())
+                self.config.testing_events[cls_i] = int(Y_test[f'Class_{cls_i}'].sum())
 
         out_yml = self.modeldir / 'model_info.yml'
         with open(out_yml, 'w') as file:
@@ -238,13 +263,23 @@ class DNNModel:
         output_df = pd.DataFrame({'event': events_test})
 
         # Add true classes
-        for cls_i in self.classes:
-            output_df[f'Class_{cls_i}'] = Y_test[f'Class_{cls_i}']
+        if self.type == 'binary':
+            # For binary case, Y_test is a Series
+            output_df['Class_isSignal'] = Y_test
+        else:
+            # For multiclass case, Y_test is a DataFrame
+            for cls_i in self.classes:
+                output_df[f'Class_{cls_i}'] = Y_test[f'Class_{cls_i}']
 
         # Add predicted scores
         Y_pred_score = self.model.predict(X_test)
-        for i, cls_i in enumerate(Y_test.columns):
-            output_df[f'Score_{cls_i.removeprefix("Class_")}'] = Y_pred_score[:, i]
+        if self.type == 'binary':
+            # For binary case, only one score column for signal probability
+            output_df['Score_isSignal'] = Y_pred_score.flatten()
+        else:
+            # For multiclass case
+            for i, cls_i in enumerate(Y_test.columns):
+                output_df[f'Score_{cls_i.removeprefix("Class_")}'] = Y_pred_score[:, i]
 
         self.logger.debug("Event Predictions:")
         self.logger.debug(output_df, max_rows=5, extra_indent=1)
@@ -305,8 +340,12 @@ class DNNModel:
         start_time = time.perf_counter()
         self.logger.info(f"\n\n\n{'='*100}\n{'='*100}")
         self.logger.info(f"Running DNN Model: {self.name}")
+        self.logger.debug(f"Classes: {self.classes}")
+        self.logger.debug(f"Type: {self.type}")
+        self.logger.debug(f"Processes: {self.processes}")
+        self.logger.debug(f"Categorization: {self.training_setup.categorization}")
         
-        model_df = self.set_model_df_from_total_df(self.training_setup, total_df)
+        model_df = self.set_model_df_from_total_df(total_df)
         X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.Full_Splitting(model_df)
         self.Train(X_train, Y_train, sw_train, Y_test, fixed_random_seed, save_model_info)
         model_metrics, cm_norm_true, cm_norm_pred, diag_names = self.Evaluate(X_test, Y_test, evs_test, rank_features)
