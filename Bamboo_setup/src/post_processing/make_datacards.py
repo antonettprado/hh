@@ -1,6 +1,3 @@
-import os, sys
-import yaml
-import ROOT
 import argparse
 import subprocess
 from pathlib import Path
@@ -9,9 +6,10 @@ from typing import Iterable
 from collections import defaultdict
 import rfileIO
 
-def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, split_hist_name: list[str], era: float) -> str:
+def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, split_hist_name: list[str], era: float, signal: str='HH') -> str:
     ''' Updates to datacards (e.g. systematics) go here '''
     obs_rate = process_rates.pop(obs_process)
+    sig_rate = process_rates.pop(signal)
 
     separator: str = '\n' + '-'*130 + '\n'
     def tab(tabular_data) -> str:
@@ -46,12 +44,12 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
         ["observation", f'{obs_rate:.4f}']
     ])
 
-    num_model_processes = len(process_rates)
+    num_model_processes = len(process_rates) + 1
     rates: list[list[str]] = [
         ["bin", ""] + [channel] * num_model_processes,
-        ["process", ""] + [ proc for proc in process_rates.keys() ],
+        ["process", ""] + [signal]   + [ proc for proc in process_rates.keys() ],
         ["process", ""] + [ i for i in range(num_model_processes) ],
-        ["rate", ""] + [ f'{rate:.4f}' for rate in process_rates.values() ],        
+        ["rate", ""]    + [sig_rate] + [ f'{rate:.4f}' for rate in process_rates.values() ],        
     ]
 
     # Sytematics go here
@@ -105,9 +103,7 @@ def parse_results_files(results_dir: Path) -> tuple[defaultdict, dict[str, list[
     eras: set[str] = { f.stem.rsplit('_', 1)[1] for f in rfiles }
     
     template_file: Path = rfiles[0]
-    tfile = ROOT.TFile.Open(str(template_file))
-    hist_names: list[str] = list(filter(lambda k: not (k in ["Runs", "generated_sum_corrected"] or k.startswith('yields')), 
-                                        map(lambda k: k.GetName(), tfile.GetListOfKeys())))
+    hist_names: list[str] = rfileIO.get_hist_names(template_file)
     
     first_hist_name: str = hist_names[0]
     parts: list[str] = first_hist_name.split(':')
@@ -135,7 +131,7 @@ def init_file_structure(file_structure: dict, nndir: Path) -> None:
     for model, modelfs in file_structure.items():
         for era, erafs in modelfs.items():
             for fname, _ in erafs:
-                f: Path = nndir / model / era / fname
+                f: Path = nndir / model / f'era_{era}' / fname
                 f.mkdir(exist_ok=True, parents=True)
                 file_structure[model][era] = [] # Change this level to the list of datacard paths (for combination)
 
@@ -152,7 +148,7 @@ def make_datacards(nndir: Path, results_dir: Path=None):
             split_hist_name = hist_names_map[hname]
             selection, category, variable, model = split_hist_name
             channel: str = selection + '_' + category
-            rpath: Path = nndir / model / era / channel / f'{variable}.root'
+            rpath: Path = nndir / model / f'era_{era}' / channel / f'{variable}.root'
             tpath: Path = rpath.with_suffix('.txt')
             process_rates: dict[str, float] = rfileIO.compute_rates(histos)
             rfileIO.write_datacard_rfile(rpath, histos)
@@ -166,7 +162,7 @@ def make_datacards(nndir: Path, results_dir: Path=None):
     for model, erafs in file_structure.items():
         era_datacards: list[Path] = []
         for era, channel_datacards in erafs.items():
-            era_datacard: Path = nndir / model / era / f'datacard_{era}.txt'
+            era_datacard: Path = nndir / model / f'era_{era}' / f'datacard_{era}.txt'
             make_combined_datacard(era_datacard, channel_datacards)
             era_datacards.append(era_datacard)
 

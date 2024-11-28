@@ -5,6 +5,15 @@ import references as refs
 from typing import Iterable
 from collections import defaultdict
 
+def get_hist_names(rfile: Path) -> list[str]:
+    tfile = ROOT.TFile.Open(str(rfile))
+    hist_names = [
+        tkey.GetName()
+        for tkey in tfile.GetListOfKeys()
+        if  not (tkey.GetName() in ['generated_sum_corrected', 'Runs'] or tkey.GetName().startswith('yields')) 
+    ]
+    return hist_names
+
 def compute_rates(histos: dict[str, ROOT.TFile]) -> dict[str, float]:
     return { proc: h.Integral() for proc, h in histos.items() }
 
