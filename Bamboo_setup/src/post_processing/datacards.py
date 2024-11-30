@@ -128,6 +128,7 @@ def parse_results_files(results_dir: Path) -> tuple[defaultdict, dict[str, list[
 
 
 def init_file_structure(file_structure: dict, nndir: Path) -> None:
+    ''' Creates the directories according to `file_structure` and instantiates a list which will later be populated with datacard paths '''
     for model, modelfs in file_structure.items():
         for era, erafs in modelfs.items():
             for fname, _ in erafs:
@@ -136,7 +137,7 @@ def init_file_structure(file_structure: dict, nndir: Path) -> None:
                 file_structure[model][era] = [] # Change this level to the list of datacard paths (for combination)
 
 
-def make_datacards(nndir: Path, results_dir: Path=None):
+def make_datacards(nndir: Path, results_dir: Path=None) -> list[Path]:
     if not results_dir:
         results_dir = nndir / 'results'
     
@@ -158,27 +159,32 @@ def make_datacards(nndir: Path, results_dir: Path=None):
             tpath.write_text(dc_text)
 
             file_structure[model][era].append(tpath)
-        
+    
+    datacards_to_fit: list[Path] = []
     for model, erafs in file_structure.items():
         era_datacards: list[Path] = []
         for era, channel_datacards in erafs.items():
             era_datacard: Path = nndir / model / f'era_{era}' / f'datacard_{era}.txt'
             make_combined_datacard(era_datacard, channel_datacards)
             era_datacards.append(era_datacard)
+            datacards_to_fit.append(era_datacard)
 
         model_datacard: Path = nndir / model / f'datacard_{model}.txt'
         make_combined_datacard(model_datacard, era_datacards)
+        datacards_to_fit.append(model_datacard)
+
+    return datacards_to_fit
         
 def parse_args():
     parser = argparse.ArgumentParser(description="Make datacards")
-    parser.add_argument("output", action="store", type=Path, help="directory where datacards will be written to")
-    parser.add_argument("-i", "--input", action="store", type=Path, help="directory containing the DNN fit root files (default: <output-dir>/results)")
+    parser.add_argument("nndir", action="store", type=Path, help="directory where datacards will be written to")
+    parser.add_argument("-i", "--input", action="store", type=Path, help="directory containing the DNN fit root files (default: <nndir>/results)")
     args = parser.parse_args()
     return args
 
 def main() -> None:
     args = parse_args()
-    make_datacards(nndir=args.output, results_dir=args.input)
+    make_datacards(nndir=args.nndir, results_dir=args.input)
 
 if __name__ == "__main__":
     main()

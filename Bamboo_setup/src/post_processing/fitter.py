@@ -1,14 +1,13 @@
-import os, sys, glob
+import sys
 import argparse
-import yaml
-import ROOT
 from pathlib import Path
 import subprocess
+from multiprocessing import Pool
+from typing import Callable
 
 def run_fit_diagnostics(workspace_file: Path, fit_type: str) -> str:
     ''' 
     Computes fit diagnostics limits using `combine -M FitDiagnostics`
-
     Arguments:
         workspace_file (Path): root file containing the RooWorkspace corresponding to a datacard
         fit_type (str): either `'blinded'` for blinded fit or `'unblinded'` for unblinded fit 
@@ -16,23 +15,20 @@ def run_fit_diagnostics(workspace_file: Path, fit_type: str) -> str:
     fit_type = fit_type.capitalize()
     if fit_type not in ["Blinded", "Unblinded"]:
         raise ValueError(f"fit_type must be one of 'blinded' or 'unblinded' (passed in {fit_type})")
-    fit_type_cmd: str = "-t -1" if fit_type == "blind" else ""
+    fit_type_cmd: str = "-t -1" if fit_type == "Blinded" else ""
 
     cmd = f'combine -M FitDiagnostics --mass 125 --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic --saveNormalization --setParameters r=1 --setParameterRanges r=-100,100 {fit_type_cmd} -n {fit_type} {workspace_file}'
     output: str = f'Fit Diagnostics for {fit_type} Fit\n\n'
-    output += subprocess.check_output(cmd.split(), text=True)
+    output += subprocess.check_output(cmd.split(), text=True, cwd=workspace_file.parent)
     output += '\n\n'
-    outfile: Path = Path(f'higgsCombine{fit_type}.FitDiagnostics.mH125.root')
-    outfile.rename(workspace_file.parent / outfile.name)
-    diagnostics_outfile: Path = Path(f'fitDiagnostics{fit_type}.root')
-    diagnostics_outfile = diagnostics_outfile.rename(workspace_file.parent / diagnostics_outfile.name)
+
+    # maybe get the normalizations here and append to the output?
 
     return output
 
 def run_asymptotic_limits(workspace_file: Path, fit_type: str) -> str:
     ''' 
     Computes asymptotic limits using `combine -M AsymptoticLimits`
-
     Arguments:
         workspace_file (Path): root file containing the RooWorkspace corresponding to a datacard
         fit_type (str): either `'blinded'` for blinded fit or `'unblinded'` for unblinded fit 
@@ -40,24 +36,22 @@ def run_asymptotic_limits(workspace_file: Path, fit_type: str) -> str:
     fit_type = fit_type.capitalize()
     if fit_type not in ["Blinded", "Unblinded"]:
         raise ValueError(f"fit_type must be one of 'blinded' or 'unblinded' (passed in {fit_type})")
-    fit_type_cmd: str = '--run blind' if fit_type == "blinded" else "--run both"
+    fit_type_cmd: str = '--run blind' if fit_type == "Blinded" else "--run both"
     
     cmd = f'combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic {fit_type_cmd} -n {fit_type} {workspace_file}'
     output: str = f'Asymptotic Limits for {fit_type} Fit\n\n'
-    output += subprocess.check_output(cmd.split(), text=True)
+    output += subprocess.check_output(cmd.split(), text=True, cwd=workspace_file.parent)
     output += '\n\n'
-    outfile: Path = Path(f'higgsCombine{fit_type}.AsymptoticLimits.mH125.root')
-    outfile.rename(workspace_file.parent / outfile.name)
     return output
 
 def run_main_fits(workspace_file: Path) -> str:
+    ''' Helper function to run blinded and unblinded asymptotic limits as well as blinded and unblinded fit diagnostics '''
     fit_results_text: str = f'Fit results for datacard: {workspace_file}\n'
     fit_results_text += run_asymptotic_limits(workspace_file, 'blinded')
     fit_results_text += run_asymptotic_limits(workspace_file, 'unblinded')
     fit_results_text += run_fit_diagnostics(workspace_file, 'blinded')
     fit_results_text += run_fit_diagnostics(workspace_file, 'unblinded')
-    Path('combine_logger.out').unlink()
-    print(fit_results_text)
+    return fit_results_text
 
 def create_workspace(dc: Path):
     subprocess.run(f'combineTool.py -M T2W -m 125.38 -v 3 -i {dc}'.split(), check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -70,15 +64,17 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def main():
+def main() -> None:
     args = parse_args()
-    # workspace: Path = create_workspace(args.datacard)
-    workspace = Path('dctest/datacard_Modelhigh_and_low.root')
+    workspace: Path = create_workspace(args.datacard)
     fit_results_text: str = run_main_fits(workspace)
+    fit_results: Path = args.datacard.parent / 'fit_results.txt'
+    fit_results.write_text(fit_results_text)
 
 if __name__ == "__main__":
     main()
     sys.exit(0)
+    '''
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Make datacards")
     parser.add_argument("-i", "--input_dir", action="store", dest="input_dir", help="input_dir = input directory containing results")
@@ -227,23 +223,4 @@ if __name__ == "__main__":
             fit_results_file.close()
             fit_file_unblinded.Close()
             os.system("mv fitDiagnosticsTest.root %s/fitDiagnosticsTest_unblinded_fit.root"%output_dir_sel_cat_disc)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
+    '''

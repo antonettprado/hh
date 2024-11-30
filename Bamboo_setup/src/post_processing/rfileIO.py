@@ -5,6 +5,22 @@ import references as refs
 from typing import Iterable
 from collections import defaultdict
 
+# Incomplete function to get the normalizations from the fitDiagnostics root file
+def get_fit_normalizations(file: Path) -> tuple[list,list,list]:
+    output: str = ''
+    tfile = ROOT.TFile.Open(str(file))
+    signal_norms = tfile.Get('norm_fit_s')
+    background_norms = tfile.Get('norm_fit_b')
+    prefit_norms = tfile.Get('norm_prefit')
+
+    signal_norms_iter = signal_norms.createIterator()
+    while norm_s := signal_norms_iter.Next():
+        name: str = norm_s.GetName()
+        if 'total' in name: continue
+        process: str = name.split('/')[-1]
+        norm_b = background_norms.find(name)
+        norm_prefit = prefit_norms.find(name)
+
 def get_hist_names(rfile: Path) -> list[str]:
     tfile = ROOT.TFile.Open(str(rfile))
     hist_names = [
@@ -12,6 +28,7 @@ def get_hist_names(rfile: Path) -> list[str]:
         for tkey in tfile.GetListOfKeys()
         if  not (tkey.GetName() in ['generated_sum_corrected', 'Runs'] or tkey.GetName().startswith('yields')) 
     ]
+    tfile.Close()
     return hist_names
 
 def compute_rates(histos: dict[str, ROOT.TFile]) -> dict[str, float]:
@@ -82,11 +99,6 @@ def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict
         tfile.Close()
 
     process_summed_histos = sum_histos_over_subprocesses(histos)
-        
-    # for k, v in process_summed_histos.items():
-    #     print(k)
-    #     for k, h in v.items():
-    #         print(f'\t{k:6s} : {str(h)}')
 
     return process_summed_histos
 
