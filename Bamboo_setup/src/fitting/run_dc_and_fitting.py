@@ -49,10 +49,8 @@ def main() -> None:
         dc_res_file: Path = wksp.parent / 'fit_results.txt'
         dc_res_file.write_text(dc_fit_results)
 
-
 if __name__ == "__main__":
     main()
-    
 
     '''
     Before running the command, within a new lxplus session, run:

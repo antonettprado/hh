@@ -1,7 +1,7 @@
 import yaml
 import ROOT
 from pathlib import Path
-import references as refs
+import post_processing.references as refs
 from typing import Iterable
 from collections import defaultdict
 

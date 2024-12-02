@@ -1,15 +1,37 @@
 import os, sys, glob
 import argparse
 import yaml
-import ROOT
+from pathlib import Path
+from glob import glob
+import subprocess
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Combine datacards")
+    parser.add_argument("output_datacard", type=Path, help="location to store the combined datacard (e.g. datacards/combined_datacard.txt)")
+    parser.add_argument("input_datacards", nargs="+", type=Path, help="list or glob of datacards to combine")
+    args = parser.parse_args()
+
+    # Check inputs
+    dne: list[Path] = [ p for p in args.input_datacards if not p.is_file()]
+    if dne: raise ValueError(f'Input file(s) {[str(p) for p in dne]} do not exist')
+
+    args.input_datacards = [
+        Path(path) 
+        for pattern in args.input_datacards 
+        for path in glob(str(pattern))
+    ] 
+    return args
+
+def main(output_dc: Path, input_datacards: list[Path]) -> None:
+    ''' Combines datacards in each subdirectory of `parent_dir` into one using `/HiggsAnalysis/CombinedLimit/scripts/combineCards.py` '''
+    command: str = "combineCards.py"
+    
 
 if __name__ == "__main__":
-
-    # Parsing arguments
-    parser = argparse.ArgumentParser(description="Combine datacards")
-    parser.add_argument("-i", "--input_dir", action="store", dest="input_dir", help="input_dir = input directory containing results")
-    parser.add_argument("-f", "--cat_disc_filename", action="store", dest="cat_disc_filename", help="cat_disc_filename = filename for yml file containing categories and discriminants")
-    args = parser.parse_args()
+    args = parse_args()
+    # main(**args)
+    print(args.input_datacards)
+    sys.exit(0)
 
     input_dir = args.input_dir + "/datacards"
     output_dir = args.input_dir + "/datacards/combined"
@@ -51,4 +73,3 @@ if __name__ == "__main__":
     combine_datacard_command += " > %s/combined_datacard.txt"%output_dir
     os.system(combine_datacard_command)
     print ()
-    
