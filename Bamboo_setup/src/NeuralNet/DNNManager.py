@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from sklearn.model_selection import StratifiedKFold
 import yaml
 from NeuralNet.DNNModel import DNNModel
-from post_processing import References as Refs
+from post_processing import references as Refs
 from NeuralNet.utils import ModelConfig, fix_random_seed, get_context_aware_logger, NoOpLogger, log_context
 from NeuralNet import data_utils
 from typing import Set, Optional

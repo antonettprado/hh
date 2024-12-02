@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from post_processing import References as Refs
+from post_processing import references as Refs
 import uproot
 import numpy as np
 from typing import Union, Optional, Dict, List

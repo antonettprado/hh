@@ -12,7 +12,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.utils import plot_model
 import NeuralNet.model_builder as model_builder
 from NeuralNet.utils import ModelConfig, get_logger, get_context_aware_logger, log_context
-from post_processing import References as Refs
+from post_processing import references as Refs
 from NeuralNet.registry_losses import LossRegistry
 from NeuralNet.registry_models import ModelRegistry
 from NeuralNet.registry_preprocessors import PreprocessorRegistry

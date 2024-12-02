@@ -8,7 +8,7 @@ from colorlog import ColoredFormatter
 from typing import Dict, Callable
 from functools import wraps
 import pandas as pd
-import post_processing.References as Refs
+import post_processing.references as Refs
 from typing import Dict, Callable, Type, Union
 import io
 from contextlib import contextmanager, redirect_stdout
