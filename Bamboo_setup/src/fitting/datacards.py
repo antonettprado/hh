@@ -127,12 +127,12 @@ def parse_results_files(results_dir: Path) -> tuple[defaultdict, dict[str, list[
     return file_structure, hist_names_map, eras
 
 
-def init_file_structure(file_structure: dict, nndir: Path) -> None:
+def init_file_structure(file_structure: dict, fitsdir: Path) -> None:
     ''' Creates the directories according to `file_structure` and instantiates a list which will later be populated with datacard paths '''
     for model, modelfs in file_structure.items():
         for era, erafs in modelfs.items():
             for fname, _ in erafs:
-                f: Path = nndir / model / f'era_{era}' / fname
+                f: Path = fitsdir / model / f'era_{era}' / fname
                 f.mkdir(exist_ok=True, parents=True)
                 file_structure[model][era] = [] # Change this level to the list of datacard paths (for combination)
 
@@ -140,16 +140,17 @@ def init_file_structure(file_structure: dict, nndir: Path) -> None:
 def make_datacards(nndir: Path, results_dir: Path=None) -> list[Path]:
     if not results_dir:
         results_dir = nndir / 'results'
-    
+    fitsdir: Path = nndir / 'fits'
+
     file_structure, hist_names_map, eras =  parse_results_files(results_dir)
-    init_file_structure(file_structure, nndir)
+    init_file_structure(file_structure, fitsdir)
     combined_histograms = rfileIO.combine_results(results_dir, hist_names=list(hist_names_map.keys()))
     for era in eras:
         for hname, histos in combined_histograms[era].items():
             split_hist_name = hist_names_map[hname]
             selection, category, variable, model = split_hist_name
             channel: str = selection + '_' + category
-            rpath: Path = nndir / model / f'era_{era}' / channel / f'{variable}.root'
+            rpath: Path = fitsdir / model / f'era_{era}' / channel / f'{variable}.root'
             tpath: Path = rpath.with_suffix('.txt')
             process_rates: dict[str, float] = rfileIO.compute_rates(histos)
             rfileIO.write_datacard_rfile(rpath, histos)
@@ -164,12 +165,22 @@ def make_datacards(nndir: Path, results_dir: Path=None) -> list[Path]:
     for model, erafs in file_structure.items():
         era_datacards: list[Path] = []
         for era, channel_datacards in erafs.items():
-            era_datacard: Path = nndir / model / f'era_{era}' / f'datacard_{era}.txt'
-            make_combined_datacard(era_datacard, channel_datacards)
-            era_datacards.append(era_datacard)
-            datacards_to_fit.append(era_datacard)
+            era_datacard: Path = fitsdir / model / f'era_{era}' / f'datacard_{era}.txt'
+            SL_res_2bx_datacards = [ dc for dc in channel_datacards if dc.parent.name.startswith('SL_res_2b_x_') ]
+            channel_datacards = [ dc for dc in channel_datacards if not dc.parent.name.startswith('SL_res_2b_x_') ]
+            if channel_datacards:
+                make_combined_datacard(era_datacard, channel_datacards)
+                era_datacards.append(era_datacard)
+                datacards_to_fit.append(era_datacard)
+            if SL_res_2bx_datacards:
+                # These are not combined into model datacards unless there are no 1b and 2b datacards
+                datacard_2bx: Path = era_datacard.parent / f'datacard_{era}_2bx.txt'
+                make_combined_datacard(datacard_2bx, SL_res_2bx_datacards)
+                datacards_to_fit.append(datacard_2bx)
+                if not channel_datacards:
+                    era_datacards.append(datacard_2bx)
 
-        model_datacard: Path = nndir / model / f'datacard_{model}.txt'
+        model_datacard: Path = fitsdir / model / f'datacard_{model}.txt'
         make_combined_datacard(model_datacard, era_datacards)
         datacards_to_fit.append(model_datacard)
 
@@ -177,7 +188,7 @@ def make_datacards(nndir: Path, results_dir: Path=None) -> list[Path]:
         
 def parse_args():
     parser = argparse.ArgumentParser(description="Make datacards")
-    parser.add_argument("nndir", action="store", type=Path, help="directory where datacards will be written to")
+    parser.add_argument("nndir", action="store", type=Path, help="directory where datacards will be written to inside a 'fits' directory")
     parser.add_argument("-i", "--input", action="store", type=Path, help="directory containing the DNN fit root files (default: <nndir>/results)")
     args = parser.parse_args()
     return args
