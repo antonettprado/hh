@@ -5,6 +5,7 @@ import datacards
 import itertools
 from pathlib import Path
 from typing import Callable
+from datacards import Datacard
 from multiprocessing import Pool
 
 def parse_args():
@@ -27,9 +28,18 @@ def main() -> None:
     args = parse_args()
     start = time.perf_counter()
     print(f"{'Making Datacards':.<22}", end=' ', flush=True)
-    datacards_for_fit: list[Path] = datacards.make_datacards(args.nndir, results_dir=args.input)
+    dcs: list[Datacard] = datacards.make_datacards(args.nndir, results_dir=args.input)
+    sel_dcs: list[Datacard] = datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_1b', 'SL_res_2b'])
+    # sdc.selection will be None if it was combined from multiple selections
+    if any(dc.selection == None for dc in sel_dcs):
+        era_dcs = [ sdc for sdc in sel_dcs if sdc.selection is None ]
+    elif all(dc.selection == 'SL_res_2b_x' for dc in sel_dcs):
+        era_dcs = sel_dcs
+    model_dcs: list[Datacard] = datacards.combine_datacards_over_eras(era_dcs)
     print(f'{-start+(start := time.perf_counter()):.2f}s')
 
+    datacards_for_fit = sel_dcs + model_dcs
+    datacards_for_fit: list[Path] = [ dc.path for dc in datacards_for_fit ]
     with Pool() as p:
         print(f"{'Creating Workspaces':.<22}", end=' ', flush=True)
         workspaces_and_results_files: list[tuple[Path,Path]] = p.map(fitter.create_workspace, datacards_for_fit)
@@ -49,9 +59,7 @@ def main() -> None:
     for i, (wksp, _) in enumerate(workspaces_and_results_files):
         dc_slice: slice = slice(i_start := i*dc_result_length, i_start + dc_result_length)
         dc_fit_results: str = ''.join(fit_results[dc_slice])
-        dc_res_file: Path = wksp.parent / 'fit_results.txt'
-        if wksp.stem.split('_')[-1] == '2bx':
-            dc_res_file: Path = wksp.parent / 'fit_results_2bx.txt'
+        dc_res_file: Path = wksp.parent / ('fit_results_' + wksp.stem.split('_',1)[-1] + '.txt')
 
         dc_res_file.write_text(dc_fit_results)
 
@@ -72,12 +80,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-    '''
-    Before running the command, within a new lxplus session, run:
-    cd /afs/cern.ch/user/a/anunezde/CMSSW_14_1_0_pre4/src/CombineHarvester/CombineTools/hh/Bamboo_setup/
-    export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
-    cmsenv
-    Command:
-    $ python3 src/post_processing/run_dc_and_fitting.py -w $Z_OUTPUT_eos/2022_even_0822/NN_default/NN_ti_20llrscombos -nndir $Z_OUTPUT_eos/2022_even_0822/LLR_and_vars_4o5/NN_default/NN_ti_20llrscombos -c config/analysis_2022.yml -p all -a
-    '''

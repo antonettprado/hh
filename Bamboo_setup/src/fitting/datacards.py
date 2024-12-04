@@ -1,12 +1,63 @@
+import rfileIO
 import argparse
 import subprocess
 from pathlib import Path
-from tabulate import tabulate
 from typing import Iterable
-from collections import defaultdict
-import rfileIO
+from itertools import groupby
+from tabulate import tabulate
+from typing_extensions import Self
 
-def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, split_hist_name: list[str], era: float, signal: str='HH') -> str:
+
+class Datacard():
+    ''' Class that defines a datacard object '''
+    file_root: Path # Must be set before making any datacards from histograms
+
+    def __init__(self, path: Path, model: str, era: str, selection: str, category: str, variable: str) -> None:
+        self.path: Path = path
+        self.model: str = model
+        self.era: str = era
+        self.selection: str = selection
+        self.category: str = category
+        self.variable: str = variable
+        self.channel: str = '_'.join((selection, category)) if (selection and category) else None
+    
+    @classmethod
+    def from_histogram(cls, model: str, era: str, selection: str, category: str, variable: str) -> Self:
+        ''' Constructor for low-level datacards made from combined histograms '''
+        if not cls.file_root:
+            raise ValueError('Must call Datacard.set_file_root() before creating a datacard from histogram')
+        model: str = model
+        era: str = era
+        selection: str = selection
+        category: str = category
+        variable: str = variable
+        path = cls.file_root / model / f'era_{era}' / '_'.join((selection, category)) / f'{variable}.txt'
+        return cls(path, model, era, selection, category, variable)
+
+    @classmethod
+    def from_combination(cls, datacards: list[Self], path: Path) -> Self:
+        ''' Constructor for high-level datacards made by combining multiple datacards '''
+        dc0 = datacards[0]
+        make_combined_datacard(path, [dc.path for dc in datacards])
+        category, variable = None, None
+        model = dc0.model
+
+        selections = groupby(map(lambda dc: dc.selection, datacards))
+        all_selections_equal: bool = next(selections, True) and not next(selections, False)
+        selection = dc0.selection if all_selections_equal else None
+
+        eras = groupby(map(lambda dc: dc.era, datacards))
+        all_eras_equal: bool = next(eras, True) and not next(eras, False)
+        era = dc0.era if all_eras_equal else None
+
+        return cls(path, model=model, era=era, selection=selection, category=category, variable=variable)
+
+    @classmethod
+    def set_file_root(cls, path: Path):
+        cls.file_root = path
+
+
+def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, dc: Datacard, signal: str='HH') -> str:
     ''' Updates to datacards (e.g. systematics) go here '''
     obs_rate = process_rates.pop(obs_process)
     sig_rate = process_rates.pop(signal)
@@ -17,15 +68,12 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
         tabstr += tabulate(tabular_data, tablefmt='plain')
         return tabstr
 
-    channel: str = split_hist_name[0] + '_' + split_hist_name[1]
-    model: str = split_hist_name[3]
-    variable: str = split_hist_name[2]
     comment: str = (
         f'# Shape input card for HH to bbWW non-resonant analysis\n' +
-        f'# model    : {model}\n' +
-        f'# era      : {era}\n' +
-        f'# channel  : {channel}\n' +
-        f'# variable : {variable}\n'
+        f'# model    : {dc.model}\n' +
+        f'# era      : {dc.era}\n' +
+        f'# channel  : {dc.channel}\n' +
+        f'# variable : {dc.variable}\n'
     )
 
     preamble: str = (
@@ -40,13 +88,13 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
     ])
     
     observation: str = tab([
-        ["bin", channel],
+        ["bin", dc.channel],
         ["observation", f'{obs_rate:.4f}']
     ])
 
     num_model_processes = len(process_rates) + 1
     rates: list[list[str]] = [
-        ["bin", ""] + [channel] * num_model_processes,
+        ["bin", ""] + [dc.channel] * num_model_processes,
         ["process", ""] + [signal]   + [ proc for proc in process_rates.keys() ],
         ["process", ""] + [ i for i in range(num_model_processes) ],
         ["rate", ""]    + [sig_rate] + [ f'{rate:.4f}' for rate in process_rates.values() ],        
@@ -60,10 +108,11 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
     rates_and_systematics: str = tab(rates + systematics)
 
     stats: str = tab([
-        [channel, 'autoMCStats', 10, 0, 1]
+        [dc.channel, 'autoMCStats', 10, 0, 1]
     ])
 
     return comment + preamble + shapes + observation + rates_and_systematics + stats
+
 
 def make_combined_datacard(combined_datacard: Path, datacards: list[Path]) -> None:
     ''' Makes combined datacard text file for a list of datacards using `/HiggsAnalysis/CombinedLimit/scripts/combineCards.py` '''
@@ -71,18 +120,20 @@ def make_combined_datacard(combined_datacard: Path, datacards: list[Path]) -> No
     dc_text = subprocess.check_output(command)
     combined_datacard.write_bytes(dc_text)
 
-def parse_as_DNN_model(split_hist_names: list[list[str]], eras: set[str]) -> tuple[defaultdict, list[int]]:
-    metadata = defaultdict(lambda: defaultdict(list)) # Represents the file structure that will be created. Maybe should make a dedicated dataclass for this?
+
+def parse_as_DNN_model(split_hist_names: list[list[str]], eras: set[str]) -> tuple[list[Datacard], list[int]]:
+    datacards: list[Datacard] = []
     hist_ids_for_fit: list[int] = []
 
     for i, (selection, category, variable, model) in enumerate(split_hist_names):
         for era in eras:
             # For datacards, we are only interested in the histograms of the scores for which a given event was maximal
             if category.split('_')[1] in variable:
-                metadata[model][era].append(('_'.join((selection, category)), variable))
+                datacard: Datacard = Datacard.from_histogram(model, era, selection, category, variable)
+                datacards.append(datacard)
                 hist_ids_for_fit.append(i)
 
-    return metadata, hist_ids_for_fit
+    return datacards, hist_ids_for_fit
 
 
 def underscore_split(hist_names: list[str]) -> list[list[str]]:
@@ -96,9 +147,8 @@ def underscore_split(hist_names: list[str]) -> list[list[str]]:
     return split_hist_names
 
 
-def parse_results_files(results_dir: Path) -> tuple[defaultdict, dict[str, list[str]], set[str]]:
+def parse_results_files(results_dir: Path) -> tuple[list[Datacard], list[str]]:
     ''' Looks at one of the root files and figures out what datacards to make. Filters out yields, generated_sum_corrected, and Runs TTree.  '''
-
     rfiles: list[Path] = [ f for f in results_dir.iterdir() if not f.name.startswith('__skeleton__') ]
     eras: set[str] = { f.stem.rsplit('_', 1)[1] for f in rfiles }
     
@@ -122,70 +172,74 @@ def parse_results_files(results_dir: Path) -> tuple[defaultdict, dict[str, list[
     else:
         raise ValueError(f"Histogram {first_hist_name} could not be parsed")
 
-    file_structure, hist_indices_for_fit = parser(split_hist_names, eras)
-    hist_names_map: dict[str, list[str]] = { hist_names[i]: split_hist_names[i] for i in hist_indices_for_fit }
-    return file_structure, hist_names_map, eras
+    datacards, hist_indices_for_fit = parser(split_hist_names, eras)
+    relevant_hist_names: list[str] = [ hist_names[i] for i in hist_indices_for_fit ]
+    return datacards, relevant_hist_names
 
 
-def init_file_structure(file_structure: dict, fitsdir: Path) -> None:
-    ''' Creates the directories according to `file_structure` and instantiates a list which will later be populated with datacard paths '''
-    for model, modelfs in file_structure.items():
-        for era, erafs in modelfs.items():
-            for fname, _ in erafs:
-                f: Path = fitsdir / model / f'era_{era}' / fname
-                f.mkdir(exist_ok=True, parents=True)
-                file_structure[model][era] = [] # Change this level to the list of datacard paths (for combination)
-
-
-def make_datacards(nndir: Path, results_dir: Path=None) -> list[Path]:
+def make_datacards(nndir: Path, results_dir: Path=None) -> list[Datacard]:
+    ''' Makes the lowest level datacards for each model, era, selection, and category '''
     if not results_dir:
         results_dir = nndir / 'results'
     fitsdir: Path = nndir / 'fits'
+    fitsdir.mkdir(exist_ok=True)
+    Datacard.set_file_root(fitsdir)
 
-    file_structure, hist_names_map, eras =  parse_results_files(results_dir)
-    init_file_structure(file_structure, fitsdir)
-    combined_histograms = rfileIO.combine_results(results_dir, hist_names=list(hist_names_map.keys()))
-    for era in eras:
-        for hname, histos in combined_histograms[era].items():
-            split_hist_name = hist_names_map[hname]
-            selection, category, variable, model = split_hist_name
-            channel: str = selection + '_' + category
-            rpath: Path = fitsdir / model / f'era_{era}' / channel / f'{variable}.root'
-            tpath: Path = rpath.with_suffix('.txt')
-            process_rates: dict[str, float] = rfileIO.compute_rates(histos)
-            rfileIO.write_datacard_rfile(rpath, histos)
+    datacards, hist_names =  parse_results_files(results_dir)
+    combined_histograms = rfileIO.combine_results(results_dir, hist_names=hist_names)
 
-            obs_process: str = 'data' if 'data' in process_rates else 'asimov'
-            dc_text: str = generate_datacard_text(rpath, process_rates, obs_process, split_hist_name, era)
-            tpath.write_text(dc_text)
+    for dc, hname in zip(datacards, hist_names):
+        dc.path.parent.mkdir(exist_ok=True, parents=True)
+        rpath: Path = dc.path.with_suffix('.root')
+        histos = combined_histograms[dc.era][hname]
+        process_rates: dict[str, float] = rfileIO.compute_rates(histos)
 
-            file_structure[model][era].append(tpath)
+        obs_process: str = 'data' if 'data' in process_rates else 'asimov'
+        dc_text: str = generate_datacard_text(rpath, process_rates, obs_process, dc)
+        dc.path.write_text(dc_text)
+
+        rfileIO.write_datacard_rfile(rpath, histos) 
     
-    datacards_to_fit: list[Path] = []
-    for model, erafs in file_structure.items():
-        era_datacards: list[Path] = []
-        for era, channel_datacards in erafs.items():
-            era_datacard: Path = fitsdir / model / f'era_{era}' / f'datacard_{era}.txt'
-            SL_res_2bx_datacards = [ dc for dc in channel_datacards if dc.parent.name.startswith('SL_res_2b_x_') ]
-            channel_datacards = [ dc for dc in channel_datacards if not dc.parent.name.startswith('SL_res_2b_x_') ]
-            if channel_datacards:
-                make_combined_datacard(era_datacard, channel_datacards)
-                era_datacards.append(era_datacard)
-                datacards_to_fit.append(era_datacard)
-            if SL_res_2bx_datacards:
-                # These are not combined into model datacards unless there are no 1b and 2b datacards
-                datacard_2bx: Path = era_datacard.parent / f'datacard_{era}_2bx.txt'
-                make_combined_datacard(datacard_2bx, SL_res_2bx_datacards)
-                datacards_to_fit.append(datacard_2bx)
-                if not channel_datacards:
-                    era_datacards.append(datacard_2bx)
+    return datacards
 
-        model_datacard: Path = fitsdir / model / f'datacard_{model}.txt'
-        make_combined_datacard(model_datacard, era_datacards)
-        datacards_to_fit.append(model_datacard)
 
-    return datacards_to_fit
-        
+def combine_datacards_over_selections(datacards: list[Datacard], combine_selections: list[str] = None) -> list[Datacard]:
+    ''' Makes the higher-level datacards combined over multiple selections within a model and an era '''
+    if combine_selections is None:
+        combine_selections: list[str] = []
+    combined_datacards: list[Datacard] = []
+
+    def merged_selection_key(dc: Datacard) -> str:
+        return ':'.join(combine_selections) if dc.selection in combine_selections else dc.selection
+
+    datacards = sorted(datacards, key=lambda dc: (dc.model, dc.era, dc.selection))
+    for _, group in groupby(datacards, key=lambda dc: (dc.model, dc.era)):
+        for selection, dcs in groupby(group, key=merged_selection_key):
+            dcs = list(dcs)
+            root: Path = dcs[0].path.parents[1]
+            comb_dc_name: str = 'datacard_' + '_'.join((part.split('_',2)[-1] for part in selection.split(':'))) + '.txt'
+            comb_dc_path: Path = root / comb_dc_name
+            combined_datacards.append(Datacard.from_combination(dcs, comb_dc_path))
+
+    return combined_datacards
+
+def combine_datacards_over_eras(datacards: list[Datacard]) -> list[Datacard]:
+    ''' 
+    Makes the higher-level datacards combined over multiple eras within a model
+    Arguments: 
+        datacards (list[Datacard]): list of Datacard objects. These are combined over like `model` attributes. Each datacard must represent the entire era.
+    '''
+    combined_datacards: list[Datacard] = []
+    model_key = lambda dc: dc.model
+    datacards = sorted(datacards, key=model_key)
+    for model, dcs in groupby(datacards, model_key):
+        dcs = list(dcs)
+        comb_dc_path: Path = dcs[0].path.parents[1] / f'datacard_{model}.txt'
+        combined_datacards.append(Datacard.from_combination(dcs, comb_dc_path))
+
+    return combined_datacards
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Make datacards")
     parser.add_argument("nndir", action="store", type=Path, help="directory where datacards will be written to inside a 'fits' directory")
@@ -195,7 +249,9 @@ def parse_args():
 
 def main() -> None:
     args = parse_args()
-    make_datacards(nndir=args.nndir, results_dir=args.input)
+    _, dcs = make_datacards(nndir=args.nndir, results_dir=args.input)
+    dcs = combine_datacards_over_selections(dcs)
+    combine_datacards_over_eras(dcs)
 
 if __name__ == "__main__":
     main()
