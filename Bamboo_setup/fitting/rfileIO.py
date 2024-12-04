@@ -107,7 +107,7 @@ def combine_results(results_dir: Path, hist_names: list[str]=None) -> dict:
     files: list[Path] = refs._find_root_files(results_dir)
     eras: list[str] = refs._find_eras(results_dir)
 
-    with open('config/analysis_2022_full.yml') as file:
+    with open('bamboo/config/analysis_2022_full.yml') as file:
         config = yaml.safe_load(file)
         lumis = { era: v['luminosity'] for era, v in config['eras'].items() if era in eras }
         xs = { subprocess_era: v['cross-section'] for subprocess_era, v in config['samples'].items() }
