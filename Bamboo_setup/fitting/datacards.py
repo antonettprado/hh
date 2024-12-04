@@ -1,8 +1,7 @@
-import rfileIO
 import argparse
 import subprocess
+from . import rfileIO
 from pathlib import Path
-from typing import Iterable
 from itertools import groupby
 from tabulate import tabulate
 from typing_extensions import Self

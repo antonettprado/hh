@@ -3,7 +3,7 @@ import ROOT
 from pathlib import Path
 from typing import Iterable
 from collections import defaultdict
-import post_processing.references as refs
+from utils import references as refs
 
 # Incomplete function to get the normalizations from the fitDiagnostics root file
 def get_fit_normalizations(file: Path) -> tuple[list,list,list]:

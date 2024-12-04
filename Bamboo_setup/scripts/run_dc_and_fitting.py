@@ -1,12 +1,12 @@
 import time
-import fitter
 import argparse
-import datacards
 import itertools
 from pathlib import Path
+from fitting import fitter
 from typing import Callable
-from datacards import Datacard
+from fitting import datacards
 from multiprocessing import Pool
+from fitting.datacards import Datacard
 
 def parse_args():
     parser = argparse.ArgumentParser()
