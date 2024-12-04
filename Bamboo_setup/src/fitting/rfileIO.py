@@ -1,9 +1,9 @@
 import yaml
 import ROOT
 from pathlib import Path
-import post_processing.references as refs
 from typing import Iterable
 from collections import defaultdict
+import post_processing.references as refs
 
 # Incomplete function to get the normalizations from the fitDiagnostics root file
 def get_fit_normalizations(file: Path) -> tuple[list,list,list]:
@@ -31,10 +31,10 @@ def get_hist_names(rfile: Path) -> list[str]:
     tfile.Close()
     return hist_names
 
-def compute_rates(histos: dict[str, ROOT.TFile]) -> dict[str, float]:
+def compute_rates(histos: dict[str, ROOT.TH1D]) -> dict[str, float]:
     return { proc: h.Integral() for proc, h in histos.items() }
 
-def write_datacard_rfile(path: Path, histos: dict[str, ROOT.TFile], write_asimov: bool=True) -> None:
+def write_datacard_rfile(path: Path, histos: dict[str, ROOT.TH1D], write_asimov: bool=True) -> None:
     outfile = ROOT.TFile.Open(str(path), "RECREATE")
     outfile.cd()
     for name, hist in histos.items():
@@ -113,8 +113,8 @@ def combine_results(results_dir: Path, hist_names: list[str]=None) -> dict:
         xs = { subprocess_era: v['cross-section'] for subprocess_era, v in config['samples'].items() }
     
     process_map = { sub: process.replace('HH_bbWW', 'HH').replace('HH_bbtautau', 'HH') 
-                 for process, sub_processes in refs.PROCESSES_FILES.items()
-                   for sub in sub_processes }
+                    for process, sub_processes in refs.PROCESSES_FILES.items()
+                    for sub in sub_processes }
 
     combined_results: dict = {}
     for era in eras:
