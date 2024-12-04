@@ -17,10 +17,11 @@ from NeuralNet.registry_losses import LossRegistry
 from NeuralNet.registry_models import ModelRegistry
 from NeuralNet.registry_preprocessors import PreprocessorRegistry
 import time
+from typing import Tuple
 
 class DNNModel:
 
-    def __init__(self, model_config: ModelConfig, modeldir: Path, log_level='info'):
+    def __init__(self, model_config: ModelConfig, modeldir: Path=None, log_level='info'):
         self.config = model_config
         self.name = model_config.name
         self.type = model_config.type
@@ -34,8 +35,9 @@ class DNNModel:
         self.model_df = None
         self.model = None
         self.history = None
-        self.modeldir = modeldir
-        self.modeldir.mkdir(parents=True, exist_ok=True)
+        if modeldir:
+            self.modeldir = modeldir
+            self.modeldir.mkdir(parents=True, exist_ok=True)
         self.logger = get_context_aware_logger(self.__class__.__name__, log_level)
 
         if self.type == 'binary': self._validate_categorization_for_binary(self.training_setup)
@@ -47,6 +49,14 @@ class DNNModel:
         has_non_empty_key = any(k for k in training_setup.categorization.keys() )
         if not (has_empty_key and has_non_empty_key):
             raise ValueError("Dictionary must be of the form {'isSignal': ['HH'], "": ['ttbar', 'tW']}")
+
+    def print_model_info(self):
+        self.logger.info(f"\n\n\n{'='*100}\n{'='*100}")
+        self.logger.info(f"Running DNN Model: {self.name}")
+        self.logger.debug(f"Classes: {self.classes}")
+        self.logger.debug(f"Type: {self.type}")
+        self.logger.debug(f"Processes: {self.processes}")
+        self.logger.debug(f"Categorization: {self.training_setup.categorization}")
 
     @log_context("Setting model dataframe ...")
     def set_model_df_from_total_df(self, total_df: pd.DataFrame = None):
@@ -62,6 +72,7 @@ class DNNModel:
         all_features = [col for col in model_df.columns if col in Refs.ALL_VARNAMES_1D]
         all_non_features = [col for col in model_df.columns if col not in all_features]
         model_features = all_features if self.training_setup.input_vars == 'All' else self.training_setup.input_vars 
+        self.model_features = model_features
         columns_to_keep = model_features + all_non_features
         model_df = model_df[columns_to_keep]
 
@@ -103,22 +114,17 @@ class DNNModel:
             unassigned_processes = model_df.loc[unassigned, 'Process'].unique()
             raise ValueError(f"Some processes were not assigned to any class: {unassigned_processes}")
 
-        non_features_to_keep = ['event', 'sample_weight', 'Class']
-        columns_to_keep = non_features_to_keep + model_features
-        model_df = model_df[columns_to_keep]
-
         self.logger.debug("Model dataframe:")
         self.logger.debug(model_df)
 
         return model_df
     
-    def get_X_and_Y_from_model_df(self, model_df):
+    def get_X_and_Y_from_model_df(self, model_df) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
         '''
         Separates features (X) and target (Y) from the model dataframe.
         Also returns event numbers and sample_weights
         '''
-        drop_cols = ['event', 'sample_weight', 'Class']
-        X_df = model_df.drop(columns=drop_cols)
+        X_df = model_df[self.model_features]
 
         # Y_df must be one-hot encoded
         if self.type == 'multi':
@@ -126,7 +132,7 @@ class DNNModel:
             Y_df = pd.get_dummies(model_df["Class"], prefix="Class")
             Y_df = Y_df.reindex(columns=[f"Class_{cls_i}" for cls_i in self.classes], fill_value=0)
         elif self.type == 'binary':
-            Y_df = model_df["Class"].rename("Class_isSignal")
+            Y_df = model_df[["Class"]].rename(columns={"Class": "Class_isSignal"})
 
         events = model_df["event"]
         sample_weights = model_df["sample_weight"]
@@ -264,22 +270,18 @@ class DNNModel:
 
         # Add true classes
         if self.type == 'binary':
-            # For binary case, Y_test is a Series
-            output_df['Class_isSignal'] = Y_test
+            output_df['Class_isSignal'] = Y_test['Class_isSignal']
         else:
-            # For multiclass case, Y_test is a DataFrame
             for cls_i in self.classes:
                 output_df[f'Class_{cls_i}'] = Y_test[f'Class_{cls_i}']
 
         # Add predicted scores
         Y_pred_score = self.model.predict(X_test)
         if self.type == 'binary':
-            # For binary case, only one score column for signal probability
             output_df['Score_isSignal'] = Y_pred_score.flatten()
         else:
-            # For multiclass case
-            for i, cls_i in enumerate(Y_test.columns):
-                output_df[f'Score_{cls_i.removeprefix("Class_")}'] = Y_pred_score[:, i]
+            for i, cls_i in enumerate(self.classes):
+                output_df[f'Score_{cls_i}'] = Y_pred_score[:, i]
 
         self.logger.debug("Event Predictions:")
         self.logger.debug(output_df, max_rows=5, extra_indent=1)
@@ -317,7 +319,9 @@ class DNNModel:
 
     def Full_Splitting(self, model_df: pd.DataFrame=None):
         assert model_df is not None
-        X_df, Y_df, events, sample_weights = self.get_X_and_Y_from_model_df(model_df)        
+        X_df, Y_df, events, sample_weights = self.get_X_and_Y_from_model_df(model_df)
+        self.logger.debug(f"X_df: {X_df.columns.to_list()}")
+        self.logger.debug(f"Y_df: {Y_df.columns.to_list()}")        
         X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='train_test_split')
         return X_train, X_test, Y_train, Y_test, evs_test, sw_train
 
@@ -338,12 +342,6 @@ class DNNModel:
 
     def Run(self, total_df, fixed_random_seed=True, rank_features=False, save_model_info=True):
         start_time = time.perf_counter()
-        self.logger.info(f"\n\n\n{'='*100}\n{'='*100}")
-        self.logger.info(f"Running DNN Model: {self.name}")
-        self.logger.debug(f"Classes: {self.classes}")
-        self.logger.debug(f"Type: {self.type}")
-        self.logger.debug(f"Processes: {self.processes}")
-        self.logger.debug(f"Categorization: {self.training_setup.categorization}")
         
         model_df = self.set_model_df_from_total_df(total_df)
         X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.Full_Splitting(model_df)

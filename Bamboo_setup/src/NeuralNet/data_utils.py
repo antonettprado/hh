@@ -33,8 +33,6 @@ def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[
         DataFrame containing combined data from all ROOT files
     """
     results_dir = workdir / 'results'
-    # if logger is None:
-    #     logger = get_context_aware_logger('load_root_data', 'debug')
         
     root_files_available = Refs._find_root_files(results_dir)
     if total_inputs:
