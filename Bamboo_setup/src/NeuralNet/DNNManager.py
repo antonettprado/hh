@@ -19,25 +19,25 @@ class DNNManager:
 
     def __init__(self, workdir: str, sel_names: list[str], config_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None, log_level = 'debug'):
         self.mode = None
-        self.WORKDIR = Path(workdir)
+        self.workdir = Path(workdir)
         self.sel_names = sel_names
         self.config_yml = self.NEURALNET / 'config' / config_yml if config_yml else None
         self.total_inputs = self.NEURALNET / 'inputs' / total_inputs if total_inputs else None
-        self.RESULTSDIR = self.WORKDIR / 'results'
+        self.resultsdir = self.workdir / 'results'
         if DNNManagerdir is None:
             sels = '_'.join(sel_names)
-            self.DNNMANAGERDIR = self.WORKDIR /  f"Neural_Nets_{sels}"
+            self.DNNManagerdir = self.workdir /  f"Neural_Nets_{sels}"
         else:
-            self.DNNMANAGERDIR = self.WORKDIR / DNNManagerdir
-        self.DNNMANAGERDIR.mkdir(parents=True, exist_ok=True)
-        self.logger = get_context_aware_logger(self.__class__.__name__, log_level, self.DNNMANAGERDIR / 'manager.txt')
+            self.DNNManagerdir = self.workdir / DNNManagerdir
+        self.DNNManagerdir.mkdir(parents=True, exist_ok=True)
+        self.logger = get_context_aware_logger(self.__class__.__name__, log_level, self.DNNManagerdir / 'manager.txt')
         self.log_level = log_level
         self.output_info()
 
     @log_context("DNN Manager instantiated")
     def output_info(self):
-        self.logger.info(f"WORKDIR:{self.WORKDIR}")
-        self.logger.info(f"DNNMANAGERDIR:{self.DNNMANAGERDIR}")
+        self.logger.info(f"Workdir:{self.workdir}")
+        self.logger.info(f"DNNManagerdir:{self.DNNManagerdir}")
         self.logger.info(f"Total inputs file: {self.total_inputs}")
         self.logger.info(f"Config models file: {self.config_yml}")
 
@@ -92,7 +92,7 @@ class DNNManager:
     def start(self):
         model_configs = self.load_model_configs()
 
-        total_df_unprep = data_utils.load_root_data(workdir=self.WORKDIR, tree_names=self.sel_names, total_inputs=self.total_inputs, logger=self.logger)
+        total_df_unprep = data_utils.load_root_data(workdir=self.workdir, tree_names=self.sel_names, total_inputs=self.total_inputs, logger=self.logger)
         total_df_unprep = data_utils.fix_column_names_mismatch(df=total_df_unprep)
         data_utils.inspect_data(df=total_df_unprep, logger=self.logger)
         total_df = data_utils.preprocess_data(df=total_df_unprep, logger=self.logger)
@@ -106,12 +106,13 @@ class DNNManager:
         mode_function_name = DNNManager.MODE_MAPPING.get(self.mode)
         mode_function = getattr(self, mode_function_name)
         mode_function(total_df, model_configs, **self.kwargs)
-        self.logger.info(f"\nThe DNN models tested were saved in {self.DNNMANAGERDIR.resolve()}")
+        self.logger.info(f"\nThe DNN models tested were saved in {self.DNNManagerdir.resolve()}")
 
     @log_context("Running mode: train and evaluate")
     def _train_eval(self, total_df, model_configs, rank_features, **kwargs):
         for model_config in model_configs:
-            DNN = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / model_config.name, log_level=self.log_level)
+            DNN = DNNModel(model_config=model_config, modeldir=self.DNNManagerdir / model_config.name, log_level=self.log_level)
+            DNN.print_model_info()
             model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=True, rank_features=rank_features)
             self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
@@ -122,26 +123,38 @@ class DNNManager:
             skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
 
             DNN_base = DNNModel(model_config=model_config)
+            DNN_base.print_model_info()
             model_df = DNN_base.set_model_df_from_total_df(total_df=total_df)
-            X_df, Y_df, events, sample_weights = DNNModel.get_X_and_Y_from_model_df(model_df)
+            X_df, Y_df, events, sample_weights = DNN_base.get_X_and_Y_from_model_df(model_df)
+            self.logger.debug(f"X_df: {X_df.columns.to_list()}")
+            self.logger.debug(f"Y_df: {Y_df.columns.to_list()}")
 
-            modelsuperdir = model_config.name
-            model_name = model_config.name
+            base_modeldir = model_config.name
+            base_modelname = model_config.name
             Y_df_single = Y_df.squeeze() if DNN_base.type == 'binary' else Y_df.idxmax(axis=1)
             for fold_i, (train_index, test_index) in enumerate(skf.split(X_df, Y_df_single)):
-                self.logger.info(f"Running fold {fold_i+1}/{skf.get_n_splits()}", level=2)
-                model_config.name = model_name + f'_Fold{fold_i}'
-                DNN_fold_i = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / modelsuperdir / model_config.name, log_level=self.log_level)
-                X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNNModel.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='skf', train_index=train_index, test_index=test_index)
+                self.logger.info(f"Running fold {fold_i+1}/{skf.get_n_splits()}")
+                model_config.name = base_modelname + f'_Fold{fold_i+1}'
+                modeldir = self.DNNManagerdir / base_modeldir / model_config.name
+                DNN_fold_i = DNNModel(model_config=model_config, modeldir=modeldir, log_level=self.log_level)
+                X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNN_fold_i.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='skf', train_index=train_index, test_index=test_index)
                 DNN_fold_i.Train(X_train, Y_train, sw_train, Y_test)
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN_fold_i.Evaluate(X_test, Y_test, evs_test)
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
                 fold_test_data = pd.DataFrame({
-                    'test_index': test_index,        
-                    'events': evs_test,             
-                    'Class': Y_df_single.iloc[test_index].values})
-                test_indices_csv = DNN_fold_i.modeldir / f'Test_Events.csv'
+                    'test_index': test_index,             
+                    'event': model_df.iloc[test_index]['event'].values,
+                    'run': model_df.iloc[test_index]['run'].values,
+                    'luminosityBlock': model_df.iloc[test_index]['luminosityBlock'].values,
+                    'genTtbarId': model_df.iloc[test_index]['genTtbarId'].values,
+                    'File': model_df.iloc[test_index]['File'].values,
+                    'ak4_jet1_bscore': model_df.iloc[test_index]['ak4_jet1_bscore'].values,
+                    'ak4_jet2_bscore': model_df.iloc[test_index]['ak4_jet2_bscore'].values,
+                    'ak4_jet3_bscore': model_df.iloc[test_index]['ak4_jet3_bscore'].values,
+                    'ak4_jet4_bscore': model_df.iloc[test_index]['ak4_jet4_bscore'].values
+                })
+                test_indices_csv = DNN_fold_i.modeldir / f'test_events.csv'
                 fold_test_data.to_csv(test_indices_csv, index=False)
 
     @log_context("Running mode: multi")
@@ -151,7 +164,7 @@ class DNNManager:
             model_name = model_config.name
             for iteration in range(n_iterations):
                 model_config.name = model_name + f'_{iteration}'
-                DNN = DNNModel(model_config=model_config, modeldir=self.DNNMANAGERDIR / modelsuperdir / model_config.name, log_level=self.log_level)
+                DNN = DNNModel(model_config=model_config, modeldir=self.DNNManagerdir / modelsuperdir / model_config.name, log_level=self.log_level)
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=False, rank_features=False)
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
@@ -183,7 +196,7 @@ class DNNManager:
     @log_context("Updating models summary csv ...")
     def update_models_summary_csv(self, model_name: str, model_metrics: dict, cm_norm_true: np.ndarray, cm_norm_pred: np.ndarray, diag_names: list):
 
-        models_summary = self.DNNMANAGERDIR / 'models_performance.csv'
+        models_summary = self.DNNManagerdir / 'models_performance.csv'
         if models_summary.exists():
             df = pd.read_csv(models_summary)
         else:
@@ -250,9 +263,7 @@ if __name__ == '__main__':
     
     python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -m train_eval
 
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -ti vars40.txt -o DNNManager -m train_eval
+    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -m ca --n_splits 5
 
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -ti vars40.txt -o DNNManager_ca -m ca --n_splits 5
-
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -ti vars40.txt -o DNNManager_multi -m multi --n_iterations 3
+    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -m multi --n_iterations 3
     '''

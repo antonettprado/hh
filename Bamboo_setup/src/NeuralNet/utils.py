@@ -54,7 +54,6 @@ def get_logger(name: str = 'free', log_level: str = 'DEBUG', log_file: Path = No
         logger.addHandler(console_handler)
 
         if log_file is not None:
-            print(f"Logging to file: {log_file}")
             log_file.parent.mkdir(parents=True, exist_ok=True)
             file_handler = logging.FileHandler(log_file, mode='w')
             file_handler.setFormatter(logging.Formatter("%(message)s"))
