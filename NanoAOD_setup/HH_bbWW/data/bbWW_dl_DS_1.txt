@@ -1,2 +1,0 @@
-/store/mc/RunIIAutumn18NanoAODv7/GluGluToHHTo2B2VTo2L2Nu_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/60000/B768038D-E963-8C4A-A13A-835C789FBE24.root
-/store/mc/RunIIAutumn18NanoAODv7/GluGluToHHTo2B2VTo2L2Nu_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/60000/E726B23B-4179-7042-8570-457C445C51FE.root
