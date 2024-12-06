@@ -1,0 +1,257 @@
+Models:
+  # # ==================== Binary Models ====================
+  - name: 'binary_HH_ttbar'
+    type: 'binary'
+    training_setup:
+      categorization: {"isSignal": ["HH_bbWW"], "":["ttbar"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0}
+      # With the latest additions to the list of variables, "All" is:
+      # ['met_pt', 'met_phi', 'nAK4', 'nAK4_btag', 'nAK4_nonbtag', 'nAK8_btag', 'ak4_jet0_pt', 'ak4_jet0_phi', 'ak4_jet0_eta', 'ak4_jet0_bscore', 'ak4_jet1_pt', 'ak4_jet1_phi', 'ak4_jet1_eta', 'ak4_jet1_bscore', 'ak4_jet2_pt', 'ak4_jet2_phi', 'ak4_jet2_eta', 'ak4_jet2_bscore', 'ak4_jet3_pt', 'ak4_jet3_phi', 'ak4_jet3_eta', 'ak4_jet3_bscore', 'ak4_jet4_pt', 'ak4_jet4_phi', 'ak4_jet4_eta', 'ak4_jet4_bscore', 'ak4_jet5_pt', 'ak4_jet5_phi', 'ak4_jet5_eta', 'ak4_jet5_bscore', 'lep0_pt', 'lep0_phi', 'lep0_eta', 'lep0_iso', 'trijet_mInv', 'trijet_pt', 'trijet_pt_rat', 'blnu_mT', 'blnu_pt', 'trijet_bijet_dR', 'trijet_bijet_dPhi', 'trijet_bijet_dEta', 'bjet_bijet_dR', 'bjet_bijet_dPhi', 'bjet_bijet_dEta', 'all_sT', 'all_sT_50_cut', 'all_mInv', 'all_mT', 'all_jets_HT', 'all_pt', 'mjj', 'WW_mInv', 'WW_pt', 'bjets_mbb', 'bjets_dPhi', 'bjets_dPhi_abs', 'bjets_dEta', 'bjets_dEta_abs', 'bjets_dR', 'bjets_pt_bb', 'bjet0_pt', 'bjet1_pt', 'bjets_mean_pt']
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      output_layers: 
+        - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'binary_HH_ttbar_tW'
+    type: 'binary'
+    training_setup:
+      categorization: {"isSignal": ["HH_bbWW"], "":["ttbar", "tW"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      output_layers: 
+        - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'binary_HH_ttbar_tW_WJets'
+    type: 'binary'
+    training_setup:
+      categorization: {"isSignal": ["HH_bbWW"], "":["ttbar", "tW", "WJets"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      output_layers: 
+        - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'binary_All'
+    type: 'binary'
+    training_setup:
+      categorization: {"isSignal": ["HH_bbWW"], "":["ttbar", "tW", "WJets", "VV"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      output_layers: 
+        - {type: 'Dense', units: 1, kernel_initializer: 'normal', activation: 'sigmoid', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'binary_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  # # ================= Multiclass Models =================
+
+  - name: 'multi_HH_ttbar'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      output_layers: 
+        - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW": ["tW"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      output_layers: 
+        - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_WJets'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.4}
+      output_layers: 
+        - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_ttbar_tW_WJets_Others'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "ttbar": ["ttbar"], "tW":["tW"], "WJets": ["WJets"], "Others": ["DY", "VV"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+      output_layers: 
+        - {type: 'Dense', units: 5, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_Top'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+      output_layers: 
+        - {type: 'Dense', units: 2, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_Top_WJets'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"], "WJets": ["WJets"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 1.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+      output_layers: 
+        - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_Top_WJets_Others'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"], "WJets": ["WJets"], "Others": ["DY", "VV"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+      output_layers: 
+        - {type: 'Dense', units: 4, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
+
+  - name: 'multi_HH_Top_Others'
+    type: 'multi'
+    training_setup:
+      categorization: {"HH": ["HH_bbWW"], "Top": ["ttbar", "tW"], "Others": ["DY", "VV", "WJets"]}
+      weights: {"HH_bbWW": 1.0, "ttbar": 8.0, "tW": 4.0, "DY": 1.0, "VV": 1.0, "WJets": 1.0}
+      input_vars: 'All'
+    architecture: 
+      format: 'defined_here'
+      preprocessor: 'Standardize'
+      use_flags: False
+      sentinel_replacement: -9
+      residual_network: True
+      hidden_layers: 
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+        - {type: 'Dense', units: 256, activation: 'relu', act_regularizer: {l2: 1e-4}, dropout_rate: 0.5}
+      output_layers: 
+        - {type: 'Dense', units: 3, kernel_initializer: 'normal', activation: 'softmax', act_regularizer: {l2: 1e-4}, name: 'output'}
+    compiler: {optimizer: 'adam', lr: 0.001, loss: 'categorical_crossentropy'}
+    fit: {batch_size: 1024, epochs: 1000, validation_split: 0.25}
