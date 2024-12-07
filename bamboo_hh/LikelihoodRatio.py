@@ -1,37 +1,29 @@
-from bamboo.analysismodules import NanoAODHistoModule
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, CutFlowReport, Skim
-from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.plots import Plot, Skim
 from bamboo.scalefactors import get_correction
-from bamboo.treeproxies import FloatProxy
 
-from base_selection import NanoBaseHHbbWW
-from SL_DL_vars_reco import SL_DL_vars_reco
-import utils.object_definition as object_defs
-import utils.event_definition as event_defs
-from utils.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
-import utils.variable_definition as var_defs
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW
+from bamboo_hh.VarsReco import VarsReco
+import bamboo_hh.definitions.variable_definition as var_defs
+from bamboo_hh.definitions.variables import Variable1D, Variable2D, Variable3D, LikelihoodRatio
 
-import os
-import ROOT
 from pathlib import Path
-from typing import Dict, List
 from itertools import combinations
 
-class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
+class LikelihoodRatio(NanoBaseHHbbWW):
     def __init__(self, args):
-        super(SL_DL_likelihood_ratio, self).__init__(args)
+        super(LikelihoodRatio, self).__init__(args)
         self.event_nr_sel = "even"
         print("The work dir for the correction file is: " + self.args.llr_corr_workdir)
         print("The output path is: " + self.args.output)
 
     def addArgs(self, parser):
-        super(SL_DL_likelihood_ratio, self).addArgs(parser)
+        super(LikelihoodRatio, self).addArgs(parser)
         parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the correction file is')
         parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
         
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
-        tree, baseSel, backend, lumiArgs = super(SL_DL_likelihood_ratio, self).prepareTree(tree=tree,
+        tree, baseSel, backend, lumiArgs = super(LikelihoodRatio, self).prepareTree(tree=tree,
                                                                                     sample=sample,
                                                                                     sampleCfg=sampleCfg,
                                                                                     description=description,
@@ -57,7 +49,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         llr = LikelihoodRatio(subvar.name)
         subvar_data = op.switch(subvar.data < subvar.min, subvar.min + 0.0001*abs(subvar.min), subvar.data)
         subvar_data = op.switch(subvar.data > subvar.max, subvar.max - 0.0001*abs(subvar.max), subvar.data)
-        subvar_llr = SL_DL_likelihood_ratio.get_var_llr(llr_corr_workdir, [subvar_data], llr[subvar.subcat].ref, subvar.selection)
+        subvar_llr = LikelihoodRatio.get_var_llr(llr_corr_workdir, [subvar_data], llr[subvar.subcat].ref, subvar.selection)
         
         llr_data = {sel_name: subvar_llr}
         llr.populate(llr_data, var_defs.get_selections_subset([sel_name]))
@@ -75,7 +67,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
                 #    continue
                 subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
                 subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
-                subcat_var_lr = SL_DL_likelihood_ratio.get_var_llr(llr_corr_workdir, [subcat_var_data], lr[subcat_var.subcat].ref, subcat_var.selection)
+                subcat_var_lr = LikelihoodRatio.get_var_llr(llr_corr_workdir, [subcat_var_data], lr[subcat_var.subcat].ref, subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, var_defs.get_selections_subset(lr_data.keys()))
             llrs_for_vars_1D.append(lr)
@@ -95,7 +87,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
                 subcat_var_xdata = op.switch(subcat_var.xdata > var.xmax, var.xmax - 0.0001*abs(var.xmax), subcat_var.xdata)
                 subcat_var_ydata = op.switch(subcat_var.ydata < var.ymin, var.ymin + 0.0001*abs(var.ymin), subcat_var.ydata)
                 subcat_var_ydata = op.switch(subcat_var.ydata > var.ymax, var.ymax - 0.0001*abs(var.ymax), subcat_var.ydata)
-                subcat_var_lr = SL_DL_likelihood_ratio.get_var_llr(llr_corr_workdir, [subcat_var_xdata, subcat_var_ydata], lr[subcat_var.subcat].ref, subcat_var.selection)
+                subcat_var_lr = LikelihoodRatio.get_var_llr(llr_corr_workdir, [subcat_var_xdata, subcat_var_ydata], lr[subcat_var.subcat].ref, subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, var_defs.get_selections_subset(lr_data.keys()))
             llrs_for_vars_2D.append(lr)
@@ -117,7 +109,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
                 subcat_var_ydata = op.switch(subcat_var.ydata > var.ymax, var.ymax - 0.0001*abs(var.ymax), subcat_var.ydata)
                 subcat_var_zdata = op.switch(subcat_var.zdata < var.zmin, var.zmin + 0.0001*abs(var.zmin), subcat_var.zdata)
                 subcat_var_zdata = op.switch(subcat_var.zdata > var.zmax, var.zmax - 0.0001*abs(var.zmax), subcat_var.zdata)
-                subcat_var_lr = SL_DL_likelihood_ratio.get_var_llr(llr_corr_workdir, [subcat_var_xdata, subcat_var_ydata, subcat_var_zdata], lr[subcat_var.subcat].ref, subcat_var.selection)
+                subcat_var_lr = LikelihoodRatio.get_var_llr(llr_corr_workdir, [subcat_var_xdata, subcat_var_ydata, subcat_var_zdata], lr[subcat_var.subcat].ref, subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, var_defs.get_selections_subset(lr_data.keys()))
             llrs_for_vars_3D.append(lr)
@@ -125,7 +117,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
 
     @staticmethod
     def get_llrs_for_vars_1D_2combos(llr_corr_workdir, objects) -> list[LikelihoodRatio]:
-        llrs_for_vars_1D = SL_DL_likelihood_ratio.get_llrs_for_vars_1D(llr_corr_workdir, objects)
+        llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(llr_corr_workdir, objects)
         llrs_for_vars_1D_combos = []
         # ---------------- 2-combo of 1D vars ----------------
         for lr1, lr2 in combinations(llrs_for_vars_1D, 2):
@@ -155,8 +147,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         vars_custom_combos.extend(combinations(interesting_vars_1D, len(interesting_vars_1D)))
         vars_custom_combos.extend(combinations(interesting_vars_set1, len(interesting_vars_set1)))
         # -----------------------------------------------------------------
-        llrs_for_vars_1D = SL_DL_likelihood_ratio.get_llrs_for_vars_1D(llr_corr_workdir, objects)
-        # llrs_for_vars_2D = SL_DL_likelihood_ratio.get_llrs_for_vars_2D()
+        llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(llr_corr_workdir, objects)
+        # llrs_for_vars_2D = LikelihoodRatio.get_llrs_for_vars_2D()
         # llrs_for_vars = llrs_for_vars_1D + llrs_for_vars_2D
         llrs_for_vars = llrs_for_vars_1D
         llrs_for_vars_custom_combos = []
@@ -183,7 +175,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
             for subcat_var in var:
                 subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
                 subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
-                subcat_var_lr = SL_DL_likelihood_ratio.get_var_llr(llr_corr_workdir, [subcat_var_data], lr[subcat_var.subcat].ref, subcat_var.selection)
+                subcat_var_lr = LikelihoodRatio.get_var_llr(llr_corr_workdir, [subcat_var_data], lr[subcat_var.subcat].ref, subcat_var.selection)
                 lr_data[subcat_var.subcat] = subcat_var_lr
             lr.populate(lr_data, var_defs.get_selections_subset(lr_data.keys()))
             llrs_for_bjets_vars_1D.append(lr)
@@ -202,8 +194,8 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         vars_custom_combos.extend(combinations(bjets_vars_1D_names, 7))
         vars_custom_combos.extend(combinations(bjets_vars_1D_names, 8))
         # -----------------------------------------------------------------
-        llrs_for_bjets_vars_1D = SL_DL_likelihood_ratio.get_llrs_for_bjets_vars_1D(llr_corr_workdir, objects)
-        # llrs_for_bjets_vars_2D = SL_DL_likelihood_ratio.get_llrs_for_bjets_vars_2D(llr_corr_workdir, objects)
+        llrs_for_bjets_vars_1D = LikelihoodRatio.get_llrs_for_bjets_vars_1D(llr_corr_workdir, objects)
+        # llrs_for_bjets_vars_2D = LikelihoodRatio.get_llrs_for_bjets_vars_2D(llr_corr_workdir, objects)
         llrs_for_bjets_vars = llrs_for_bjets_vars_1D 
         llrs_for_bjets_vars_custom_combos = []
         for combo_list in vars_custom_combos:
@@ -230,7 +222,7 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
             print()
 
         sel_name = "SL_res_2b_x"
-        llrs_for_vars_1D = SL_DL_likelihood_ratio.get_llrs_for_vars_1D(llr_corr_workdir, objects)
+        llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(llr_corr_workdir, objects)
         for llr_product in llrs_product_list:
             llr_product_data = {}
             for subcat_llr_product in llr_product:
@@ -261,21 +253,21 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
         plots = []
         plots.append(self.yields)
 
-        objects = SL_DL_vars_reco.get_objects(tree, self.era)
-        selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
+        objects = VarsReco.get_objects(tree, self.era)
+        selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         var_defs.set_selections_for_vars(selections)
 
         # ===============================================================================
         # ================================== Plots ======================================
-        # # ===============================================================================
+        # ===============================================================================
 
         sel_name = "SL_res_2b_x"
 
-        llrs_for_vars_1D = SL_DL_likelihood_ratio.get_llrs_for_vars_1D(self.args.llr_corr_workdir, objects)
+        llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(self.args.llr_corr_workdir, objects)
         # llrs_for_vars_2D = self.get_llrs_for_vars_2D(objects)
         # llrs_for_vars_3D = self.get_llrs_for_vars_3D(objects)
         # llrs_for_vars_1D_2combos = self.get_llrs_for_vars_1D_2combos(objects)
-        # llrs_for_vars_custom_combos = SL_DL_likelihood_ratio.get_llrs_for_vars_custom_combos(self.args.llr_corr_workdir, objects)
+        # llrs_for_vars_custom_combos = LikelihoodRatio.get_llrs_for_vars_custom_combos(self.args.llr_corr_workdir, objects)
         all_llrs = llrs_for_vars_1D
         plots.extend([Plot.make1D(subcat_llr.ref, subcat_llr.data, subcat_llr.selection, lr.eqbin) for lr in all_llrs for subcat_llr in lr if subcat_llr.subcat == sel_name])
         
@@ -296,18 +288,15 @@ class SL_DL_likelihood_ratio(NanoBaseHHbbWW):
 
 
         # if not self.args.no_skim:
-        #     plots = SL_DL_likelihood_ratio.get_skims(all_llrs, objects, selections, plots)
+        #     plots = LikelihoodRatio.get_skims(all_llrs, objects, selections, plots)
 
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_DL_likelihood_ratio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(LikelihoodRatio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        from bamboo_hh.plotter.plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, resultsdir=resultsdir)
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
-
-        from post_processing.cut_based_sel.cut_based_selections import main as cut_based_selections
-        cut_based_selections(workdir)

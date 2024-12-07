@@ -11,8 +11,8 @@ import argparse
 import math
 from typing import Union
 import yaml
-from utils import variables
-from post_processing import references as Refs
+from ..definitions import variables
+from references import references as Refs
 from itertools import product
 from collections import defaultdict
 from dataclasses import dataclass, field

@@ -1,15 +1,15 @@
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, CutFlowReport, Skim
+from bamboo.plots import Plot, Skim
 
-from base_selection import NanoBaseHHbbWW
-from SL_DL_event_selection import SL_DL_event_selection
-import utils.variable_definition as var_defs
-from utils.variables import Variable
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW
+from bamboo_hh.EventSelection import EventSelection
+import bamboo_hh.definitions.variable_definition as var_defs
+from bamboo_hh.definitions.variables import Variable
 
-class SL_DL_vars_reco(NanoBaseHHbbWW):
+class VarsReco(NanoBaseHHbbWW):
 
     def __init__(self, args):
-        super(SL_DL_vars_reco, self).__init__(args)
+        super(VarsReco, self).__init__(args)
         self.event_nr_sel = "even"
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
@@ -17,12 +17,12 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         # If you want to filter any variables out to avoid using in this analysis, do it here for efficiency
         
     def addArgs(self, parser):
-        super(SL_DL_vars_reco, self).addArgs(parser)
+        super(VarsReco, self).addArgs(parser)
         parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=False, help='Not producing skims')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
-        tree, baseSel, backend, lumiArgs = super(SL_DL_vars_reco, self).prepareTree(tree=tree,
+        tree, baseSel, backend, lumiArgs = super(VarsReco, self).prepareTree(tree=tree,
                                                                                     sample=sample,
                                                                                     sampleCfg=sampleCfg,
                                                                                     description=description,
@@ -32,7 +32,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
 
     @staticmethod
     def get_objects(tree, era):
-        objects = SL_DL_event_selection.get_objects(tree, era)
+        objects = EventSelection.get_objects(tree, era)
         ak4_jets = objects["cleaned_ak4_jets"]
         ak4_btags = objects["cleaned_ak4_btags"]
         ak4_loose_btags = objects["cleaned_ak4_loose_btags"]
@@ -67,7 +67,7 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
     @staticmethod
     def get_selections(tree, objects, baseSel, yields, is_MC, era, sample):
 
-        all_selections = SL_DL_event_selection.get_event_selections(tree, objects, baseSel, yields, is_MC, era, sample)       
+        all_selections = EventSelection.get_event_selections(tree, objects, baseSel, yields, is_MC, era, sample)       
         selections = {
             'SL': all_selections['SL']['SL'],
             'DL': all_selections['DL']['DL'],
@@ -108,8 +108,8 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
         plots.append(self.yields)
         plots.extend(self.base_plots)
 
-        objects = SL_DL_vars_reco.get_objects(tree, self.era)
-        selections = SL_DL_vars_reco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
+        objects = VarsReco.get_objects(tree, self.era)
+        selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         var_defs.set_selections_for_vars(selections)
 
         reco_vars = var_defs.gather_all_1D_variables(objects)
@@ -153,21 +153,21 @@ class SL_DL_vars_reco(NanoBaseHHbbWW):
             # Verify that the skim selections in the list self.args.skim_selections are in selections
             assert all(skim_sel in selections for skim_sel in self.args.skim_selections), f"Skim selections {self.args.skim_selections} not in selections"
             for skim_selection in self.args.skim_selections:
-                plots.append(SL_DL_vars_reco.get_skim(reco_vars, selections[skim_selection], skim_selection))
+                plots.append(VarsReco.get_skim(reco_vars, selections[skim_selection], skim_selection))
 
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        super(SL_DL_vars_reco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(VarsReco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        from bamboo_hh.plotter.plotter import Plotter
 
         myPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes="All")
         myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
         myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)
 
 
-        from post_processing import llr_functions
+        from definitions import llr_functions
 
         if self.args.llr_backgrounds == 'All': 
             which_processes = 'All'

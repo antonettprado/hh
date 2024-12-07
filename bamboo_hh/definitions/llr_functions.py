@@ -2,10 +2,9 @@ import numpy as np
 import scipy.interpolate
 import json
 import argparse
-from post_processing.sig_bkg_shape_comp.plotter import Plotter
-from utils import variables
-from utils.variables import Variable, Variable1D, Variable2D, Variable3D
-import ROOT
+from ..plotter import Plotter
+import variables
+from variables import Variable1D, Variable2D, Variable3D
 from typing import Union
 import correctionlib.schemav2 as cs
 

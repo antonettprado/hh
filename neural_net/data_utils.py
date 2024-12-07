@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from post_processing import references as Refs
+from references import references as Refs
 import uproot
 import numpy as np
 from typing import Union, Optional, Dict, List
@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
-from NeuralNet.utils import get_context_aware_logger, get_non_feature_columns, log_context, NoOpLogger
+from .utils import get_context_aware_logger, get_non_feature_columns, log_context, NoOpLogger
 from tabulate import tabulate
 
 @log_context("Loading data from ROOT files")

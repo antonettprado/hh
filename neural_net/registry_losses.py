@@ -1,7 +1,7 @@
 import tensorflow as tf
-import tensorflow.keras.backend as K
-from tensorflow.keras import losses as tf_losses
-from NeuralNet.utils import Registry
+import keras.backend as K
+from keras import losses as tf_losses
+from neural_net.utils import Registry
 from typing import Dict, Callable
 
 class LossRegistry(Registry):

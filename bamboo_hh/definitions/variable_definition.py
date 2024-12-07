@@ -1,7 +1,7 @@
 from bamboo import treefunctions as op
-from utils import variables
-from utils.variables import Variable, Variable1D, Variable2D, Variable3D
-import utils.object_definition as object_defs
+from . import variables
+from .variables import Variable, Variable1D, Variable2D, Variable3D
+from . import object_definition as object_defs
 
 SELECTIONS = None
 NULL: int = -9999
@@ -19,7 +19,7 @@ def get_selections_subset(subcats: list[str]):
     return { name: SELECTIONS[name] for name in subcats }
 
 '''
-What follows are a bunch of functional definitions of the variables based on the objects and selections we generate in SL_DL_event_selection.
+What follows are a bunch of functional definitions of the variables based on the objects and selections we generate in EventSelection.
 Functions that begin with '_' such as _get_bjets_vars_data(), _get_trijet_vars_data() etc are 'protected' functions that should return intermediary calculations
 for a few different variables. 
 Functions that do not begin with '_' either return a Variable1D object that has been populated with the relevant data and selections, or a list of populated Variable1D objects

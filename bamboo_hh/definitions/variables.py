@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 import copy
 VARPATH = Path(__file__).parents[1] / 'input' / 'variables.json'
-CFGPATH = Path(__file__).parents[2] / 'config' / 'analysis_2022.yml'
+CFGPATH = Path(__file__).parents[1] / 'config' / 'analysis_2022_full.yml'
 
 # Load all variable names into local namespace (for looping)
 ALL_VARNAMES_1D = None

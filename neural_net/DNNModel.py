@@ -8,14 +8,14 @@ import tensorflow as tf
 from sklearn.inspection import permutation_importance
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from tensorflow.keras.utils import plot_model
-import NeuralNet.model_builder as model_builder
-from NeuralNet.utils import ModelConfig, get_logger, get_context_aware_logger, log_context
-from post_processing import references as Refs
-from NeuralNet.registry_losses import LossRegistry
-from NeuralNet.registry_models import ModelRegistry
-from NeuralNet.registry_preprocessors import PreprocessorRegistry
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.utils import plot_model
+import model_builder as model_builder
+from neural_net.utils import ModelConfig, get_logger, get_context_aware_logger, log_context
+from references import references as Refs
+from neural_net.registry_losses import LossRegistry
+from neural_net.registry_models import ModelRegistry
+from neural_net.registry_preprocessors import PreprocessorRegistry
 import time
 from typing import Tuple
 

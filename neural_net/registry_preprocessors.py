@@ -1,7 +1,7 @@
 import tensorflow as tf
-from NeuralNet.utils import Registry
+from neural_net.utils import Registry
 from typing import Dict, Callable
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Add, Rescaling
+from keras.layers import Input, BatchNormalization, Dense, Normalization, Activation, Dropout, Add, Rescaling
 import numpy as np
 import pandas as pd
 from typing import Dict, Callable, Type, Union

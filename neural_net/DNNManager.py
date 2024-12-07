@@ -4,17 +4,17 @@ from pathlib import Path
 from argparse import ArgumentParser
 from sklearn.model_selection import StratifiedKFold
 import yaml
-from NeuralNet.DNNModel import DNNModel
-from post_processing import references as Refs
-from NeuralNet.utils import ModelConfig, fix_random_seed, get_context_aware_logger, NoOpLogger, log_context
-from NeuralNet import data_utils
+from neural_net.DNNModel import DNNModel
+from references import references as Refs
+from neural_net.utils import ModelConfig, fix_random_seed, get_context_aware_logger, NoOpLogger, log_context
+from neural_net import data_utils
 from typing import Set, Optional
 
 class DNNManager:
 
     NEURALNET = Path(__file__).parent
-    BAMBOO_SETUP = NEURALNET.parents[1]
-    assert BAMBOO_SETUP.name.startswith('Bamboo_setup')
+    HHDIR = NEURALNET.parent
+    assert HHDIR.name.startswith('hh')
     MODE_MAPPING =  {'train_eval': '_train_eval', 'ca': '_kfold', 'multi': '_multi', 'eval': '_eval'}
 
     def __init__(self, workdir: str, sel_names: list[str], config_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None, log_level = 'debug'):
@@ -22,11 +22,11 @@ class DNNManager:
         self.workdir = Path(workdir)
         self.sel_names = sel_names
         self.config_yml = self.NEURALNET / 'config' / config_yml if config_yml else None
-        self.total_inputs = self.NEURALNET / 'inputs' / total_inputs if total_inputs else None
+        self.total_inputs = self.NEURALNET / 'input' / total_inputs if total_inputs else None
         self.resultsdir = self.workdir / 'results'
         if DNNManagerdir is None:
             sels = '_'.join(sel_names)
-            self.DNNManagerdir = self.workdir /  f"Neural_Nets_{sels}"
+            self.DNNManagerdir = self.workdir /  f"nns_{sels}"
         else:
             self.DNNManagerdir = self.workdir / DNNManagerdir
         self.DNNManagerdir.mkdir(parents=True, exist_ok=True)
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     elif args.mode == 'multi':
         parser.add_argument("--n_iterations", type=int, required=True, help="Number of iterations per model")
     elif args.mode == 'eval':
-        parser.add_argument("-d", "--inputNNdir", action="store", required=True, help="Directory of NN to be evaluated. Example: Z_OUTPUT/VarsReco/Neural_Nets/multiclass_HH_ttbar_tW")
+        parser.add_argument("-d", "--inputNNdir", action="store", required=True, help="Directory of NN to be evaluated. Example: Z_OUTPUT/VarsReco/nns/multiclass_HH_ttbar_tW")
         parser.add_argument("-r", "--rank_features", action="store_true", help="set to get input feature ranking")
     args = parser.parse_args()
 

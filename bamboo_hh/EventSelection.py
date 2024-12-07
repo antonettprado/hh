@@ -1,23 +1,20 @@
-from bamboo.plots import Plot, SummedPlot, CutFlowReport, Skim
+from bamboo.plots import Plot, SummedPlot, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo import treefunctions as op
 
-import utils.object_definition as object_defs
-import utils.event_definition as event_defs
-import utils.scale_factors_weights as sf_weights
-from utils import variables
-from utils.variables import Variable1D, Variable2D
+import bamboo_hh.definitions.object_definition as object_defs
+import bamboo_hh.definitions.event_definition as event_defs
 
-from base_selection import NanoBaseHHbbWW
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 
 
-class SL_DL_event_selection(NanoBaseHHbbWW):
+class EventSelection(NanoBaseHHbbWW):
     def __init__(self, args):
-        super(SL_DL_event_selection, self).__init__(args)
+        super(EventSelection, self).__init__(args)
         self.event_nr_sel = "all"
         
     def addArgs(self, parser):
-        super(SL_DL_event_selection, self).addArgs(parser)
+        super(EventSelection, self).addArgs(parser)
         parser.add_argument("-mb", "--mc_truth_b", action='store_true', dest = "mc_truth_b", help='Whether to use MC truth value for b-jets')
         parser.add_argument("-s", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
 
@@ -654,8 +651,8 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
         plots.append(self.yields)
         plots.extend(self.base_plots)
         
-        objects = SL_DL_event_selection.get_objects(tree, self.era, self.args.mc_truth_b, use_mvaTTH=False) 
-        selections = SL_DL_event_selection.get_event_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
+        objects = EventSelection.get_objects(tree, self.era, self.args.mc_truth_b, use_mvaTTH=False) 
+        selections = EventSelection.get_event_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
         
         self.set_category_groups(selections)
 
@@ -724,9 +721,9 @@ class SL_DL_event_selection(NanoBaseHHbbWW):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_DL_event_selection, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(EventSelection, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        from plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, resultsdir=resultsdir)
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)

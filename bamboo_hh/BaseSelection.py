@@ -1,12 +1,10 @@
 from bamboo.analysismodules import NanoAODHistoModule
-from bamboo.treedecorators import NanoAODDescription, nanoFatJetCalc, CalcCollectionsGroups
-from bamboo.analysisutils import makeMultiPrimaryDatasetTriggerSelection, configureJets, configureType1MET
+from bamboo.treedecorators import NanoAODDescription
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin
 import os
 
-from itertools import chain
 import re
 
 JECTagDatabase = {

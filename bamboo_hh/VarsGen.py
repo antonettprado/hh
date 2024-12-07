@@ -1,17 +1,9 @@
 from bamboo.treedecorators import nanoGenDescription
 from bamboo import treefunctions as op
-from bamboo.plots import Plot, DerivedPlot, SummedPlot, CutFlowReport, Skim
+from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
-from bamboo.analysisutils import loadPlotIt
-from plotit.plotit import Stack
 from bamboo.analysismodules import NanoAODHistoModule
-from bamboo.root import gbl
 import os
-import correctionlib.schemav2 as cs
-import ROOT
-import numpy as np
-import uproot
-from pathlib import Path
 
 ALL_SIGNAL_SAMPLES = ['bbWW_sl.root', 'bbWW_dl.root', 'bbtautau.root']
 ALL_BACKG_SAMPLES = ['TTbar_sl.root', 'TTbar_dl.root']
@@ -27,14 +19,14 @@ EQBIN_TT_PT = EqBin(250, 0, 1000)
 EQBIN_ALL_ST = EqBin(500, 0, 2000)
 EQBIN_ALL = EqBin(600, 0, 3000)
 
-class SL_DL_vars_gen(NanoAODHistoModule):
+class VarsGen(NanoAODHistoModule):
 
     def __init__(self, args):
-        super(SL_DL_vars_gen, self).__init__(args)
+        super(VarsGen, self).__init__(args)
         self.event_nr_sel = 'even'
 
     def addArgs(self, parser):
-        super(SL_DL_vars_gen, self).addArgs(parser)
+        super(VarsGen, self).addArgs(parser)
         parser.add_argument("--jets_pt_cut", action='store',type=int, default=25, help='Pt cut for all jets')
         parser.add_argument("--bjets_num", action='store', type=int, default=2, help='Minimum number of bjets per event')
 
@@ -55,7 +47,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
         self.base_plots = []    # Plots in base that need to be propagated to the Plotters
 
-        tree, _noSel, backend, lumiArcs = super(SL_DL_vars_gen, self).prepareTree(
+        tree, _noSel, backend, lumiArcs = super(VarsGen, self).prepareTree(
                                         tree=tree,
                                         sample=sample,
                                         sampleCfg=sampleCfg,
@@ -111,7 +103,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         return tree, baseSel, backend, lumiArcs
 
     def readCounters(self, resultsFile):
-        counters = super(SL_DL_vars_gen, self).readCounters(resultsFile)
+        counters = super(VarsGen, self).readCounters(resultsFile)
         # Corrections to the generated sum "
         if resultsFile.GetListOfKeys().FindObject('generated_sum_corrected'):
             sample = os.path.basename(resultsFile.GetName())
@@ -495,7 +487,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         ttpair_pt = (top.p4 + topbar.p4).Pt()
 
         if plots is not None:
-            sel, tag = SL_DL_vars_gen.get_selection_and_tags(sel_name, selections)
+            sel, tag = VarsGen.get_selection_and_tags(sel_name, selections)
             plots.extend([
                 Plot.make1D(tag+'n_b_from_top', op.rng_len(b_from_top), sel, EqBin(10,0,10)),
                 Plot.make1D(tag+'n_W_from_top', op.rng_len(Wp_from_top), sel, EqBin(10,0,10)),
@@ -548,8 +540,8 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         plots.append(self.yields)
         plots.extend(self.base_plots)
 
-        self.gen_objects = SL_DL_vars_gen.get_gen_objects(tree)
-        self.selections = SL_DL_vars_gen.get_gen_selections(self.gen_objects, baseSel)
+        self.gen_objects = VarsGen.get_gen_objects(tree)
+        self.selections = VarsGen.get_gen_selections(self.gen_objects, baseSel)
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -567,7 +559,7 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_MBB, EQBIN_TT_PT], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_PT, EQBIN_TT_PT], xTitle="pT of bb", yTitle="m_{inv} for t_{1}")])
 
-        plots, _ = SL_DL_vars_gen.for_DNN_study(self.gen_objects, 'baseSel', self.selections, plots)
+        plots, _ = VarsGen.for_DNN_study(self.gen_objects, 'baseSel', self.selections, plots)
 
         plots = self.get_skims('baseSel', plots)
 
@@ -591,9 +583,9 @@ class SL_DL_vars_gen(NanoAODHistoModule):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
 
-        super(SL_DL_vars_gen, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(VarsGen, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from post_processing.sig_bkg_shape_comp.plotter import Plotter
+        from bamboo_hh.plotter.plotter import Plotter
         myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era)
         myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
         myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
@@ -602,71 +594,71 @@ class SL_DL_vars_gen(NanoAODHistoModule):
         # df = ROOT.RDataFrame("noSel", file)
         # df.Display({"event", "GenPart_pdgId", "GenPart_genPartIdxMother"}, 5, 20).Print()
 
-        print("------------------ Calculating Ratio for DNN study --------------------")
-        from utils import variables
-        from post_processing.sig_bkg_shape_comp.compare_subcategories import get_total_hist
-        from post_processing import plotting
+        # print("------------------ Calculating Ratio for DNN study --------------------")
+        # from utils import variables
+        # from post_processing.sig_bkg_shape_comp.compare_subcategories import get_total_hist
+        # from post_processing import plotting
 
-        files_in_resultsdir = os.listdir(resultsdir)
-        PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
-        PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
-        SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
-        BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
-        INTERPOLATION_SCALE_FACTOR_1D = 9
-        DECIMAL_PLACES = 3
+        # files_in_resultsdir = os.listdir(resultsdir)
+        # PRESENT_SIGNAL_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_SIGNAL_SAMPLES]
+        # PRESENT_BACKG_SAMPLES = [filename for filename in files_in_resultsdir if filename in ALL_BACKG_SAMPLES]
+        # SIGNAL_SAMPLES = variables.open_root_files(PRESENT_SIGNAL_SAMPLES, resultsdir)
+        # BACKG_SAMPLES = variables.open_root_files(PRESENT_BACKG_SAMPLES, resultsdir)
+        # INTERPOLATION_SCALE_FACTOR_1D = 9
+        # DECIMAL_PLACES = 3
 
-        refs = []
-        for key in BACKG_SAMPLES[0].GetListOfKeys():
-            obj = key.ReadObj()
-            if 'baseSel_ttpair' in obj.GetName() and 'ttpair_pt' not in obj.GetName():
-                refs.append(obj.GetName())
+        # refs = []
+        # for key in BACKG_SAMPLES[0].GetListOfKeys():
+        #     obj = key.ReadObj()
+        #     if 'baseSel_ttpair' in obj.GetName() and 'ttpair_pt' not in obj.GetName():
+        #         refs.append(obj.GetName())
 
-        ratio_plots_outdir = Path(workdir) / 'ratio_plots'
-        if not ratio_plots_outdir.exists(): ratio_plots_outdir.mkdir(exist_ok=True, parents=True)
+        # ratio_plots_outdir = Path(workdir) / 'ratio_plots'
+        # if not ratio_plots_outdir.exists(): ratio_plots_outdir.mkdir(exist_ok=True, parents=True)
 
-        ratios_file = ROOT.TFile(resultsdir + "/ttpair_pt_ratios.root", "RECREATE") 
-        all_corrections = []
-        for ref in refs:
+        # ratios_file = ROOT.TFile(resultsdir + "/ttpair_pt_ratios.root", "RECREATE") 
+        # all_corrections = []
+        # for ref in refs:
 
-            compare_subcategories(workdir, custom=1, extra=ref)
+        #     compare_subcategories(workdir, custom=1, extra=ref)
 
-            numerator = ref
-            denominator = 'baseSel_ttpair_pt'
-            numerator_hist = get_total_hist(numerator, BACKG_SAMPLES, normalized=False)
-            denominator_hist = get_total_hist(denominator, BACKG_SAMPLES, normalized=False)
+        #     numerator = ref
+        #     denominator = 'baseSel_ttpair_pt'
+        #     numerator_hist = get_total_hist(numerator, BACKG_SAMPLES, normalized=False)
+        #     denominator_hist = get_total_hist(denominator, BACKG_SAMPLES, normalized=False)
 
-            ratio_hist = numerator_hist.Clone()
-            ratio_hist.Divide(denominator_hist)
-            ratio_hist.Write()
+        #     ratio_hist = numerator_hist.Clone()
+        #     ratio_hist.Divide(denominator_hist)
+        #     ratio_hist.Write()
 
-            canvas = ROOT.TCanvas('canvas', '', 200, 200)
-            canvas.SetGrid()
-            ratio_hist.SetStats(0)
-            ratio_hist.Draw("hist")
-            canvas.Update()
-            ttpair_scaledpt = ref.removeprefix('baseSel_ttpair_')
-            print(ttpair_scaledpt)
-            canvas.SaveAs( str( ratio_plots_outdir / f'{ttpair_scaledpt}.pdf'))
-            canvas.Close()
+        #     canvas = ROOT.TCanvas('canvas', '', 200, 200)
+        #     canvas.SetGrid()
+        #     ratio_hist.SetStats(0)
+        #     ratio_hist.Draw("hist")
+        #     canvas.Update()
+        #     ttpair_scaledpt = ref.removeprefix('baseSel_ttpair_')
+        #     print(ttpair_scaledpt)
+        #     canvas.SaveAs( str( ratio_plots_outdir / f'{ttpair_scaledpt}.pdf'))
+        #     canvas.Close()
 
-            nbins= ratio_hist.GetNbinsX()
-            bin_edges = np.array([ratio_hist.GetBinLowEdge(i+1) for i in range(nbins+1)])
-            bin_contents = np.array([ratio_hist.GetBinContent(i+1) for i in range(nbins)])
-            corr = cs.Correction(
-                name=ttpair_scaledpt,
-                version=0,
-                inputs=[cs.Variable(name="xaxis", type="real")],
-                output=cs.Variable(name="", type="real", description=""),
-                data=cs.Binning(
-                    nodetype="binning",
-                    input="xaxis",
-                    edges=list(np.round(bin_edges, DECIMAL_PLACES)),
-                    content=list(np.round(bin_contents, DECIMAL_PLACES)),
-                    flow="clamp"))
-            all_corrections.append(corr)
+        #     nbins= ratio_hist.GetNbinsX()
+        #     bin_edges = np.array([ratio_hist.GetBinLowEdge(i+1) for i in range(nbins+1)])
+        #     bin_contents = np.array([ratio_hist.GetBinContent(i+1) for i in range(nbins)])
+        #     corr = cs.Correction(
+        #         name=ttpair_scaledpt,
+        #         version=0,
+        #         inputs=[cs.Variable(name="xaxis", type="real")],
+        #         output=cs.Variable(name="", type="real", description=""),
+        #         data=cs.Binning(
+        #             nodetype="binning",
+        #             input="xaxis",
+        #             edges=list(np.round(bin_edges, DECIMAL_PLACES)),
+        #             content=list(np.round(bin_contents, DECIMAL_PLACES)),
+        #             flow="clamp"))
+        #     all_corrections.append(corr)
 
-        ratios_file.Close()
-        cset = cs.CorrectionSet(schema_version=2, description=f"TTbar pt scaling", corrections=all_corrections) 
-        output_llr_file = os.path.join(resultsdir, "ttpair_pt_scaling.json")
-        with open(output_llr_file, "w") as outfile:
-            outfile.write(cset.json(exclude_unset=False))
+        # ratios_file.Close()
+        # cset = cs.CorrectionSet(schema_version=2, description=f"TTbar pt scaling", corrections=all_corrections) 
+        # output_llr_file = os.path.join(resultsdir, "ttpair_pt_scaling.json")
+        # with open(output_llr_file, "w") as outfile:
+        #     outfile.write(cset.json(exclude_unset=False))

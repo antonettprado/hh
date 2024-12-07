@@ -272,16 +272,16 @@ export X509_USER_PROXY=$(realpath ~/private/x509up)
 # For more complete instructions and default arguments (feel free to configure the defaults as you like)
 python -u bambooRunBetter.py --help
 # Some Examples
-python -u bambooRunBetter.py src/SL_DL_event_selection.py local_event_selection # local run using config/analysis_2022_test.yml and config/cern.ini as default
-python -u bambooRunBetter.py src/SL_DL_event_selection.py total_event_selection -td # distributed=driver run using analysis_2022.yml
-python -u bambooRunBetter.py src/SL_DL_vars_reco.py local_vars_reco -c config/analysis_2017.yml -d # driver run using a different config file
-python -u bambooRunBetter.py src/SL_DL_likelihood_ratio.py total_vars_reco -c config/analysis_2022.yml --driver --input-dir Z_OUTPUT/total_vars_reco # --input-dir argument is passed onto SL_DL_likelihood_ratio.py
+python -u bambooRunBetter.py src/event_selection.py local_event_selection # local run using config/analysis_2022_test.yml and config/cern.ini as default
+python -u bambooRunBetter.py src/event_selection.py total_event_selection -td # distributed=driver run using analysis_2022.yml
+python -u bambooRunBetter.py src/vars_reco.py local_vars_reco -c config/analysis_2017.yml -d # driver run using a different config file
+python -u bambooRunBetter.py src/likelihood_ratio.py total_vars_reco -c config/analysis_2022.yml --driver --input-dir Z_OUTPUT/total_vars_reco # --input-dir argument is passed onto likelihood_ratio.py
 ```
 
-## Process NANOAODs: SL_DL_event_selection 
+## Process NANOAODs: EventSelection 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_event_selection.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_EventSelection --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/EventSelection.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_EventSelection --envConfig config/cern.ini --distributed=driver
 ```
 
 To produce skims add the option "-s" to the above command
@@ -293,10 +293,10 @@ python3 src/post_processing/sync/create_sync_tables.py -i Z_OUTPUT/TOTAL_EventSe
 
 Add the different sample names for which you want to produce the tables
 
-## Process NANOAODs: SL_DL_vars_gen 
+## Process NANOAODs: vars_gen 
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_vars_gen.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsGen --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/vars_gen.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsGen --envConfig config/cern.ini --distributed=driver
 ```
 
 ### Postprocessing: Plot Signal vs Background Comparisons 
@@ -304,10 +304,10 @@ bambooRun -m src/SL_DL_vars_gen.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_Va
 python3 src/post_processing/sig_bkg_shape_comp/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsGen
 ```
 
-## Process NANOAODs: SL_DL_vars_reco
+## Process NANOAODs: vars_reco
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_vars_reco.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsReco --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/vars_reco.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsReco --envConfig config/cern.ini --distributed=driver
 ```
 
 ### Postprocessing: Plot Signal vs Background Comparisons 
@@ -320,10 +320,10 @@ python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco 
 python3 post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco
 ```
 
-## Process NANOAODs: SL_DL_likelihood_ratios
+## Process NANOAODs: likelihood_ratios
 To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
 ```bash
-bambooRun -m src/SL_DL_likelihood_ratio.py config/analysis_2022.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LR --envConfig config/cern.ini --distributed=driver
+bambooRun -m src/likelihood_ratio.py config/analysis_2022.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LR --envConfig config/cern.ini --distributed=driver
 ```
 
 ### Postprocessing: Compare LR signal vs background 

@@ -8,12 +8,12 @@ from colorlog import ColoredFormatter
 from typing import Dict, Callable
 from functools import wraps
 import pandas as pd
-import post_processing.references as Refs
+from references import references as Refs
 from typing import Dict, Callable, Type, Union
 import io
 from contextlib import contextmanager, redirect_stdout
 from pathlib import Path
-from tensorflow.keras import Model
+from keras import Model
 
 def get_non_feature_columns(df: pd.DataFrame):
     return [col for col in df.columns if col not in Refs.ALL_VARNAMES_1D]

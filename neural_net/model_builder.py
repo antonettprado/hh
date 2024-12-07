@@ -1,15 +1,15 @@
 import tensorflow as tf
-from tensorflow.keras import Model, regularizers
-from tensorflow.keras.layers import Input, BatchNormalization, Dense, Activation, Dropout, Add, Rescaling
-from tensorflow.keras.optimizers import Adam, SGD, RMSprop
-from tensorflow.keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
-import tensorflow.keras.backend as K
+from keras import Model, regularizers
+from keras.layers import Input, BatchNormalization, Dense, Activation, Dropout, Add, Rescaling
+from keras.optimizers import Adam, SGD, RMSprop
+from keras.metrics import BinaryAccuracy, CategoricalAccuracy, AUC, Precision, Recall, F1Score
+import keras.backend as K
 import numpy as np
 import pandas as pd
-from NeuralNet.utils import log_context, NoOpLogger, get_context_aware_logger
-from NeuralNet.registry_losses import LossRegistry
-from NeuralNet.registry_models import ModelRegistry
-from NeuralNet.registry_preprocessors import PreprocessorRegistry
+from neural_net.utils import log_context, NoOpLogger, get_context_aware_logger
+from neural_net.registry_losses import LossRegistry
+from neural_net.registry_models import ModelRegistry
+from neural_net.registry_preprocessors import PreprocessorRegistry
 
 UNDEFINED = -9999
 
