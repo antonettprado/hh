@@ -21,7 +21,7 @@ LOCK = threading.Lock()
 def parse_args(): 
     parser = argparse.ArgumentParser(description="Wrapper for bambooRun to improve error handling and resubmission")
     parser.add_argument("module", type=Path, help="Module to run (example: bamboo_hh/EventSelection.py). Can also add module-specific arguments")
-    parser.add_argument("--output", "-o", type=Path, default=Path(f"/eos/user/{USER[0]}/{USER}/test"), help=f"Output directory name. Cannot overwrite an existing directory (default: /eos/user/{USER[0]}/{USER}/test)")
+    parser.add_argument("--output", "-o", type=Path, default=Path(f"/eos/user/{USER[0]}/{USER}/hh_output/test"), help=f"Output directory name. Cannot overwrite an existing directory (default: /eos/user/{USER[0]}/{USER}/hh_output/test)")
     parser.add_argument("--config", "-c", type=Path, default=Path("bamboo_hh/config/analysis_2022_test.yml"), help="Analysis configuration file (default: bamboo_hh/config/analysis_2022_test.yml)")
     parser.add_argument("--env-config", type=Path, default=Path("bamboo_hh/config/cern.ini"), help="Environment configuration file (default: bamboo_hh/config/cern.ini)")
     parser.add_argument("--total", "-t", action="store_true", help="Sets config to analysis_2022.yml (equivalent to -c bamboo_hh/config/analysis_2022.yml)")

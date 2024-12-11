@@ -25,11 +25,9 @@ PROCESSES_FILES = dict(
     #Fakes=[]
     )
 
-<<<<<<<< HEAD:Bamboo_setup/src/post_processing/references.py
-VARPATH = Path(__file__).parents[1] / 'input' / 'variables.json'
-========
+
 VARPATH = Path('bamboo_hh/input/variables.json')
->>>>>>>> datacard-update:references/references.py
+
 with open(VARPATH, 'r') as f:
     ALL_JSON_DATA = json.load(f)
     ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
