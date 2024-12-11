@@ -18,7 +18,7 @@ class VarsReco(NanoBaseHHbbWW):
         
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)
-        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=False, help='Not producing skims')
+        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', help='Not producing skims')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
@@ -167,7 +167,7 @@ class VarsReco(NanoBaseHHbbWW):
         myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)
 
 
-        from definitions import llr_functions
+        from bamboo_hh.definitions import llr_functions
 
         if self.args.llr_backgrounds == 'All': 
             which_processes = 'All'
