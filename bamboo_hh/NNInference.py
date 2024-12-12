@@ -140,7 +140,7 @@ class NNInference(NanoBaseHHbbWW):
         self.DNN_LIST = []
         for modeldir in self.modeldir_list:
             DNN = NNInference.get_DNN(modeldir, objects, self.args.llr_corr_workdir)
-            for sel_name in ['SL_res_2b_x']:
+            for sel_name in DNN.subcats:
                 dnn = DNN[sel_name]
                 scores = dnn.data
                 max_score_index = op.rng_max_element_index(scores, lambda score: score)

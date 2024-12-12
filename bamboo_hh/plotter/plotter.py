@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
 ROOT.gErrorIgnoreLevel = ROOT.kError
+ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 HHDIR = Path(__file__).parents[3]
 
@@ -368,27 +369,6 @@ class Plotter(BasePlotter):
         if isinstance(hist_0, ROOT.TH2):
             for leg_i, hist_i in hist_dict.items():
                 self._draw_2D_hist_on_one_canvas(ref=ref, hist=hist_i, leg=leg_i)
-                    
-    def Get_Signal_Background_for_ref(self, ref:str, normalized:bool=True) -> dict[str, ROOT.TH1]:
-
-        ref_histograms = self.RefHistograms(ref, self)
-
-        process_hist_dict: dict[str, ROOT.TH1] = {} # eg. {"HH": ROOT.TH1D, ...}
-        for process in self.tfiles.keys():
-            process_hist = self.get_process_hist_for_era(ref, process, era)
-            process_hist_dict[process] = process_hist
-
-        sig_back_dict: dict[str, ROOT.TH1] = self.get_signal_and_backg_hists(ref, process_hist_dict)
-
-        if normalized:
-            for hist in sig_back_dict.values():
-                integral = hist.Integral()
-                if integral != 0.0:  # Avoid division by zero
-                    hist.Scale(1/integral)
-                else:
-                    print(f"Warning: Integral for {hist.GetName()} is zero.")
-
-        return sig_back_dict
 
 # ==== SuperPlotter class NOT YET COMPLETED =====================
 
