@@ -3,19 +3,20 @@ import numpy as np
 from pathlib import Path
 from argparse import ArgumentParser
 from sklearn.model_selection import StratifiedKFold
-import yaml
-from neural_net.DNNModel import DNNModel
-from references import references as Refs
-from neural_net.utils import ModelConfig, fix_random_seed, get_context_aware_logger, NoOpLogger, log_context
+from references import references
+from neural_net import utils
 from neural_net import data_utils
+from neural_net.DNNModel import DNNModel
 from typing import Set, Optional
+import json
+import yaml
 
 class DNNManager:
 
     NEURALNET = Path(__file__).parent
     HHDIR = NEURALNET.parent
     assert HHDIR.name.startswith('hh')
-    MODE_MAPPING =  {'train_eval': '_train_eval', 'ca': '_kfold', 'multi': '_multi', 'eval': '_eval'}
+    MODE_MAPPING =  {'train_eval': '_train_eval', 'cv': '_kfold', 'multi': '_multi', 'eval': '_eval'}
 
     def __init__(self, workdir: str, sel_names: list[str], config_yml: str = None, total_inputs: str = None, DNNManagerdir: str = None, log_level = 'debug'):
         self.mode = None
@@ -30,11 +31,11 @@ class DNNManager:
         else:
             self.DNNManagerdir = self.workdir / DNNManagerdir
         self.DNNManagerdir.mkdir(parents=True, exist_ok=True)
-        self.logger = get_context_aware_logger(self.__class__.__name__, log_level, self.DNNManagerdir / 'manager.txt')
+        self.logger = utils.get_context_aware_logger(self.__class__.__name__, log_level, self.DNNManagerdir / 'manager.txt')
         self.log_level = log_level
         self.output_info()
 
-    @log_context("DNN Manager instantiated")
+    @utils.log_context("DNN Manager instantiated")
     def output_info(self):
         self.logger.info(f"Workdir:{self.workdir}")
         self.logger.info(f"DNNManagerdir:{self.DNNManagerdir}")
@@ -47,9 +48,9 @@ class DNNManager:
         self.mode = mode
         self.kwargs = kwargs
         if self.mode != 'multi': 
-            fix_random_seed()
+            utils.fix_random_seed()
 
-    @log_context("Loading model configurations")
+    @utils.log_context("Loading model configurations")
     def load_model_configs(self):
 
         if self.config_yml is None: return None
@@ -79,11 +80,11 @@ class DNNManager:
                 # Require layers and outputs
                 assert 'layers' in model_data and 'outputs' in model_data, "Layers and outputs are required when architecture is 'defined_here'"
 
-            model_config = ModelConfig(**model_data)
+            model_config = utils.ModelConfig(**model_data)
 
             processes = [proc for proc_list in model_config.training_setup.categorization.values() for proc in proc_list]
             for process in processes:
-                assert process in Refs.PROCESSES_FILES.keys(), f"{process} is not a valid process"
+                assert process in references.PROCESSES_FILES.keys(), f"{process} is not a valid process"
 
             model_configs.append(model_config)            
 
@@ -108,7 +109,7 @@ class DNNManager:
         mode_function(total_df, model_configs, **self.kwargs)
         self.logger.info(f"\nThe DNN models tested were saved in {self.DNNManagerdir.resolve()}")
 
-    @log_context("Running mode: train and evaluate")
+    @utils.log_context("Running mode: train and evaluate")
     def _train_eval(self, total_df, model_configs, rank_features, **kwargs):
         for model_config in model_configs:
             DNN = DNNModel(model_config=model_config, modeldir=self.DNNManagerdir / model_config.name, log_level=self.log_level)
@@ -116,10 +117,9 @@ class DNNManager:
             model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=True, rank_features=rank_features)
             self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
-    @log_context("Running mode: k-fold")
+    @utils.log_context("Running mode: k-fold")
     def _kfold(self, total_df, model_configs, n_splits, **kwargs):
         for model_config in model_configs:
-
             skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
 
             DNN_base = DNNModel(model_config=model_config)
@@ -129,35 +129,32 @@ class DNNManager:
             self.logger.debug(f"X_df: {X_df.columns.to_list()}")
             self.logger.debug(f"Y_df: {Y_df.columns.to_list()}")
 
-            base_modeldir = model_config.name
             base_modelname = model_config.name
             Y_df_single = Y_df.squeeze() if DNN_base.type == 'binary' else Y_df.idxmax(axis=1)
-            for fold_i, (train_index, test_index) in enumerate(skf.split(X_df, Y_df_single)):
-                self.logger.info(f"Running fold {fold_i+1}/{skf.get_n_splits()}")
-                model_config.name = base_modelname + f'_Fold{fold_i+1}'
-                modeldir = self.DNNManagerdir / base_modeldir / model_config.name
+            
+            # Pre-compute the model base directory
+            base_model_dir = self.DNNManagerdir / base_modelname
+            base_model_dir.mkdir(parents=True, exist_ok=True)
+            
+            for fold_i, (train_index, test_index) in enumerate(skf.split(X_df, Y_df_single), start=1):
+                self.logger.info(f"Running fold {fold_i}/{skf.get_n_splits()}")
+                fold_name = f'{base_modelname}_Fold{fold_i}'
+                model_config.name = fold_name
+                modeldir = base_model_dir / model_config.name
+                
+                # Train and evaluate model
                 DNN_fold_i = DNNModel(model_config=model_config, modeldir=modeldir, log_level=self.log_level)
-                X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNN_fold_i.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='skf', train_index=train_index, test_index=test_index)
+                X_train, X_test, Y_train, Y_test, evs_test, sw_train = DNN_fold_i.get_train_and_test_split(
+                    X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, 
+                    split_type='skf', train_index=train_index, test_index=test_index)
+                    
                 DNN_fold_i.Train(X_train, Y_train, sw_train, Y_test)
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN_fold_i.Evaluate(X_test, Y_test, evs_test)
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
-
-                fold_test_data = pd.DataFrame({
-                    'test_index': test_index,             
-                    'event': model_df.iloc[test_index]['event'].values,
-                    'run': model_df.iloc[test_index]['run'].values,
-                    'luminosityBlock': model_df.iloc[test_index]['luminosityBlock'].values,
-                    'genTtbarId': model_df.iloc[test_index]['genTtbarId'].values,
-                    'File': model_df.iloc[test_index]['File'].values,
-                    'ak4_jet1_bscore': model_df.iloc[test_index]['ak4_jet1_bscore'].values,
-                    'ak4_jet2_bscore': model_df.iloc[test_index]['ak4_jet2_bscore'].values,
-                    'ak4_jet3_bscore': model_df.iloc[test_index]['ak4_jet3_bscore'].values,
-                    'ak4_jet4_bscore': model_df.iloc[test_index]['ak4_jet4_bscore'].values
-                })
-                test_indices_csv = DNN_fold_i.modeldir / f'test_events.csv'
-                fold_test_data.to_csv(test_indices_csv, index=False)
-
-    @log_context("Running mode: multi")
+            
+        return 
+    
+    @utils.log_context("Running mode: multi")
     def _multi(self, total_df, model_configs, n_iterations, **kwargs):
         for model_config in model_configs:
             modelsuperdir = model_config.name
@@ -168,7 +165,7 @@ class DNNManager:
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=False, rank_features=False)
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
-    @log_context("Running mode: evaluate only")
+    @utils.log_context("Running mode: evaluate only")
     def _eval(self, inputNNdir, **kwargs):
 
         def load_model(dir: str):
@@ -193,7 +190,7 @@ class DNNManager:
         DNN.model = tf_model
         # model_metrics, _, _, _ = DNN.Evaluate(X_test, Y_test, evs_test, rank_features)
 
-    @log_context("Updating models summary csv ...")
+    @utils.log_context("Updating models summary csv ...")
     def update_models_summary_csv(self, model_name: str, model_metrics: dict, cm_norm_true: np.ndarray, cm_norm_pred: np.ndarray, diag_names: list):
 
         models_summary = self.DNNManagerdir / 'models_performance.csv'
@@ -234,17 +231,17 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--sel_names", action="store", nargs="+", required=True, help="Ex: SL_res_2b_x")
     parser.add_argument("-ti", "--total_inputs", type=str, required=False, default=None, help='Loads only the inputs listed on the txt file to the total_df')
     parser.add_argument("-o", "--outdir", type=str, default=None, help='Name of output directory for DNNManager')
-    parser.add_argument("-m", "--mode", choices=['train_eval', 'ca', 'multi', 'eval'], required=True, help='Train and Evaluate, evaluate only, cross-application, cross-validate, multiple')
+    parser.add_argument("-m", "--mode", choices=['train_eval', 'cv', 'multi', 'eval'], required=True, help='Train and Evaluate, evaluate only, cross-application, cross-validate, multiple')
     parser.add_argument("-l", "--log_level", choices=['info', 'debug', 'warning', 'error'], default='debug', help='Log level')
     args, unknown = parser.parse_known_args()
     if args.mode == 'train_eval':
         parser.add_argument("-r", "--rank_features", action="store_true", help="set to get input feature ranking")
-    elif args.mode == 'ca':
+    elif args.mode == 'cv':
         parser.add_argument("--n_splits", type=int, required=True, help="Number of splits for k-fold")
     elif args.mode == 'multi':
         parser.add_argument("--n_iterations", type=int, required=True, help="Number of iterations per model")
     elif args.mode == 'eval':
-        parser.add_argument("-d", "--inputNNdir", action="store", required=True, help="Directory of NN to be evaluated. Example: Z_OUTPUT/VarsReco/nns/multiclass_HH_ttbar_tW")
+        parser.add_argument("-d", "--inputNNdir", action="store", required=True, help="Directory of NN to be evaluated. Example: Z_OUTPUT/VarsReco/Neural_Nets/multiclass_HH_ttbar_tW")
         parser.add_argument("-r", "--rank_features", action="store_true", help="set to get input feature ranking")
     args = parser.parse_args()
 
@@ -261,9 +258,9 @@ if __name__ == '__main__':
     '''
     Example:
     
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -m train_eval
+    python3 neural_net/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_2b_x -m train_eval
 
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -m ca --n_splits 5
+    python3 neural_net/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_2b_x -m cv --n_splits 5
 
-    python3 src/NeuralNet/DNNManager.py -w $Z_OUTPUT_eos/Reco -c NN_roster.yml -c SL_res_2b_x -m multi --n_iterations 3
+    python3 neural_net/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_2b_x -m multi --n_iterations 3
     '''

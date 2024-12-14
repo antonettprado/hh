@@ -52,6 +52,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
     def addArgs(self, parser):
         super(NanoBaseHHbbWW, self).addArgs(parser)
         parser.add_argument("--noHLT", action='store_true', help='No HLT triggers')
+        parser.add_argument("--event_nr_sel", action='store', default=None, help='Event number selection')
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         def isMC():

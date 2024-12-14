@@ -14,19 +14,19 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
-from .utils import get_context_aware_logger, get_non_feature_columns, log_context, NoOpLogger
+from neural_net import utils
 from tabulate import tabulate
 
-@log_context("Loading data from ROOT files")
+@utils.log_context("Loading data from ROOT files")
 def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[Path] = None, 
-                  max_events: int = 1000000, logger=NoOpLogger) -> pd.DataFrame:
+                  max_events: int = 1000000, logger=utils.NoOpLogger) -> pd.DataFrame:
     """Load data from ROOT files and return a pandas DataFrame.
     
     Args:
         workdir: Working directory path
         tree_names: List of ROOT tree names to process
         total_inputs: Path to file containing branch names (optional)
-        max_events: Maximum number of events per file (default: 1000000)
+        max_events: Maximum number of events per file (default: 1000000), -1 for all
         logger: Optional logger for status messages
     
     Returns:
@@ -36,55 +36,51 @@ def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[
         
     root_files_available = Refs._find_root_files(results_dir)
     if total_inputs:
-        branches = ['event','run','luminosityBlock','genWeight','bunchCrossing','genTtbarId']
+        branches = ['event','luminosityBlock']
         branches.extend([line.strip() for line in open(total_inputs)])
     else:
         branches = None
     
     df_list = []
+    header = f"{'File':<26}"
+    for tree_name in tree_names:
+        header += f" {tree_name:>14}"
+    header += f"{'Total Taken':>14}"
+    logger.debug(header)
+    
     for root_file in root_files_available:
-        logger.debug(f"Processing {root_file.stem}")
         sample_name = root_file.stem
         subprocess = sample_name.rsplit('_', 1)[0]
         era = sample_name.rsplit('_', 1)[1]
         process = Refs.get_process_from_subprocess(subprocess)
         
-        upfile = uproot.open(root_file)
-        for tree_name in tree_names:
-            upfile_df = upfile[tree_name].arrays(branches, library="pd")
-            if len(upfile_df) > max_events:
-                upfile_df = upfile_df.sample(n=max_events, random_state=1)
+        log = f"{sample_name:<26}"
+        with uproot.open(root_file) as upfile:
+            upfile_df = pd.DataFrame()
+            for tree_name in tree_names:
+                tree = upfile[tree_name]
+                tree_events = tree.num_entries
+                log += f"{tree_events:>14,}"
+                num_events_to_load = min(max_events, tree_events)if max_events != -1 else tree_events
+                tree_df = tree.arrays(branches, entry_start=0, entry_stop=num_events_to_load, library="pd")
+                tree_df['Selection'] = tree_name
+                upfile_df = pd.concat([upfile_df, tree_df], ignore_index=True)
                 
-            upfile_df['File'] = sample_name
-            upfile_df['Subprocess'] = subprocess
-            upfile_df['Era'] = era
-            upfile_df['Process'] = process
-            upfile_df['Selection'] = tree_name
-            df_list.append(upfile_df)
+            total = upfile_df.shape[0]
+            log += f"{total:>14,}"
+
+        upfile_df['File'] = sample_name
+        upfile_df['Subprocess'] = subprocess
+        upfile_df['Era'] = era
+        upfile_df['Process'] = process
+        df_list.append(upfile_df)
+
+        logger.debug(f"{log}")
 
     return pd.concat(df_list, axis=0, ignore_index=True)
 
-def fix_column_names_mismatch(df: pd.DataFrame) -> pd.DataFrame:
-    """Fix common column name mismatches in the DataFrame."""
-    if 'gen_Weight' in df.columns:
-        df = df.rename(columns={'gen_Weight': 'genWeight'})
-    return df
-
-def extract_numeric_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Extract only numeric features from DataFrame, excluding metadata columns."""
-    non_feature_columns = get_non_feature_columns(df)
-    df_features = df.drop(columns=[col for col in non_feature_columns if col in df.columns])
-    
-    # Identify non-numeric features
-    df_non_numeric_features = df_features.select_dtypes(exclude=[np.number])
-    columns_non_numeric_features = df_non_numeric_features.columns
-    # if len(columns_non_numeric_features) > 0 and logger:
-    #     logger.warning(f"Non-numeric features excluded: {len(columns_non_numeric_features)} ({columns_non_numeric_features})")
-    
-    return df_features.select_dtypes(include=[np.number])
-
-@log_context('Data inspection')
-def inspect_data(df: pd.DataFrame, logger=NoOpLogger):
+@utils.log_context('Data inspection')
+def inspect_data(df: pd.DataFrame, logger=utils.NoOpLogger):
 
     logger.info(f"Duplicate events:")
     num_duplicate_events = df.duplicated(keep='first').sum()
@@ -138,8 +134,8 @@ def inspect_data(df: pd.DataFrame, logger=NoOpLogger):
         logger.info(f"\tNo events with undefined values (-9999) found.")    
     return
 
-@log_context('Preprocessing data')  
-def preprocess_data(df: pd.DataFrame, logger=NoOpLogger) -> pd.DataFrame:
+@utils.log_context('Preprocessing data')  
+def preprocess_data(df: pd.DataFrame, logger=utils.NoOpLogger) -> pd.DataFrame:
 
     # Drop exact duplicates
     logger.info(f"Dropping exact duplicates if any ...")
@@ -151,9 +147,8 @@ def preprocess_data(df: pd.DataFrame, logger=NoOpLogger) -> pd.DataFrame:
     
     return df
 
-
-@log_context('Data summary (of numeric features, ignoring NaNs, Infs)')
-def get_data_summary(df: pd.DataFrame, columns=['Selection', 'Subprocess', 'Process', 'Era', 'File'], logger=NoOpLogger) -> dict:
+@utils.log_context('Data summary (of numeric features, ignoring NaNs, Infs)')
+def get_data_summary(df: pd.DataFrame, columns=['Selection', 'Subprocess', 'Process', 'Era', 'File'], logger=utils.NoOpLogger) -> dict:
 
     logger.info(df, print_full=False, max_rows=10)
 
@@ -199,6 +194,24 @@ def get_data_summary(df: pd.DataFrame, columns=['Selection', 'Subprocess', 'Proc
 
 
 
+def fix_column_names_mismatch(df: pd.DataFrame) -> pd.DataFrame:
+    """Fix common column name mismatches in the DataFrame."""
+    if 'gen_Weight' in df.columns:
+        df = df.rename(columns={'gen_Weight': 'genWeight'})
+    return df
+
+def extract_numeric_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Extract only numeric features from DataFrame, excluding metadata columns."""
+    non_feature_columns = utils.get_non_feature_columns(df)
+    df_features = df.drop(columns=[col for col in non_feature_columns if col in df.columns])
+    
+    # Identify non-numeric features
+    df_non_numeric_features = df_features.select_dtypes(exclude=[np.number])
+    columns_non_numeric_features = df_non_numeric_features.columns
+    # if len(columns_non_numeric_features) > 0 and logger:
+    #     logger.warning(f"Non-numeric features excluded: {len(columns_non_numeric_features)} ({columns_non_numeric_features})")
+    
+    return df_features.select_dtypes(include=[np.number])
 
 def handle_llrs(df: pd.DataFrame, nan_replacement=-9999, logger=None) -> pd.DataFrame:
     """Handle log-likelihood ratio columns and special values."""
@@ -233,7 +246,7 @@ def plot_correlation_matrix(df: pd.DataFrame, figsize=(32, 16), logger=None) -> 
     if logger:
         logger.info("Plotting correlation matrix...")
     
-    df_numeric = extract_numeric_features(df, logger)
+    df_numeric = extract_numeric_features(df)
     corr = df_numeric.corr().round(2)
     
     plt.figure(figsize=figsize)
@@ -255,7 +268,7 @@ def plot_feature_distributions(df: Union[pd.DataFrame, pd.Series], columns: Opti
         logger.info("Plotting feature distributions...")
     
     if isinstance(df, pd.DataFrame):
-        df_numeric = extract_numeric_features(df, logger)
+        df_numeric = extract_numeric_features(df)
         if ignore_value is not None:
             df_numeric = df_numeric[df_numeric != ignore_value]
         

@@ -11,7 +11,10 @@ from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 class EventSelection(NanoBaseHHbbWW):
     def __init__(self, args):
         super(EventSelection, self).__init__(args)
-        self.event_nr_sel = "all"
+        if self.args.event_nr_sel: 
+            self.event_nr_sel = self.args.event_nr_sel
+        else:
+            self.event_nr_sel = "all"
         
     def addArgs(self, parser):
         super(EventSelection, self).addArgs(parser)
@@ -723,7 +726,7 @@ class EventSelection(NanoBaseHHbbWW):
 
         super(EventSelection, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
-        from plotter import Plotter
-        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, resultsdir=resultsdir)
-        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
-        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
+        from bamboo_hh.plotter.plotter import Plotter
+        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0])
+        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
+        myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)

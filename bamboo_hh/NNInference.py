@@ -13,7 +13,10 @@ import bamboo_hh.definitions.variable_definition as var_defs
 class NNInference(NanoBaseHHbbWW):
     def __init__(self, args):
         super(NNInference, self).__init__(args)
-        self.event_nr_sel = "odd" # set to odd manually if needed
+        if self.args.event_nr_sel: 
+            self.event_nr_sel = self.args.event_nr_sel
+        else:
+            self.event_nr_sel = "odd"
 
         if self.args.superNNdir is not None:
             self.modeldir_list = [modeldir.resolve() for modeldir in Path(self.args.superNNdir).iterdir() if modeldir.is_dir()]

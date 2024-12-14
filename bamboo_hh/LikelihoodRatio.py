@@ -12,8 +12,10 @@ from itertools import combinations
 
 class LikelihoodRatio(NanoBaseHHbbWW):
     def __init__(self, args):
-        super(LikelihoodRatio, self).__init__(args)
-        self.event_nr_sel = "even"
+        if self.args.event_nr_sel: 
+            self.event_nr_sel = self.args.event_nr_sel
+        else:
+            self.event_nr_sel = "odd"
         print("The work dir for the correction file is: " + self.args.llr_corr_workdir)
         print("The output path is: " + self.args.output)
 
@@ -297,6 +299,6 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         super(LikelihoodRatio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from bamboo_hh.plotter.plotter import Plotter
-        myPlotter = Plotter(dir=workdir, configFile=self.args.input[0], era=self.era, resultsdir=resultsdir)
-        myPlotter.Draw_Processes(normalization='lumi', combine_backs=True, sen_info=True)
-        myPlotter.Draw_Processes(normalization='unity', combine_backs=False, sen_info=False)
+        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0], resultsdir=resultsdir)
+        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
+        myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)

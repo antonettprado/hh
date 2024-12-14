@@ -10,7 +10,10 @@ class VarsReco(NanoBaseHHbbWW):
 
     def __init__(self, args):
         super(VarsReco, self).__init__(args)
-        self.event_nr_sel = "even"
+        if self.args.event_nr_sel: 
+            self.event_nr_sel = self.args.event_nr_sel
+        else:
+            self.event_nr_sel = "even"
         # self.vars1D = get_all_1D_variables()
         # self.vars2D = get_all_2D_variables()
         # self.vars = self.vars1D | self.vars2D # Merge them
@@ -18,7 +21,7 @@ class VarsReco(NanoBaseHHbbWW):
         
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)
-        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', help='Not producing skims')
+        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=False, help='Not producing skims')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
