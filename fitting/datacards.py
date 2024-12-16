@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+from typing import Callable
 from . import rfileIO
 from pathlib import Path
 from itertools import groupby
@@ -176,7 +177,7 @@ def parse_results_files(results_dir: Path) -> tuple[list[Datacard], list[str]]:
     return datacards, relevant_hist_names
 
 
-def make_datacards(nndir: Path, results_dir: Path=None) -> list[Datacard]:
+def make_datacards(nndir: Path, results_dir: Path=None, rebin: Callable=lambda x: x) -> list[Datacard]:
     ''' Makes the lowest level datacards for each model, era, selection, and category '''
     if not results_dir:
         results_dir = nndir / 'results'
@@ -190,7 +191,8 @@ def make_datacards(nndir: Path, results_dir: Path=None) -> list[Datacard]:
     for dc, hname in zip(datacards, hist_names):
         dc.path.parent.mkdir(exist_ok=True, parents=True)
         rpath: Path = dc.path.with_suffix('.root')
-        histos = combined_histograms[dc.era][hname]
+        histos: dict = combined_histograms[dc.era][hname]
+        histos = rebin(histos, 'signal' if 'HH' in dc.category else 'background')
         process_rates: dict[str, float] = rfileIO.compute_rates(histos)
 
         obs_process: str = 'data' if 'data' in process_rates else 'asimov'
