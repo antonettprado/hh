@@ -7,6 +7,7 @@ from typing import Callable
 from fitting import datacards
 from multiprocessing import Pool
 from fitting.datacards import Datacard
+from fitting.binning import run2_binning_strategy
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -18,7 +19,7 @@ def parse_args():
 def make_datacards(nndir: Path, results_dir: Path) -> tuple[list[Datacard], list[Datacard]]:
     start = time.perf_counter()
     print(f"{'Making Datacards':.<22}", end=' ', flush=True)
-    dcs: list[Datacard] = datacards.make_datacards(nndir, results_dir=results_dir)
+    dcs: list[Datacard] = datacards.make_datacards(nndir, results_dir=results_dir, rebin=run2_binning_strategy)
 
     sel_dcs: list[Datacard] = datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_1b', 'SL_res_2b'])
 
@@ -43,7 +44,10 @@ def run_fits_multiprocessed(datacards: list[Path]):
         workspaces_and_results_files: list[tuple[Path,Path]] = p.map(fitter.create_workspace, datacards)
         print(f'{-start+(start := time.perf_counter()):.2f}s')
 
-        fit_funcs: list[Callable] = [fitter.run_asymptotic_limits, fitter.run_fit_diagnostics]
+        fit_funcs: list[Callable] = [
+            fitter.run_asymptotic_limits, 
+            # fitter.run_fit_diagnostics
+        ]
         fit_types: list[str] = ['blinded', 'unblinded']
         fit_args = itertools.product(workspaces_and_results_files, fit_funcs, fit_types)
 
