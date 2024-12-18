@@ -47,24 +47,41 @@ class VarsReco(NanoBaseHHbbWW):
             bjet_sorter = lambda jet: -jet.btagPNetB
         sorted_ak4_loose_btags = op.sort(ak4_loose_btags, bjet_sorter)
         objects['sorted_ak8_btags'] = op.sort(ak8_btags, lambda jet: -jet.pt)
+        objects['sorted_ak4_jets'] = op.sort(ak4_jets, lambda jet: -jet.pt)
         # objects['sorted_ak4_btags'] = op.sort(ak4_btags, bjet_sorter)
         # objects['ak4_nonbtags'] = ak4_non_medbtags
         # Redefine the ak4 jets in a mutually exclusive way
-        ak4_nonbtags = op.select(
-            ak4_non_medbtags, 
-            lambda jet: op.NOT(
-                op.AND(
-                    op.rng_len(ak4_btags) == 1,
-                    op.rng_len(sorted_ak4_loose_btags) >= 2,
-                    jet.idx == sorted_ak4_loose_btags[1].idx 
-                )
-            )
-        )
-        ak4_btags_redef = op.select(ak4_jets, lambda jet: op.NOT(op.rng_any(ak4_nonbtags, lambda nbjet: jet.idx == nbjet.idx)))
-        objects['sorted_ak4_btags'] = op.sort(ak4_btags_redef, bjet_sorter)
-        objects['ak4_nonbtags'] = ak4_nonbtags
-        objects['sorted_ak4_jets'] = op.sort(ak4_jets, lambda jet: -jet.pt)
+        # ak4_nonbtags = op.select(
+        #     ak4_non_medbtags, 
+        #     lambda jet: op.NOT(
+        #         op.AND(
+        #             op.rng_len(ak4_btags) == 1,
+        #             op.rng_len(sorted_ak4_loose_btags) >= 2,
+        #             jet.idx == sorted_ak4_loose_btags[1].idx 
+        #         )
+        #     )
+        # )
+        # ak4_btags_redef = op.select(ak4_jets, lambda jet: op.NOT(op.rng_any(ak4_nonbtags, lambda nbjet: jet.idx == nbjet.idx)))
+        # objects['sorted_ak4_btags'] = op.sort(ak4_btags_redef, bjet_sorter)
+        # objects['ak4_nonbtags'] = ak4_nonbtags
 
+        # 4j selection definitions
+        btag_sorted_ak4_jets = op.sort(ak4_jets, bjet_sorter)
+        objects['sorted_ak4_btags'] = op.select(
+            btag_sorted_ak4_jets,
+            lambda jet: op.OR(
+                jet.idx == btag_sorted_ak4_jets[0].idx,
+                jet.idx == btag_sorted_ak4_jets[1].idx
+            ) 
+        ) 
+        objects['ak4_nonbtags'] = op.select(
+            btag_sorted_ak4_jets,
+            lambda jet: op.NOT(op.OR(
+                jet.idx == btag_sorted_ak4_jets[0].idx,
+                jet.idx == btag_sorted_ak4_jets[1].idx
+            ))
+        ) 
+        
         return objects
 
     @staticmethod
