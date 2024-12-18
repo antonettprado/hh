@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
 ROOT.gErrorIgnoreLevel = ROOT.kError
+ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 HHDIR = Path(__file__).parents[3]
 
