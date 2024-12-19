@@ -35,7 +35,8 @@ def run2_binning_strategy(histos: dict[str, ROOT.TH1D], stype: str) -> dict[str,
     sig_pdf = lumi_sig_hist.Clone()
     sig_pdf.Scale(1/lumi_sig_hist.Integral())
 
-    lumi_back_hist = histos['asimov']
+    lumi_back_hist = histos['asimov'].Clone()
+    lumi_back_hist.Add(lumi_sig_hist, -1) # subtract signal to get background-only hist
     back_pdf = lumi_back_hist.Clone()
     back_pdf.Scale(1/lumi_back_hist.Integral())
 
