@@ -19,8 +19,9 @@ LOCK = threading.Lock()
 # There may still be an issue with corrupted root files on certain storage nodes returning sgmentation violations in the jobs
 
 def parse_args(): 
+    module_choices: list[str] = [ path.stem for path in Path('bamboo_hh').iterdir() if path.is_file() and not path.name.startswith('_') ]
     parser = argparse.ArgumentParser(description="Wrapper for bambooRun to improve error handling and resubmission")
-    parser.add_argument("module", type=Path, help="Module to run (example: bamboo_hh/EventSelection.py). Can also add module-specific arguments")
+    parser.add_argument("module", type=str, choices=module_choices, help="Module in bamboo_hh to run. Can also add module-specific arguments")
     parser.add_argument("--output", "-o", type=Path, default=Path(f"/eos/user/{USER[0]}/{USER}/hh_output/test"), help=f"Output directory name. Cannot overwrite an existing directory (default: /eos/user/{USER[0]}/{USER}/hh_output/test)")
     parser.add_argument("--config", "-c", type=Path, default=Path("bamboo_hh/config/analysis_2022_test.yml"), help="Analysis configuration file (default: bamboo_hh/config/analysis_2022_test.yml)")
     parser.add_argument("--env-config", type=Path, default=Path("bamboo_hh/config/cern.ini"), help="Environment configuration file (default: bamboo_hh/config/cern.ini)")
@@ -39,7 +40,7 @@ def generate_cmd(args, mod_args) -> tuple[str, Path, Path]:
 
     cmd: list[str] = ["bambooRun"] # begin the bambooRun command
 
-    module: Path = root / args.module
+    module: Path = root / 'bamboo_hh' / args.module + '.py'
     cmd.extend(["-m", module])
 
     config: Path = root / args.config
