@@ -240,6 +240,8 @@ class EventSelection(NanoBaseHHbbWW):
         SL_only = mllSel.refine("SL_lepton_only_selection", cut=[op.OR(
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
             event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH))])
+        # Use 4j 1b and 2b jet selections to define SL_res_1b and SL_res_2b
+        # Previously used sl_resolved_1b_jet_selection sl_resolved_2b_jet_selection
         SL_res_1b = SL_only.refine("SL_resolved_1b_jet_selection", cut=[
             event_defs.sl_resolved_4j_1b_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_res_2b = SL_only.refine("SL_resolved_2b_jets_selection", cut=[

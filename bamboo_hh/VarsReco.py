@@ -50,7 +50,7 @@ class VarsReco(NanoBaseHHbbWW):
         objects['sorted_ak4_jets'] = op.sort(ak4_jets, lambda jet: -jet.pt)
         # objects['sorted_ak4_btags'] = op.sort(ak4_btags, bjet_sorter)
         # objects['ak4_nonbtags'] = ak4_non_medbtags
-        # Redefine the ak4 jets in a mutually exclusive way
+        # Redefine the ak4 jets in a mutually exclusive way for 1b 2b selections
         # ak4_nonbtags = op.select(
         #     ak4_non_medbtags, 
         #     lambda jet: op.NOT(
