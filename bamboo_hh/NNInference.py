@@ -149,11 +149,11 @@ class NNInference(NanoBaseHHbbWW):
                 max_score_index = op.rng_max_element_index(scores, lambda score: score)
                 for i, class_i in enumerate(dnn.classes):
                     # Total distribution
-                    plots.append(Plot.make1D('_'.join([dnn.ref, 'Whole', 'Score'+class_i, 'Model'+dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
+                    plots.append(Plot.make1D('__'.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
                     # Cut
-                    sel_NNclass_name = '_'.join([sel_name, class_i, dnn.model_name])
+                    sel_NNclass_name = '__'.join([sel_name, class_i, dnn.model_name])
                     sel_NNclass = (dnn.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
-                    plots.append(Plot.make1D('_'.join([dnn.ref, class_i, 'Score'+class_i, 'Model'+dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
+                    plots.append(Plot.make1D('__'.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
                     self.yields.add(sel_NNclass, sel_NNclass_name) 
 
             self.DNN_LIST.append(DNN)
