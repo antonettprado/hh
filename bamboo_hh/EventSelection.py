@@ -241,9 +241,9 @@ class EventSelection(NanoBaseHHbbWW):
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
             event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH))])
         SL_res_1b = SL_only.refine("SL_resolved_1b_jet_selection", cut=[
-            event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+            event_defs.sl_resolved_4j_1b_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_res_2b = SL_only.refine("SL_resolved_2b_jets_selection", cut=[
-            event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+            event_defs.sl_resolved_4j_2b_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_resolved = SL_only.refine("SL_resolved_jets_selection", cut=[
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_boosted = SL_only.refine("SL_boosted_jets_selection", cut=[
