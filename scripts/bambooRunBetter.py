@@ -40,7 +40,7 @@ def generate_cmd(args, mod_args) -> tuple[str, Path, Path]:
 
     cmd: list[str] = ["bambooRun"] # begin the bambooRun command
 
-    module: Path = root / 'bamboo_hh' / args.module + '.py'
+    module: Path = root / 'bamboo_hh' / (args.module + '.py')
     cmd.extend(["-m", module])
 
     config: Path = root / args.config
