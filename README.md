@@ -250,7 +250,7 @@ After all this is applied resinstall bamboo using: `pip install . --upgrade` (ag
 Clone this repository into the parent directory containing the bamboo installation:
 
 ```bash
-git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
+git clone https://gitlab.cern.ch/abdatta/hh.git
 ```
 
 Execute these each time you start from a clean shell:
@@ -258,7 +258,7 @@ Execute these each time you start from a clean shell:
 cd
 source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
 source bamboodev/bamboovenv/bin/activate
-cd bamboodev/hh/Bamboo_setup
+cd bamboodev/hh/
 export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
 voms-proxy-init --voms cms -rfc --valid 192:00 
 
