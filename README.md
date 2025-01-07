@@ -250,7 +250,7 @@ After all this is applied resinstall bamboo using: `pip install . --upgrade` (ag
 Clone this repository into the parent directory containing the bamboo installation:
 
 ```bash
-git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
+git clone https://gitlab.cern.ch/abdatta/hh.git
 ```
 
 Execute these each time you start from a clean shell:
