@@ -9,6 +9,7 @@ Install bamboo analysis framework with the instructions here: https://bamboo-hep
 
 I will just display a diff between the master branch of bamboo and my working bamboo install (updated 10/16/2024). 
 **Cool trick**: you can copy-paste this diff into a file and run `git apply [diff_file]` in the bamboo directory to apply these changes. However, this may break with future bamboo updates.
+If you get a single whitespace error, that means it worked
 ```diff
 diff --git a/bamboo/analysismodules.py b/bamboo/analysismodules.py
 index 7f15676..d902133 100644
@@ -266,104 +267,8 @@ cp $(voms-proxy-info -p) ~/private/x509up
 export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
-# ------------------------------ Analysis -------------------------------
-## To Use bambooRunBetter.py
-```bash
-# For more complete instructions and default arguments (feel free to configure the defaults as you like)
-python -u bambooRunBetter.py --help
-# Some Examples
-python -u bambooRunBetter.py src/event_selection.py local_event_selection # local run using config/analysis_2022_test.yml and config/cern.ini as default
-python -u bambooRunBetter.py src/event_selection.py total_event_selection -td # distributed=driver run using analysis_2022.yml
-python -u bambooRunBetter.py src/vars_reco.py local_vars_reco -c config/analysis_2017.yml -d # driver run using a different config file
-python -u bambooRunBetter.py src/likelihood_ratio.py total_vars_reco -c config/analysis_2022.yml --driver --input-dir Z_OUTPUT/total_vars_reco # --input-dir argument is passed onto likelihood_ratio.py
-```
-
-## Process NANOAODs: EventSelection 
-To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
-```bash
-bambooRun -m src/EventSelection.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_EventSelection --envConfig config/cern.ini --distributed=driver
-```
-
-To produce skims add the option "-s" to the above command
-
-### Postprocessing: Produce tables for synchronization from skims
-```bash
-python3 src/post_processing/sync/create_sync_tables.py -i Z_OUTPUT/TOTAL_EventSelection -s bbWW_sl TTbar_sl
-```
-
-Add the different sample names for which you want to produce the tables
-
-## Process NANOAODs: vars_gen 
-To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
-```bash
-bambooRun -m src/vars_gen.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsGen --envConfig config/cern.ini --distributed=driver
-```
-
-### Postprocessing: Plot Signal vs Background Comparisons 
-```bash
-python3 src/post_processing/sig_bkg_shape_comp/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsGen
-```
-
-## Process NANOAODs: vars_reco
-To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
-```bash
-bambooRun -m src/vars_reco.py config/analysis_2022.yml -o Z_OUTPUT/TOTAL_VarsReco --envConfig config/cern.ini --distributed=driver
-```
-
-### Postprocessing: Plot Signal vs Background Comparisons 
-```bash
-python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco -l reco
-```
-
-### Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection 
-```bash
-python3 post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco
-```
-
-## Process NANOAODs: likelihood_ratios
-To run on condor (remove --distributed=driver to run locally and add -i to run interactively):
-```bash
-bambooRun -m src/likelihood_ratio.py config/analysis_2022.yml --input_dir Z_OUTPUT/TOTAL_VarsReco -o Z_OUTPUT/TOTAL_VarsReco_LR --envConfig config/cern.ini --distributed=driver
-```
-
-### Postprocessing: Compare LR signal vs background 
-```bash
-python3 src/post_processing/compare_subcategories.py -s Z_OUTPUT/TOTAL_VarsReco_LR -l reco
-```
-
-### Postprocessing: Derive Cuts on Variables using Signal Efficiency and Background Rejection 
-```bash
-python3 src/post_processing/cut_based_selections.py -s Z_OUTPUT/TOTAL_VarsReco_LR --lr
-```
-
-### Training DNN test models
-```bash
-python3 src/post_processing/NN/bbWW_NN_class.py -s Z_OUTPUT/TOTAL_VarsReco_2022
-```
-
-# ------------------------------ Trigger -------------------------------
-## Process NanoAODs with L1 objects: SL_L1_trigger_efficiency
-```bash
-bambooRun -m src/SL_L1_trigger_efficiency.py config/analysis_2024.yml -o Z_OUTPUT/L1_sample2018_pt0 --lep_pt 0
-```
-### Postprocessing: Plot trigger efficiency s-curves
-```bash
-python3 src/post_processing/trigger/plot_trigger_efficiencies.py
-```
-
-# ------------------------------ Make Datacards -------------------------------
-## Make datacards from results 
-
-Update the yaml file (src/input/Datacard_category_discriminant.yml) with channels and discriminants to create datacards for
-
-```bash
-python3 src/post_processing/datacard/make_datacard.py -i Z_OUTPUT/TOTAL_EventSelection_2022 -c config/analysis_2022.yml -f src/input/datacard_category_discriminant.yml -r
-```
-
 # ------------------------------ Set up Higgs Combine for Fitting -------------------------------
 ## Setup of Higgs Combine for fitting
-
-Must use lxplus7 for now
 
 ```bash
 cd
@@ -383,23 +288,36 @@ git checkout v3.0.0
 scram b
 cd CombineTools/
 
-git clone https://gitlab.cern.ch/abdatta/hh.git && cd hh/Bamboo_setup
+ln -s [hh directory] ./hh
+cd hh
 export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
 ```
 
-## To combine datacards
-
+# ------------------------------ Analysis -------------------------------
+## To use bambooRunBetter.py
+First, check `python scripts/bambooRunBetter.py --help` to see available options as these will be the most up-to-date. Some examples:
 ```bash
-python3 src/post_processing/fits/combine_datacards.py -i Z_OUTPUT/TOTAL_VarsReco_LR -f src/input/combine_datacards.yml
+python -u scripts/bambooRunBetter.py EventSelection -o local_event_selection # local run using config/analysis_2022_test.yml and config/cern.ini as default
+python -u scripts/bambooRunBetter.py VarsReco -o $EOS/vars_reco -c config/analysis_2017.yml -d # driver run using a different config file
+python -u scripts/bambooRunBetter.py NNInference -o $EOS/nn -td -SNN $EOS/vars_reco/[nndir] # distributed=driver run using analysis_2022.yml, SNN passed onto NNInference module
+python -u scripts/bambooRunBetter.py LikelihoodRatio total_vars_reco -c config/analysis_2022.yml --driver --input-dir $EOS/vars_reco # --input-dir argument is passed onto likelihood_ratio.py
+```
+Check the module-specific arguements for the module of interest using `bambooRun -m bamboo_hh/[Module].py --help`
+
+## To build the neural nets
+First, check `python neural_net/DNNManager.py --help` for available options. Most common use case:
+```bash
+python neural_net/DNNManager.py -w $EOS/[vars_reco_output] -s SL_res_2b SL_res_1b -m train_eval -c NN_roster.yml
+```
+Adapt the yml to your liking to build the models
+
+## To run the neural net inference
+```bash
+python -u scripts/bambooRunBetter.py NNInference -o $EOS/nn -td -SNN $EOS/vars_reco/[nndir]
 ```
 
-## To run the fits
-
+## To make datacards from results 
+Need to `cd` into the symbolically linked `hh` directory within CMSSW. Then run `cmsenv` followed by (for example):
 ```bash
-python3 src/post_processing/fits/run_fits.py -i Z_OUTPUT/TOTAL_VarsReco_LR -f src/input/fit_datacards.yml
+python3 scripts/run_dc_and_fitting $EOS/nn
 ```
-
-
-
-
-
