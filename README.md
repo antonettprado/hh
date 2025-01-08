@@ -1,6 +1,6 @@
 # HH to bbWW Analysis
 
-## Installation:
+## ------------------------------ Installation -------------------------------
 
 Install bamboo analysis framework with the instructions here: https://bamboo-hep.readthedocs.io/en/latest/install.html#fresh-install. 
 **On line 4, replace "centos7" with "el9"**
@@ -267,8 +267,7 @@ cp $(voms-proxy-info -p) ~/private/x509up
 export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
-# ------------------------------ Set up Higgs Combine for Fitting -------------------------------
-## Setup of Higgs Combine for fitting
+### Setup of Higgs Combine for fitting
 
 ```bash
 cd
@@ -293,8 +292,8 @@ cd hh
 export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
 ```
 
-# ------------------------------ Analysis -------------------------------
-## To use bambooRunBetter.py
+## ------------------------------ Analysis -------------------------------
+### To use bambooRunBetter.py
 First, check `python scripts/bambooRunBetter.py --help` to see available options as these will be the most up-to-date. Some examples:
 ```bash
 python -u scripts/bambooRunBetter.py EventSelection -o local_event_selection # local run using config/analysis_2022_test.yml and config/cern.ini as default
@@ -304,19 +303,19 @@ python -u scripts/bambooRunBetter.py LikelihoodRatio total_vars_reco -c config/a
 ```
 Check the module-specific arguements for the module of interest using `bambooRun -m bamboo_hh/[Module].py --help`
 
-## To build the neural nets
+### To build the neural nets
 First, check `python neural_net/DNNManager.py --help` for available options. Most common use case:
 ```bash
 python neural_net/DNNManager.py -w $EOS/[vars_reco_output] -s SL_res_2b SL_res_1b -m train_eval -c NN_roster.yml
 ```
 Adapt the yml to your liking to build the models
 
-## To run the neural net inference
+### To run the neural net inference
 ```bash
 python -u scripts/bambooRunBetter.py NNInference -o $EOS/nn -td -SNN $EOS/vars_reco/[nndir]
 ```
 
-## To make datacards from results 
+### To make datacards from results 
 Need to `cd` into the symbolically linked `hh` directory within CMSSW. Then run `cmsenv` followed by (for example):
 ```bash
 python3 scripts/run_dc_and_fitting $EOS/nn
