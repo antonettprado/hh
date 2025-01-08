@@ -289,7 +289,7 @@ cd CombineTools/
 
 ln -s [hh directory] ./hh
 cd hh
-export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
+export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
 
 ## Analysis
