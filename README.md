@@ -1,6 +1,6 @@
 # HH to bbWW Analysis
 
-## ------------------------------ Installation -------------------------------
+## Installation
 
 Install bamboo analysis framework with the instructions here: https://bamboo-hep.readthedocs.io/en/latest/install.html#fresh-install. 
 **On line 4, replace "centos7" with "el9"**
@@ -292,7 +292,7 @@ cd hh
 export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
 ```
 
-## ------------------------------ Analysis -------------------------------
+## Analysis
 ### To use bambooRunBetter.py
 First, check `python scripts/bambooRunBetter.py --help` to see available options as these will be the most up-to-date. Some examples:
 ```bash
