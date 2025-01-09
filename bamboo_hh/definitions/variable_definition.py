@@ -720,7 +720,7 @@ def get_nAK4_nonbtag(objects) -> Variable1D:
     subcat_names = nAK4_nonbtag.subcats
     selections = get_selections_subset(subcat_names)
 
-    data = op.static_cast("UInt_t", op.rng_len(objects["ak4_nonbtags"]))
+    data = op.static_cast("UInt_t", op.rng_len(objects["cleaned_ak4_jets"]) - op.rng_len(objects["cleaned_ak4_btags"]))
     data = {sel_name: data for sel_name in selections.keys()}
     nAK4_nonbtag.populate(data, selections)
     return nAK4_nonbtag
