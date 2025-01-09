@@ -21,7 +21,7 @@ class VarsReco(NanoBaseHHbbWW):
         
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)
-        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=False, help='Not producing skims')
+        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_res_1b', 'SL_res_2b'], help='skim tree selections to produce')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
