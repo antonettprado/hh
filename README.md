@@ -316,7 +316,7 @@ python -u scripts/bambooRunBetter.py NNInference -o $EOS/nn -td -SNN $EOS/vars_r
 ```
 
 ### To make datacards from results 
-Need to `cd` into the symbolically linked `hh` directory within CMSSW. Then run `cmsenv` followed by (for example):
+First do `cd` into the `CMSSW_14_1_0_pre4/src` directory and run `cmsenv`. Then `cd` into the symbolically linked `hh` directory within CMSSW. Then run this for example:
 ```bash
-python3 scripts/run_dc_and_fitting $EOS/nn
+python3 scripts/run_dc_and_fitting.py $EOS/nn
 ```
