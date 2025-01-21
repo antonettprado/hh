@@ -56,7 +56,7 @@ samples:
          das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM # 716 files
         ]
     type: mc
-    cross-section: 366
+    cross-section: 366 # 407.8 @ 13.6 TeV (?)
     generated-events: genEventSumw
     split: 250
 
@@ -67,7 +67,7 @@ samples:
          das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM # 319 files
         ]
     type: mc
-    cross-section: 88.4
+    cross-section: 88.4 # 101.8 @ 13.6 TeV (?)
     generated-events: genEventSumw
     split: 120
   
@@ -80,7 +80,7 @@ samples:
          das:/TbarWplustoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM # 116 files
         ]
     type: mc
-    cross-section: 19.307618 # xsec(TW) / 2 (since t and tbar is included) x BR(W->l nu) x BR(W->qq) x 2 (since there are two W bosons) = 87.9 / 2 x 0.3259 x 0.6741
+    cross-section: 19.307618 # xsec(TW) / 2 (since t and tbar is included) x BR(W->l nu) x BR(W->qq) x 2 (since there are two W bosons) = 87.9 / 2 x 0.3259 x 0.6741 x 2
     generated-events: genEventSumw
     split: 50
 
@@ -91,7 +91,7 @@ samples:
          das:/TbarWplusto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM # 73 files
         ]
     type: mc
-    cross-section: 4.6651009 # xsec(TW) / 2 (since t and tbar is included) x BR(W->l nu)^2 x 2 (since there are two W bosons) = 87.9 / 2 x 0.3259^2 x 2
+    cross-section: 4.6651009 # xsec(TW) / 2 (since t and tbar is included) x BR(W->l nu)^2 (since there are two W bosons) = 87.9 / 2 x 0.3259^2 x 2
     generated-events: genEventSumw
     split: 20
 
@@ -212,6 +212,182 @@ samples:
     cross-section: 12.75
     generated-events: genEventSumw
     split: 10
+
+  # QCD Multijet
+  QCD_pT_15to30_2022:
+    era: "2022"
+    group: "QCD"
+    db: das:/QCD_PT-15to30_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM # 7 files
+    type: mc
+    cross-section: 1.301E+09
+    generated-events: genEventSumw
+    split: -10
+
+  QCD_pT_30to50_2022:
+    era: "2022"
+    group: "QCD"
+    db: das:/QCD_PT-30to50_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM # 7 files
+    type: mc
+    cross-section: 1.133E+08
+    generated-events: genEventSumw
+    split: -10
+
+  QCD_pT_50to80_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-50to80_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 27 files,
+      das:/QCD_PT-50to80_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 64 files
+    ]
+    type: mc
+    cross-section: 1.676E+07
+    generated-events: genEventSumw
+    split: -5
+
+  QCD_pT_80to120_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-80to120_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 9 files,
+      das:/QCD_PT-80to120_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 84 files
+    ]
+    type: mc
+    cross-section: 2.534E+06
+    generated-events: genEventSumw
+    split: -5
+
+  QCD_pT_120to170_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 11 files,
+      das:/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 64 files
+    ]
+    type: mc
+    cross-section: 4.458E+05
+    generated-events: genEventSumw
+    split: -3
+
+  QCD_pT_170to300_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-170to300_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 12 files,
+      das:/QCD_PT-170to300_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 94 files
+    ]
+    type: mc
+    cross-section: 1.137E+05
+    generated-events: genEventSumw
+    split: -4
+
+  QCD_pT_300to470_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 15 files,
+      das:/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 99 files
+    ]
+    type: mc
+    cross-section: 7.589E+03
+    generated-events: genEventSumw
+    split: -2
+
+  QCD_pT_470to600_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-470to600_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 10 files,
+      das:/QCD_PT-470to600_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 80 files
+    ]
+    type: mc
+    cross-section: 6.264E+02
+    generated-events: genEventSumw
+    split: -3
+
+  QCD_pT_600to800_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-600to800_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 23 files,
+      das:/QCD_PT-600to800_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 130 files
+    ]
+    type: mc
+    cross-section: 1.786E+02
+    generated-events: genEventSumw
+    split: -2
+
+  QCD_pT_800to1000_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-800to1000_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 34 files,
+      das:/QCD_PT-800to1000_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 108 files
+    ]
+    type: mc
+    cross-section: 3.057E+01
+    generated-events: genEventSumw
+    split: -3
+
+  QCD_pT_1000to1400_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-1000to1400_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 29 files,
+      das:/QCD_PT-1000to1400_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 60 files
+    ]
+    type: mc
+    cross-section: 8.920E+00
+    generated-events: genEventSumw
+    split: -3
+
+  QCD_pT_1400to1800_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-1400to1800_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 5 files,
+      das:/QCD_PT-1400to1800_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 13 files
+    ]
+    type: mc
+    cross-section: 8.103E-01
+    generated-events: genEventSumw
+    split: -2
+
+  QCD_pT_1800to2400_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-1800to2400_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 9 files,
+      das:/QCD_PT-1800to2400_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 15 files
+    ]
+    type: mc
+    cross-section: 1.148E-01
+    generated-events: genEventSumw
+    split: -3
+
+  QCD_pT_2400to3200_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-2400to3200_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 5 files,
+      das:/QCD_PT-2400to3200_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 18 files
+    ]
+    type: mc
+    cross-section: 7.542E-03
+    generated-events: genEventSumw
+    split: -5
+
+  QCD_pT_3200_2022:
+    era: "2022"
+    group: "QCD"
+    db: [
+      das:/QCD_PT-3200_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM, # 6 files,
+      das:/QCD_PT-3200_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM, # 11 files
+    ]
+    type: mc
+    cross-section: 2.331E-04
+    generated-events: genEventSumw
+    split: -10
+
 
   ######################################################################################################################################################################################################
   # VVV
@@ -384,6 +560,9 @@ plotIt:
     tW:
       legend: tW
       fill-color: "#BB2255"
+    QCD:
+      legend: QCD
+      fill-color: "#AB2255"
   plotdefaults:
     y-axis: Events
     # log-y: both
