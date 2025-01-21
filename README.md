@@ -260,7 +260,7 @@ cd
 source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
 source bamboodev/bamboovenv/bin/activate
 cd bamboodev/hh/
-export PYTHONPATH="${PYTHONPATH}:${PWD}/src/"
+export PYTHONPATH="${PYTHONPATH}:${PWD}/"
 voms-proxy-init --voms cms -rfc --valid 192:00 
 
 cp $(voms-proxy-info -p) ~/private/x509up
@@ -316,7 +316,7 @@ python -u scripts/bambooRunBetter.py NNInference -o $EOS/nn -td -SNN $EOS/vars_r
 ```
 
 ### To make datacards from results 
-Need to `cd` into the symbolically linked `hh` directory within CMSSW. Then run `cmsenv` followed by (for example):
+First do `cd` into the `CMSSW_14_1_0_pre4/src` directory and run `cmsenv`. Then `cd` into the symbolically linked `hh` directory within CMSSW. Then run this for example:
 ```bash
-python3 scripts/run_dc_and_fitting $EOS/nn
+python3 scripts/run_dc_and_fitting.py $EOS/nn
 ```
