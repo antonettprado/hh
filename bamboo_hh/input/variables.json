@@ -175,7 +175,27 @@
             "min": 0,
             "max": 400,
             "unit": "GeV",
-            "title": "leptonic p_{T}",
+            "title": "leptonic top p_{T}",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
+        "blnu_bl_mInv":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 1000,
+            "unit": "GeV",
+            "title": "leptonic top m_{bl}",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
+        "blnu_lnu_mT":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 1000,
+            "unit": "GeV",
+            "title": "leptonic top m_{l#nu}",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
         
@@ -319,6 +339,26 @@
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
+        "jj_l_dPhi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "#Delta#phi(jj, l)",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
+        "jj_l_dR":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 5.5,
+            "unit": "",
+            "title": "#DeltaR(jj, l)",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
         "WW_mInv":
         {
             "nbins": 100,
@@ -326,6 +366,16 @@
             "max": 1000,
             "unit": "GeV",
             "title": "m_{WW}",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+        },
+
+        "WW_mT":
+        {
+            "nbins": 100,
+            "min": 0,
+            "max": 1000,
+            "unit": "GeV",
+            "title": "WW m_{T}",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 

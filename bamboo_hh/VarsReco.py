@@ -3,7 +3,7 @@ from bamboo.plots import Plot, Skim
 
 from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 from bamboo_hh.EventSelection import EventSelection
-import bamboo_hh.definitions.variable_definition as var_defs
+from bamboo_hh.definitions.variable_definition import RecoVariables
 from bamboo_hh.definitions.variables import Variable
 
 class VarsReco(NanoBaseHHbbWW):
@@ -93,6 +93,7 @@ class VarsReco(NanoBaseHHbbWW):
             'DL': all_selections['DL']['DL'],
             'SL_res_1b': all_selections['SL']['SL_res_1b'],
             'SL_res_2b': all_selections['SL']['SL_res_2b'],
+            'SL_resolved': all_selections['SL']['SL_resolved'],
             'SL_boosted': all_selections['SL']['SL_boosted'],
             'DL_res_1b': all_selections['DL']['DL_res_1b'],
             'DL_res_2b': all_selections['DL']['DL_res_2b'],
@@ -130,9 +131,8 @@ class VarsReco(NanoBaseHHbbWW):
 
         objects = VarsReco.get_objects(tree, self.era)
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
-        var_defs.set_selections_for_vars(selections)
 
-        reco_vars = var_defs.gather_all_1D_variables(objects)
+        reco_vars = RecoVariables(objects, selections).gather_all_1D_variables()
         # reco_2D_vars = var_defs.gather_all_2D_variables(objects)
         # reco_3D_vars = var_defs.gather_all_3D_variables(objects)
 
