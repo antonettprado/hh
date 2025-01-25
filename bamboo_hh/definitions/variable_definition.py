@@ -52,6 +52,7 @@ class RecoVariables():
             self.gather_total_vars() +
             self.gather_ll_vars() +
             self.gather_misc_vars() + 
+            self.gather_lj_vars() + 
             self.gather_object_vars() +
             self.gather_low_level_lepton_vars() + 
             self.gather_low_level_ak4_jet_vars()
@@ -85,6 +86,7 @@ class RecoVariables():
         return vars3D
         
     def gather_bjet_vars(self) -> list[Variable1D]:
+        '''Vars related to bjets only (Higgs reconstruction)'''
         bjet_vars = [
             self.get_bjets_mbb(),
             self.get_bjets_dPhi(),
@@ -102,6 +104,7 @@ class RecoVariables():
         return bjet_vars
 
     def gather_top_vars(self) -> list[Variable1D]:
+        '''Vars related to top reconstruction'''
         top_vars = [
             self.get_trijet_mInv(),
             self.get_trijet_pt(),
@@ -121,6 +124,7 @@ class RecoVariables():
         return top_vars
 
     def gather_total_vars(self) -> list[Variable1D]:
+        '''Vars that involve all reconstructed objects (or just all jets)'''
         total_vars = [
             self.get_all_sT(),
             self.get_all_sT_50_cut(),
@@ -140,7 +144,20 @@ class RecoVariables():
             self.get_ll_pt(),
         ]
         return ll_vars
-       
+    
+    def gather_lj_vars(self) -> list[Variable1D]:
+        '''Vars that relate jets and leptons'''
+        lj_vars = [
+            self.get_jj_l_dPhi(),
+            self.get_jj_l_dR(),
+            self.get_jj_lnu_dPhi(),
+            self.get_bb_lnu_dPhi(),
+            self.get_min_b_l_dPhi(),
+            self.get_min_b_l_dR(),
+            self.get_min_b_lnu_dPhi(),
+        ]
+        return lj_vars
+
     def gather_misc_vars(self) -> list[Variable1D]:
         vars = [
             self.get_mjj(),
@@ -413,6 +430,55 @@ class RecoVariables():
         jj_W, two_nonbtags = self._get_jj_W()
         lep0_p4, _ = self._get_leptons_p4()
         return op.switch(two_nonbtags, op.deltaR(lep0_p4, jj_W[0].p4 + jj_W[1].p4), NULL)
+
+    def get_jj_lnu_dPhi(self) -> Variable1D:
+        jj_W, two_nonbtags = self._get_jj_W()
+        lep0_p4, _ = self._get_leptons_p4()
+        met = self.objects['met']
+        return op.switch(two_nonbtags, op.deltaPhi(lep0_p4 + met.p4, jj_W[0].p4 + jj_W[1].p4), NULL)
+
+    def get_bb_lnu_dPhi(self) -> Variable1D:
+        bjet0, bjet1, _, _, two_btags = self._get_bjets_data()
+        lep0_p4, _ = self._get_leptons_p4()
+        met = self.objects['met']
+        return op.switch(two_btags, op.deltaPhi(lep0_p4 + met.p4, bjet0.p4 + bjet1.p4), NULL)
+
+    def get_min_b_l_dPhi(self) -> Variable1D:
+        bjet0, bjet1, _, _, two_btags = self._get_bjets_data()
+        lep0_p4, _ = self._get_leptons_p4()
+        return op.switch(
+            two_btags, 
+            op.min(
+                op.deltaPhi(bjet0.p4, lep0_p4), 
+                op.deltaPhi(bjet1.p4, lep0_p4)
+            ),
+            NULL
+        )
+
+    def get_min_b_l_dR(self) -> Variable1D:
+        bjet0, bjet1, _, _, two_btags = self._get_bjets_data()
+        lep0_p4, _ = self._get_leptons_p4()
+        return op.switch(
+            two_btags, 
+            op.min(
+                op.deltaR(bjet0.p4, lep0_p4), 
+                op.deltaR(bjet1.p4, lep0_p4)
+            ),
+            NULL
+        )
+        
+    def get_min_b_lnu_dPhi(self) -> Variable1D:
+        bjet0, bjet1, _, _, two_btags = self._get_bjets_data()
+        lep0_p4, _ = self._get_leptons_p4()
+        met = self.objects['met']
+        return op.switch(
+            two_btags, 
+            op.min(
+                op.deltaPhi(bjet0.p4, lep0_p4 + met.p4), 
+                op.deltaPhi(bjet1.p4, lep0_p4 + met.p4)
+            ),
+            NULL
+        )
 
     def get_WW_mInv(self) -> Variable1D:
         met = self.objects['met']

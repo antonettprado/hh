@@ -359,6 +359,56 @@
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
         },
 
+        "jj_lnu_dPhi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "#Delta#phi(jj, l#nu)",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
+        "bb_lnu_dPhi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "#Delta#phi(bb, l#nu)",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
+        "min_b_l_dPhi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "min_{b}(#Delta#phi(b, l))",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
+        "min_b_l_dR":
+        {
+            "nbins": 50,
+            "min": 0,
+            "max": 5.5,
+            "unit": "",
+            "title": "min_{b}(#DeltaR(b, l))",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+
+        "min_b_lnu_dPhi":
+        {
+            "nbins": 50,
+            "min": -4,
+            "max": 4,
+            "unit": "",
+            "title": "min_{b}(#Delta#phi(b, l#nu))",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+        },
+        
         "WW_mInv":
         {
             "nbins": 100,
