@@ -233,7 +233,7 @@ class RecoVariables():
         
         boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)
         
-        # Must have exactly the same keys as selections!!
+        # Must have exactly the same keys as selections, except for SL_resolved selection if SL_res_1b and SL_res_2b have the same definition!!
         return {'SL_res_1b': res_data, 'SL_res_2b': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data,
                 'SL_res_2b_x': res_data }

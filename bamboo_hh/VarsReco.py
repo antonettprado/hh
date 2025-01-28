@@ -21,7 +21,7 @@ class VarsReco(NanoBaseHHbbWW):
         
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)
-        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_res_1b', 'SL_res_2b'], help='skim tree selections to produce')
+        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_resolved'], help='skim tree selections to produce')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
@@ -124,26 +124,6 @@ class VarsReco(NanoBaseHHbbWW):
         skim = Skim(subcat, skim_data, selection)
         return skim
 
-    @staticmethod
-    def combine_skims(resultsdir, skim1: str, skim2: str, comb_skim: str):
-        import ROOT
-        from pathlib import Path
-        files = filter(lambda p: p.suffix == '.root' and not p.stem.startswith('__skeleton__'),  Path(resultsdir).iterdir())
-        for f in files:
-            with ROOT.TFile(str(f), 'UPDATE') as f:
-                t1 = f.Get(skim1)
-                t2 = f.Get(skim2)
-
-                lst = ROOT.TList()
-                lst.Add(t1)
-                lst.Add(t2)
-                t = ROOT.TTree.MergeTrees(lst)
-                t.SetName(comb_skim)
-                t.Write()
-
-                ROOT.gDirectory.Delete(skim1+';*')
-                ROOT.gDirectory.Delete(skim2+';*')
-
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         plots.append(self.yields)
@@ -199,10 +179,6 @@ class VarsReco(NanoBaseHHbbWW):
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
         super(VarsReco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-
-        if 'SL_res_1b' in self.args.skim_selections and 'SL_res_2b' in self.args.skim_selections:
-            print("Combining 1b and 2b skims")
-            VarsReco.combine_skims(resultsdir, 'SL_res_1b', 'SL_res_2b', 'SL_resolved')
 
         from bamboo_hh.plotter.plotter import Plotter
 

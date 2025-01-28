@@ -302,6 +302,9 @@ class Variable1D(Variable):
             data (dict[str:FloatProxy]): dictionary of subcat:data
             selections (dict[str:SelectionProxy]): dictionary of subcat:selection
         '''
+        if 'SL_res_1b' in data.keys() and 'SL_res_2b' in data.keys() and 'SL_resolved' not in data.keys() and 'SL_resolved' in self.subcats and data['SL_res_1b'] == data['SL_res_2b']:
+            data['SL_resolved'] = data['SL_res_1b']
+
         self.data = data
         self.selections = selections
         if data.keys() != selections.keys():

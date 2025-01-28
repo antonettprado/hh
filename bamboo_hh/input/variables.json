@@ -8,7 +8,7 @@
             "max": 1,
             "unit": "",
             "title": "DNN score",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
         "DNN_score_s_over_b":
         {
@@ -17,7 +17,7 @@
             "max": 3,
             "unit": "",
             "title": "DNN score log(S/B)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
         "bjets_mbb": 
         {
@@ -26,7 +26,7 @@
             "max": 300,
             "unit": "GeV",
             "title": "m_{bb}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjets_dPhi": 
@@ -36,7 +36,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(b,b)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjets_dPhi_abs":
@@ -46,7 +46,7 @@
             "max": 4,
             "unit": "",
             "title": "|#Delta#phi(b,b)|",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjets_dEta":
@@ -56,7 +56,7 @@
             "max": 7,
             "unit": "",
             "title": "#Delta#eta(b,b)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjets_dEta_abs":
@@ -66,7 +66,7 @@
             "max": 7,
             "unit": "",
             "title": "|#Delta#eta(b,b)|",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjets_dR":
@@ -76,7 +76,7 @@
             "max": 7,
             "unit": "",
             "title": "#DeltaR(b,b)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjets_pt_bb":
@@ -86,7 +86,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "p_{T}^{bb}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjet0_pt":
@@ -96,7 +96,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "leading b-jet p_{T}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjet1_pt":
@@ -106,7 +106,7 @@
             "max": 200,
             "unit": "GeV",
             "title": "sub-leading b-jet p_{T}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bjets_mean_pt":
@@ -116,7 +116,7 @@
             "max": 300,
             "unit": "GeV",
             "title": "mean b-jet p_{T}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "bfatjet_mass":
@@ -146,7 +146,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "hadronic top mass",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
         
         "trijet_pt":
@@ -156,7 +156,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "hadronic top p_{T}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "blnu_mT":
@@ -166,7 +166,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "leptonic top m_{T}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "blnu_pt":
@@ -176,7 +176,7 @@
             "max": 400,
             "unit": "GeV",
             "title": "leptonic top p_{T}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "blnu_bl_mInv":
@@ -186,7 +186,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "leptonic top m_{bl}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "blnu_lnu_mT":
@@ -196,7 +196,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "leptonic top m_{l#nu}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
         
         "all_sT_50_cut":
@@ -206,7 +206,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "all_sT_50_cut",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_sT":
@@ -216,7 +216,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "all_sT",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_mInv":
@@ -226,7 +226,7 @@
             "max": 2000,
             "unit": "GeV",
             "title": "all_mInv",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_mT":
@@ -236,7 +236,7 @@
             "max": 2000,
             "unit": "GeV",
             "title": "all_mT",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_pt":
@@ -246,7 +246,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "all_pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "all_jets_HT":
@@ -256,7 +256,7 @@
             "max": 1500,
             "unit": "GeV",
             "title": "all_jet_HT",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_2b"]
         },
 
         "mjj":
@@ -266,7 +266,7 @@
             "max": 300,
             "unit": "GeV",
             "title": "mjj",
-            "subcats": ["SL_res_2b", "SL_res_1b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "trijet_pt_rat":
@@ -276,7 +276,7 @@
             "max": 1.1,
             "unit": "",
             "title": "trijet_pt_rat",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "trijet_bijet_dR":
@@ -286,7 +286,7 @@
             "max": 6,
             "unit": "",
             "title": "#DeltaR(bjj, jj)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "trijet_bijet_dPhi":
@@ -296,7 +296,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(bjj, jj)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
         
         "trijet_bijet_dEta":
@@ -306,7 +306,7 @@
             "max": 7,
             "unit": "",
             "title": "#Delta#eta(bjj, jj)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "bjet_bijet_dR":
@@ -316,7 +316,7 @@
             "max": 5.5,
             "unit": "",
             "title": "#DeltaR(b, jj)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "bjet_bijet_dPhi":
@@ -326,7 +326,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(b, jj)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "bjet_bijet_dEta":
@@ -336,7 +336,7 @@
             "max": 7,
             "unit": "",
             "title": "#Delta#eta(b, jj)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "jj_l_dPhi":
@@ -346,7 +346,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(jj, l)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "jj_l_dR":
@@ -356,7 +356,7 @@
             "max": 5.5,
             "unit": "",
             "title": "#DeltaR(jj, l)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "jj_lnu_dPhi":
@@ -366,7 +366,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(jj, l#nu)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "bb_lnu_dPhi":
@@ -376,7 +376,7 @@
             "max": 4,
             "unit": "",
             "title": "#Delta#phi(bb, l#nu)",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "min_b_l_dPhi":
@@ -386,7 +386,7 @@
             "max": 4,
             "unit": "",
             "title": "min_{b}(#Delta#phi(b, l))",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "min_b_l_dR":
@@ -396,7 +396,7 @@
             "max": 5.5,
             "unit": "",
             "title": "min_{b}(#DeltaR(b, l))",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
 
         "min_b_lnu_dPhi":
@@ -406,7 +406,7 @@
             "max": 4,
             "unit": "",
             "title": "min_{b}(#Delta#phi(b, l#nu))",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x"]
         },
         
         "WW_mInv":
@@ -416,7 +416,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "m_{WW}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "WW_mT":
@@ -426,7 +426,7 @@
             "max": 1000,
             "unit": "GeV",
             "title": "WW m_{T}",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "WW_pt":
@@ -436,7 +436,7 @@
             "max": 600,
             "unit": "GeV",
             "title": "WW p_T",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "lep0_pt":
@@ -446,7 +446,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "Lepton0 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "lep0_eta":
@@ -456,7 +456,7 @@
             "max": 2.5,
             "unit": "",
             "title": "Lepton0 #eta",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "lep0_phi":
@@ -466,7 +466,7 @@
             "max": 4,
             "unit": "",
             "title": "Lepton0 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "lep0_iso":
@@ -476,7 +476,7 @@
             "max": 1,
             "unit": "",
             "title": "Lepton0 isolation",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "lep1_pt":
@@ -526,7 +526,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "AK4_0 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         }, 
         
         "ak4_jet1_pt":
@@ -536,7 +536,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "AK4_1 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         }, 
 
         "ak4_jet2_pt":
@@ -546,7 +546,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "AK4_2 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         }, 
 
         "ak4_jet3_pt":
@@ -556,7 +556,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "AK4_3 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         }, 
         
         "ak4_jet4_pt":
@@ -566,7 +566,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "AK4_4 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         }, 
 
         "ak4_jet5_pt":
@@ -576,7 +576,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "AK4_5 pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         }, 
 
         "ak4_jet0_eta":
@@ -586,7 +586,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_0 #eta",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet1_eta":
@@ -596,7 +596,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_1 #eta",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet2_eta":
@@ -606,7 +606,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_2 #eta",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet3_eta":
@@ -616,7 +616,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_3 #eta",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet4_eta":
@@ -626,7 +626,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_4 #eta",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet5_eta":
@@ -636,7 +636,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_5 #eta",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet0_phi":
@@ -646,7 +646,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_0 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet1_phi":
@@ -656,7 +656,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_1 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet2_phi":
@@ -666,7 +666,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_2 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet3_phi":
@@ -676,7 +676,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_3 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet4_phi":
@@ -686,7 +686,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_4 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet5_phi":
@@ -696,7 +696,7 @@
             "max": 4,
             "unit": "",
             "title": "AK4_5 #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet0_bscore":
@@ -706,7 +706,7 @@
             "max": 1,
             "unit": "",
             "title": "AK4_0 btag score",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet1_bscore":
@@ -716,7 +716,7 @@
             "max": 1,
             "unit": "",
             "title": "AK4_1 btag score",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet2_bscore":
@@ -726,7 +726,7 @@
             "max": 1,
             "unit": "",
             "title": "AK4_2 btag score",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet3_bscore":
@@ -736,7 +736,7 @@
             "max": 1,
             "unit": "",
             "title": "AK4_3 btag score",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet4_bscore":
@@ -746,7 +746,7 @@
             "max": 1,
             "unit": "",
             "title": "AK4_4 btag score",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak4_jet5_bscore":
@@ -756,7 +756,7 @@
             "max": 1,
             "unit": "",
             "title": "AK4_5 btag score",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "DL_res_1b", "DL_res_2b"]
         },
 
         "ak8_btag0_pt":
@@ -796,7 +796,7 @@
             "max": 500,
             "unit": "GeV",
             "title": "MET pt",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "met_phi":
@@ -806,7 +806,7 @@
             "max": 4,
             "unit": "GeV",
             "title": "MET #phi",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
 
         "mll":
@@ -865,7 +865,7 @@
             "max": 30,
             "unit": "",
             "title": "nAK4",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
         "nAK4_btag":
         {
@@ -874,7 +874,7 @@
             "max": 30,
             "unit": "",
             "title": "nAK4_btag",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
         "nAK4_nonbtag":
         {
@@ -883,7 +883,7 @@
             "max": 30,
             "unit": "",
             "title": "nAK4_nonbtag",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
         "nAK8_btag":
         {
@@ -892,7 +892,7 @@
             "max": 30,
             "unit": "",
             "title": "nAK8_btag",
-            "subcats": ["SL_res_1b", "SL_res_2b", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         }
 
     },
