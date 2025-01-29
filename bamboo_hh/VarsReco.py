@@ -22,6 +22,7 @@ class VarsReco(NanoBaseHHbbWW):
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)
         parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_resolved'], help='skim tree selections to produce')
+        parser.add_argument("-p", "--plot_selections", nargs="+", action='store', default=['SL_resolved'], help='selections to plot in bamboo')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
@@ -140,7 +141,12 @@ class VarsReco(NanoBaseHHbbWW):
         # ================================== Plots ======================================
         # ===============================================================================
         
-        hists_1D = [ Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) for var in reco_vars for i in var ]
+        hists_1D = [ 
+            Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) 
+            for var in reco_vars 
+            for i in var 
+            if i.subcat in self.args.plot_selections 
+        ]
         plots.extend(hists_1D)
 
         # hists_2D = [ Plot.make2D(i.ref, [i.xdata, i.ydata], i.selection, [i.xeqbin, i.yeqbin], xTitle=i.xfull_title, yTitle=i.yfull_title) for var in reco_2D_vars for i in var ]
@@ -154,9 +160,8 @@ class VarsReco(NanoBaseHHbbWW):
         # ===============================================================================
         
         self.yields.add(selections['SL_res_1b'], 'SL_res_1b')
-        self.yields.add(selections['SL_res_1b_x'], 'SL_res_1b_x')
         self.yields.add(selections['SL_res_2b'], 'SL_res_2b')
-        self.yields.add(selections['SL_res_2b_x'], 'SL_res_2b_x')
+        self.yields.add(selections['SL_resolved'], 'SL_resolved')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
         self.yields.add(selections['DL_res_2b'], 'DL_res_2b')
@@ -168,7 +173,6 @@ class VarsReco(NanoBaseHHbbWW):
         # ================================== Skims ======================================
         # ===============================================================================
 
-        # Temporary solution, comment/uncomment lines here for skims. Cannot run SL_res_2b and SL_res_2b_x skims at the same time
         if self.args.skim_selections:
             # Verify that the skim selections in the list self.args.skim_selections are in selections
             assert all(skim_sel in selections for skim_sel in self.args.skim_selections), f"Skim selections {self.args.skim_selections} not in selections"
