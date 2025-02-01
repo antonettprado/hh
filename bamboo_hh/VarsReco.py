@@ -133,9 +133,10 @@ class VarsReco(NanoBaseHHbbWW):
         objects = VarsReco.get_objects(tree, self.era)
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
 
-        reco_vars = RecoVariables(objects, selections).gather_all_1D_variables()
-        # reco_2D_vars = var_defs.gather_all_2D_variables(objects)
-        # reco_3D_vars = var_defs.gather_all_3D_variables(objects)
+        reco_vars: RecoVariables = RecoVariables(objects, selections)
+        vars1d = reco_vars.gather_all_1D_variables()
+        # vars2d = reco_vars.gather_all_2D_variables()
+        # vars3d = reco_vars.gather_all_3D_variables()
 
         # ===============================================================================
         # ================================== Plots ======================================
@@ -143,7 +144,7 @@ class VarsReco(NanoBaseHHbbWW):
         
         hists_1D = [ 
             Plot.make1D(i.ref, i.data, i.selection, i.eqbin, xTitle=i.full_title) 
-            for var in reco_vars 
+            for var in vars1d 
             for i in var 
             if i.subcat in self.args.plot_selections 
         ]

@@ -8,7 +8,7 @@ from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 from bamboo_hh.VarsReco import VarsReco
 from bamboo_hh.LikelihoodRatio import LikelihoodRatio
 from bamboo_hh.definitions.variables import Variable1D, LikelihoodRatio
-import bamboo_hh.definitions.variable_definition as var_defs
+from bamboo_hh.definitions.variable_definition import RecoVariables
 
 class NNInference(NanoBaseHHbbWW):
     def __init__(self, args):
@@ -59,45 +59,52 @@ class NNInference(NanoBaseHHbbWW):
 
         return model, model_name, model_type, feature_names, classes, processes
 
+    # @staticmethod
+    # def gathers_vars_dict(objects, selections) -> dict[str, dict[str, Variable1D]]:
+    #     vars1D = var_defs.gather_all_1D_variables(objects)
+    #     sel_vars_dict = {}
+    #     for sel_name, sel in selections.items():
+    #         vars1D_dict = {sub_var.name: sub_var for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
+    #         sel_vars_dict[sel_name] = vars1D_dict
+
+    #     return sel_vars_dict
+
+    # @staticmethod
+    # def gather_input_vars(sel_name, feature_names, objects, selections, llr_corr_workdir=None):
+    #     var_names = [s for s in feature_names if not s.endswith('_llr')]
+    #     llr_names = [s for s in feature_names if s.endswith('_llr')]
+    #     input_vars = []
+
+    #     sel_subvars_dict = NNInference.gathers_vars_dict(objects, selections)  # {SL_res_2b_x: {'sub_bjets_mbb': sub_bjets_mbb}}
+    #     subvars_dict = sel_subvars_dict[sel_name]                           # {'sub_bjets_mbb': sub_bjets_mbb}
+
+    #     # Variables
+    #     if var_names:
+    #         input_vars.extend([subvars_dict[name].data for name in var_names if name in subvars_dict])  # [sub_bjets_mbb.data]
+
+    #     return input_vars
+
     @staticmethod
-    def gathers_vars_dict(objects, selections) -> dict[str, dict[str, Variable1D]]:
-        vars1D = var_defs.gather_all_1D_variables(objects)
-        sel_vars_dict = {}
-        for sel_name, sel in selections.items():
-            vars1D_dict = {sub_var.name: sub_var for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
-            sel_vars_dict[sel_name] = vars1D_dict
-
-        return sel_vars_dict
-
-    @staticmethod
-    def gather_input_vars(sel_name, feature_names, objects, selections, llr_corr_workdir=None):
-        var_names = [s for s in feature_names if not s.endswith('_llr')]
-        llr_names = [s for s in feature_names if s.endswith('_llr')]
-        input_vars = []
-
-        sel_subvars_dict = NNInference.gathers_vars_dict(objects, selections)  # {SL_res_2b_x: {'sub_bjets_mbb': sub_bjets_mbb}}
-        subvars_dict = sel_subvars_dict[sel_name]                           # {'sub_bjets_mbb': sub_bjets_mbb}
-
-        # Variables
-        if var_names:
-            input_vars.extend([subvars_dict[name].data for name in var_names if name in subvars_dict])  # [sub_bjets_mbb.data]
-
-        return input_vars
-
-    @staticmethod
-    def get_DNN(modeldir:str, objects, llr_corr_workdir=None):
+    def get_DNN(modeldir:str, reco_vars: RecoVariables, llr_corr_workdir=None):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
-        selections = var_defs.get_selections_subset(subcat_names)
+        vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
+        vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
+
+        DNN_selections = reco_vars._get_selections_subset(subcat_names)
 
         model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(modeldir)
         data = {}
-        for sel_name in selections.keys():
-            input_vars = NNInference.gather_input_vars(sel_name, feature_names, objects, selections, llr_corr_workdir)
+        for sel_name in DNN_selections.keys():
+            input_vars = [
+                vars_dict[name].data[sel_name]
+                for name in feature_names
+                if sel_name in vars_dict[name].subcats
+            ]
             sel_data = model(*input_vars)
             data[sel_name] = sel_data
 
-        DNN.populate(data, selections)
+        DNN.populate(data, DNN_selections)
 
         DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes)
         print(f"\tModel Name: {DNN.model_name}")
@@ -135,14 +142,14 @@ class NNInference(NanoBaseHHbbWW):
         
         objects = VarsReco.get_objects(tree, self.era)
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
-        var_defs.set_selections_for_vars(selections)
+        reco_vars = RecoVariables(objects, selections)
 
         # # ===============================================================================
         # # ================================== Plots ======================================
         # # ===============================================================================
         self.DNN_LIST = []
         for modeldir in self.modeldir_list:
-            DNN = NNInference.get_DNN(modeldir, objects, self.args.llr_corr_workdir)
+            DNN = NNInference.get_DNN(modeldir, reco_vars, self.args.llr_corr_workdir)
             for sel_name in DNN.subcats:
                 dnn = DNN[sel_name]
                 scores = dnn.data
