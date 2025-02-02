@@ -14,7 +14,12 @@ PROCESSES_FILES = dict(
     tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
     WJets=['Wjets_0J', 'Wjets_1J', 'Wjets_2J'],
     DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J'],
-    VV=['WW', 'WZ', 'ZZ']
+    VV=['WW', 'WZ', 'ZZ'],
+    QCD=[
+        'QCD_pT_15to30',     'QCD_pT_30to50',     'QCD_pT_50to80',     'QCD_pT_80to120',    'QCD_pT_120to170', 
+        'QCD_pT_170to300',   'QCD_pT_300to470',   'QCD_pT_470to600',   'QCD_pT_600to800',   'QCD_pT_800to1000', 
+        'QCD_pT_1000to1400', 'QCD_pT_1400to1800', 'QCD_pT_1800to2400', 'QCD_pT_2400to3200', 'QCD_pT_3200'
+    ],
     #VVV=[]
     #ttW=[]
     #ttZ=[]
@@ -67,6 +72,7 @@ CLASS_COLOR_MAP = dict(
     WJets=['cyan', ROOT.kCyan],
     DY=['magenta', ROOT.kMagenta],
     VV=['orange', ROOT.kOrange],
+    QCD=['azure', ROOT.kViolet],
     #VVV=[]
     #ttW=[]
     #ttZ=[]
