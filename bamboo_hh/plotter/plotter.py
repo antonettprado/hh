@@ -22,7 +22,16 @@ ROOT.gStyle.SetPalette(ROOT.kBird)
 ROOT.gErrorIgnoreLevel = ROOT.kError
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
-HHDIR = Path(__file__).parents[3]
+kcolor_map = {
+    'blue': ROOT.kBlue,
+    'red': ROOT.kRed,
+    'green': ROOT.kGreen,
+    'cyan': ROOT.kCyan,
+    'magenta': ROOT.kMagenta,
+    'orange': ROOT.kOrange,
+    'pink': ROOT.kPink,
+    'black': ROOT.kBlack
+}
 
 
 class BasePlotter:
@@ -414,7 +423,7 @@ class Reference():
                         print(f"Warning: Histogram for file {tfile.GetName()} and ref {self.ref} is None")
             else:
                 print(f"Warning: Initial histogram for ref {self.ref} is None")
-            hist.SetLineColor(references._get_color_for(process, ROOT_b=True))
+            hist.SetLineColor(kcolor_map[references.CLASS_COLOR_MAP[process]])
 
             if hist:
                 self.histograms[process][era] = hist
@@ -472,8 +481,7 @@ class SuperPlotter(BasePlotter):
                 hist_list.append(self._get_ref_hist_for_process(ref, process, workdir))
                 legend_list.append(workdir.name)
             outfilepath = ref
-            self._draw_hists_in_one_canvas(outfilepath, hist_list, legend_list)
-
+            self._draw_hists_in_one_canvas(outfilepath, hist_list, legend_list)    
 
 if __name__ == "__main__":
 

@@ -33,31 +33,55 @@ class NNInference(NanoBaseHHbbWW):
     @staticmethod
     def get_DNN_model_info(modeldir: str):
         modeldir = Path(modeldir)
-        feature_names = []
-        input_vars_file = modeldir / 'input_variables.txt'
-        with open(input_vars_file, 'r') as file:
-            for line in file:
-                feature_names.append(line.strip())
+
         model_path = modeldir / "dnn_model.onnx"
         model = mvaEvaluator(model_path, mvaType='ONNXRuntime', otherArgs = ("output"))
 
         model_info_file = modeldir / 'model_info.yml'
         with open(model_info_file, 'r') as file:
             model_info = yaml.safe_load(file)
-
         model_name = model_info['name']
-        model_type = model_info['type']
-        categorization = model_info['training_setup']['categorization']
-        if model_info['type']  == 'binary':
+        model_type = model_info['model_type']
+        classification = model_info['classification']
+        features = model_info['features']
+            
+        if model_type  == 'binary':
             classes = ["isSignal"]
-        elif model_info['type'] == 'multi':
-            classes = [class_i for class_i in categorization.keys()]
         else:
-            raise Exception(f"Model {model_info['name']} is of invalid type")
+            classes = [class_i for class_i in classification.keys()]
         
-        processes = [proc for proc_list in categorization.values() for proc in proc_list]
+        processes = [proc for proc_list in classification.values() for proc in proc_list]
 
-        return model, model_name, model_type, feature_names, classes, processes
+        return model, model_name, model_type, features, classes, processes
+
+    # @staticmethod
+    # def get_DNN_model_info(modeldir: str):
+    #     modeldir = Path(modeldir)
+    #     feature_names = []
+    #     input_vars_file = modeldir / 'input_variables.txt'
+    #     with open(input_vars_file, 'r') as file:
+    #         for line in file:
+    #             feature_names.append(line.strip())
+    #     model_path = modeldir / "dnn_model.onnx"
+    #     model = mvaEvaluator(model_path, mvaType='ONNXRuntime', otherArgs = ("output"))
+
+    #     model_info_file = modeldir / 'model_info.yml'
+    #     with open(model_info_file, 'r') as file:
+    #         model_info = yaml.safe_load(file)
+
+    #     model_name = model_info['name']
+    #     model_type = model_info['type']
+    #     categorization = model_info['training_setup']['categorization']
+    #     if model_info['type']  == 'binary':
+    #         classes = ["isSignal"]
+    #     elif model_info['type'] == 'multi':
+    #         classes = [class_i for class_i in categorization.keys()]
+    #     else:
+    #         raise Exception(f"Model {model_info['name']} is of invalid type")
+        
+    #     processes = [proc for proc_list in categorization.values() for proc in proc_list]
+
+    #     return model, model_name, model_type, feature_names, classes, processes
 
     # @staticmethod
     # def gathers_vars_dict(objects, selections) -> dict[str, dict[str, Variable1D]]:
