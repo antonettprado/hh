@@ -1,8 +1,8 @@
-import ROOT, json
+import json
 from pathlib import Path
 
 #Sort list by length and in descending order (most specific ones first)
-SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_res_1b', 'SL_res_2b', 'SL_res_2b_x', 'SL_boosted', 'DL_res_1b', 'DL_res_2b', 'DL_boosted', 'Total']
+SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_resolved', 'SL_res_1b', 'SL_res_2b', 'SL_res_2b_x', 'SL_boosted', 'DL_res_1b', 'DL_res_2b', 'DL_boosted', 'Total']
 SELECTIONS.sort(key=len, reverse=True)
 
 ERAS = ['2022', '2022EE', '2023', '2023BPix']
@@ -25,9 +25,7 @@ PROCESSES_FILES = dict(
     #Fakes=[]
     )
 
-
-VARPATH = Path('bamboo_hh/input/variables.json')
-
+VARPATH = Path(__file__).parents[1] / 'bamboo_hh' / 'input' / 'variables.json'
 with open(VARPATH, 'r') as f:
     ALL_JSON_DATA = json.load(f)
     ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
@@ -48,25 +46,29 @@ def _find_eras(resultsdir: Path) -> list[str]:
     valid_eras = [era for era in ERAS if era in present_eras]
     return valid_eras
 
-def get_process_from_subprocess(subprocess):
+def get_process_for_file(file: Path) -> str:
+    subprocess = file.stem.rsplit('_', 1)[0]
+    for process, subprocesses in PROCESSES_FILES.items():
+        if subprocess in subprocesses:
+            return process
+    return None
+
+def get_process_from_subprocess(subprocess: str) -> str:
     for process, subprocesses in PROCESSES_FILES.items():
         if subprocess in subprocesses:
             return process
     return None
 
 # Color scheme for plotting processes -----------------
-
-_get_color_for = lambda cat, ROOT_b : CLASS_COLOR_MAP[cat][1] if ROOT_b else CLASS_COLOR_MAP[cat][0]
-
 CLASS_COLOR_MAP = dict(
-    HH_bbWW=['blue', ROOT.kBlue],
-    HH_bbtautau = ['blue', ROOT.kBlue],
-    HH=['blue', ROOT.kBlue], 
-    ttbar=['red', ROOT.kRed], 
-    tW=['green', ROOT.kGreen], 
-    WJets=['cyan', ROOT.kCyan],
-    DY=['magenta', ROOT.kMagenta],
-    VV=['orange', ROOT.kOrange],
+    HH_bbWW='blue',
+    HH_bbtautau = 'blue',
+    HH='blue', 
+    ttbar='red', 
+    tW='green', 
+    WJets='cyan',
+    DY='magenta',
+    VV='orange',
     #VVV=[]
     #ttW=[]
     #ttZ=[]
@@ -75,8 +77,8 @@ CLASS_COLOR_MAP = dict(
     #tH=[]
     #Others=[]
     #Fakes=[]
-    Others=['black', ROOT.kBlack],
-    Top=['pink', ROOT.kPink],
-    AllBackgrounds=['black', ROOT.kBlack]
+    Others='black', 
+    Top='pink', 
+    AllBackgrounds='black'
     )
     
