@@ -111,7 +111,7 @@ class VarsReco(NanoBaseHHbbWW):
         return selections
 
     @staticmethod
-    def get_skim(reco_vars: list[Variable], selection, subcat: str):
+    def get_skim(vars1d: list[Variable], selection, subcat: str):
         skim_data = {
             "event": None,
             "run": None,
@@ -120,7 +120,7 @@ class VarsReco(NanoBaseHHbbWW):
             "bunchCrossing": None,
             "genTtbarId": None
             }
-        subcat_vars: list[Variable] = [ var[subcat] for var in reco_vars if subcat in var.subcats ]
+        subcat_vars: list[Variable] = [ var[subcat] for var in vars1d if subcat in var.subcats ]
         skim_data.update({v.name: v.data for v in subcat_vars})
         skim = Skim(subcat, skim_data, selection)
         return skim
@@ -178,7 +178,7 @@ class VarsReco(NanoBaseHHbbWW):
             # Verify that the skim selections in the list self.args.skim_selections are in selections
             assert all(skim_sel in selections for skim_sel in self.args.skim_selections), f"Skim selections {self.args.skim_selections} not in selections"
             for skim_selection in self.args.skim_selections:
-                plots.append(VarsReco.get_skim(reco_vars, selections[skim_selection], skim_selection))
+                plots.append(VarsReco.get_skim(vars1d, selections[skim_selection], skim_selection))
 
         return plots
 
