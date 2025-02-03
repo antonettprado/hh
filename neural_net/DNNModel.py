@@ -463,7 +463,7 @@ def draw_score_distribution(DNN_type: str, output_df, modeldir: Path):
             fig, ax = get_template(class_score)
             for true_proc in classes_true:
                 label = true_proc.removeprefix('Class_')
-                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=nbins, color=Refs._get_color_for(label, ROOT_b=False), label=label, histtype='step', density=True)
+                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=nbins, color=Refs.CLASS_COLOR_MAP[label], label=label, histtype='step', density=True)
             ax.legend()
             fig.savefig(modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
             plt.close(fig)

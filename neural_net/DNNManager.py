@@ -162,6 +162,7 @@ class DNNManager:
             for iteration in range(n_iterations):
                 model_config.name = model_name + f'_{iteration}'
                 DNN = DNNModel(model_config=model_config, modeldir=self.DNNManagerdir / modelsuperdir / model_config.name, log_level=self.log_level)
+                DNN.print_model_info()
                 model_metrics, cm_norm_true, cm_norm_pred, diag_names = DNN.Run(total_df, fixed_random_seed=False, rank_features=False)
                 self.update_models_summary_csv(model_config.name, model_metrics, cm_norm_true, cm_norm_pred, diag_names)
 
