@@ -2,314 +2,264 @@ import pandas as pd
 import numpy as np
 import random
 from pathlib import Path
-import yaml
 import tf2onnx
 import tensorflow as tf
-from sklearn.inspection import permutation_importance
-from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from keras.utils import plot_model
-import model_builder as model_builder
-from neural_net.utils import ModelConfig, get_logger, get_context_aware_logger, log_context
-from references import references as Refs
-from neural_net.registry_losses import LossRegistry
-from neural_net.registry_models import ModelRegistry
-from neural_net.registry_preprocessors import PreprocessorRegistry
+from neural_net import utils
+from references import references as refs
+from neural_net_tf.model_design import get_activity_regularizer, get_optimizer, get_metrics, get_callbacks, CustomStandardizer, ReplaceUndefinedValuesWithConstant
 import time
-from typing import Tuple
+
+UNDEFINED = -9999
 
 class DNNModel:
 
-    def __init__(self, model_config: ModelConfig, modeldir: Path=None, log_level='info'):
-        self.config = model_config
-        self.name = model_config.name
-        self.type = model_config.type
-        self.training_setup = model_config.training_setup
-        self.architecture = model_config.architecture
-        self.compiler = model_config.compiler
-        self.fit = model_config.fit
+    def __init__(self, config, modeldir: Path=None, log_level='info'):
+        self.config = config
+        self.name = config.name
+        self.model_type = config.model_type
+        self.sel_names = config.tree_names
+        self.classification = config.classification
+        self.process_sf = config.process_sf
+        self.features = config.features
+        self.network = config.network
+        self.batch_size = config.batch_size
+        self.loss = config.loss
+        self.optimizer = config.optimizer
+        self.epochs = config.epochs
+        self.data_split = config.data_split
 
-        self.classes = [class_i for class_i in model_config.training_setup.categorization.keys() if class_i]
-        self.processes = [proc for proc_list in model_config.training_setup.categorization.values() for proc in proc_list]
-        self.model_df = None
-        self.model = None
-        self.history = None
+        self.training_features_mean = None
+        self.training_features_var = None
+
+        self.classes = [class_i for class_i in config.classification.keys() if class_i]
+        self.processes = [proc for proc_list in config.classification.values() for proc in proc_list]
         if modeldir:
             self.modeldir = modeldir
             self.modeldir.mkdir(parents=True, exist_ok=True)
-        self.logger = get_context_aware_logger(self.__class__.__name__, log_level)
+        self.logger = utils.get_logger(self.name, self.modeldir/'training.txt', log_level)
+        if self.model_type == 'binary': self._validate_categorization_for_binary()
 
-        if self.type == 'binary': self._validate_categorization_for_binary(self.training_setup)
-
-    def _validate_categorization_for_binary(self, training_setup):
-        if len(training_setup.categorization) !=2 : 
+    def _validate_categorization_for_binary(self):
+        if len(self.classification) !=2 : 
             raise ValueError("Dictionary for binary classifier must contain exactly two items")
-        has_empty_key = "" in training_setup.categorization
-        has_non_empty_key = any(k for k in training_setup.categorization.keys() )
+        has_empty_key = "" in self.classification
+        has_non_empty_key = any(k for k in self.classification.keys() )
         if not (has_empty_key and has_non_empty_key):
             raise ValueError("Dictionary must be of the form {'isSignal': ['HH'], "": ['ttbar', 'tW']}")
 
-    def print_model_info(self):
-        self.logger.info(f"\n\n\n{'='*100}\n{'='*100}")
+    def show_info(self):
+        self.logger.info(f"{'='*100}\n{'='*100}")
         self.logger.info(f"Running DNN Model: {self.name}")
-        self.logger.debug(f"Classes: {self.classes}")
-        self.logger.debug(f"Type: {self.type}")
-        self.logger.debug(f"Processes: {self.processes}")
-        self.logger.debug(f"Categorization: {self.training_setup.categorization}")
+        self.logger.info(f"Classes: {self.classes}")
+        self.logger.info(f"Type: {self.model_type}")
+        self.logger.info(f"Processes: {self.processes}")
+        self.logger.info(f"Categorization: {self.classification}")
+        self.logger.info(f"Selections: {self.sel_names}")
 
-    @log_context("Setting model dataframe ...")
-    def set_model_df_from_total_df(self, total_df: pd.DataFrame = None):
-        '''
-        This function does the following: 
-            - Picks only the features (or input variables) noted in 'input_vars'
-            - Keeps only the events corresponding to all training processes
-            - Adds a training weight to each event normalized by the process it corresponds to
-        '''
-
+    def get_model_df(self, total_df: pd.DataFrame = None):
+        self.logger.info("\nSetting model dataframe ...")
         model_df = total_df.copy()
-
-        all_features = [col for col in model_df.columns if col in Refs.ALL_VARNAMES_1D]
-        all_non_features = [col for col in model_df.columns if col not in all_features]
-        model_features = all_features if self.training_setup.input_vars == 'All' else self.training_setup.input_vars 
-        self.model_features = model_features
-        columns_to_keep = model_features + all_non_features
-        model_df = model_df[columns_to_keep]
-
+        model_df = model_df[['event', 'genWeight', 'Process'] + self.features]
         # Verify all processes exist in the dataframe -------------------------------------
         unique_processes = model_df['Process'].unique()
         for process in self.processes:
             assert process in unique_processes, f"Process {process} was not found in the total dataframe"
-            
         # Keep only events corresponding to any of the training processes indicated ------
         model_df = model_df[model_df['Process'].isin(self.processes)]
-
-        # Apply training weights ---------------------------------------------------------
+        # Add sample weights -------------------------------------------------------------
         for process in self.processes:
             process_mask = (model_df[f"Process"] == process)
             process_total_genWeight = model_df[process_mask]["genWeight"].sum()
-            scaling_factor = self.training_setup.weights.get(process, 1)
+            scaling_factor = self.process_sf.get(process, 1)
             model_df.loc[process_mask, "sample_weight"] = model_df["genWeight"] * model_df.shape[0] * scaling_factor / process_total_genWeight
             process_total_sample_weight = model_df[process_mask]['sample_weight'].sum()
-            self.logger.debug(f"Process weights:")
-            self.logger.debug(f"Total sum of genWeights for {process}: {process_total_genWeight} ")
-            self.logger.debug(f"Total sum of sample_weights for {process}: {process_total_sample_weight} ")
-
         # Create classes as specified in categorization ----------------------------------
-        if self.type == 'binary':
+        if self.model_type == 'binary':
             # For binary classification, assign 1 to signal events (isSignal) and 0 to background events
-            signal_processes = self.training_setup.categorization.get('isSignal', [])
+            signal_processes = self.classification.get('isSignal', [])
             model_df['Class'] = 0  # Default all to background
             signal_mask = model_df['Process'].isin(signal_processes)
             model_df.loc[signal_mask, 'Class'] = 1
         else:
             # For multiclass, keep original behavior
-            for class_name, class_processes in self.training_setup.categorization.items():
+            for class_name, class_processes in self.classification.items():
                 class_mask = model_df['Process'].isin(class_processes)
                 model_df.loc[class_mask, 'Class'] = class_name
-
+        self.logger.debug(model_df)
+        return model_df
+    
+    def check_model_df(self, model_df):
+        self.logger.info("\nChecking model dataframe ...")
         # Verify all events have been assigned to a class
         unassigned = (model_df['Class'] == "") | model_df['Class'].isna()
         if unassigned.any():
             unassigned_processes = model_df.loc[unassigned, 'Process'].unique()
             raise ValueError(f"Some processes were not assigned to any class: {unassigned_processes}")
+        # Temporary:
+        # with pd.option_context('display.max_rows', None, 'display.float_format', '{:.4f}'.format):
+        #     for class_name in self.classification.keys():
+        #         self.logger.warning(f'\nStats for {class_name}')
+        #         df_for_class = model_df[model_df['Class'] == class_name]
+        #         stats_summary = df_for_class.describe().round(4).T
+        #         self.logger.warning(stats_summary)
+        # Show total sample weight per class
+        sum_genWeights = model_df.groupby('Class')['genWeight'].sum()
+        sum_sample_weights = model_df.groupby('Class')['sample_weight'].sum()
+        results = pd.DataFrame({'Total sample_weight': sum_sample_weights, 'Total genWeight': sum_genWeights}).reset_index()
+        results['Total sample_weight'] = results['Total sample_weight'].apply(lambda x: f"{x:,.5f}")
+        results['Total genWeight'] = results['Total genWeight'].apply(lambda x: f"{x:,.5f}")
+        self.logger.info(results)
 
-        self.logger.debug("Model dataframe:")
-        self.logger.debug(model_df)
+    def split_data(self, model_df):
+        self.logger.info("\nSplit into training, validation and testing")
+        total_train_size = self.data_split['train'] + self.data_split['val']
+        total_train, test_data = train_test_split(
+            model_df, 
+            train_size=total_train_size, 
+            stratify=model_df['Class'], 
+            random_state=7)
+        train_size = self.data_split['train'] / (self.data_split['train'] + self.data_split['val'])
+        train_data, val_data = train_test_split(total_train, 
+            train_size=train_size, 
+            stratify=total_train['Class'], 
+            random_state=7)
+        if len(val_data) == 0:
+            self.logger.warning("Validation data is empty. Setting val_data to None.")
+            val_data = None
+        for df, name in zip([train_data, val_data, test_data], ['Training', 'Validation', 'Testing']):
+            if df is not None:
+                self.logger.info(f"{name} data:")
+                self.logger.info(f"\tNumber of events: {len(df)}")
+                class_counts = df['Class'].value_counts()
+                formatted_counts = "\n\t\t".join([f"{cls}: {count}" for cls, count in class_counts.items()])
+                self.logger.info(f"\tClass counts:\n\t\t{formatted_counts}")
+        
+        return train_data, val_data, test_data
 
-        return model_df
-    
-    def get_X_and_Y_from_model_df(self, model_df) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-        '''
-        Separates features (X) and target (Y) from the model dataframe.
-        Also returns event numbers and sample_weights
-        '''
-        X_df = model_df[self.model_features]
+    def compute_mean_variance_for_training(self, train_data):
+        X_train = train_data[self.features]
+        valid_mask = X_train != UNDEFINED
+        valid_data = X_train.where(valid_mask)
 
-        # Y_df must be one-hot encoded
-        if self.type == 'multi':
-            # Y_df must be one-hot encoded
-            Y_df = pd.get_dummies(model_df["Class"], prefix="Class")
-            Y_df = Y_df.reindex(columns=[f"Class_{cls_i}" for cls_i in self.classes], fill_value=0)
-        elif self.type == 'binary':
-            Y_df = model_df[["Class"]].rename(columns={"Class": "Class_isSignal"})
+        mean = valid_data.mean(axis=0, skipna=True).to_numpy()
+        variance = valid_data.var(axis=0, skipna=True).to_numpy()
 
-        events = model_df["event"]
-        sample_weights = model_df["sample_weight"]
+        self.training_features_mean = mean
+        self.training_features_var = variance
 
-        return X_df, Y_df, events, sample_weights
+        self.logger.info(f"\nComputed mean variance for training data:")
+        self.logger.info(pd.DataFrame({"Feature": self.config.features, "Mean": mean, "Variance": variance}))
+        self.logger.info(f"\nTotal samples in train_data: {len(train_data):,}")
 
-    def get_train_and_test_split(self, X_df: pd.DataFrame, Y_df: pd.DataFrame, events: pd.Series, sample_weights: pd.Series, split_type='train_test_split', train_index=None, test_index=None):
+    def build_model(self, fixed_random_seed):
+        self.logger.info("\nBuilding model ...")
 
-        if split_type == 'train_test_split':
-            test_size = 0.2
-            # Handle both binary and multiclass cases
-            stratify_by = Y_df if isinstance(Y_df, pd.Series) else Y_df.idxmax(axis=1)
-            X_train, X_test, Y_train, Y_test, evs_train, evs_test, sw_train, sw_test = train_test_split(
-                X_df, Y_df, events, sample_weights, 
-                test_size=test_size, 
-                random_state=7, 
-                stratify=stratify_by
-            )
-        elif split_type == 'skf':
-            assert all(idx is not None for idx in [train_index, test_index])
-            X_train, X_test = X_df.iloc[train_index], X_df.iloc[test_index]
-            Y_train, Y_test = Y_df.iloc[train_index], Y_df.iloc[test_index]
-            evs_train, evs_test = events.iloc[train_index], events.iloc[test_index]
-            sw_train, sw_test = sample_weights.iloc[train_index], sample_weights.iloc[test_index]
+        input_layer = tf.keras.layers.Input(shape=(len(self.features),))
+        standardizer = CustomStandardizer(self.training_features_mean, self.training_features_var)
+        input_layer_prepped = standardizer(input_layer)
+        undefined_value_replacer = ReplaceUndefinedValuesWithConstant(constant=-9)
+        input_layer_prepped = undefined_value_replacer(input_layer_prepped)
 
-        return X_train, X_test, Y_train, Y_test, evs_test, sw_train
-  
-    @log_context("Building model ...")
-    def build_model(self, X_train, fixed_random_seed: bool = True):
+        x = input_layer_prepped
+        for n_layer, layer in enumerate(self.network['hidden_layers']):
+            if layer['type'] == 'Dense':
+                reg = get_activity_regularizer(layer['act_regularizer'])
+                if self.network['residual_network']:
+                    if n_layer == 0:
+                        x = tf.keras.layers.Dense(units=layer['units'], activation=layer['activation'], activity_regularizer=reg, name=f"layer_{n_layer}")(x)
+                    elif n_layer%2 != 0:
+                        x_input = x
+                        x = tf.keras.layers.Dense(units=layer['units'], activation=layer['activation'], activity_regularizer=reg, name=f"layer_{n_layer}")(x)
+                    else:
+                        x = tf.keras.layers.Add()([x, x_input])
+                        x = tf.keras.layers.Dense(units=layer['units'], activation=layer['activation'], activity_regularizer=reg, name=f"layer_{n_layer}")(x)
+                else:
+                    x = tf.keras.layers.Dense(units=layer['units'], activation=layer['activation'], activity_regularizer=reg, name=f"layer_{n_layer}")(x)    
+                x = tf.keras.layers.BatchNormalization()(x)
+                x = tf.keras.layers.Dropout(float(layer['dropout_rate']))(x)
 
-        if fixed_random_seed:
-            # Set seeds for reproducibility
-            seed_value = 42
-            tf.random.set_seed(seed_value)
-            np.random.seed(seed_value)
-            random.seed(seed_value)
+        out_layer = self.network['output_layer']
+        out_reg = get_activity_regularizer(out_layer['act_regularizer'])
+        output = tf.keras.layers.Dense(units=out_layer['units'], kernel_initializer=out_layer['kernel_initializer'], activation=out_layer['activation'], activity_regularizer=out_reg)(x)
 
-        input_layer, input_layer_prepped =  model_builder.get_input_layers(self.architecture, X_train, self.logger)
+        return tf.keras.Model(inputs=input_layer, outputs=output, name='model')
 
-        self.logger.debug(f"Setting up archicture: {self.architecture.format}")
-        if self.architecture.format == 'defined_here':
-            model = model_builder.build_custom_arch(self.architecture, input_layer, input_layer_prepped)
-        else:
-            model = ModelRegistry.get(self.architecture.format)(input_layer, input_layer_prepped, len(self.classes))
+    def compile(self, model: tf.keras.Model) -> tf.keras.Model:
 
         model.compile(
-            optimizer=model_builder.get_optimizer(self.compiler),
-            loss=LossRegistry.get(self.compiler.loss),
-            metrics = model_builder.get_metrics(self.classes),
-            weighted_metrics = []
+            optimizer=get_optimizer(self.optimizer), 
+            loss=self.loss,
+            metrics = get_metrics(),
+            weighted_metrics=[]
         )
 
-        self.model = model
+        model.summary(print_fn=lambda x: self.logger.info(x))
 
-        self.logger.debug(model.summary, extra_indent = 1)
+        return model 
 
-        return model
-
-    @log_context("Training model ...")
-    def train_model(self, X_train, Y_train, sw_train):
-
-        early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=0, mode='min', restore_best_weights=True)
-        reduce_plateau = ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=0.001, patience=10, min_lr=1e-8, verbose=0, mode='min')
-        terminate_on_nan = tf.keras.callbacks.TerminateOnNaN()
-
-        Y_train = Y_train.astype('float32')
-        sw_train = sw_train.astype('float32')
-
-        history = self.model.fit(
-            X_train, 
-            Y_train, 
-            batch_size=self.fit.batch_size, 
-            epochs=self.fit.epochs, 
-            sample_weight=sw_train,
-            validation_split=self.fit.validation_split,  
-            callbacks=[early_stopping, reduce_plateau, terminate_on_nan])
-
-        self.history = history
-
-        return history
-    
-    @log_context("Saving model info ...")
-    def save_model_info(self, features, Y_train, Y_test):
-
-        model_onnx, external_tensor_storage = tf2onnx.convert.from_keras(self.model, output_path=self.modeldir/'dnn_model.onnx')
-
-        plot_model(self.model, to_file=self.modeldir/'model_plot.png', show_shapes=True, show_layer_names=True)
-
-        input_names = features.tolist()
-        input_variables_file = self.modeldir /'input_variables.txt'
-        with open(input_variables_file, 'w') as file:
-            for name in input_names:
-                file.write(name + '\n')
-
-        # Event counting
-        self.config.training_events['Total'] = len(Y_train)
-        self.config.testing_events['Total'] = len(Y_test)
-
-        if self.type == 'binary':
-            # Count signal (1s) and background (0s) events
-            self.config.training_events['isSignal Positive'] = int((Y_train == 1).sum())
-            self.config.training_events['isSignal Negative'] = int((Y_train == 0).sum())
-            self.config.testing_events['isSignal Positive'] = int((Y_test == 1).sum())
-            self.config.testing_events['isSignal Negative'] = int((Y_test == 0).sum())
-        else:
-            for cls_i in self.classes:
-                self.config.training_events[cls_i] = int(Y_train[f'Class_{cls_i}'].sum())
-                self.config.testing_events[cls_i] = int(Y_test[f'Class_{cls_i}'].sum())
-
-        out_yml = self.modeldir / 'model_info.yml'
-        with open(out_yml, 'w') as file:
-            yaml.dump(self.config.__getstate__(), file, sort_keys=False)
-
-    @log_context("Evaluating model ...")
-    def evaluate(self, X_test, Y_test, events_test) -> tuple[pd.DataFrame, dict]:
-
-        Y_test = Y_test.astype('float32') 
-        model_metrics = self.model.evaluate(X_test, Y_test, verbose=0, return_dict=True)  
-
-        if np.isnan(model_metrics['loss']):
-            raise ValueError(f"Nan detected in evaluation for model {self.name}")
+    def fit(self, model, train_data: pd.DataFrame, val_data=None):
         
+        if val_data is not None:
+            using_validation = True
+            validation_data = (val_data[self.features], pd.get_dummies(val_data['Class']), val_data['sample_weight'])
+        else:
+            using_validation = False
+            validation_data = None
+
+        self.logger.info(f"Using validation: {using_validation}")
+
+        history = model.fit(
+            x=train_data[self.features],
+            y=pd.get_dummies(train_data['Class']),
+            batch_size=self.batch_size,
+            epochs=self.epochs,
+            sample_weight=train_data['sample_weight'],
+            validation_data=validation_data,
+            callbacks=get_callbacks(self.modeldir, using_validation),
+        )
+
+        tf.keras.models.save_model(model, self.modeldir/ 'dnn_model_tf_keras')
+
+        tf2onnx.convert.from_keras(model, output_path=self.modeldir/'dnn_model.onnx')
+
+        return model, history
+
+    def evaluate(self, model, test_data):
+        self.logger.info("\nEvaluating model ...")
+        model_metrics = model.evaluate(test_data[self.features], pd.get_dummies(test_data['Class']), verbose=0, return_dict=True) 
         self.logger.info("Model metrics:")
         self.logger.info(pd.DataFrame([model_metrics]))
-        return model_metrics
 
-    @log_context("Predicting ...")
-    def predict(self, X_test, Y_test, events_test):
-        # Reset indices for consistent concatenation
-        events_test.reset_index(drop=True, inplace=True)
-        Y_test.reset_index(drop=True, inplace=True)
+        predicted_scores = model.predict(test_data[self.features])
+        pred_df = pd.DataFrame(predicted_scores, columns=[f'Score_{class_name}' for class_name in self.classes]).reset_index(drop=True)
+        # self.logger.info(f'Predictions:\n{pred_df}')
+        class_oh = pd.get_dummies(test_data['Class']).reset_index(drop=True)
+        class_oh.columns = [f'Class_{class_name}' for class_name in self.classes]
+        # self.logger.info(f'True labels:\n{class_oh}')
 
-        # Create output dataframe
-        output_df = pd.DataFrame({'event': events_test})
-
-        # Add true classes
-        if self.type == 'binary':
-            output_df['Class_isSignal'] = Y_test['Class_isSignal']
-        else:
-            for cls_i in self.classes:
-                output_df[f'Class_{cls_i}'] = Y_test[f'Class_{cls_i}']
-
-        # Add predicted scores
-        Y_pred_score = self.model.predict(X_test)
-        if self.type == 'binary':
-            output_df['Score_isSignal'] = Y_pred_score.flatten()
-        else:
-            for i, cls_i in enumerate(self.classes):
-                output_df[f'Score_{cls_i}'] = Y_pred_score[:, i]
-
-        self.logger.debug("Event Predictions:")
-        self.logger.debug(output_df, max_rows=5, extra_indent=1)
-
-        output_df.to_csv(self.modeldir / 'predictions.csv', index=False)
-
-        return output_df
+        output_df = pd.concat([class_oh, pred_df], axis=1)
+        self.logger.info("Output:")
+        self.logger.info(f"{output_df}")
+        return model_metrics, output_df
    
-    @log_context("Feature Ranking ...")
-    def feature_ranking(self, X_test, Y_test):
-
+    def feature_ranking(self, model, test_data):
+        self.logger.info("\nFeature Ranking ...")
+        from sklearn.base import BaseEstimator, RegressorMixin
+        from sklearn.inspection import permutation_importance
         class KerasRegressorWrapper(BaseEstimator, RegressorMixin):
             def __init__(self, model):
                 self.model = model
-
             def fit(self, X, y):
                 self.model.fit(X, y)
                 return self
-
             def predict(self, X):
                 return self.model.predict(X)
-            
-        estimator = KerasRegressorWrapper(self.model)
-        result = permutation_importance(estimator, X_test, Y_test, n_repeats=10, random_state=42)
+        estimator = KerasRegressorWrapper(model)
+        result = permutation_importance(estimator, test_data[features], pd.get_dummies(test_data['Class']), n_repeats=10, random_state=42)
         sorted_idx = result.importances_mean.argsort()
         features_list = X_test.columns.tolist()
         features_ranked = [features_list[idx] for idx in sorted_idx]
-
         features_ranking_file = self.modeldir / "features_ranking.txt"
         with open(features_ranking_file, 'w') as file:
             file.write(f"Number of features: {len(features_list)}\n")
@@ -317,40 +267,21 @@ class DNNModel:
             for i, ranked_f in enumerate(features_ranked):
                 file.write(f"{i+1}. {ranked_f}\n")
 
-    def Full_Splitting(self, model_df: pd.DataFrame=None):
-        assert model_df is not None
-        X_df, Y_df, events, sample_weights = self.get_X_and_Y_from_model_df(model_df)
-        self.logger.debug(f"X_df: {X_df.columns.to_list()}")
-        self.logger.debug(f"Y_df: {Y_df.columns.to_list()}")        
-        X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.get_train_and_test_split(X_df=X_df, Y_df=Y_df, events=events, sample_weights=sample_weights, split_type='train_test_split')
-        return X_train, X_test, Y_train, Y_test, evs_test, sw_train
-
-    # ===================== Facade Methods ============================
-    def Train(self, X_train, Y_train, sw_train, Y_test, fixed_random_seed=True, save_model_info=True):
-        self.build_model(X_train, fixed_random_seed)
-        self.train_model(X_train, Y_train, sw_train)
-        if save_model_info: 
-            self.save_model_info(X_train.columns, Y_train, Y_test)
-
-    def Evaluate(self, X_test, Y_test, evs_test, rank_features=False):
-        model_metrics = self.evaluate(X_test, Y_test, evs_test)
-        output_df = self.predict(X_test, Y_test, evs_test)
-        cm_norm_true, cm_norm_pred, diag_names = draw_all_stats(DNN_type=self.type, history=self.history, output_df=output_df, modeldir=self.modeldir, classes=self.classes)
-        if rank_features: 
-            self.feature_ranking(X_test, Y_test)
-        return model_metrics, cm_norm_true, cm_norm_pred, diag_names
-
-    def Run(self, total_df, fixed_random_seed=True, rank_features=False, save_model_info=True):
+    def Run(self, total_df, fixed_random_seed=True, rank_features=False):
         start_time = time.perf_counter()
-        
-        model_df = self.set_model_df_from_total_df(total_df)
-        X_train, X_test, Y_train, Y_test, evs_test, sw_train = self.Full_Splitting(model_df)
-        self.Train(X_train, Y_train, sw_train, Y_test, fixed_random_seed, save_model_info)
-        model_metrics, cm_norm_true, cm_norm_pred, diag_names = self.Evaluate(X_test, Y_test, evs_test, rank_features)
-
+        model_df = self.get_model_df(total_df)
+        self.check_model_df(model_df)
+        train_data, val_data, test_data = self.split_data(model_df)
+        self.compute_mean_variance_for_training(train_data)
+        model = self.build_model(fixed_random_seed)
+        model = self.compile(model)
+        model, history = self.fit(model, train_data, val_data)
+        model_metrics, output_df = self.evaluate(model, test_data)
+        cm_norm_true, cm_norm_pred, diag_names = draw_all_stats(DNN_type=self.model_type, history=history, output_df=output_df, modeldir=self.modeldir, classes=self.classes)
+        if rank_features: 
+            self.feature_ranking(model, test_data)
         elapsed_time = time.perf_counter() - start_time
         self.logger.info(f"Finished DNN Model {self.name} in: {elapsed_time:.2f} seconds")
-
         return model_metrics, cm_norm_true, cm_norm_pred, diag_names
     
 # =================================================================
@@ -463,9 +394,14 @@ def draw_score_distribution(DNN_type: str, output_df, modeldir: Path):
             fig, ax = get_template(class_score)
             for true_proc in classes_true:
                 label = true_proc.removeprefix('Class_')
-                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score], bins=nbins, color=Refs.CLASS_COLOR_MAP[label], label=label, histtype='step', density=True)
+                # Count the number of events for the current class
+                event_count = output_df.loc[output_df[true_proc] == 1].shape[0]
+                ax.hist(output_df.loc[output_df[true_proc] == 1, class_score],
+                        bins=nbins, color=refs.CLASS_COLOR_MAP[label],
+                        label=f'{label} (N={event_count})',
+                        histtype='step', density=True)
             ax.legend()
-            fig.savefig(modeldir/('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
+            fig.savefig(modeldir / ('_'.join(['dist', class_score.split('_')[1], 'score.pdf'])))
             plt.close(fig)
 
 def draw_roc_curve(DNN_type: str, output_df, modeldir: Path, classes = None):

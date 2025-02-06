@@ -32,13 +32,13 @@ To run the DNNManager you must provide the following:
 Examples:
 ```bash
     # Mode: Train and evalute
-    python3 src/NeuralNet/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m train_eval
+    python3 neural_net/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m train_eval
 
     # Mode: Cross-application
-    python3 src/NeuralNet/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m ca --n_splits 5
+    python3 neural_net/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m kfold --n_splits 5
 
     # Mode: Multi-model training
-    python3 src/NeuralNet/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m multi --n_iterations 3
+    python3 neural_net/DNNManager.py -w Z_OUTPUT/Reco -c NN_roster.yml -s SL_res_1b SL_res_2b -m multi --n_iterations 3
 ```
 
 Other parameters are optional, such as:

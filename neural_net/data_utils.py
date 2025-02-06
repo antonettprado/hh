@@ -16,8 +16,8 @@ from sklearn.impute import SimpleImputer
 
 from neural_net import utils
 from tabulate import tabulate
+import tensorflow as tf
 
-@utils.log_context("Loading data from ROOT files")
 def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[Path] = None, 
                   max_events: int = 1000000, logger=utils.NoOpLogger) -> pd.DataFrame:
     """Load data from ROOT files and return a pandas DataFrame.
@@ -32,11 +32,12 @@ def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[
     Returns:
         DataFrame containing combined data from all ROOT files
     """
+    logger.info(f"\nLoading data from ROOT files")
     results_dir = workdir / 'results'
         
     root_files_available = Refs._find_root_files(results_dir)
     if total_inputs:
-        branches = ['event','luminosityBlock']
+        branches = ['event','genWeight']
         branches.extend([line.strip() for line in open(total_inputs)])
     else:
         branches = None
@@ -46,7 +47,7 @@ def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[
     for tree_name in tree_names:
         header += f" {tree_name:>14}"
     header += f"{'Total Taken':>14}"
-    logger.debug(header)
+    logger.info(header)
     
     for root_file in root_files_available:
         sample_name = root_file.stem
@@ -75,12 +76,13 @@ def load_root_data(workdir: Path, tree_names: List[str], total_inputs: Optional[
         upfile_df['Process'] = process
         df_list.append(upfile_df)
 
-        logger.debug(f"{log}")
+        logger.info(f"{log}")
 
     return pd.concat(df_list, axis=0, ignore_index=True)
 
-@utils.log_context('Data inspection')
 def inspect_data(df: pd.DataFrame, logger=utils.NoOpLogger):
+
+    logger.info(f"\nData inspection")
 
     logger.info(f"Duplicate events:")
     num_duplicate_events = df.duplicated(keep='first').sum()
@@ -134,31 +136,37 @@ def inspect_data(df: pd.DataFrame, logger=utils.NoOpLogger):
         logger.info(f"\tNo events with undefined values (-9999) found.")    
     return
 
-@utils.log_context('Preprocessing data')  
 def preprocess_data(df: pd.DataFrame, logger=utils.NoOpLogger) -> pd.DataFrame:
 
-    # Drop exact duplicates
+    logger.info(f"\nPreprocessing data")
+
     logger.info(f"Dropping exact duplicates if any ...")
     df = df.drop_duplicates(keep='first')
 
-    # Removing events with negative weights
     logger.info(f"Removing events with negative weights ...")
     df = df[df['genWeight'] > 0].copy()
-    
+
+    logger.info(f"Converting float columns to float32 and int columns to int32 ...")
+    for col in df.columns:
+        if pd.api.types.is_float_dtype(df[col]):
+            df[col] = df[col].astype('float32')
+        elif pd.api.types.is_integer_dtype(df[col]):
+            df[col] = df[col].astype('int32')
+
     return df
 
-@utils.log_context('Data summary (of numeric features, ignoring NaNs, Infs)')
 def get_data_summary(df: pd.DataFrame, columns=['Selection', 'Subprocess', 'Process', 'Era', 'File'], logger=utils.NoOpLogger) -> dict:
 
-    logger.info(df, print_full=False, max_rows=10)
+    logger.info("\nData summary (of numeric features, ignoring NaNs, Infs)")
 
     df_numeric_features = extract_numeric_features(df)
     finite_vals_mask = np.isfinite(df_numeric_features) 
     df_finite = df_numeric_features.where(finite_vals_mask)
     
     logger.info(f"Stats summary:")
-    stats_summary = df_finite.describe().round(2)
-    logger.info(stats_summary.T, print_full=True, extra_indent=1)
+    stats_summary = df_finite.describe().round(4)
+    with pd.option_context('display.max_rows', None):
+        logger.info(stats_summary.T)
 
     z_threshold = 5
     logger.info(f"Outlier detection (z_scores > {z_threshold}):")
@@ -188,10 +196,9 @@ def get_data_summary(df: pd.DataFrame, columns=['Selection', 'Subprocess', 'Proc
     ]
     headers = [item for col in columns for item in [col, "Count"]]
     table = tabulate(rows, headers=headers, tablefmt='grid')
-    logger.info(f"{table}", extra_indent=1)
+    logger.info(table)
     
     return 
-
 
 
 def fix_column_names_mismatch(df: pd.DataFrame) -> pd.DataFrame:

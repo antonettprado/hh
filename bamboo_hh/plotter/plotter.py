@@ -30,7 +30,8 @@ kcolor_map = {
     'magenta': ROOT.kMagenta,
     'orange': ROOT.kOrange,
     'pink': ROOT.kPink,
-    'black': ROOT.kBlack
+    'black': ROOT.kBlack,
+    'violet': ROOT.kViolet
 }
 
 
