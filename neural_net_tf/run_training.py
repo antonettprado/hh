@@ -13,7 +13,7 @@ def main(workdir: str, configfilename: str, rosterdirname: str, trainer: str, **
 
     workdir = Path(workdir)
 
-    configfile =  NEURALNET / 'config' / configfilename
+    configfile =  NEURALNET / 'config' / f'{configfilename}.yml'
     model_configs = load_model_configs(configfile)
 
     rosterdir = workdir / rosterdirname
@@ -47,6 +47,4 @@ if __name__ == "__main__":
     parser.add_argument("--n_splits", type=int, help='Number of folds for k-fold mode')
     args = parser.parse_args()
 
-    main(args.workdir, args.configfilename, args.outdirname, args.trainer, n_iterations=args.n_iterations, n_splits=
-    
-    args.n_splits)
+    main(args.workdir, args.configfilename, args.outdirname, args.trainer, n_iterations=args.n_iterations, n_splits=args.n_splits)
