@@ -9,7 +9,7 @@ from neural_net_tf import utils
 SHUFFLE_BUFFER_SIZE = 10_000_000
 NON_FEATURE_BRANCHES = ['event', 'genWeight']
 
-def get_data(config, workdir, modeldir, logger):
+def get_data(config, workdir, logger):
     manager = DatasetManager(config, workdir, logger)
     class_datasets = manager.combine_by_class()
     train_ds, val_ds, test_ds = split_class_datasets(class_datasets, config)

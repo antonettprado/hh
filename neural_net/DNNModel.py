@@ -181,7 +181,7 @@ class DNNModel:
 
         out_layer = self.network['output_layer']
         out_reg = get_activity_regularizer(out_layer['act_regularizer'])
-        output = tf.keras.layers.Dense(units=out_layer['units'], kernel_initializer=out_layer['kernel_initializer'], activation=out_layer['activation'], activity_regularizer=out_reg)(x)
+        output = tf.keras.layers.Dense(units=out_layer['units'], kernel_initializer=out_layer['kernel_initializer'], activation=out_layer['activation'], activity_regularizer=out_reg, name='output')(x)
 
         return tf.keras.Model(inputs=input_layer, outputs=output, name='model')
 

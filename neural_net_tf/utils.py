@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 import numpy as np
 
+UNDEFINED = -9999
+
 def set_seed(seed_value=42):
     tf.keras.utils.set_random_seed(seed_value)
     tf.config.experimental.enable_op_determinism()
@@ -100,7 +102,7 @@ def plot_features(dataset: tf.data.Dataset, features: list[str], outfile: str):
     plt.savefig(outfile, bbox_inches='tight', dpi=300)
     plt.close() 
 
-def log_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict:
+def log_class_stats(dataset: tf.data.Dataset, mapper, logger):
     """
     Computes total counts, class percentages, and sample weight sums for each class.
     Returns a dictionary containing this information.
@@ -143,3 +145,62 @@ def log_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict:
         logger.info(f"\t{'Sample weight':<15}: {info['sample_weight_sum']:>15,.3f}")
 
     return
+
+def log_training_stats(train_data: tf.data.Dataset, features, logger) -> (list, list):
+
+    train_mean, train_var, train_samples = compute_training_stats(train_data, features, ignore_value=UNDEFINED)
+    logger.info(f"\nComputed mean variance for training data:")
+    logger.info("\n".join(f"Feature: {f:<15}\tMean: {m:>12.4f}\tVariance: {v:>12.4f}" for f, m, v in zip(features, train_mean, train_var)))
+    logger.info(f"\nTotal samples in train_data: {train_samples:,}")
+
+    return train_mean, train_var
+
+def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value: int = None) -> (list, list, int):
+    print(f"\nThe ignore_value is {ignore_value}")
+
+    num_features = len(features)
+    tf_type = {'int': tf.int32, 'float': tf.float32}
+
+    initial_state = {
+        "sum": tf.zeros(num_features, dtype=tf_type['float']),
+        "sum_squared": tf.zeros(num_features, dtype=tf_type['float']),
+        "valid_counts": tf.zeros(num_features, dtype=tf_type['float']),
+        "total_samples": tf.constant(0, dtype=tf_type['int'])
+    }
+
+    def reduce_fn(state, batch):
+        batch_features, *_ = batch
+
+        if ignore_value is not None:
+            valid_mask = tf.not_equal(batch_features, tf.cast(ignore_value, tf_type['float']))
+            valid_features = tf.where(valid_mask, batch_features, tf.zeros_like(batch_features))
+        else:
+            valid_mask = tf.ones_like(batch_features, dtype=tf.bool)
+            valid_features = batch_features
+
+        batch_sum = tf.reduce_sum(valid_features, axis=0)
+        batch_sum_squared = tf.reduce_sum(tf.square(valid_features), axis=0)
+        batch_valid_counts = tf.reduce_sum(tf.cast(valid_mask, tf_type['float']), axis=0)
+        batch_sample_count = tf.shape(batch_features)[0]
+
+        new_sum = state["sum"] + batch_sum
+        new_sum_squared = state["sum_squared"] + batch_sum_squared
+        new_valid_counts = state["valid_counts"] + batch_valid_counts
+        new_total_samples = state["total_samples"] + batch_sample_count
+
+        return {
+            "sum": new_sum,
+            "sum_squared": new_sum_squared,
+            "valid_counts": new_valid_counts,
+            "total_samples": new_total_samples
+        }
+
+    final_state = dataset.reduce(initial_state, reduce_fn)
+
+    mean = (final_state["sum"] / final_state["valid_counts"]).numpy().tolist()
+    mean_square = (final_state["sum_squared"] / final_state["valid_counts"]).numpy()
+    variance = (mean_square - np.square(mean)).tolist()
+
+    total_samples = final_state["total_samples"].numpy().item()
+
+    return mean, variance, total_samples

@@ -24,25 +24,12 @@ class ModelNetwork:
         self.epochs = config.epochs
         self.data_split = config.data_split
 
-        self.training_features_mean = None
-        self.training_features_var = None
-
-    def get_feature_stats(self, train_data: tf.data.Dataset):
-
-        mean, variance, train_samples = compute_mean_variance(train_data, self.features, ignore_value=UNDEFINED)
-        self.logger.info(f"\nComputed mean variance for training data:")
-        self.logger.info("\n".join(f"Feature: {f:<15}\tMean: {m:>12.4f}\tVariance: {v:>12.4f}" for f, m, v in zip(self.features, mean, variance)))
-        self.logger.info(f"\nTotal samples in train_data: {train_samples:,}")
-
-        self.training_features_mean = mean
-        self.training_features_var = variance
-
-    def build_model(self) -> tf.keras.Model:
+    def build_model(self, train_mean, train_var) -> tf.keras.Model:
 
         n_classes = len(self.mapper.get_classes())
 
         input_layer = tf.keras.layers.Input(shape=(len(self.features),))
-        standardizer = CustomStandardizer(self.training_features_mean, self.training_features_var)
+        standardizer = CustomStandardizer(train_mean, train_var)
         input_layer_prepped = standardizer(input_layer)
         undefined_value_replacer = ReplaceUndefinedValuesWithConstant(constant=-9)
         input_layer_prepped = undefined_value_replacer(input_layer_prepped)
@@ -172,9 +159,8 @@ class ModelNetwork:
         fig.savefig(outdir / 'all_metrics_curves.pdf')
         plt.close(fig)
 
-    def Run(self, train_data, val_data):
-        model = self.build_model()
-        self.get_feature_stats(train_data)
+    def Run(self, train_data, val_data, train_mean, train_var):
+        model = self.build_model(train_mean, train_var)
         compiled_model = self.compile(model)
         trained_model, history = self.fit(compiled_model, train_data, val_data)
         self.plot_training_curves(history)
@@ -400,56 +386,6 @@ class ModelEvaluator:
 Model design utilities
 ======================
 '''
-
-def compute_mean_variance(dataset: tf.data.Dataset, features: list[str], ignore_value: int = None):
-    print(f"\nThe ignore_value is {ignore_value}")
-
-    num_features = len(features)
-    tf_type = {'int': tf.int32, 'float': tf.float32}
-
-    initial_state = {
-        "sum": tf.zeros(num_features, dtype=tf_type['float']),
-        "sum_squared": tf.zeros(num_features, dtype=tf_type['float']),
-        "valid_counts": tf.zeros(num_features, dtype=tf_type['float']),
-        "total_samples": tf.constant(0, dtype=tf_type['int'])
-    }
-
-    def reduce_fn(state, batch):
-        batch_features, *_ = batch
-
-        if ignore_value is not None:
-            valid_mask = tf.not_equal(batch_features, tf.cast(ignore_value, tf_type['float']))
-            valid_features = tf.where(valid_mask, batch_features, tf.zeros_like(batch_features))
-        else:
-            valid_mask = tf.ones_like(batch_features, dtype=tf.bool)
-            valid_features = batch_features
-
-        batch_sum = tf.reduce_sum(valid_features, axis=0)
-        batch_sum_squared = tf.reduce_sum(tf.square(valid_features), axis=0)
-        batch_valid_counts = tf.reduce_sum(tf.cast(valid_mask, tf_type['float']), axis=0)
-        batch_sample_count = tf.shape(batch_features)[0]
-
-        new_sum = state["sum"] + batch_sum
-        new_sum_squared = state["sum_squared"] + batch_sum_squared
-        new_valid_counts = state["valid_counts"] + batch_valid_counts
-        new_total_samples = state["total_samples"] + batch_sample_count
-
-        return {
-            "sum": new_sum,
-            "sum_squared": new_sum_squared,
-            "valid_counts": new_valid_counts,
-            "total_samples": new_total_samples
-        }
-
-    final_state = dataset.reduce(initial_state, reduce_fn)
-
-    mean = (final_state["sum"] / final_state["valid_counts"]).numpy().tolist()
-    mean_square = (final_state["sum_squared"] / final_state["valid_counts"]).numpy()
-    variance = (mean_square - np.square(mean)).tolist()
-
-    total_samples = final_state["total_samples"].numpy().item()
-
-    return mean, variance, total_samples
 
 class LoggingCallback(tf.keras.callbacks.Callback):
     def __init__(self, outdir: Path):
