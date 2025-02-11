@@ -214,7 +214,7 @@ samples:
     split: 10
 
   # QCD Multijet
-  QCD_pT_50to80:
+  QCD_pT_50to80_2022EE:
     era: "2022EE"
     group: "QCD"
     db: das:/QCD_PT-50to80_TuneCP5_13p6TeV_pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -223,7 +223,7 @@ samples:
     generated-events: genEventSumw
     split: -3
 
-  QCD_pT_80to120:
+  QCD_pT_80to120_2022EE:
     era: "2022EE"
     group: "QCD"
     db: das:/QCD_PT-80to120_TuneCP5_13p6TeV_pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -232,7 +232,7 @@ samples:
     generated-events: genEventSumw
     split: -3
 
-  QCD_pT_120to170:
+  QCD_pT_120to170_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -244,7 +244,7 @@ samples:
     generated-events: genEventSumw
     split: -4
 
-  QCD_pT_170to300:
+  QCD_pT_170to300_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -256,7 +256,7 @@ samples:
     generated-events: genEventSumw
     split: -4
 
-  QCD_pT_300to470:
+  QCD_pT_300to470_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -268,7 +268,7 @@ samples:
     generated-events: genEventSumw
     split: -3
 
-  QCD_pT_470to600:
+  QCD_pT_470to600_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -280,7 +280,7 @@ samples:
     generated-events: genEventSumw
     split: -1
 
-  QCD_pT_600to800:
+  QCD_pT_600to800_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -292,7 +292,7 @@ samples:
     generated-events: genEventSumw
     split: -1
 
-  QCD_pT_800to1000:
+  QCD_pT_800to1000_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -304,7 +304,7 @@ samples:
     generated-events: genEventSumw
     split: -3
 
-  QCD_pT_1000to1400:
+  QCD_pT_1000to1400_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -316,7 +316,7 @@ samples:
     generated-events: genEventSumw
     split: -2
 
-  QCD_pT_1400to1800:
+  QCD_pT_1400to1800_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -328,7 +328,7 @@ samples:
     generated-events: genEventSumw
     split: -4
 
-  QCD_pT_1800to2400:
+  QCD_pT_1800to2400_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -340,7 +340,7 @@ samples:
     generated-events: genEventSumw
     split: -7
 
-  QCD_pT_2400to3200:
+  QCD_pT_2400to3200_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -352,7 +352,7 @@ samples:
     generated-events: genEventSumw
     split: -10
 
-  QCD_pT_3200:
+  QCD_pT_3200_2022EE:
     era: "2022EE"
     group: "QCD"
     db: [
@@ -572,6 +572,9 @@ plotIt:
     tW:
       legend: tW
       fill-color: "#BB2255"
+    QCD:
+      legend: QCD
+      fill-color: "#AB2255"
   plotdefaults:
     y-axis: Events
     # log-y: both
