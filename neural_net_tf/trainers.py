@@ -26,20 +26,22 @@ def multi(config, workdir, modeldir, logger, summaryfile, n_iterations):
 
     for i in range(n_iterations):
 
-        logger.info(f"\n{60 * '='}\nModel {config.name} iteration: {i}\n{60 * '='}")
-        model_i_dir = modeldir / f"{config.name}_{i}"
+        config_i = config.replicate(name=f'{config.name}_{i}')
+
+        logger.info(f"\n{60 * '='}\nModel {config_i.name}\n{60 * '='}")
+        model_i_dir = modeldir / f"{config_i.name}"
         model_i_dir.mkdir(exist_ok=True)
 
-        network = ModelNetwork(config, model_i_dir, logger)
+        network = ModelNetwork(config_i, model_i_dir, logger)
         trained_model = network.Run(train_data, val_data, train_mean, train_var)
 
-        evaluator = ModelEvaluator(config, model_i_dir, logger, trained_model, test_data)
+        evaluator = ModelEvaluator(config_i, model_i_dir, logger, trained_model, test_data)
         model_metrics = evaluator.Run()
-        
-        update_summary(summaryfile, f"{config.name}_{i}", model_metrics)
 
-    save_model_config(config, modeldir / 'model_info.yml')
+        config_i.metrics = model_metrics
+        save_model_config(config_i, model_i_dir / 'model_info.yml')
 
+        update_summary(summaryfile, config_i.name, model_metrics)
 
 def kfold(config, workdir, modeldir, logger, summaryfile, n_splits):
     pass
