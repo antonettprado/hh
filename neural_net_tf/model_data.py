@@ -183,10 +183,19 @@ class DatasetManager:
                     if tree_name in upfile:
                         row = {'File': file_path, 'Tree': tree_name, 'Total Events': upfile[tree_name].num_entries}
                     else:
-                        row = {'File': file_path, 'Tree': None, 'Total Events': None}
+                        row = {'File': file_path, 'Tree': tree_name, 'Total Events': None}
                     rows.append(row)
 
         self.info_ds_meta = pd.DataFrame(rows)
+        self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+
+        # Check for empty trees
+        nan_rows = self.info_ds_meta[self.info_ds_meta['Total Events'].isna()]
+        self.logger.warning("The following trees don't exist:")
+        for i, row in nan_rows.iterrows():
+            self.logger.warning(f"{row['File'].resolve()}: {row['Tree']}")
+
+        self.info_ds_meta = self.info_ds_meta.drop(nan_rows.index)
         self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
 
     def _load_trees_concurrently(self) -> list[tf.data.Dataset]:
