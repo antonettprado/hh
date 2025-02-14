@@ -531,16 +531,16 @@ class RecoVariables():
         return met.phi
 
     def get_nAK4(self) -> Variable1D:
-        return op.static_cast("UInt_t", op.rng_len(self.objects["cleaned_ak4_jets"]))
+        return op.static_cast("Float_t", op.rng_len(self.objects["cleaned_ak4_jets"]))
 
     def get_nAK4_btag(self) -> Variable1D:
-        return op.static_cast("UInt_t",op.rng_len(self.objects["cleaned_ak4_btags"]))
+        return op.static_cast("Float_t",op.rng_len(self.objects["cleaned_ak4_btags"]))
 
     def get_nAK4_nonbtag(self) -> Variable1D:
-        return op.static_cast("UInt_t", op.rng_len(self.objects["cleaned_ak4_jets"]) - op.rng_len(self.objects["cleaned_ak4_btags"]))
+        return op.static_cast("Float_t", op.rng_len(self.objects["cleaned_ak4_jets"]) - op.rng_len(self.objects["cleaned_ak4_btags"]))
 
     def get_nAK8_btag(self) -> Variable1D:
-        return op.static_cast("UInt_t", op.rng_len(self.objects["cleaned_ak8_btags"]))
+        return op.static_cast("Float_t", op.rng_len(self.objects["cleaned_ak8_btags"]))
 
     def get_mll(self) -> Variable1D:
         lep0_p4, lep1_p4 = self._get_leptons_p4()
