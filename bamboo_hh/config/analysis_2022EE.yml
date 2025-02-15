@@ -49,9 +49,9 @@ samples:
   ######################################################################################################################################################################################################
   # ttbar
 
-  TTbar_sl_2022EE:
+  ttbar_sl_2022EE:
     era: "2022EE"
-    group: "TTbar"
+    group: "ttbar"
     db: [das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
          das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/NANOAODSIM
         ]
@@ -60,9 +60,9 @@ samples:
     generated-events: genEventSumw
     split: 200
 
-  TTbar_dl_2022EE:
+  ttbar_dl_2022EE:
     era: "2022EE"
-    group: "TTbar"
+    group: "ttbar"
     db: [das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM,
          das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/NANOAODSIM
         ]
@@ -557,8 +557,8 @@ plotIt:
     HH_bbtautau:
       legend: HH_bbtautau
       fill-color: "#EDC951"
-    TTbar:
-      legend: TTbar
+    ttbar:
+      legend: ttbar
       fill-color: "#99ccff"
     DY:
       legend: DY
