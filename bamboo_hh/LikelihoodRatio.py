@@ -17,6 +17,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
             self.event_nr_sel = self.args.event_nr_sel
         else:
             self.event_nr_sel = "odd"
+        print(f"{self.args.llr_corr_workdir=}")
         print("The work dir for the correction file is: " + self.args.llr_corr_workdir)
         print("The output path is: " + self.args.output)
 
@@ -29,7 +30,6 @@ class LikelihoodRatio(NanoBaseHHbbWW):
     def get_var_llr(llr_corr_workdir:str, data: list, var_name, selection, defineOnFirstUse=True):
         llr_corr_workdir = Path(llr_corr_workdir)
         corr_file = llr_corr_workdir / 'results' / 'corrections_llr_All.json'
-        print(var_name)
         if len(data) == 1: 
             return get_correction(corr_file, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
         elif len(data) == 2:
@@ -38,7 +38,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
             return get_correction(corr_file, var_name, params={"xaxis": data[0],"yaxis":data[1], "zaxis":data[2]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     @staticmethod
-    def get_llr_for_sel(subvar, sel_name:str, llr_corr_workdir) -> LLR:
+    def get_llr_for_sel(subvar, sel_name:str, llr_corr_workdir, reco_vars) -> LLR:
         llr = LLR(subvar.name)
         subvar_data = op.switch(subvar.data < subvar.min, subvar.min + 0.0001*abs(subvar.min), subvar.data)
         subvar_data = op.switch(subvar.data > subvar.max, subvar.max - 0.0001*abs(subvar.max), subvar.data)
@@ -70,11 +70,21 @@ class LikelihoodRatio(NanoBaseHHbbWW):
     def get_select_llrs(llr_corr_workdir, reco_vars):
 
         llrs_product_list = [
-            LikelihoodRatio(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat']),
-            LikelihoodRatio(['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat']),
-            LikelihoodRatio(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'])]
+            LLR(['bjets_mbb', 'bjets_dR']),
+            LLR(['bjets_pt_bb', 'bjets_dR']),
+            LLR(['bjets_mbb', 'trijet_mInv']),
+            LLR(['bjets_dR', 'bjets_mbb', 'trijet_mInv']),
+            LLR(['bjet0_pt', 'bjets_dR', 'bjets_mbb', 'trijet_mInv']),
+            LLR(['bjet0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_mbb', 'trijet_mInv']),
+            LLR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat']),
+            LLR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat', 'bjets_pt_bb']),
+            LLR(['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat']),
+            LLR(['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb']),
+            LLR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat']),
+            LLR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'])
+        ]
 
-        sel_name = "SL_res_2b_x"
+        sel_name = "SL_resolved"
         llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(llr_corr_workdir, reco_vars)
         for llr_product in llrs_product_list:
             llr_product_data = {}
@@ -88,19 +98,19 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         return llrs_product_list
 
     @staticmethod
-    def get_skims(llrs, objects, selections, plots):
-        sel_name = 'SL_res_2b_x'
-        branches = {"event":None, "gen_Weight": objects["gen_Weight"]}
+    def get_skims(llrs, vars1d, selection, subcat):
+        sel_name = 'SL_resolved'
+        skim_data = {"event":None, "genWeight": None}
 
-        sel_vars_dict = var_defs.gathers_vars_dict(objects, selections)
-        branches.update(sel_vars_dict[sel_name])
+        subcat_vars: list[Variable] = [ var[subcat] for var in vars1d if subcat in var.subcats ]
+        skim_data.update({v.name: v.data for v in subcat_vars})
 
         llrs_dict = {i.name: i.data for llr in llrs for i in llr if i.subcat == sel_name}
-        branches.update(llrs_dict)
+        skim_data.update(llrs_dict)
 
-        plots.append(Skim(sel_name, branches, selections[sel_name]))
+        skim = Skim(subcat, skim_data, selection)
 
-        return plots
+        return skim
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -119,11 +129,13 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         sel_name = "SL_resolved"
 
         llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(self.args.llr_corr_workdir, reco_vars)
+        select_llrs = LikelihoodRatio.get_select_llrs(self.args.llr_corr_workdir, reco_vars)
         # llrs_for_vars_2D = self.get_llrs_for_vars_2D(objects)
         # llrs_for_vars_3D = self.get_llrs_for_vars_3D(objects)
         # llrs_for_vars_1D_2combos = self.get_llrs_for_vars_1D_2combos(objects)
         # llrs_for_vars_custom_combos = LikelihoodRatio.get_llrs_for_vars_custom_combos(self.args.llr_corr_workdir, objects)
-        all_llrs = llrs_for_vars_1D
+        # all_llrs = llrs_for_vars_1D + select_llrs
+        all_llrs = llrs_for_vars_1D + select_llrs
         plots.extend([Plot.make1D(subcat_llr.ref, subcat_llr.data, subcat_llr.selection, llr.eqbin) for llr in all_llrs for subcat_llr in llr if subcat_llr.subcat == sel_name])
         
         # ===============================================================================
@@ -140,9 +152,9 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
 
-
-        # if not self.args.no_skim:
-        #     plots = LikelihoodRatio.get_skims(all_llrs, objects, selections, plots)
+        vars_1D = reco_vars.gather_all_1D_variables()
+        if not self.args.no_skim:
+            plots.append(LikelihoodRatio.get_skims(all_llrs, vars_1D, selections[sel_name], sel_name))
 
         return plots
 
@@ -151,6 +163,9 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         super(LikelihoodRatio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from bamboo_hh.plotter.plotter import Plotter
-        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0], resultsdir=resultsdir)
-        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
-        myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)
+        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes='All')
+        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=False, sen_info=False)
+        myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False)
+
+        print(f"\nLikelihoodRatio completed using {self.event_nr_sel} events\n")
+

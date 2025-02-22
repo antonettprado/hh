@@ -46,7 +46,7 @@ class BasePlotter:
         self.dirtype = dirtype
         self.plotterdir = self.basedir / outdir
 
-        self.refs_file = None
+        self.refsFile = None
         self.refs = None
         self.eras: list[str] 
         self.LUMINOSITY:dict[str, float] = dict()         # dict{era: era_lumi}
@@ -70,8 +70,8 @@ class BasePlotter:
         '''
         For either a dirtype of 'workdir' or 'superworkdir' set a reference root file to pull all references from
         '''
-        self.refs_file = references._find_root_files(ref_workdir/'results')[0]
-        tfile = TFile.Open(str(self.refs_file), 'read')
+        self.refsFile = references._find_root_files(ref_workdir/'results')[0]
+        tfile = TFile.Open(str(self.refsFile), 'read')
         refs = []
         for key in tfile.GetListOfKeys():
             obj = key.ReadObj()
@@ -379,22 +379,22 @@ class Plotter(BasePlotter):
             for leg_i, hist_i in hist_dict.items():
                 self._draw_2D_hist_on_one_canvas(ref=ref, hist=hist_i, leg=leg_i)
                     
-    def Get_Signal_Background_for_ref(self, ref:str, normalization='unity', combine_eras=True) -> dict[str, ROOT.TH1]:
+    def Get_Signal_Background_for_ref(self, ref:str, normalization:str) -> dict[str,ROOT.TH1]:
 
-        Ref = Reference(ref, self, combine_eras, normalization)
-        if combine_eras:
-            process_hist_dict = Ref.assemble_for_combined_eras()
+        Ref = Reference(ref=ref, plotter=self, combine_eras=None, norm_type=normalization)
 
-            sig_back_dict: dict[str, ROOT.TH1] = self.get_signal_and_backg_hists(ref, process_hist_dict)
+        process_hist_dict = Ref.assemble_for_era(self.eras[0])
+        sig_back_dict: dict[str, ROOT.TH1] = self.get_signal_and_backg_hists(ref, process_hist_dict)
 
+        if normalization == 'unity':
             for hist in sig_back_dict.values():
                 integral = hist.Integral()
-                if integral != 1.0:
-                    print(f"\tWarning: Integral for {hist.GetName()}is {integral}")
+                if integral != 0.0:
+                    hist.Scale(1/integral)
+                else:
+                    print(f"\WARNING: Integral for {hist.GetName()}is 0")
 
         return sig_back_dict
-
-# ==== SuperPlotter class NOT YET COMPLETED =====================
 
 @dataclass
 class Reference():
@@ -461,7 +461,7 @@ class Reference():
     def __repr__(self):
         return f"Reference(ref={self.ref}, plotter={self.plotter}, combine_eras={self.combine_eras}, norm_type={self.norm_type}, outdir={self.outdir}, dist_name={self.dist_name})"
 
-
+# ==== SuperPlotter class NOT YET COMPLETED =====================
 
 class SuperPlotter(BasePlotter):
 
@@ -494,8 +494,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     myPlotter = Plotter(args.workdir, args.configFile, args.outdir)
-    myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True, combine_eras=args.combine_eras)
-    myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False, combine_eras=args.combine_eras)
+    myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False, combine_eras=args.combine_eras)
+    myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False, combine_eras=args.combine_eras)
     # myPlotter.Draw_Processes(normalization='unity', combine_backgs=False, sen_info=False, which_processes=['HH', 'ttbar'])
     
     '''

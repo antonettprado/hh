@@ -205,3 +205,5 @@ class VarsReco(NanoBaseHHbbWW):
 
         llrPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes=which_processes)
         llr_functions.compute_llrs(plotter=llrPlotter, outfilename='corrections_llr_'+postfix, which_processes=which_processes)
+
+        print(f"\nVarsReco completed using {self.event_nr_sel} events\n")

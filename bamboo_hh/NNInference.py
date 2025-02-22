@@ -7,7 +7,8 @@ from bamboo import treefunctions as op
 from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 from bamboo_hh.VarsReco import VarsReco
 from bamboo_hh.LikelihoodRatio import LikelihoodRatio
-from bamboo_hh.definitions.variables import Variable1D, LikelihoodRatio
+from bamboo_hh.definitions.variables import Variable1D
+from bamboo_hh.definitions.variables import LikelihoodRatio as LLR
 from bamboo_hh.definitions.variable_definition import RecoVariables
 
 class NNInference(NanoBaseHHbbWW):
@@ -55,60 +56,73 @@ class NNInference(NanoBaseHHbbWW):
         classes = [class_i for class_i in classification.keys()] if model_type == 'multi' else ["isSignal"]        
         processes = [proc for proc_list in classification.values() for proc in proc_list]
 
+        print(f"\tModel Name: {model_name}")
+        print(f"\t\tType: {model_type}")
+        print(f"\t\tClasses: {classes}")
+        print(f"\t\tProcesses: {processes}")
+
         return model, model_name, model_type, features, classes, processes
 
-    # @staticmethod
-    # def gathers_vars_dict(objects, selections) -> dict[str, dict[str, Variable1D]]:
-    #     vars1D = var_defs.gather_all_1D_variables(objects)
-    #     sel_vars_dict = {}
-    #     for sel_name, sel in selections.items():
-    #         vars1D_dict = {sub_var.name: sub_var for var in vars1D for sub_var in var if sub_var.subcat == sel_name}
-    #         sel_vars_dict[sel_name] = vars1D_dict
+    @staticmethod
+    def gather_input_vars(sel_name, feature_names, reco_vars, llr_corr_workdir=None):
 
-    #     return sel_vars_dict
+        vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
+        vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
 
-    # @staticmethod
-    # def gather_input_vars(sel_name, feature_names, objects, selections, llr_corr_workdir=None):
-    #     var_names = [s for s in feature_names if not s.endswith('_llr')]
-    #     llr_names = [s for s in feature_names if s.endswith('_llr')]
-    #     input_vars = []
+        var_names = [s for s in feature_names if not s.endswith('_llr')]
+        llr_names = [s for s in feature_names if s.endswith('_llr')]
+        input_vars = []
+        
+        # Variables
+        if var_names:
+            input_vars = [ vars_dict[name].data[sel_name] for name in var_names if sel_name in vars_dict[name].subcats]
 
-    #     sel_subvars_dict = NNInference.gathers_vars_dict(objects, selections)  # {SL_res_2b_x: {'sub_bjets_mbb': sub_bjets_mbb}}
-    #     subvars_dict = sel_subvars_dict[sel_name]                           # {'sub_bjets_mbb': sub_bjets_mbb}
+        if llr_names:
+            for llr_name in llr_names:
+                ref = llr_name.replace('_llr', '')
+                if '_x_' in ref:
+                    varnames = ref.split('_x_')
+                    llr_list = []
+                    for varname in varnames:
+                        var = vars_dict[varname]
+                        subvar = var[sel_name]
+                        print(f"{subvar.ref}")
+                        # subvar = subvars_dict[varname]
+                        llr = LikelihoodRatio.get_llr_for_sel(subvar, sel_name, llr_corr_workdir, reco_vars)
+                        llr_list.append(llr)
+                    llr_product = LLR(varnames)
+                    llr_product_data = op.sum(*[llr[sel_name].data for llr in llr_list])
+                    llr_product.populate({sel_name: llr_product_data}, reco_vars._get_selections_subset([sel_name]))
+                    input_vars.append(llr_product[sel_name].data)
+                else:
+                    varname = ref
+                    var = vars_dict[varname]
+                    subvar = var[sel_name]
+                    # subvar = subvars_dict[varname]
+                    llr = LikelihoodRatio.get_llr_for_sel(subvar, sel_name, llr_corr_workdir, reco_vars)
+                    input_vars.append(llr[sel_name].data)
 
-    #     # Variables
-    #     if var_names:
-    #         input_vars.extend([subvars_dict[name].data for name in var_names if name in subvars_dict])  # [sub_bjets_mbb.data]
-
-    #     return input_vars
+        return input_vars
 
     @staticmethod
     def get_DNN(modeldir:str, reco_vars: RecoVariables, llr_corr_workdir=None):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
-        vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
-        vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
-
+        # vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
+        # vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
         DNN_selections = reco_vars._get_selections_subset(subcat_names)
 
         model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(modeldir)
         data = {}
         for sel_name in DNN_selections.keys():
-            input_vars = [
-                vars_dict[name].data[sel_name]
-                for name in feature_names
-                if sel_name in vars_dict[name].subcats
-            ]
+            # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
+            input_vars = NNInference.gather_input_vars(sel_name, feature_names, reco_vars, llr_corr_workdir)
             sel_data = model(*input_vars)
             data[sel_name] = sel_data
-
+        
         DNN.populate(data, DNN_selections)
 
         DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes)
-        print(f"\tModel Name: {DNN.model_name}")
-        print(f"\t\tType: {DNN.model_type}")
-        print(f"\t\tClasses: {DNN.classes}")
-        print(f"\t\tProcesses: {DNN.processes}")
         
         return DNN
 
@@ -188,7 +202,7 @@ class NNInference(NanoBaseHHbbWW):
 
         from bamboo_hh.plotter.plotter import Plotter
         myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0])
-        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
+        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False)
         myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False)
 
 
@@ -199,3 +213,5 @@ class NNInference(NanoBaseHHbbWW):
             #     customPlotter = Plotter(workdir=workdir, configFile=self.args.input[0], outdir=f'plotter_onlyOnTrainedProcesses/{DNN.model_name}', which_processes=DNN.processes)
             #     customPlotter.Draw_Refs(normalization='lumi', combine_backgs=False, sen_info=True, refs_endingwith=DNN.model_name)
             #     customPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False, refs_endingwith=DNN.model_name)
+
+        print(f"\nNNInference completed using {self.event_nr_sel} events\n")
