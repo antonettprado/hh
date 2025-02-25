@@ -146,7 +146,7 @@ def log_class_stats(dataset: tf.data.Dataset, mapper, logger):
 
     return
 
-def log_training_stats(train_data: tf.data.Dataset, features, logger) -> (list, list):
+def log_training_stats(train_data: tf.data.Dataset, features, logger) -> tuple[list, list]:
 
     train_mean, train_var, train_samples = compute_training_stats(train_data, features, ignore_value=UNDEFINED)
     logger.info(f"\nComputed mean variance for training data:")
@@ -155,7 +155,7 @@ def log_training_stats(train_data: tf.data.Dataset, features, logger) -> (list, 
 
     return train_mean, train_var
 
-def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value: int = None) -> (list, list, int):
+def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value: int = None) -> tuple[list, list, int]:
     print(f"\nThe ignore_value is {ignore_value}")
 
     num_features = len(features)

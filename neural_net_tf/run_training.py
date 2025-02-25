@@ -1,14 +1,17 @@
 from argparse import ArgumentParser
 from pathlib import Path
 import time
-from neural_net_tf.model_config import load_model_configs
-from neural_net_tf.trainers import simple, multi, kfold
-from neural_net_tf.utils import set_seed, set_logger
+
 
 NEURALNET = Path(__file__).parent
 
 
 def main(workdir: str, configfilename: str, rosterdirname: str, trainer: str, **kwargs):
+    # Importing here speeds up --help
+    from neural_net_tf.model_config import load_model_configs
+    from neural_net_tf.trainers import simple, multi, kfold
+    from neural_net_tf.utils import set_seed, set_logger
+
     set_seed()
 
     workdir = Path(workdir)

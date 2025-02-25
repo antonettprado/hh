@@ -187,7 +187,7 @@ class DatasetManager:
                     rows.append(row)
 
         self.info_ds_meta = pd.DataFrame(rows)
-        self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+        self.logger.info(self.info_ds_meta.assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
 
         # Check for empty trees
         nan_rows = self.info_ds_meta[self.info_ds_meta['Total Events'].isna()]
@@ -196,7 +196,7 @@ class DatasetManager:
             self.logger.warning(f"{row['File'].resolve()}: {row['Tree']}")
 
         self.info_ds_meta = self.info_ds_meta.drop(nan_rows.index)
-        self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+        self.logger.info(self.info_ds_meta.assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
 
     def _load_trees_concurrently(self) -> list[tf.data.Dataset]:
 
@@ -240,13 +240,13 @@ class DatasetManager:
         self.info_ds_meta['Class DS Weight'] = self.info_ds_meta.groupby(by=['Class'], as_index=False)['DS Weight'].transform(lambda g: g / g.sum())
 
         self.logger.info(f"\nDataset metadata:")
-        self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+        self.logger.info(self.info_ds_meta.assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
 
     def _create_info_processes(self):
         self.info_processes = self.info_ds_meta.groupby(by=['Process'], as_index=True)[['GenWeight', 'DS Events']].sum().rename(columns={'DS Events': 'Events'})
         self.info_processes['Process SF'] = self.info_processes.index.map(lambda p: self.process_sf.get(p, None))
-        self.info_processes['Class'] = self.info_processes.index.map(lambda p: self.mapper.get_class_for_process(p))
-        self.info_processes['Class Index'] = self.info_processes.index.map(lambda p: self.mapper.get_class_idx_for_process(p))
+        self.info_processes['Class'] = self.info_processes.index.map(self.mapper.get_class_for_process)
+        self.info_processes['Class Index'] = self.info_processes.index.map(self.mapper.get_class_idx_for_process)
 
     def _enrich_datasets(self) -> list[tf.data.Dataset]:
         ''' Ensure each dataset maintains its details attribute after enriching'''
@@ -260,7 +260,7 @@ class DatasetManager:
 
         table_proc_sf = tf.lookup.StaticHashTable(
             initializer=tf.lookup.KeyValueTensorInitializer(keys=processes_tensor, values=processes_sf_tensor),
-            default_value=tf.constant(0.0)
+            default_value=tf.constant(1.0)
         )
 
         table_total_genWeight = tf.lookup.StaticHashTable(
@@ -316,7 +316,7 @@ class DatasetManager:
         Update `self.info_ds_meta` with the aggregated metadata from processed datasets.
         """
         self.logger.info(f"\nDataset metadata after enriching:")
-        self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+        self.logger.info(self.info_ds_meta.assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
 
     def _fill_info_processes(self):
         self.info_processes['SampleWeight'] = self.info_ds_meta.groupby(by=['Process'], as_index=True)['SampleWeight'].sum()
