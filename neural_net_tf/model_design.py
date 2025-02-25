@@ -71,24 +71,16 @@ class ModelNetwork:
         return model 
 
     def fit(self, model: tf.keras.Model, train_data: tf.data.Dataset, val_data: tf.data.Dataset = None) -> tf.keras.Model:
-
-        x = train_data         
-        y = None
-        validation_data = None 
-        using_validation = False
-
-        if val_data:
-            using_validation = True
-            validation_data = val_data              
+        
+        using_validation = bool(val_data)
 
         self.logger.info(f"Using validation: {using_validation}")
 
         history = model.fit(
-            x=x,
-            y=y,
+            x=train_data,
             epochs=self.epochs,
             callbacks = get_callbacks(self.modeldir, using_validation),
-            validation_data=validation_data
+            validation_data=val_data
         )
 
         tf.keras.models.save_model(model, self.modeldir/ 'dnn_model_tf_keras')

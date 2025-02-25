@@ -6,6 +6,8 @@ from neural_net_tf.utils import update_summary, log_training_stats
 def simple(config, workdir, modeldir, logger, summaryfile):
 
     train_data, val_data, test_data = get_data(config, workdir, logger)
+    # import sys
+    # sys.exit(0)
     train_mean, train_var = log_training_stats(train_data, config.features, logger)
     
     network = ModelNetwork(config, modeldir, logger)
