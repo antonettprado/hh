@@ -15,7 +15,7 @@
 #  data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
 
 
-- name: 'multi_HH_ttbar_tW_more_vars'
+- name: 'multi_HH_ttbar_tW'
   model_type: 'multi'
   classification: {"HH": ["ggHH_kl_1_kt_1_hbbhww", "ggHH_kl_2p45_kt_1_hbbhww", "ggHH_kl_5_kt_1_hbbhww"], "ttbar": ["ttbar"], "tW": ["tW"]}
   process_sf: {"ggHH_kl_1_kt_1_hbbhww": 1.0, "ggHH_kl_2p45_kt_1_hbbhww": 1.0, "ggHH_kl_5_kt_1_hbbhww": 1.0, "ttbar": 8.0, "tW": 4.0}
