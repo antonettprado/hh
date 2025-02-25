@@ -26,7 +26,9 @@ def get_hist_names(rfile: Path) -> list[str]:
     hist_names = [
         tkey.GetName()
         for tkey in tfile.GetListOfKeys()
-        if  not (tkey.GetName() in ['generated_sum_corrected', 'Runs'] or tkey.GetName().startswith('yields')) 
+        if  not (tkey.GetName() in ['generated_sum_corrected', 'Runs'] or tkey.GetName().startswith('yields'))
+        # Also ensure the key is indeed a histogram and not a tree (or any other non-TH1 object)
+        and isinstance(tfile.Get(tkey.GetName()), ROOT.TH1) 
     ]
     tfile.Close()
     return hist_names
@@ -76,6 +78,7 @@ def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict
         return default if hist_names is None else hist_name in hist_names
     
     histos: defaultdict[str, list[ROOT.TH1D]] = defaultdict(list) 
+    print(xs)
     for f in root_files:
         subprocess_era = f.stem
         subprocess = subprocess_era.rsplit('_', 1)[0]

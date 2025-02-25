@@ -155,7 +155,7 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--workdir", action="store", help="work directory. Ex: Z_OUTPUT/VarsReco")
     parser.add_argument("-c", "--configFile", default='bamboo_hh/config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
     parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
-    parser.add_argument("-o", "--outfilename", default='corrections_llr', action='store', help='Name of json output file within results dir')
+    parser.add_argument("-o", "--outfilename", default='corrections_llr_All', action='store', help='Name of json output file within results dir')
     args = parser.parse_args()
 
     if args.llr_backgrounds == 'All': 

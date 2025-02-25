@@ -30,6 +30,9 @@ def make_datacards(nndir: Path, results_dir: Path) -> tuple[list[Datacard], list
     elif all(dc.selection == 'SL_res_2b_x' for dc in sel_dcs):
         # Use 2b_x datacards if they are all we ran on
         era_dcs = sel_dcs
+    elif all(dc.selection == 'SL_resolved' for dc in sel_dcs):
+        # Use 2b_x datacards if they are all we ran on
+        era_dcs = sel_dcs
     else:
         raise RuntimeError("Don't know which selection datacards to use to generate combined model datacards")
     model_dcs: list[Datacard] = datacards.combine_datacards_over_eras(era_dcs)
