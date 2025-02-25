@@ -57,10 +57,14 @@ class Datacard():
         cls.file_root = path
 
 
-def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, dc: Datacard, signal: str='HH') -> str:
+def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, dc: Datacard, signal: str='ggHH_kl_1_kt_1_hbbhww') -> str:
     ''' Updates to datacards (e.g. systematics) go here '''
     obs_rate = process_rates.pop(obs_process)
     sig_rate = process_rates.pop(signal)
+    # Manually remove other kl points, for now
+    process_rates.pop("ggHH_kl_2p45_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_5_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_1_kt_1_hbbhtt")
 
     separator: str = '\n' + '-'*130 + '\n'
     def tab(tabular_data) -> str:
@@ -148,7 +152,7 @@ def underscore_split(hist_names: list[str]) -> list[list[str]]:
 
 
 def parse_results_files(results_dir: Path) -> tuple[list[Datacard], list[str]]:
-    ''' Looks at one of the root files and figures out what datacards to make. Filters out yields, generated_sum_corrected, and Runs TTree.  '''
+    ''' Looks at one of the root files and figures out what datacards to make. Filters out yields, generated_sum_corrected, and 'Runs' TTree.  '''
     rfiles: list[Path] = [ f for f in results_dir.iterdir() if not f.name.startswith('__skeleton__') ]
     eras: set[str] = { f.stem.rsplit('_', 1)[1] for f in rfiles }
     

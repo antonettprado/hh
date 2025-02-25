@@ -47,7 +47,7 @@ def write_datacard_rfile(path: Path, histos: dict[str, ROOT.TH1D], write_asimov:
 def sum_histos_over_subprocesses(histos, asimov: bool=True):
     process_summed_histos: defaultdict[str, dict[str, ROOT.TFile]] = defaultdict(dict)
     for k, hs in histos.items():
-        name, process = k.rsplit('_', 1)
+        name, process = k.rsplit('__', 1)
         summed_hist = hs[0].Clone(k)
         for h in hs[1:]: 
             summed_hist.Add(h)
@@ -55,7 +55,7 @@ def sum_histos_over_subprocesses(histos, asimov: bool=True):
 
 
     for process_histo_dict in process_summed_histos.values():
-        iterhists: Iterable = filter(lambda v: v[0]!='data', process_histo_dict.items())
+        iterhists: Iterable = filter(lambda v: v[0]!='data' and 'kl_2p45' not in v[0] and 'kl_5' not in v[0], process_histo_dict.items())
         init_hist = next(iterhists)[1]
         asimov_hist = init_hist.Clone(init_hist.GetName().rsplit('_',1)[0]+'_asimov')
         for _, h in iterhists:
@@ -95,7 +95,7 @@ def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict
             scaled_hist = h.Clone(name+f':{subprocess}')
             scaled_hist.Scale(weight)
             scaled_hist.SetDirectory(0)
-            histos[name+'_'+process].append(scaled_hist)
+            histos[name+'__'+process].append(scaled_hist)
         tfile.Close()
 
     process_summed_histos = sum_histos_over_subprocesses(histos)
@@ -112,7 +112,7 @@ def combine_results(results_dir: Path, hist_names: list[str]=None) -> dict:
         lumis = { era: v['luminosity'] for era, v in config['eras'].items() if era in eras }
         xs = { subprocess_era: v['cross-section'] for subprocess_era, v in config['samples'].items() }
     
-    process_map = { sub: process.replace('HH_bbWW', 'HH').replace('HH_bbtautau', 'HH') 
+    process_map = { sub: process
                     for process, sub_processes in refs.PROCESSES_FILES.items()
                     for sub in sub_processes }
 
