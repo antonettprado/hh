@@ -59,7 +59,7 @@ class ModelConfig:
     loss: str = None
     epochs: int = None
     data_split: dict[str, float] = None
-
+    process_events: dict[str, int] = None
     # Store arbitrary keys
     extra_keys: dict[str, Any] = field(default_factory=dict)
 

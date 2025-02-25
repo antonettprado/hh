@@ -102,11 +102,27 @@ def plot_features(dataset: tf.data.Dataset, features: list[str], outfile: str):
     plt.savefig(outfile, bbox_inches='tight', dpi=300)
     plt.close() 
 
-def log_class_stats(dataset: tf.data.Dataset, mapper, logger):
+def log_class_stats(train_ds, val_ds, test_ds, config, logger):
+
+    logger.info(f'\nTraining dataset:')
+    compute_class_stats(train_ds, config.mapper, logger)
+    logger.info(f'\nValidation dataset:')
+    compute_class_stats(val_ds, config.mapper, logger)
+    logger.info(f'\nTest dataset:')
+    compute_class_stats(test_ds, config.mapper, logger)
+
+    # logger.info(f'\nPlotting features for training, validation, and testing data')
+    # plot_features(train_ds, config.features, modeldir/f'features_train.pdf')
+    # plot_features(val_ds, config.features, modeldir/f'features_val.pdf')
+    # plot_features(test_ds, config.features, modeldir/f'features_test.pdf')
+
+def compute_class_stats(dataset: tf.data.Dataset, mapper, logger):
     """
     Computes total counts, class percentages, and sample weight sums for each class.
     Returns a dictionary containing this information.
     """
+    if dataset is None: return
+
     num_classes = len(mapper.get_classes())
     tf_type = {'int': tf.int32, 'float': tf.float32}
 
@@ -146,8 +162,8 @@ def log_class_stats(dataset: tf.data.Dataset, mapper, logger):
 
     return
 
-def log_training_stats(train_data: tf.data.Dataset, features, logger) -> tuple[list, list]:
-
+def log_training_stats(train_data: tf.data.Dataset, config, logger) -> tuple[list, list]:
+    features = config.features
     train_mean, train_var, train_samples = compute_training_stats(train_data, features, ignore_value=UNDEFINED)
     logger.info(f"\nComputed mean variance for training data:")
     logger.info("\n".join(f"Feature: {f:<15}\tMean: {m:>12.4f}\tVariance: {v:>12.4f}" for f, m, v in zip(features, train_mean, train_var)))
@@ -204,3 +220,35 @@ def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore
     total_samples = final_state["total_samples"].numpy().item()
 
     return mean, variance, total_samples
+
+class StreamingKFold:
+    def __init__(self, ds, n_folds, batch_size):
+        self.ds = ds
+        self.n_folds = n_folds
+        self.current_pass = 0
+        self.batch_size = batch_size
+
+    def _filter_fold(self, dataset, pass_index, train: bool):
+        def filter_fn(event, features, class_oh, sample_weight):
+            mask = tf.not_equal(event%self.n_folds, pass_index) if train else tf.equal(event%self.n_folds, pass_index)
+            return (#tf.boolean_mask(event, mask),
+                    tf.boolean_mask(features, mask),
+                    tf.boolean_mask(class_oh, mask),
+                    tf.boolean_mask(sample_weight, mask))
+        return dataset.map(filter_fn, num_parallel_calls=tf.data.AUTOTUNE) 
+
+    def _get_fold(self, pass_index):
+        train_ds = self._filter_fold(self.ds, pass_index, train=True).rebatch(self.batch_size)
+        test_ds = self._filter_fold(self.ds, pass_index, train=False).rebatch(self.batch_size)
+        return train_ds, test_ds
+
+    def __iter__(self):
+        self.current_pass = 0
+        return self
+    
+    def __next__(self):
+        if self.current_pass >= self.n_folds:
+            raise StopIteration
+        pass_index = self.current_pass
+        self.current_pass += 1
+        return pass_index, self._get_fold(pass_index)

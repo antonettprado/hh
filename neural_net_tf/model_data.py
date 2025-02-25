@@ -6,6 +6,7 @@ import pandas as pd
 from references import references
 from neural_net_tf import utils
 
+UNDEFINED= -9999
 SHUFFLE_BUFFER_SIZE = 10_000_000
 NON_FEATURE_BRANCHES = ['event', 'genWeight']
 
@@ -14,19 +15,6 @@ def get_data(config, workdir, logger):
     class_datasets = manager.combine_by_class()
     train_ds, val_ds, test_ds = split_class_datasets(class_datasets, config)
     train_ds = train_ds.unbatch().shuffle(buffer_size=SHUFFLE_BUFFER_SIZE, reshuffle_each_iteration=True, seed=42).batch(config.batch_size).prefetch(tf.data.AUTOTUNE)
-    
-    logger.info(f'\nTraining dataset:')
-    utils.log_class_stats(train_ds, config.mapper, logger)
-    logger.info(f'\nValidation dataset:')
-    utils.log_class_stats(val_ds, config.mapper, logger)
-    logger.info(f'\nTest dataset:')
-    utils.log_class_stats(test_ds, config.mapper, logger)
-
-    # logger.info(f'\nPlotting features for training, validation, and testing data')
-    # utils.plot_features(train_ds, config.features, modeldir/f'features_train.pdf')
-    # utils.plot_features(val_ds, config.features, modeldir/f'features_val.pdf')
-    # utils.plot_features(test_ds, config.features, modeldir/f'features_test.pdf')
-
     return train_ds, val_ds, test_ds
 
 def split_shuffled_dataset(dataset, config):
@@ -80,13 +68,32 @@ def split_class_datasets(class_datasets: dict[str, tf.data.Dataset], config):
 
     return train_ds, val_ds, test_ds
 
+def split_total_train_data(ds, config, shuffle:bool=True):
+    if shuffle:
+        ds = ds.unbatch().shuffle(buffer_size=SHUFFLE_BUFFER_SIZE, reshuffle_each_iteration=False, seed=42).batch(config.batch_size).prefetch(tf.data.AUTOTUNE)
+    num_batches = ds.reduce(tf.constant(0, dtype=tf.int32), lambda x, _: x + 1).numpy()
+    data_split = config.data_split
+    train_frac = data_split['train'] / (data_split['train'] + data_split['val'])
+    val_frac = data_split['val'] / (data_split['train'] + data_split['val'])
+    train_batches = int(train_frac * num_batches)
+    val_batches = num_batches - train_batches
+    if float(data_split['val']) != float(0):
+        train_ds = ds.take(train_batches)
+        val_ds = ds.skip(train_batches).take(val_batches)
+    else:
+        train_ds = ds
+        val_ds = None
+    train_ds = ds.unbatch().shuffle(buffer_size=SHUFFLE_BUFFER_SIZE, reshuffle_each_iteration=True, seed=42).batch(config.batch_size).prefetch(tf.data.AUTOTUNE)
+    return train_ds, val_ds
+
+
 '''
 =======================================
 Treat data as tf.data.Dataset objects
 =======================================
 '''
 
-def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_size: int, chunk_size: int=100_000, max_events=1_000_000) -> tf.data.Dataset:
+def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_size: int=1024, chunk_size: int=100_000, max_events=1_000_000) -> tf.data.Dataset:
 
     branches = NON_FEATURE_BRANCHES + features
 
@@ -103,6 +110,9 @@ def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_
                 events = chunk['event'][valid_indices]
                 genWeight = chunk['genWeight'][valid_indices]
 
+                # Replace inf, -inf, NaN, and None values with UNDEFINED
+                feature_data = np.nan_to_num(feature_data, nan=UNDEFINED, posinf=UNDEFINED, neginf=UNDEFINED)
+
                 # Determine how many events we can yield without exceeding max_events
                 remaining_events = max_events - total_events_yielded
                 if remaining_events <= 0:
@@ -114,13 +124,13 @@ def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_
 
                 # Slice the chunk to yield only the required number of events
                 yield {
-                    'events': events[:yield_size],
+                    'event': events[:yield_size],
                     'genWeight': genWeight[:yield_size],
                     'features': feature_data[:yield_size]
                 }
 
     output_signature = {
-        'events': tf.TensorSpec(shape=(None,), dtype=tf.int32),
+        'event': tf.TensorSpec(shape=(None,), dtype=tf.int32),
         'genWeight': tf.TensorSpec(shape=(None,), dtype=tf.float32),
         'features': tf.TensorSpec(shape=(None, len(features)), dtype=tf.float32),
     }
@@ -128,7 +138,7 @@ def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_
     ds = tf.data.Dataset.from_generator(lambda: data_generator(), output_signature=output_signature).rebatch(batch_size)
 
     genWeight_total = ds.reduce(initial_state=tf.constant(0.0), reduce_func=lambda state, batch: state + tf.reduce_sum(batch['genWeight'])).numpy()
-    total_events = ds.reduce(initial_state=tf.constant(0, dtype=tf.int32), reduce_func=lambda state, batch: state + tf.cast(tf.shape(batch['events'])[0], tf.int32)).numpy()
+    total_events = ds.reduce(initial_state=tf.constant(0, dtype=tf.int32), reduce_func=lambda state, batch: state + tf.cast(tf.shape(batch['event'])[0], tf.int32)).numpy()
     ds.details = {
         'file_name': file_path.stem,
         'tree_name': tree_name,
@@ -140,13 +150,14 @@ def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_
 
 class DatasetManager:
 
-    def __init__(self, model_config, workdir: Path, logger=None):
+    def __init__(self, config, workdir: Path, logger=None):
         self.workdir = workdir
-        self.tree_names = model_config.tree_names
-        self.features = model_config.features
-        self.process_sf = model_config.process_sf
-        self.batch_size = model_config.batch_size
-        self.mapper = model_config.mapper
+        self.tree_names = config.tree_names
+        self.features = config.features
+        self.process_sf = config.process_sf
+        self.batch_size = config.batch_size
+        self.process_events = config.process_events
+        self.mapper = config.mapper
         self.tree_list: list[tf.data.Dataset] = []
         self.info_ds_meta: pd.DataFrame = None
         self.info_processes: pd.DataFrame = None
@@ -157,6 +168,7 @@ class DatasetManager:
 
     def __post_init__(self) -> pd.DataFrame:
         self._create_info_ds_meta()
+        self._calculate_events_per_file()
         # self._load_trees_concurrently()
         self._load_trees_sequentially()
         self._fill_info_ds_meta()
@@ -171,19 +183,19 @@ class DatasetManager:
         all_root_files = references._find_root_files(self.workdir / 'results')
         relevant_files = []
         for file in all_root_files:
-            subprocess_file = file.stem.rsplit('_', 1)[0]
-            process_file = references.get_process_from_subprocess(subprocess_file)
-            if process_file in self.mapper.get_processes():
+            process = references.get_process_for_file(file)
+            if process in self.mapper.get_processes():
                 relevant_files.append(file)
 
         rows = []
         for file_path in relevant_files:
+            process = references.get_process_for_file(file_path)
             with uproot.open(file_path) as upfile:
                 for tree_name in self.tree_names:
                     if tree_name in upfile:
-                        row = {'File': file_path, 'Tree': tree_name, 'Total Events': upfile[tree_name].num_entries}
+                        row = {'File': file_path, 'Tree': tree_name, 'Process': process, 'Total Events': upfile[tree_name].num_entries}
                     else:
-                        row = {'File': file_path, 'Tree': tree_name, 'Total Events': None}
+                        row = {'File': file_path, 'Tree': tree_name, 'Process': process, 'Total Events': None}
                     rows.append(row)
 
         self.info_ds_meta = pd.DataFrame(rows)
@@ -191,12 +203,35 @@ class DatasetManager:
 
         # Check for empty trees
         nan_rows = self.info_ds_meta[self.info_ds_meta['Total Events'].isna()]
-        self.logger.warning("The following trees don't exist:")
-        for i, row in nan_rows.iterrows():
-            self.logger.warning(f"{row['File'].resolve()}: {row['Tree']}")
+        self.logger.info(nan_rows)
+        if not nan_rows.empty:
+            for i, row in nan_rows.iterrows():
+                self.logger.warning(f"\n{row['File'].resolve()}: {row['Tree']} does not exist")
+            self.info_ds_meta = self.info_ds_meta.drop(nan_rows.index)
+            self.logger.info(f"\n{self.info_ds_meta.copy().assign(File=self.info_ds_meta['File'].apply(lambda x: x.stem))}")
 
-        self.info_ds_meta = self.info_ds_meta.drop(nan_rows.index)
-        self.logger.info(self.info_ds_meta.assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+    def _calculate_events_per_file(self):
+        process_totals = self.info_ds_meta.groupby('Process')['Total Events'].transform('sum')
+        self.info_ds_meta['Process Event Ratio'] = self.info_ds_meta['Total Events'] / process_totals
+
+        if self.process_events:
+            process_mapping = pd.Series(self.process_events)
+            is_all_events = self.info_ds_meta['Process'].map(process_mapping) == 'All'
+            has_specific_events = self.info_ds_meta['Process'].isin(self.process_events.keys())
+            events = pd.Series(1_000_000, index=self.info_ds_meta.index)
+            
+            events.loc[is_all_events] = self.info_ds_meta.loc[is_all_events, 'Total Events']
+            
+            specific_events_mask = has_specific_events & ~is_all_events
+            if specific_events_mask.any():
+                events.loc[specific_events_mask] = (
+                    self.info_ds_meta.loc[specific_events_mask, 'Process'].map(process_mapping) *
+                    self.info_ds_meta.loc[specific_events_mask, 'Process Event Ratio']
+                ).astype(int)
+        else:
+            events = pd.Series(1_000_000, index=self.info_ds_meta.index)
+        
+        self.info_ds_meta['Take events'] = events
 
     def _load_trees_concurrently(self) -> list[tf.data.Dataset]:
 
@@ -224,8 +259,8 @@ class DatasetManager:
 
     def _load_trees_sequentially(self) -> list[tf.data.Dataset]:
         self.logger.info(f'\nLoading trees sequentially')
-        for row in self.info_ds_meta.itertuples(name='row'):
-            ds = load_tree_as_ds(row.File, row.Tree, self.features, self.batch_size)
+        for _,row in self.info_ds_meta.iterrows():
+            ds = load_tree_as_ds(row['File'], row['Tree'], self.features, self.batch_size, max_events=row['Take events'])
             ds.details['class_name'] = self.mapper.get_class_for_process(ds.details['process'])
             self.tree_list.append(ds)
 
@@ -233,7 +268,7 @@ class DatasetManager:
         self.total_events = sum(ds.details['total_events'] for ds in self.tree_list)
         self.info_ds_meta['DS Events'] = [ds.details['total_events'] for ds in self.tree_list]
         self.info_ds_meta['DS Weight'] = [ds.details['total_events'] / self.total_events for ds in self.tree_list]
-        self.info_ds_meta['Process'] = [ds.details['process'] for ds in self.tree_list]
+        # self.info_ds_meta['Process'] = [ds.details['process'] for ds in self.tree_list]
         self.info_ds_meta['GenWeight'] = [ds.details['genWeight_total'] for ds in self.tree_list]
         self.info_ds_meta['Class'] = self.info_ds_meta['Process'].map(lambda proc: self.mapper.get_class_for_process(proc))
         self.info_ds_meta['Class Index'] = self.info_ds_meta['Process'].map(lambda proc: self.mapper.get_class_idx_for_process(proc))
@@ -245,8 +280,8 @@ class DatasetManager:
     def _create_info_processes(self):
         self.info_processes = self.info_ds_meta.groupby(by=['Process'], as_index=True)[['GenWeight', 'DS Events']].sum().rename(columns={'DS Events': 'Events'})
         self.info_processes['Process SF'] = self.info_processes.index.map(lambda p: self.process_sf.get(p, None))
-        self.info_processes['Class'] = self.info_processes.index.map(self.mapper.get_class_for_process)
-        self.info_processes['Class Index'] = self.info_processes.index.map(self.mapper.get_class_idx_for_process)
+        self.info_processes['Class'] = self.info_processes.index.map(lambda p: self.mapper.get_class_for_process(p))
+        self.info_processes['Class Index'] = self.info_processes.index.map(lambda p: self.mapper.get_class_idx_for_process(p))
 
     def _enrich_datasets(self) -> list[tf.data.Dataset]:
         ''' Ensure each dataset maintains its details attribute after enriching'''
@@ -284,13 +319,13 @@ class DatasetManager:
                 class_idx_tensor = table_proc_to_class_idx.lookup(process_tensor)
                 sample_weight = batch['genWeight'] * total_events_tensor * process_sf_tensor / total_genWeight_tensor
                 return {
-                    'events': batch['events'],
+                    'event': batch['event'],
                     'genWeight': batch['genWeight'],
-                    'process': tf.fill(tf.shape(batch['events']), process_tensor),
-                    'process_sf': tf.fill(tf.shape(batch['events']), process_sf_tensor),
+                    'process': tf.fill(tf.shape(batch['event']), process_tensor),
+                    'process_sf': tf.fill(tf.shape(batch['event']), process_sf_tensor),
                     'sample_weight': sample_weight,
-                    'class_idx': tf.fill(tf.shape(batch['events']), class_idx_tensor),
-                    'class_oh': tf.one_hot(tf.fill(tf.shape(batch['events']), class_idx_tensor), depth=n_classes),
+                    'class_idx': tf.fill(tf.shape(batch['event']), class_idx_tensor),
+                    'class_oh': tf.one_hot(tf.fill(tf.shape(batch['event']), class_idx_tensor), depth=n_classes),
                     'features': batch['features'],
                 }
 
@@ -348,14 +383,15 @@ class DatasetManager:
             seed=42, 
             stop_on_empty_dataset=False)
 
-        combined_dataset = combined_dataset.map(lambda batch: (batch['features'], batch['class_oh'], batch['sample_weight']), num_parallel_calls=tf.data.AUTOTUNE)
+        combined_dataset = combined_dataset.map(lambda batch: (batch['event'], batch['features'], batch['class_oh'], batch['sample_weight']), num_parallel_calls=tf.data.AUTOTUNE)
 
         n_features = len(self.features)
         n_classes = len(self.mapper.get_classes())
 
         # Ensure the dataset outputs tuples
         combined_dataset = combined_dataset.map(
-            lambda features, class_oh, sample_weight: (
+            lambda events, features, class_oh, sample_weight: (
+                tf.ensure_shape(events, (None,)),
                 tf.ensure_shape(features, (None, n_features)),
                 tf.ensure_shape(class_oh, (None, n_classes)),
                 tf.ensure_shape(sample_weight, (None,))
@@ -441,13 +477,13 @@ def load_tree_as_df(file_path: Path, tree_name: str, features: list[str], tree_c
 
 class DataFrameManager:
 
-    def __init__(self, model_config, workdir: Path, logger=None):
+    def __init__(self, config, workdir: Path, logger=None):
         self.workdir = workdir
-        self.tree_names = model_config.tree_names
-        self.features = model_config.features
-        self.process_sf = model_config.process_sf
-        self.batch_size = model_config.batch_size
-        self.mapper = model_config.mapper
+        self.tree_names = config.tree_names
+        self.features = config.features
+        self.process_sf = config.process_sf
+        self.batch_size = config.batch_size
+        self.mapper = config.mapper
         self.tree_list: list[tf.data.Dataset] = []
         self.info_ds_meta: pd.DataFrame = None
         self.info_processes: pd.DataFrame = None
@@ -486,7 +522,7 @@ class DataFrameManager:
                     rows.append(row)
 
         self.info_ds_meta = pd.DataFrame(rows)
-        self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+        self.logger.info(self.info_ds_meta.assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
 
     def _load_trees(self) -> list[pd.DataFrame]:
         for row in self.info_ds_meta.itertuples(index=True, name='Row'):
@@ -504,7 +540,7 @@ class DataFrameManager:
         self.info_ds_meta['Class Index'] = self.info_ds_meta['Process'].map(lambda proc: self.mapper.get_class_idx_for_process(proc))
 
         self.logger.info(f"\nFiles:")
-        self.logger.info(self.info_ds_meta.copy().assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
+        self.logger.info(self.info_ds_meta.assign(File=self.info_ds_meta["File"].apply(lambda x: x.stem)))
 
     def _create_info_processes(self):
         self.info_processes = self.info_ds_meta.groupby(by=['Process'], as_index=True)[['GenWeight', 'DF Events']].sum().rename(columns={'DF Events': 'Events'})

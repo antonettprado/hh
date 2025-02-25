@@ -8,6 +8,9 @@ import tf2onnx
 import logging
 import json
 
+import mplhep as hep
+plt.style.use(hep.style.CMS)
+
 UNDEFINED = -9999
 
 class ModelNetwork:
@@ -34,7 +37,7 @@ class ModelNetwork:
         undefined_value_replacer = ReplaceUndefinedValuesWithConstant(constant=-9)
         input_layer_prepped = undefined_value_replacer(input_layer_prepped)
 
-        units = self.network.get('units', 64) if self.network is not None else 64
+        units = self.network.get('units')
         activation = 'relu'
         reg = get_activity_regularizer(self.network.get('act_regularizer'))
         drop_rate = 0.4
@@ -71,8 +74,8 @@ class ModelNetwork:
         return model 
 
     def fit(self, model: tf.keras.Model, train_data: tf.data.Dataset, val_data: tf.data.Dataset = None) -> tf.keras.Model:
-        
-        using_validation = bool(val_data)
+    
+        using_validation = bool(val_data)    
 
         self.logger.info(f"Using validation: {using_validation}")
 
@@ -176,6 +179,7 @@ class ModelEvaluator:
             'features': None
         }
         self.figures = {}
+        self.plot_data = {}
         
         self.test_data = test_data.map(lambda *args: (args[0], args[1]))  # Remove sample weights if present
 
@@ -248,28 +252,46 @@ class ModelEvaluator:
 
     def _plot_roc_curves(self):
         """Generate ROC curves for each class."""
-        fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(10,8))
         
         true_labels = self.predictions['true_labels']
         predicted_probs = self.predictions['probabilities']
+
+        # Store ROC curve data
+        roc_data = {
+            'random_guess': {'x': [0, 1], 'y': [0, 1]},
+            'classes': {}
+        }
         
+        ax.plot([0, 1], [0, 1], linestyle='--', lw=3, color='k', label='Random Guess')
         for class_name in self.mapper.get_classes():
             class_idx = self.mapper.get_class_index(class_name)
             true_class = true_labels[:, class_idx]
             pred_class = predicted_probs[:, class_idx]
             fpr, tpr, _ = roc_curve(true_class, pred_class)
             roc_auc = auc(fpr, tpr)
-            ax.plot(fpr, tpr, lw=2, label=f'{class_name} (AUC = {roc_auc:.3f})')
+
+            roc_data['classes'][class_name] = {
+                'fpr': fpr.tolist(),
+                'tpr': tpr.tolist(),
+                'auc': float(roc_auc)
+            }
+
+            ax.plot(fpr, tpr, lw=3, label=f'{class_name} (AUC = {roc_auc:.3f})')
+
+        self.plot_data['roc_curves'] = roc_data
         
-        ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='k', label='Random Guess')
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
-        ax.set_xlabel('False Positive Rate')
-        ax.set_ylabel('True Positive Rate')
-        ax.set_title('ROC Curves')
-        ax.legend(loc='lower right')
-        ax.grid(True)
-        
+        ax.set_xlabel('False Positive Rate', fontsize=28, labelpad=10)
+        ax.set_ylabel('True Positive Rate', fontsize=28, labelpad=10)
+        ax.tick_params(axis='x', labelsize=26)  # Set x-axis tick font size
+        ax.tick_params(axis='y', labelsize=26)  # Set y-axis tick font size
+        for spine in ax.spines.values():
+            spine.set_linewidth(2)  # Thicker border
+        ax.grid(alpha=0.8)
+        ax.legend(fontsize=24, loc='lower right', frameon=True, edgecolor="black", fancybox=True)
+        fig.tight_layout()
         self.figures['roc_curves'] = fig
         plt.close(fig)
 
@@ -282,25 +304,38 @@ class ModelEvaluator:
         cm_true = confusion_matrix(true_classes, predicted_classes, normalize='true')
         cm_pred = confusion_matrix(true_classes, predicted_classes, normalize='pred')
         
+        self.plot_data['confusion_matrices'] = {
+            'true_normalized': cm_true.tolist(),
+            'pred_normalized': cm_pred.tolist(),
+            'class_names': class_names
+        }
+
         def plot_confusion_matrix(cm, title):
-            fig, ax = plt.subplots(figsize=(8, 6))
+            fig, ax = plt.subplots(figsize=(10, 8))
             im = ax.imshow(cm, interpolation='nearest', cmap='plasma', alpha=0.5)
-            plt.colorbar(im)
             
             for i in range(cm.shape[0]):
                 for j in range(cm.shape[1]):
-                    ax.text(j, i, f'{cm[i, j]:.3f}', ha='center', va='center', fontsize=14)
+                    ax.text(j, i, f'{cm[i, j]:.3f}', ha='center', va='center', fontsize=28)
             
-            ax.set_xlabel('Predicted', labelpad=10, fontsize=12)
-            ax.set_ylabel('True', labelpad=10, fontsize=12)
+            ax.set_xlabel('Predicted', fontsize=28, labelpad=10, loc='center')
+            ax.set_ylabel('True', fontsize=28, labelpad=10, loc='center')
             ax.set_xticks(range(len(class_names)))
             ax.set_yticks(range(len(class_names)))
-            ax.set_xticklabels(class_names, rotation=0, fontsize=12)
-            ax.set_yticklabels(class_names, fontsize=12)
-            
-            ax.set_title(title, fontsize=16)
+            ax.set_xticklabels(class_names, rotation=0, fontsize=26)
+            ax.set_yticklabels(class_names, fontsize=26)
+
             ax.xaxis.set_ticks_position('bottom')
             ax.xaxis.set_label_position('bottom')
+
+            ax.tick_params(axis='both', which='both', length=0)
+            for spine in ax.spines.values():
+                spine.set_linewidth(2)  # Thicker border
+            
+            cbar = plt.colorbar(im)
+            cbar.ax.minorticks_off()
+            cbar.ax.tick_params(length=0)  # Remove tick marks from colorbar
+
             fig.tight_layout()
             return fig
         
@@ -314,25 +349,39 @@ class ModelEvaluator:
         true_labels = self.predictions['true_labels']
         predicted_probs = self.predictions['probabilities']
         
+        score_dist_data = {}
+        
         for target_class in self.mapper.get_classes():
-            fig, ax = plt.subplots(figsize=(8, 6))
+            fig, ax = plt.subplots(figsize=(10, 8))
             ax.set_xlim(0, 1)
             target_idx = self.mapper.get_class_index(target_class)
-            
+            class_data = {}
             for true_class in self.mapper.get_classes():
                 true_idx = self.mapper.get_class_index(true_class)
                 mask = np.argmax(true_labels, axis=1) == true_idx
                 if np.any(mask):  # Only plot if we have events for this class
                     scores = predicted_probs[mask, target_idx]
-                    ax.hist(scores, bins=50, label=f'{true_class} (n={len(scores)})', histtype='step', density=True)
-            
-            ax.set_xlabel(f'{target_class} Score')
-            ax.set_ylabel('Normalized Number of Events')
-            ax.legend()
-            ax.grid(True)
-            
+                    ax.hist(scores, bins=50, label=f'{true_class} (n={len(scores)})', histtype='step', linewidth=3, density=True)
+                    class_data[true_class] = {
+                        'scores': scores.tolist(),
+                        'n_events': int(len(scores))
+                    }
+
+            score_dist_data[target_class] = class_data
+
+            ax.set_xlabel(f'{target_class} Score', fontsize=28, labelpad=10)
+            ax.set_ylabel('Normalized Number of Events', fontsize=28, labelpad=10)
+            ax.tick_params(axis='x', labelsize=26)  # Set x-axis tick font size
+            ax.tick_params(axis='y', labelsize=26)  # Set y-axis tick font size
+            for spine in ax.spines.values():
+                spine.set_linewidth(2)  # Thicker border
+            ax.grid(alpha=0.8)
+            ax.legend(fontsize=24, loc='upper right', frameon=True, edgecolor="black", fancybox=True)
+            fig.tight_layout()
             self.figures[f'score_dist_{target_class}'] = fig
             plt.close(fig)
+
+        self.plot_data['score_distributions'] = score_dist_data
 
     def _plot_correlation_matrix(self):
         """Plot feature correlation matrix."""
@@ -354,6 +403,8 @@ class ModelEvaluator:
             fig.savefig(self.outdir / f'{name}.pdf')
             plt.close(fig)
         
+        with open(self.outdir / 'data.json', 'w') as f:
+            json.dump(self.plot_data, f, indent=2)
         # Save predictions
         # if isinstance(self.predictions['features'], np.ndarray):
         #     np.save(self.outdir / 'predictions.npy', {

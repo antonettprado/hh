@@ -30,3 +30,4 @@
   loss: 'categorical_crossentropy'
   epochs: 1000
   data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
+  # process_events: {"HH_bbWW": "All", "ttbar": 2_000_000, "tW": 900_000}
