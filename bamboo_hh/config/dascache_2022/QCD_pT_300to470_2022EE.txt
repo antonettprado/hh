@@ -168,7 +168,6 @@
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/64fbd92c-78c9-49d6-9983-5b3bd132c08e.root
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/4f716911-ae5f-4277-8797-aba9ea72724a.root
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/c57f9d9a-4312-4f9e-b1a7-c72279132786.root
-/eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/fa7f59d9-a3aa-4b95-852d-60885bb1f96a.root
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/e4af5cd5-4550-474a-a442-50808bb7bfbd.root
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/ce64501a-3d39-4cb6-b20e-6b23d54489da.root
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/cc70a570-9498-4f8c-afee-0d54c3cb0290.root
@@ -213,3 +212,4 @@
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/40000/eb4a1c86-5231-4c7b-b5de-a9fd970c20b0.root
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/40000/065c52a0-449d-4048-8f7d-08733e64dc98.root
 /eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/60000/5f3be0b4-d234-4e4e-a35f-6a6a511f5836.root
+/eos/cms/store/mc/Run3Summer22EENanoAODv12/QCD_PT-300to470_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_postEE_v6_ext1-v2/30000/fa7f59d9-a3aa-4b95-852d-60885bb1f96a.root
