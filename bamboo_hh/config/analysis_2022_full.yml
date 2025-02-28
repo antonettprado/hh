@@ -416,7 +416,7 @@ samples:
   # single top t-channel
   # Need individual cross sections, TOP PAG only provides inclusive cross section
 
-  # TQbartoLNu-t-channel_2022:
+  # TQbartoLNu_2022:
   #   group: "tq"
   #   era: "2022"
   #   db: das:/TQbartoLNu-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
@@ -425,7 +425,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TQbartoLNu-t-channel_2022EE:
+  # TQbartoLNu_2022EE:
   #   group: "tq"
   #   era: "2022EE"
   #   db: das:/TQbartoLNu-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -434,7 +434,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TbarQtoLNu-t-channel_2022:
+  # TbarQtoLNu_2022:
   #   group: "tq"
   #   era: "2022"
   #   db: das:/TbarQtoLNu-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
@@ -443,7 +443,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TbarQtoLNu-t-channel_2022EE:
+  # TbarQtoLNu_2022EE:
   #   group: "tq"
   #   era: "2022EE"
   #   db: das:/TbarQtoLNu-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -452,7 +452,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TQbarto2Q-t-channel_2022:
+  # TQbarto2Q_2022:
   #   group: "tq"
   #   era: "2022"
   #   db: das:/TQbarto2Q-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
@@ -461,7 +461,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TQbarto2Q-t-channel_2022EE:
+  # TQbarto2Q_2022EE:
   #   group: "tq"
   #   era: "2022EE"
   #   db: das:/TQbarto2Q-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -470,7 +470,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TbarQto2Q-t-channel_2022:
+  # TbarQto2Q_2022:
   #   group: "tq"
   #   era: "2022"
   #   db: das:/TbarQto2Q-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
@@ -479,7 +479,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TbarQto2Q-t-channel_2022EE:
+  # TbarQto2Q_2022EE:
   #   group: "tq"
   #   era: "2022EE"
   #   db: das:/TbarQto2Q-t-channel_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -488,7 +488,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TBbarQ_t-channel_2022:
+  # TBbarQ_2022:
   #   group: "tbq"
   #   era: "2022"
   #   db: das:/TBbarQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
@@ -497,7 +497,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TBbarQ_t-channel_2022EE:
+  # TBbarQ_2022EE:
   #   group: "tbq"
   #   era: "2022EE"
   #   db: das:/TBbarQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -506,7 +506,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
     
-  # TbarBQ-t-channel_2022:
+  # TbarBQ_2022:
   #   group: "tbq"
   #   era: "2022"
   #   db: das:/TbarBQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
@@ -515,7 +515,7 @@ samples:
   #   generated-events: genEventSumw
   #   split: -3
 
-  # TbarBQ-t-channel_2022EE:
+  # TbarBQ_2022EE:
   #   group: "tbq"
   #   era: "2022EE"
   #   db: das:/TbarBQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -527,7 +527,7 @@ samples:
 #######################################################################################################################################################################################################
   # single top s-channel
   
-  TBbartoLplusNuBbar-s-channel_2022:
+  TBbartoLplusNuBbar_2022:
     group: "tb"
     era: "2022"
     db: das:/TBbartoLplusNuBbar-s-channel-4FS_TuneCP5_13p6TeV_amcatnlo-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
@@ -536,7 +536,7 @@ samples:
     generated-events: genEventSumw
     split: -3
 
-  TBbartoLplusNuBbar-s-channel_2022EE:
+  TBbartoLplusNuBbar_2022EE:
     group: "tb"
     era: "2022EE"
     db: das:/TBbartoLplusNuBbar-s-channel-4FS_TuneCP5_13p6TeV_amcatnlo-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
@@ -1470,7 +1470,7 @@ samples:
     generated-events: genEventSumw
     split: -3
 
-  TTHto2B_2022EE:
+  TTHtoNon2B_2022EE:
     group: "ttH"
     era: "2022EE"
     db: das:/TTHtoNon2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
