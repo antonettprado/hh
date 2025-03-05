@@ -111,15 +111,15 @@ class VarsReco(NanoBaseHHbbWW):
         return selections
 
     @staticmethod
-    def get_skim(vars1d: list[Variable], selection, subcat: str, era: str):
+    def get_skim(vars1d: list[Variable], selection, subcat: str, era):
         skim_data = {
             "event": None,
             "run": None,
             "luminosityBlock": None,
             "genWeight": None,
             "bunchCrossing": None,
-            "genTtbarId": None,
-            "era": era
+            "genTtbarId": None
+            #"era": era
             }
         subcat_vars: list[Variable] = [ var[subcat] for var in vars1d if subcat in var.subcats ]
         skim_data.update({v.name: v.data for v in subcat_vars})
