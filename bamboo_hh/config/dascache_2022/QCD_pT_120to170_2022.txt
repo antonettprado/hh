@@ -4,12 +4,12 @@ root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/2530000/c5e16dc8-df0a-47e1-929d-49299e2bfda3.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/50000/c6024359-88a4-4c36-b53a-6d855c67447a.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/30000/dadce952-0ade-448c-81a0-801ab1f1019e.root
-root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/50000/356db963-75f2-4d4a-acd1-087dc484e2c5.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/50000/431a8f7f-3661-4d90-937e-0206f9971761.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/50000/2887b6e0-179a-4974-b6ae-4899f7590201.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/30000/6d43fb7d-50f1-429e-b3bf-15f7b5af2bbf.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/30000/50c444ae-a74d-4293-bf7c-766e6cefd4b0.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/2550000/30afa63d-db8c-4e03-8eee-9f790e22ab9a.root
+root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5-v2/50000/356db963-75f2-4d4a-acd1-087dc484e2c5.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/30000/c5e3f611-53ce-469a-a21c-a9053299fede.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/30000/4ccfba4b-9394-4368-b858-a96f56b4110e.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/30000/da1afad8-d9d4-4bca-b705-efb82ca6ef02.root
@@ -33,9 +33,9 @@ root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/30000/e9792a7a-bc7d-442f-987b-1190d27beed4.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/50000/7a5f03ea-dd8d-47fd-9bf0-fb06d39bfc29.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2540000/8da75a5e-fb82-44e9-aa42-245a43fcfa4f.root
+root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/40000/a6e2ef5a-2730-4577-ae26-83990b236e68.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2540000/28ec239a-911e-4b71-bac6-e1c12185f33e.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/50000/7931272a-1199-44be-8b9b-6cd0d303db39.root
-root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/40000/a6e2ef5a-2730-4577-ae26-83990b236e68.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/40000/ecb0a84e-6b52-4546-8b4f-fd9b36f41e6f.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/40000/b7ab594a-0a8b-43b4-aea4-e41ec8ccf0b2.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/40000/ddd5d650-3c72-40eb-bd73-6b0c6588cf44.root
@@ -45,10 +45,7 @@ root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2530000/ea5c277a-81ac-4b57-a44b-fc3afcee3f3f.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2520000/309d0fe5-e2c1-4a46-94e0-78860a60ddc2.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2530000/500c39ab-b477-47d2-80b0-19cfe2a4c4d3.root
-root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2540000/80bb0b82-60d5-4619-8d05-4eaa30e57699.root
-root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2540000/39e77ecc-1eb7-4377-97c5-2e656f054344.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2540000/90f84641-56c0-4d9e-8752-5a7e800a0efc.root
-root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2530000/cc113d69-8101-41b5-9e43-8af530492496.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/50000/c43d0aa8-4817-4aef-85a4-6194560959a1.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/50000/1531d59e-c307-4384-8f00-e3068b622998.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/50000/defdae6f-2fe6-4285-bdd7-a4a2a1f5da2e.root
@@ -74,3 +71,6 @@ root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/30000/861e3487-5f75-4eb8-82e9-539908e0f7d4.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/30000/f73fbd8f-a8ad-476b-83ab-82d3ddb60933.root
 root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/40000/86535ff9-14df-4647-85d2-d7b275c2760a.root
+root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2530000/cc113d69-8101-41b5-9e43-8af530492496.root
+root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2540000/80bb0b82-60d5-4619-8d05-4eaa30e57699.root
+root://cms-xrd-global.cern.ch///store/mc/Run3Summer22NanoAODv12/QCD_PT-120to170_TuneCP5_13p6TeV_pythia8/NANOAODSIM/130X_mcRun3_2022_realistic_v5_ext1-v2/2540000/39e77ecc-1eb7-4377-97c5-2e656f054344.root

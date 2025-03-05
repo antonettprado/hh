@@ -58,6 +58,6 @@ def main(config_path: Path):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config-path', type=Path, default=Path('bamboo_hh/config/analysis_2022_full.yml'), help='Path to config file to convert to csv')
+    parser.add_argument('-c', '--config-path', type=Path, default=Path('bamboo_hh/config/analysis_2022.yml'), help='Path to config file to convert to csv')
     args = parser.parse_args()
     main(args.config_path)
