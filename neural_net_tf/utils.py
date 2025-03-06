@@ -220,35 +220,3 @@ def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore
     total_samples = final_state["total_samples"].numpy().item()
 
     return mean, variance, total_samples
-
-class StreamingKFold:
-    def __init__(self, ds, n_folds, batch_size):
-        self.ds = ds
-        self.n_folds = n_folds
-        self.current_pass = 0
-        self.batch_size = batch_size
-
-    def _filter_fold(self, dataset, pass_index, train: bool):
-        def filter_fn(event, features, class_oh, sample_weight):
-            mask = tf.not_equal(event%self.n_folds, pass_index) if train else tf.equal(event%self.n_folds, pass_index)
-            return (#tf.boolean_mask(event, mask),
-                    tf.boolean_mask(features, mask),
-                    tf.boolean_mask(class_oh, mask),
-                    tf.boolean_mask(sample_weight, mask))
-        return dataset.map(filter_fn, num_parallel_calls=tf.data.AUTOTUNE) 
-
-    def _get_fold(self, pass_index):
-        train_ds = self._filter_fold(self.ds, pass_index, train=True).rebatch(self.batch_size)
-        test_ds = self._filter_fold(self.ds, pass_index, train=False).rebatch(self.batch_size)
-        return train_ds, test_ds
-
-    def __iter__(self):
-        self.current_pass = 0
-        return self
-    
-    def __next__(self):
-        if self.current_pass >= self.n_folds:
-            raise StopIteration
-        pass_index = self.current_pass
-        self.current_pass += 1
-        return pass_index, self._get_fold(pass_index)

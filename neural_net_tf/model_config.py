@@ -7,6 +7,8 @@ from references import references
 from collections import OrderedDict
 import numpy as np
 
+NEURALNET = Path(__file__).parent
+
 class ClassProcessMapper:
     def __init__(self, categorization: Dict[str, List[str]]):
         self._class_to_processes = categorization
@@ -81,7 +83,9 @@ class ModelConfig:
         return ModelConfig(**fields_dict)
 
 
-def load_model_configs(roster_path: Path) -> list[ModelConfig]:
+def load_model_configs(configfilename: str) -> list[ModelConfig]:
+
+    roster_path =  NEURALNET / 'config' / f'{configfilename}.yml'
 
     def validate_processes(model_name: str, processes: list[str]) -> None:
         if len(processes) != len(set(processes)):

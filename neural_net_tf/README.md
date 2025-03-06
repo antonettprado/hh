@@ -17,8 +17,6 @@ where:
     --n_iterations n    # Provide 'n' only if trainer chosen is 'multi'
 ```
 
-
-
 The model configurations under `neural_net_tf/config` should be YAML files formatted as follows:
 ```yaml
 - name: 'model1'

@@ -86,6 +86,9 @@ class DNNModel:
             for class_name, class_processes in self.classification.items():
                 class_mask = model_df['Process'].isin(class_processes)
                 model_df.loc[class_mask, 'Class'] = class_name
+
+        self.logger.info(f'Replacing inf, NaN to {UNDEFINED}')
+        model_df[self.features] = model_df[self.features].replace([np.inf, -np.inf], np.nan).fillna(UNDEFINED)
         self.logger.debug(model_df)
         return model_df
     
@@ -96,13 +99,7 @@ class DNNModel:
         if unassigned.any():
             unassigned_processes = model_df.loc[unassigned, 'Process'].unique()
             raise ValueError(f"Some processes were not assigned to any class: {unassigned_processes}")
-        # Temporary:
-        # with pd.option_context('display.max_rows', None, 'display.float_format', '{:.4f}'.format):
-        #     for class_name in self.classification.keys():
-        #         self.logger.warning(f'\nStats for {class_name}')
-        #         df_for_class = model_df[model_df['Class'] == class_name]
-        #         stats_summary = df_for_class.describe().round(4).T
-        #         self.logger.warning(stats_summary)
+
         # Show total sample weight per class
         sum_genWeights = model_df.groupby('Class')['genWeight'].sum()
         sum_sample_weights = model_df.groupby('Class')['sample_weight'].sum()
@@ -202,16 +199,19 @@ class DNNModel:
         
         if val_data is not None:
             using_validation = True
-            validation_data = (val_data[self.features], pd.get_dummies(val_data['Class']), val_data['sample_weight'])
+            val_y = pd.get_dummies(val_data['Class']) if self.model_type == 'multi' else val_data['Class']
+            validation_data = (val_data[self.features], val_y, val_data['sample_weight'])
         else:
             using_validation = False
             validation_data = None
 
         self.logger.info(f"Using validation: {using_validation}")
 
+        train_y = pd.get_dummies(train_data['Class']) if self.model_type == 'multi' else train_data['Class']
+
         history = model.fit(
             x=train_data[self.features],
-            y=pd.get_dummies(train_data['Class']),
+            y=train_y,
             batch_size=self.batch_size,
             epochs=self.epochs,
             sample_weight=train_data['sample_weight'],
@@ -227,16 +227,16 @@ class DNNModel:
 
     def evaluate(self, model, test_data):
         self.logger.info("\nEvaluating model ...")
-        model_metrics = model.evaluate(test_data[self.features], pd.get_dummies(test_data['Class']), verbose=0, return_dict=True) 
-        self.logger.info("Model metrics:")
-        self.logger.info(pd.DataFrame([model_metrics]))
+        test_y = pd.get_dummies(test_data['Class']) if self.model_type == 'multi' else test_data['Class']
+        model_metrics = model.evaluate(test_data[self.features], test_y, verbose=0, return_dict=True) 
+        self.logger.info(f"Model metrics:\n{pd.DataFrame([model_metrics])}")
 
         predicted_scores = model.predict(test_data[self.features])
         pred_df = pd.DataFrame(predicted_scores, columns=[f'Score_{class_name}' for class_name in self.classes]).reset_index(drop=True)
         # self.logger.info(f'Predictions:\n{pred_df}')
-        class_oh = pd.get_dummies(test_data['Class']).reset_index(drop=True)
+        class_oh = test_y.reset_index(drop=True) if self.model_type == 'multi' else test_y.to_frame().reset_index(drop=True)
         class_oh.columns = [f'Class_{class_name}' for class_name in self.classes]
-        # self.logger.info(f'True labels:\n{class_oh}')
+        self.logger.info(f'True labels:\n{class_oh}')
 
         output_df = pd.concat([class_oh, pred_df], axis=1)
         self.logger.info("Output:")
@@ -272,6 +272,11 @@ class DNNModel:
         model_df = self.get_model_df(total_df)
         self.check_model_df(model_df)
         train_data, val_data, test_data = self.split_data(model_df)
+
+        self.logger.info(f'Training data:\n{train_data}\n')
+        self.logger.info(f'Validation data:\n{val_data}\n')
+        self.logger.info(f'Test data:\n{test_data}\n')
+
         self.compute_mean_variance_for_training(train_data)
         model = self.build_model(fixed_random_seed)
         model = self.compile(model)
