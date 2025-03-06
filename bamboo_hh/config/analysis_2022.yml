@@ -1114,23 +1114,23 @@ samples:
 #######################################################################################################################################################################################################
   # VBFH
 
-  VBFHto2B_2022:
-    era: "2022"
-    group: "H"
-    db: das:/VBFHto2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v3/NANOAODSIM
-    type: mc
-    cross-section: 2.367
-    generated-events: genEventSumw
-    split: -3
+  # VBFHto2B_2022:
+  #   era: "2022"
+  #   group: "H"
+  #   db: das:/VBFHto2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v3/NANOAODSIM
+  #   type: mc
+  #   cross-section: 2.367
+  #   generated-events: genEventSumw
+  #   split: -3
 
-  VBFHto2B_2022EE:
-    era: "2022EE"
-    group: "H"
-    db: das:/VBFHto2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v3/NANOAODSIM
-    type: mc
-    cross-section: 2.367
-    generated-events: genEventSumw
-    split: -3
+  # VBFHto2B_2022EE:
+  #   era: "2022EE"
+  #   group: "H"
+  #   db: das:/VBFHto2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v3/NANOAODSIM
+  #   type: mc
+  #   cross-section: 2.367
+  #   generated-events: genEventSumw
+  #   split: -3
 
   # In production
   # VBFHto2WtoLNu2Q_2022:  
@@ -1172,14 +1172,14 @@ samples:
 #######################################################################################################################################################################################################
   # ZH
 
-  ZH_Hto2B_Zto2Q_2022:
-    era: "2022"
-    group: "H"
-    db: das:/ZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
-    type: mc
-    cross-section: 0.3826
-    generated-events: genEventSumw
-    split: -3
+  # ZH_Hto2B_Zto2Q_2022:
+  #   era: "2022"
+  #   group: "H"
+  #   db: das:/ZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+  #   type: mc
+  #   cross-section: 0.3826
+  #   generated-events: genEventSumw
+  #   split: -3
     
   ZH_Hto2B_Zto2L_2022:
     era: "2022"
@@ -1208,14 +1208,14 @@ samples:
     generated-events: genEventSumw
     split: -3
 
-  ZH_Hto2B_Zto2Q_2022EE:
-    era: "2022EE"
-    group: "H"
-    db: das:/ZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
-    type: mc
-    cross-section: 0.3826
-    generated-events: genEventSumw
-    split: -3
+  # ZH_Hto2B_Zto2Q_2022EE:
+  #   era: "2022EE"
+  #   group: "H"
+  #   db: das:/ZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
+  #   type: mc
+  #   cross-section: 0.3826
+  #   generated-events: genEventSumw
+  #   split: -3
     
   ZH_Hto2B_Zto2L_2022EE:
     era: "2022EE"
@@ -1256,14 +1256,14 @@ samples:
     generated-events: genEventSumw
     split: -3
     
-  ggZH_Hto2B_Zto2Q_2022:
-    era: "2022"
-    group: "H" 
-    db: das:/ggZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
-    type: mc
-    cross-section: 5.519e-02
-    generated-events: genEventSumw
-    split: -3
+  # ggZH_Hto2B_Zto2Q_2022:
+  #   era: "2022"
+  #   group: "H" 
+  #   db: das:/ggZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+  #   type: mc
+  #   cross-section: 5.519e-02
+  #   generated-events: genEventSumw
+  #   split: -3
     
   ggZH_Hto2C_Zto2L_2022:
     era: "2022"
@@ -1283,14 +1283,14 @@ samples:
     generated-events: genEventSumw
     split: -3
     
-  ggZH_Hto2B_Zto2Q_2022EE:
-    era: "2022EE"
-    group: "H"
-    db: das:/ggZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
-    type: mc
-    cross-section: 5.519e-02
-    generated-events: genEventSumw
-    split: -3
+  # ggZH_Hto2B_Zto2Q_2022EE:
+  #   era: "2022EE"
+  #   group: "H"
+  #   db: das:/ggZH_Hto2B_Zto2Q_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
+  #   type: mc
+  #   cross-section: 5.519e-02
+  #   generated-events: genEventSumw
+  #   split: -3
     
   ggZH_Hto2C_Zto2L_2022EE:
     era: "2022EE"
