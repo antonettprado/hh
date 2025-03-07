@@ -160,11 +160,11 @@ def parse_results_files(results_dir: Path) -> tuple[list[Datacard], list[str]]:
     hist_names: list[str] = rfileIO.get_hist_names(template_file)
     
     first_hist_name: str = hist_names[0]
-    parts: list[str] = first_hist_name.split('__')
+    parts: list[str] = first_hist_name.split('_xx_')
     if len(parts) == 4:
         # This is a DNN model output
         parser = parse_as_DNN_model
-        split_hist_names: list[list[str]] = [ h.split('__') for h in hist_names ]
+        split_hist_names: list[list[str]] = [ h.split('_xx_') for h in hist_names ]
     elif len(parts) == 1:
         # Default to parsing as a DNN model
         parser = parse_as_DNN_model
