@@ -1,6 +1,7 @@
 from pathlib import Path
 import yaml
-from bamboo.plots import Plot, Skim
+from collections import defaultdict
+from bamboo.plots import Plot, Skim, SummedPlot
 from bamboo.treefunctions import mvaEvaluator
 from bamboo import treefunctions as op
 
@@ -32,9 +33,7 @@ class NNInference(NanoBaseHHbbWW):
         parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the llr correction file is')
 
     @staticmethod
-    def get_DNN_model_info(modeldir: str):
-        modeldir = Path(modeldir)
-
+    def get_DNN_model_info(modeldir: Path):
         model_path = modeldir / "dnn_model.onnx"
         model = mvaEvaluator(model_path, mvaType='ONNXRuntime', otherArgs = ("output"))
 
@@ -105,24 +104,46 @@ class NNInference(NanoBaseHHbbWW):
         return input_vars
 
     @staticmethod
-    def get_DNN(modeldir:str, reco_vars: RecoVariables, llr_corr_workdir=None):
+    def get_DNN(modeldir: Path, reco_vars: RecoVariables, tree, llr_corr_workdir=None):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
-        # vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
-        # vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
-        DNN_selections = reco_vars._get_selections_subset(subcat_names)
 
-        model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(modeldir)
+        # For k-folds
+        fold_paths = [ 
+            ( int(subpath.name[-1]), subpath ) 
+            for subpath in modeldir.iterdir() 
+            if subpath.is_dir() 
+            and modeldir.name in subpath.name 
+            and subpath.name[:-1].endswith("Fold")
+            and subpath.name[-1].isdigit()
+        ] or [ (0, modeldir) ]
+
+        num_folds = len(fold_paths)
+        DNN_selections: dict = reco_vars._get_selections_subset(subcat_names)
+
+        if num_folds > 1:
+            fold_selections: dict= {}
+            for subcat, sel in DNN_selections.items():
+                for i in range(num_folds):
+                    fold_sel = sel.refine(f"{subcat} Fold {i}", cut=[ tree.event % num_folds == i ])
+                    fold_selections[f"{subcat}_{i}"] = fold_sel
+            DNN_selections = fold_selections
+            DNN.subcats = list(fold_selections.keys())
+            DNN.set_refs(DNN.subcats)
+
         data = {}
-        for sel_name in DNN_selections.keys():
-            # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
-            input_vars = NNInference.gather_input_vars(sel_name, feature_names, reco_vars, llr_corr_workdir)
-            sel_data = model(*input_vars)
-            data[sel_name] = sel_data
+        for fold, model_path in fold_paths:
+            model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
+            for sel_name, sel in filter(lambda x: num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold), DNN_selections.items()):
+                # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
+                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, llr_corr_workdir)
+                sel_data = model(*input_vars)
+                data[sel_name] = sel_data
         
         DNN.populate(data, DNN_selections)
 
-        DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes)
+        # These will all be identical for each fold except model_name
+        DNN.update(model_name = model_name.strip(f"_Fold{num_folds-1}"), model_type=model_type, classes=classes, processes=processes, num_folds=num_folds)
         
         return DNN
 
@@ -156,24 +177,47 @@ class NNInference(NanoBaseHHbbWW):
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         reco_vars = RecoVariables(objects, selections)
 
+        delim = '_xx_'
+        def get_plot_selection(plot: Plot) -> str:
+            sel_fold, *_ = plot.name.split(delim)
+            if sel_fold.rsplit('_',1)[-1].isdigit():
+                return delim.join([sel_fold.rsplit('_',1)[0], *_])
+            else:
+                return delim.join([sel_fold, *_])
+
+
         # # ===============================================================================
         # # ================================== Plots ======================================
         # # ===============================================================================
         self.DNN_LIST = []
         for modeldir in self.modeldir_list:
-            DNN = NNInference.get_DNN(modeldir, reco_vars, self.args.llr_corr_workdir)
+            DNN = NNInference.get_DNN(modeldir, reco_vars, tree, self.args.llr_corr_workdir)
+            DNN_plots: list[list] = []
             for sel_name in DNN.subcats:
                 dnn = DNN[sel_name]
                 scores = dnn.data
                 max_score_index = op.rng_max_element_index(scores, lambda score: score)
                 for i, class_i in enumerate(dnn.classes):
                     # Total distribution
-                    plots.append(Plot.make1D('__'.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
+                    DNN_plots.append(Plot.make1D(delim.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
                     # Cut
-                    sel_NNclass_name = '__'.join([sel_name, class_i, dnn.model_name])
+                    sel_NNclass_name = delim.join([sel_name, class_i, dnn.model_name])
                     sel_NNclass = (dnn.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
-                    plots.append(Plot.make1D('__'.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
-                    self.yields.add(sel_NNclass, sel_NNclass_name) 
+                    DNN_plots.append(Plot.make1D(delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
+                    # self.yields.add(sel_NNclass, sel_NNclass_name)
+
+            plots.extend(DNN_plots)
+            
+            print(DNN.num_folds)
+            if not DNN.num_folds > 1:
+                continue
+
+            grouped_plts = defaultdict(list)
+            for plt in DNN_plots:
+                comb_name = get_plot_selection(plt)
+                grouped_plts[comb_name].append(plt)
+
+            plots.extend(SummedPlot(name, plts) for name, plts in grouped_plts.items())
 
             self.DNN_LIST.append(DNN)
         # ===============================================================================

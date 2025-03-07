@@ -49,7 +49,7 @@ def write_datacard_rfile(path: Path, histos: dict[str, ROOT.TH1D], write_asimov:
 def sum_histos_over_subprocesses(histos, asimov: bool=True):
     process_summed_histos: defaultdict[str, dict[str, ROOT.TFile]] = defaultdict(dict)
     for k, hs in histos.items():
-        name, process = k.rsplit('__', 1)
+        name, process = k.rsplit('_xx_', 1)
         summed_hist = hs[0].Clone(k)
         for h in hs[1:]: 
             summed_hist.Add(h)
@@ -98,7 +98,7 @@ def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict
             scaled_hist = h.Clone(name+f':{subprocess}')
             scaled_hist.Scale(weight)
             scaled_hist.SetDirectory(0)
-            histos[name+'__'+process].append(scaled_hist)
+            histos[name+'_xx_'+process].append(scaled_hist)
         tfile.Close()
 
     process_summed_histos = sum_histos_over_subprocesses(histos)
