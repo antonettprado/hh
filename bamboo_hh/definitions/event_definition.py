@@ -41,7 +41,7 @@ def mll_selection(electrons, muons):
         )
     )
 
-def sl_e_trigger_selection(is_mc, era, HLT):
+def sl_e_trigger_selection(is_mc, era, HLT, sample):
     if "2016" in era:
         return op.OR(
             HLT.Ele25_eta2p1_WPTight_Gsf,
@@ -54,12 +54,15 @@ def sl_e_trigger_selection(is_mc, era, HLT):
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150
         )
     elif "2022" in era:
-        return op.OR(
-            HLT.Ele30_WPTight_Gsf,
-            HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
-            HLT.Ele15_IsoVVVL_PFHT450,
-            HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65 
-        )
+        EGamma_trig = op.OR(HLT.Ele30_WPTight_Gsf, HLT.Ele28_eta2p1_WPTight_Gsf_HT150, HLT.Ele15_IsoVVVL_PFHT450)
+        JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
+        if not is_mc:
+            if sample == "EGamma":
+                return EGamma_trig
+            elif sample == "JetMET":
+                return op.AND(JetMET_trig, op.NOT(EGamma_trig))
+        return op.OR(EGamma_trig, JetMET_trig)
+    
     elif "2023" in era:
         return op.OR(
             HLT.Ele30_WPTight_Gsf,
@@ -76,7 +79,7 @@ def sl_e_trigger_selection(is_mc, era, HLT):
             HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         )
 
-def sl_mu_trigger_selection(is_mc, era, HLT):
+def sl_mu_trigger_selection(is_mc, era, HLT, sample):
     if "2016" in era:
         return op.OR(
             HLT.IsoMu22,
@@ -89,11 +92,15 @@ def sl_mu_trigger_selection(is_mc, era, HLT):
             HLT.IsoMu24
         )
     elif "2022" in era:
-        return op.OR(
-            HLT.IsoMu24,
-            HLT.Mu15_IsoVVVL_PFHT450,
-            HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65 
-        )
+        Muon_trig = op.OR(HLT.IsoMu24, HLT.Mu15_IsoVVVL_PFHT450)
+        JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
+        if not is_mc:
+            if sample == "Muon":
+                return Muon_trig
+            elif sample == "JetMET":
+                return op.AND(JetMET_trig, op.NOT(Muon_trig))
+        return op.OR(Muon_trig, JetMET_trig)
+    
     elif "2023" in era:
         return op.OR(
             HLT.IsoMu24,
@@ -229,7 +236,7 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
         )
 
-def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
+def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, sample, noHLT=False, use_mvaTTH=False):
     electron_pt_cut = 30
     if "2022" in era or "2023" in era or "2024" in era:
         electron_pt_cut = 15
@@ -240,15 +247,12 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
         op.rng_len(taus) == 0,
         op.OR(
             noHLT,
-            op.AND(
-                not noHLT,
-                sl_e_trigger_selection(is_mc, era, HLT)
-                )
+            sl_e_trigger_selection(is_mc, era, HLT, sample)
             )
         )
     )
 
-def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, noHLT=False, use_mvaTTH=False):
+def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, sample, noHLT=False, use_mvaTTH=False):
     muon_pt_cut = 25
     if "2022" in era or "2023" in era or "2024" in era:
         muon_pt_cut = 15
@@ -259,10 +263,7 @@ def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc,
         op.rng_len(taus) == 0,
         op.OR(
             noHLT,
-            op.AND(
-                not noHLT,
-                sl_mu_trigger_selection(is_mc, era, HLT)
-                )
+            sl_mu_trigger_selection(is_mc, era, HLT, sample)
             )
         )
     )
@@ -351,10 +352,7 @@ def dl_ee_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, era, 
         op.sum(electrons[0].charge, electrons[1].charge) == 0,
         op.OR(
             noHLT,
-            op.AND(
-                not noHLT,
-                dl_ee_trigger_selection(is_mc, era, HLT)
-                )
+            dl_ee_trigger_selection(is_mc, era, HLT)
             )
         )
     )
@@ -374,10 +372,7 @@ def dl_emu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, era,
         op.sum(electrons[0].charge, muons[0].charge) == 0,
         op.OR(
             noHLT,
-            op.AND(
-                not noHLT,
-                dl_emu_trigger_selection(is_mc, era, HLT)
-                )
+            dl_emu_trigger_selection(is_mc, era, HLT)
             )
         )
     )
@@ -391,10 +386,7 @@ def dl_mumu_selection(electrons, muons, electron_ConePt, muon_ConePt, is_mc, era
         op.sum(muons[0].charge, muons[1].charge) == 0,
         op.OR(
             noHLT,
-            op.AND(
-                not noHLT,
-                dl_mumu_trigger_selection(is_mc, era, HLT)
-                )
+            dl_mumu_trigger_selection(is_mc, era, HLT)
             )
         )
     )
