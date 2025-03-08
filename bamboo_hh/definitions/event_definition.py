@@ -61,6 +61,8 @@ def sl_e_trigger_selection(is_mc, era, HLT, sample):
                 return EGamma_trig
             elif sample == "JetMET":
                 return op.AND(JetMET_trig, op.NOT(EGamma_trig))
+            else:
+                return op.c_bool(False)
         return op.OR(EGamma_trig, JetMET_trig)
     
     elif "2023" in era:
@@ -99,6 +101,8 @@ def sl_mu_trigger_selection(is_mc, era, HLT, sample):
                 return Muon_trig
             elif sample == "JetMET":
                 return op.AND(JetMET_trig, op.NOT(Muon_trig))
+            else:
+                return op.c_bool(False)
         return op.OR(Muon_trig, JetMET_trig)
     
     elif "2023" in era:
