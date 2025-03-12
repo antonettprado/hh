@@ -55,7 +55,8 @@ class RecoVariables():
             self.gather_lj_vars() + 
             self.gather_object_vars() +
             self.gather_low_level_lepton_vars() + 
-            self.gather_low_level_ak4_jet_vars()
+            self.gather_low_level_ak4_jet_vars() + 
+            [self.get_era()]
         )
         return vars
 
@@ -224,6 +225,20 @@ class RecoVariables():
             ak4_jet_vars.extend(this_jet_vars)
         return ak4_jet_vars
      
+    def get_era(self) -> Variable1D:
+        era = self.objects["era"]
+        # Enumerate
+        era_enum = {
+            "2022": 1,
+            "2022EE": 2,
+            "2023": 3,
+            "2023BPix": 4,
+            "2024": 5,
+            "2025": 6,
+            "2026": 7,
+        }
+        return op.c_int(era_enum[era])
+
     def get_bjets_mbb(self) -> Variable1D:
         # Helper function for the bjets variables, returns the bjets
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data() # res_lbjet, use_lbtag = self._get_bjets_data()

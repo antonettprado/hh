@@ -19,6 +19,15 @@
             "title": "DNN score log(S/B)",
             "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         },
+        "era":
+        {
+            "nbins": 6,
+            "min": 0,
+            "max": 6,
+            "unit": "",
+            "title": "Enumerated Era",
+            "subcats": ["SL_res_1b", "SL_res_2b", "SL_resolved", "SL_res_2b_x", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        },
         "bjets_mbb": 
         {
             "nbins": 50,

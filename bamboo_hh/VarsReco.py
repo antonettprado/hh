@@ -83,7 +83,7 @@ class VarsReco(NanoBaseHHbbWW):
                 jet.idx == btag_sorted_ak4_jets[1].idx
             ))
         ) 
-        
+        objects["era"] = era
         return objects
 
     @staticmethod
@@ -113,14 +113,12 @@ class VarsReco(NanoBaseHHbbWW):
 
     @staticmethod
     def get_skim(vars1d: list[Variable], selection, subcat: str, era, type):
-        era_int = event_defs.get_era_int(era)
         skim_data = {
             "event": None,
             "run": None,
             "luminosityBlock": None,
             "bunchCrossing": None,
-            "era": era_int
-            }
+        }
         if type=='mc':
             skim_data["genWeight"] = None
             skim_data["genTtbarId"] = None

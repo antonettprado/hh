@@ -1,20 +1,5 @@
 from bamboo import treefunctions as op
 
-def get_era_int(era):
-    era_int = op.c_int(0)
-    era_str_int = {
-        "2022": 1,
-        "2022EE": 2,
-        "2023": 3,
-        "2023BPix": 4,
-        "2024": 5,
-        "2025": 6,
-        "2026": 7
-    }
-    if era in era_str_int:
-        era_int = op.c_int(era_str_int[era])
-    return era_int
-
 def mll_selection(electrons, muons):
     mZ = 91.2
     loose_ee_pair = op.combine(
