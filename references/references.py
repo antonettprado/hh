@@ -18,6 +18,8 @@ PROCESSES_FILES = dict(
     ggHH_kl_0_kt_1_hbbhtt = ['ggHH_kl_0_kt_1_hbbhtt'],
     ttbar=['ttbar_sl', 'ttbar_dl', 'ttbar_fh'],
     tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
+    tbq=['TBbarQ', 'TbarBQ'],
+    tq=['TBbartoLplusNuBbar', 'TbarBtoLminusNuB'],
     WJets=['Wjets_0J', 'Wjets_1J', 'Wjets_2J'],
     DY=['DY_dl_mll_10to50', 'DY_dl_mll_50_0J', 'DY_dl_mll_50_1J', 'DY_dl_mll_50_2J'],
     VV=['WW', 'WZ', 'ZZ'],
@@ -26,19 +28,17 @@ PROCESSES_FILES = dict(
         'QCD_pT_170to300',   'QCD_pT_300to470',   'QCD_pT_470to600',   'QCD_pT_600to800',   'QCD_pT_800to1000', 
         'QCD_pT_1000to1400', 'QCD_pT_1400to1800', 'QCD_pT_1800to2400', 'QCD_pT_2400to3200', 'QCD_pT_3200'
     ],
-    H=["GluGluHto2Wto2L2Nu", "VBFHto2B", "VBFHto2Wto2L2Nu"],
-    ZH=[
-        "ZH_Hto2B_Zto2Q", "ZH_Hto2B_Zto2L", "ZH_Hto2C_Zto2L", "ZH_ZtoAll_Hto2Wto2L2Nu", 
-        "ggZH_Hto2B_Zto2L", "ggZH_Hto2B_Zto2Q", "ggZH_Hto2C_Zto2L"
-    ],
-    WH=[
-        "WplusH_Hto2B_WtoLNu", "WplusH_Hto2C_WtoLNu", "WplusH_HtoZG_WtoAll_Zto2L", 
-        "WminusH_Hto2B_WtoLNu", "WminusH_Hto2C_WtoLNu", "WminusH_HtoZG_WtoAll_Zto2L"
+    ttV=["TTLNu-1Jets", "TTZ-ZtoQQ-1Jets"],
+    H=[
+      "GluGluHto2WtoLNu2Q", "GluGluHto2Wto2L2Nu", "VBFHto2WtoLNu2Q", "VBFHto2Wto2L2Nu",
+      "ZH_Hto2B_Zto2L", "ZH_Hto2C_Zto2L", "ZH_ZtoAll_Hto2Wto2L2Nu", 
+      "ggZH_Hto2B_Zto2L", "ggZH_Hto2C_Zto2L",
+      "WplusH_Hto2B_WtoLNu", "WplusH_Hto2C_WtoLNu", "WplusH_HtoZG_WtoAll_Zto2L", 
+      "WminusH_Hto2B_WtoLNu", "WminusH_Hto2C_WtoLNu", "WminusH_HtoZG_WtoAll_Zto2L",
+      "TTHto2B", "TTHtoNon2B"
     ],
 
     #VVV=[]
-    #ttW=[]
-    #ttZ=[]
     #ttVV=[]
     #tH=[]
     #Others=[]
@@ -81,17 +81,22 @@ CLASS_COLOR_MAP = dict(
     ggHH_kl_1_kt_1_hbbhww='blue',
     ggHH_kl_2p45_kt_1_hbbhww='blue',
     ggHH_kl_5_kt_1_hbbhww='blue',
+    ggHH_kl_0_kt_1_hbbhww = 'blue',
     ggHH_kl_1_kt_1_hbbhtt = 'blue',
+    ggHH_kl_2p45_kt_1_hbbhtt = 'blue',
+    ggHH_kl_5_kt_1_hbbhtt = 'blue',
+    ggHH_kl_0_kt_1_hbbhtt = 'blue',
     HH='blue', 
     ttbar='red', 
     tW='green', 
+    tbq='green', 
+    tq='green', 
     WJets='cyan',
     DY='magenta',
     VV='orange',
     QCD='violet',
+    ttV='pink',
     H='black',
-    ZH='black',
-    WH='black',
     #VVV=[]
     #ttW=[]
     #ttZ=[]

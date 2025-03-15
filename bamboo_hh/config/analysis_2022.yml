@@ -1424,7 +1424,7 @@ samples:
   # ttH
 
   TTHto2B_2022:
-    group: "ttH"
+    group: "H"
     era: "2022"
     db: das:/TTHto2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v3/NANOAODSIM
     type: mc
@@ -1433,7 +1433,7 @@ samples:
     split: -3
 
   TTHto2B_2022EE:
-    group: "ttH"
+    group: "H"
     era: "2022EE"
     db: das:/TTHto2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v3/NANOAODSIM
     type: mc
@@ -1442,7 +1442,7 @@ samples:
     split: -3
 
   TTHtoNon2B_2022:
-    group: "ttH"
+    group: "H"
     era: "2022"
     db: das:/TTHtoNon2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v4/NANOAODSIM
     type: mc
@@ -1451,7 +1451,7 @@ samples:
     split: -3
 
   TTHtoNon2B_2022EE:
-    group: "ttH"
+    group: "H"
     era: "2022EE"
     db: das:/TTHtoNon2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22EENanoAODv12-130X_mcRun3_2022_realistic_postEE_v6-v2/NANOAODSIM
     type: mc
