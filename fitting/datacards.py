@@ -64,7 +64,11 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
     # Manually remove other kl points, for now
     process_rates.pop("ggHH_kl_2p45_kt_1_hbbhww")
     process_rates.pop("ggHH_kl_5_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_0_kt_1_hbbhww")
     process_rates.pop("ggHH_kl_1_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_2p45_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_5_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_0_kt_1_hbbhtt")
 
     separator: str = '\n' + '-'*130 + '\n'
     def tab(tabular_data) -> str:
