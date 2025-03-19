@@ -251,7 +251,7 @@ class RecoVariables():
         # Must have exactly the same keys as selections
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -261,7 +261,7 @@ class RecoVariables():
         boost_data = op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4)
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -271,7 +271,7 @@ class RecoVariables():
         boost_data = op.abs(op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4))
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -281,7 +281,7 @@ class RecoVariables():
         boost_data = boost_bjet0.eta - boost_bjet1.eta
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -291,7 +291,7 @@ class RecoVariables():
         boost_data = op.abs(boost_bjet0.eta - boost_bjet1.eta)
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -301,7 +301,7 @@ class RecoVariables():
         boost_data = op.deltaR(boost_bjet0.p4, boost_bjet1.p4) 
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -311,7 +311,7 @@ class RecoVariables():
         boost_data = (boost_bjet0.p4 + boost_bjet1.p4).Pt()
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -321,7 +321,7 @@ class RecoVariables():
         boost_data = boost_bjet0.pt
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -331,7 +331,7 @@ class RecoVariables():
         boost_data = boost_bjet1.pt
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
@@ -341,7 +341,7 @@ class RecoVariables():
         boost_data = (boost_bjet0.pt + boost_bjet1.pt)/2
         return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
                 'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
-                'SL_res_resolved': res_data, 'SL_boosted': boost_data,
+                'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
 
