@@ -56,7 +56,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
             llr = LLR(var.name)
             lr_data = {}
             for subcat_var in var:
-                if subcat_var.subcat != "SL_resolved":
+                if subcat_var.subcat != "SL_4j_resolved":
                    continue
                 subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
                 subcat_var_data = op.switch(subcat_var.data > var.max, var.max - 0.0001*abs(var.max), subcat_var.data)
@@ -84,7 +84,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
             LLR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'])
         ]
 
-        sel_name = "SL_resolved"
+        sel_name = "SL_4j_resolved"
         llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(llr_corr_workdir, reco_vars)
         for llr_product in llrs_product_list:
             llr_product_data = {}
@@ -99,7 +99,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
 
     @staticmethod
     def get_skims(llrs, vars1d, selection, subcat):
-        sel_name = 'SL_resolved'
+        sel_name = 'SL_4j_resolved'
         skim_data = {"event":None, "genWeight": None}
 
         subcat_vars: list[Variable] = [ var[subcat] for var in vars1d if subcat in var.subcats ]
@@ -126,7 +126,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         # ================================== Plots ======================================
         # ===============================================================================
 
-        sel_name = "SL_resolved"
+        sel_name = "SL_4j_resolved"
 
         llrs_for_vars_1D = LikelihoodRatio.get_llrs_for_vars_1D(self.args.llr_corr_workdir, reco_vars)
         select_llrs = LikelihoodRatio.get_select_llrs(self.args.llr_corr_workdir, reco_vars)

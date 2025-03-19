@@ -223,10 +223,16 @@ class NNInference(NanoBaseHHbbWW):
         # ============================= Cutflow Report ==================================
         # ===============================================================================
         
-        self.yields.add(selections['SL_res_1b'], 'SL_res_1b')
-        self.yields.add(selections['SL_res_1b_x'], 'SL_res_1b_x')
-        self.yields.add(selections['SL_res_2b'], 'SL_res_2b')
-        self.yields.add(selections['SL_res_2b_x'], 'SL_res_2b_x')
+        #self.yields.add(selections['SL_res_4j_1b_x'], 'SL_res_4j_1b_x')
+        #self.yields.add(selections['SL_res_4j_2b_x'], 'SL_res_4j_2b_x')
+
+        self.yields.add(selections['SL_res_3j_1b'], 'SL_res_3j_1b')
+        self.yields.add(selections['SL_res_3j_2b'], 'SL_res_3j_2b')
+        self.yields.add(selections['SL_3j_resolved'], 'SL_3j_resolved')
+        self.yields.add(selections['SL_res_4j_1b'], 'SL_res_4j_1b')
+        self.yields.add(selections['SL_res_4j_2b'], 'SL_res_4j_2b')
+        self.yields.add(selections['SL_4j_resolved'], 'SL_4j_resolved')
+        self.yields.add(selections['SL_resolved'], 'SL_resolved')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
         self.yields.add(selections['DL_res_2b'], 'DL_res_2b')

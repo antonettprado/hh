@@ -22,8 +22,8 @@ class VarsReco(NanoBaseHHbbWW):
         
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)
-        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_resolved'], help='skim tree selections to produce')
-        parser.add_argument("-p", "--plot_selections", nargs="+", action='store', default=['SL_resolved'], help='selections to plot in bamboo')
+        parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_3j_resolved', 'SL_4j_resolved'], help='skim tree selections to produce')
+        parser.add_argument("-p", "--plot_selections", nargs="+", action='store', default=['SL_3j_resolved', 'SL_4j_resolved'], help='selections to plot in bamboo')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
@@ -93,8 +93,12 @@ class VarsReco(NanoBaseHHbbWW):
         selections = {
             'SL': all_selections['SL']['SL'],
             'DL': all_selections['DL']['DL'],
-            'SL_res_1b': all_selections['SL']['SL_res_1b'],
-            'SL_res_2b': all_selections['SL']['SL_res_2b'],
+            'SL_res_3j_1b': all_selections['SL']['SL_res_3j_1b'],
+            'SL_res_3j_2b': all_selections['SL']['SL_res_3j_2b'],
+            'SL_3j_resolved': all_selections['SL']['SL_3j_resolved'],
+            'SL_res_4j_1b': all_selections['SL']['SL_res_4j_1b'],
+            'SL_res_4j_2b': all_selections['SL']['SL_res_4j_2b'],
+            'SL_4j_resolved': all_selections['SL']['SL_4j_resolved'],
             'SL_resolved': all_selections['SL']['SL_resolved'],
             'SL_boosted': all_selections['SL']['SL_boosted'],
             'DL_res_1b': all_selections['DL']['DL_res_1b'],
@@ -103,11 +107,11 @@ class VarsReco(NanoBaseHHbbWW):
         
         ak4_jets = objects["cleaned_ak4_jets"]
         ak4_btags = objects["cleaned_ak4_btags"]
-        SL_res_1b_x = selections["SL_res_1b"].refine("Nonbjets>=2 for SL_res_1b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
-        SL_res_2b_x = selections["SL_res_2b"].refine("Nonbjets>=2 for SL_res_2b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2]) # Define in SL_DL_event_selection based on SL_only, not SL_res_2b
+        SL_res_4j_1b_x = selections["SL_res_4j_1b"].refine("Nonbjets>=2 for SL_res_4j_1b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2])
+        SL_res_4j_2b_x = selections["SL_res_4j_2b"].refine("Nonbjets>=2 for SL_res_4j_2b_x", cut=[(op.rng_len(ak4_jets)-op.rng_len(ak4_btags))>=2]) # Define in SL_DL_event_selection based on SL_only, not SL_res_2b
         selections.update({
-            'SL_res_1b_x':SL_res_1b_x, 
-            'SL_res_2b_x':SL_res_2b_x})
+            'SL_res_4j_1b_x':SL_res_4j_1b_x, 
+            'SL_res_4j_2b_x':SL_res_4j_2b_x})
 
         return selections
 
@@ -162,8 +166,12 @@ class VarsReco(NanoBaseHHbbWW):
         # ================================== Yields =====================================
         # ===============================================================================
         
-        self.yields.add(selections['SL_res_1b'], 'SL_res_1b')
-        self.yields.add(selections['SL_res_2b'], 'SL_res_2b')
+        self.yields.add(selections['SL_res_3j_1b'], 'SL_res_3j_1b')
+        self.yields.add(selections['SL_res_3j_2b'], 'SL_res_3j_2b')
+        self.yields.add(selections['SL_3j_resolved'], 'SL_3j_resolved')
+        self.yields.add(selections['SL_res_4j_1b'], 'SL_res_4j_1b')
+        self.yields.add(selections['SL_res_4j_2b'], 'SL_res_4j_2b')
+        self.yields.add(selections['SL_4j_resolved'], 'SL_4j_resolved')
         self.yields.add(selections['SL_resolved'], 'SL_resolved')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
