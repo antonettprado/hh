@@ -249,8 +249,8 @@ class RecoVariables():
         boost_data = op.invariant_mass(boost_bjet0.p4, boost_bjet1.p4)
         
         # Must have exactly the same keys as selections
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -259,8 +259,8 @@ class RecoVariables():
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data() # res_lbjet, use_lbtag = self._get_bjets_data()
         res_data = op.switch(two_btags, op.deltaPhi(res_bjet0.p4, res_bjet1.p4), NULL)
         boost_data = op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4)
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -269,8 +269,8 @@ class RecoVariables():
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data()
         res_data = op.switch(two_btags, op.abs(op.deltaPhi(res_bjet0.p4, res_bjet1.p4)), NULL)
         boost_data = op.abs(op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4))
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -279,8 +279,8 @@ class RecoVariables():
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data()
         res_data = op.switch(two_btags, res_bjet0.eta - res_bjet1.eta, NULL)
         boost_data = boost_bjet0.eta - boost_bjet1.eta
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -289,8 +289,8 @@ class RecoVariables():
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data()
         res_data = op.switch(two_btags, op.abs(res_bjet0.eta - res_bjet1.eta), NULL)
         boost_data = op.abs(boost_bjet0.eta - boost_bjet1.eta)
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -299,8 +299,8 @@ class RecoVariables():
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data()
         res_data = op.switch(two_btags, op.deltaR(res_bjet0.p4, res_bjet1.p4), NULL)
         boost_data = op.deltaR(boost_bjet0.p4, boost_bjet1.p4) 
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -309,8 +309,8 @@ class RecoVariables():
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data()
         res_data = op.switch(two_btags, (res_bjet0.p4 + res_bjet1.p4).Pt(), NULL)
         boost_data = (boost_bjet0.p4 + boost_bjet1.p4).Pt()
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -319,8 +319,8 @@ class RecoVariables():
         res_bjet0, _, boost_bjet0, _, _ = self._get_bjets_data()
         res_data = res_bjet0.pt
         boost_data = boost_bjet0.pt
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -329,8 +329,8 @@ class RecoVariables():
         _, res_bjet1, _, boost_bjet1, two_btags = self._get_bjets_data()
         res_data = op.switch(two_btags, res_bjet1.pt, NULL)
         boost_data = boost_bjet1.pt
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -339,8 +339,8 @@ class RecoVariables():
         res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = self._get_bjets_data()
         res_data = op.switch(two_btags, (res_bjet0.pt + res_bjet1.pt)/2, NULL)
         boost_data = (boost_bjet0.pt + boost_bjet1.pt)/2
-        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_res_3j_resolved': res_data,
-                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_res_4j_resolved': res_data,
+        return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
+                'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
                 'SL_resolved': res_data, 'SL_boosted': boost_data,
                 'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
                }
@@ -521,7 +521,7 @@ class RecoVariables():
         lep0_p4, lep1_p4 = self._get_leptons_p4()
         sl_data = op.switch(two_nonbtags, (j0.p4 + j1.p4 + lep0_p4 + met.p4).M(), NULL)
         dl_data = (lep0_p4 + lep1_p4 + met.p4).M()
-        return { 'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_res_4j_resolved': sl_data, 
+        return { 'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_4j_resolved': sl_data, 
                  'DL_res_1b': dl_data, 'DL_res_2b': dl_data }
 
     def get_WW_mT(self) -> Variable1D:
@@ -531,7 +531,7 @@ class RecoVariables():
         lep0_p4, lep1_p4 = self._get_leptons_p4()
         sl_data = op.switch(two_nonbtags, (j0.p4 + j1.p4 + lep0_p4 + met.p4).Mt(), NULL)
         dl_data = (lep0_p4 + lep1_p4 + met.p4).Mt()
-        return { 'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_res_4j_resolved': sl_data, 
+        return { 'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_4j_resolved': sl_data, 
                  'DL_res_1b': dl_data, 'DL_res_2b': dl_data }
 
     def get_WW_pt(self) -> Variable1D:
@@ -541,7 +541,7 @@ class RecoVariables():
         lep0_p4, lep1_p4 = self._get_leptons_p4()
         sl_data = op.switch(two_nonbtags, (j0.p4 + j1.p4 + lep0_p4 + met.p4).Pt(), NULL)
         dl_data = (lep0_p4 + lep1_p4 + met.p4).Pt()
-        return { 'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_res_4j_resolved': sl_data, 
+        return { 'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_4j_resolved': sl_data, 
                  'DL_res_1b': dl_data, 'DL_res_2b': dl_data }
         
     def get_ak8_btag0_pt(self) -> Variable1D:
