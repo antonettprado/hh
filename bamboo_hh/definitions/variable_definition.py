@@ -450,8 +450,6 @@ class RecoVariables():
     def get_all_pt(self) -> Variable1D:
         total_4vec = self._get_total_4vec()
         return total_4vec.Pt()
-        #data = total_4vec.Pt()
-        #return { "SL_res_1b": data, "SL_res_2b_x": data, 'SL_res_2b': data, "DL_res_2b": data }
 
     def get_mjj(self) -> Variable1D:
         jj_W, two_nonbtags = self._get_jj_W()
