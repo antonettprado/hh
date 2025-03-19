@@ -188,30 +188,42 @@ class EventSelection(NanoBaseHHbbWW):
         is_dl_mumu = 0
         is_res_1b = 0
         is_res_2b = 0
+        is_res_3j_1b = 0
+        is_res_3j_2b = 0
+        is_res_4j_1b = 0
+        is_res_4j_2b = 0
         is_boosted = 0
         is_sl = 0
         is_dl = 0
 
-        # Using 4j selection by default
+        # Using both 3j and 4j selection by default
         sample = sample.rsplit('_')[0] # Gets the first part of the data sample name, e.g. Muon, EGamma, JetMET. Irrelevant for MC
 
         # Single Electron
         SL_e_only = mllSel.refine("SL_electron_only_selection", cut=[
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH)])
-        SL_e_res_1b = SL_e_only.refine("SL_electron_resolved_1b_jet_selection", cut=[
+        SL_e_res_3j_1b = SL_e_only.refine("SL_electron_resolved_3j_1b_jet_selection", cut=[
+            event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_e_res_3j_2b = SL_e_only.refine("SL_electron_resolved_3j_2b_jets_selection", cut=[
+            event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_e_3j_resolved = SL_e_only.refine("SL_electron_resolved_3j_jet_selection", cut=[
+            event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_e_res_4j_1b = SL_e_only.refine("SL_electron_resolved_4j_1b_jet_selection", cut=[
             event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_e_res_2b = SL_e_only.refine("SL_electron_resolved_2b_jets_selection", cut=[
+        SL_e_res_4j_2b = SL_e_only.refine("SL_electron_resolved_4j_2b_jets_selection", cut=[
             event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_e_resolved = SL_e_only.refine("SL_electron_resolved_jet_selection", cut=[
+        SL_e_4j_resolved = SL_e_only.refine("SL_electron_resolved_4j_jet_selection", cut=[
             event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_e_resolved = SL_e_only.refine("SL_electron_resolved_jet_selection", cut=[
+            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_e_boosted = SL_e_only.refine("SL_electron_boosted_jet_selection", cut=[
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_e = SL_e_only.refine("SL_electron_selection", cut=[op.OR(
-            event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
+            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
         is_sl_e = op.switch(op.AND(
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
-            op.OR(event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
             ), 
             1, 
             0
@@ -220,20 +232,28 @@ class EventSelection(NanoBaseHHbbWW):
         # Single Muon
         SL_mu_only = mllSel.refine("SL_muon_only_selection", cut=[
             event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH)])
-        SL_mu_res_1b = SL_mu_only.refine("SL_muon_resolved_1b_jet_selection", cut=[
+        SL_mu_res_3j_1b = SL_mu_only.refine("SL_muon_resolved_3j_1b_jet_selection", cut=[
+            event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_mu_res_3j_2b = SL_mu_only.refine("SL_muon_resolved_3j_2b_jets_selection", cut=[
+            event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_mu_3j_resolved = SL_mu_only.refine("SL_muon_resolved_3j_jet_selection", cut=[
+            event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_mu_res_4j_1b = SL_mu_only.refine("SL_muon_resolved_4j_1b_jet_selection", cut=[
             event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_res_2b = SL_mu_only.refine("SL_muon_resolved_2b_jets_selection", cut=[
+        SL_mu_res_4j_2b = SL_mu_only.refine("SL_muon_resolved_4j_2b_jets_selection", cut=[
             event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_resolved = SL_mu_only.refine("SL_muon_resolved_jets_selection", cut=[
+        SL_mu_4j_resolved = SL_mu_only.refine("SL_muon_resolved_4j_jet_selection", cut=[
             event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_mu_boosted = SL_mu_only.refine("SL_muon_boosted_jets_selection", cut=[
+        SL_mu_resolved = SL_mu_only.refine("SL_muon_resolved_jet_selection", cut=[
+            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_mu_boosted = SL_mu_only.refine("SL_muon_boosted_jet_selection", cut=[
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL_mu = SL_mu_only.refine("SL_muon_selection", cut=[op.OR(
-            event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
+            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
         is_sl_mu = op.switch(op.AND(
             event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
-            op.OR(event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
             ), 
             1, 
             0
@@ -243,16 +263,24 @@ class EventSelection(NanoBaseHHbbWW):
         SL_only = mllSel.refine("SL_lepton_only_selection", cut=[op.OR(
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
             event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH))])
-        SL_res_1b = SL_only.refine("SL_resolved_1b_jet_selection", cut=[
+        SL_res_3j_1b = SL_only.refine("SL_resolved_3j_1b_jet_selection", cut=[
+            event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_res_3j_2b = SL_only.refine("SL_resolved_3j_2b_jets_selection", cut=[
+            event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_3j_resolved = SL_only.refine("SL_resolved_3j_jet_selection", cut=[
+            event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_res_4j_1b = SL_only.refine("SL_resolved_4j_1b_jet_selection", cut=[
             event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_res_2b = SL_only.refine("SL_resolved_2b_jets_selection", cut=[
+        SL_res_4j_2b = SL_only.refine("SL_resolved_4j_2b_jets_selection", cut=[
             event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_resolved = SL_only.refine("SL_resolved_jets_selection", cut=[
+        SL_4j_resolved = SL_only.refine("SL_resolved_4j_jet_selection", cut=[
             event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
-        SL_boosted = SL_only.refine("SL_boosted_jets_selection", cut=[
+        SL_resolved = SL_only.refine("SL_resolved_jet_selection", cut=[
+            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
+        SL_boosted = SL_only.refine("SL_boosted_jet_selection", cut=[
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)])
         SL = SL_only.refine("SL_selection", cut=[op.OR(
-            event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
+            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
         is_sl = op.switch(op.OR(op.c_bool(is_sl_e == 1), op.c_bool(is_sl_mu == 1)),
             1, 
@@ -356,7 +384,7 @@ class EventSelection(NanoBaseHHbbWW):
                     event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH)
                 ),
                 op.OR(
-                    event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
+                    event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags),
                     event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)
                 )
             ),
@@ -374,13 +402,41 @@ class EventSelection(NanoBaseHHbbWW):
         )])
 
         is_res_1b = op.switch(op.OR(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
             op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
             ),
             1,
             0
         )
         is_res_2b = op.switch(op.OR(
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ),
+            1,
+            0
+        )
+        is_res_3j_1b = op.switch(op.OR(
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ),
+            1,
+            0
+        )
+        is_res_3j_2b = op.switch(op.OR(
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ),
+            1,
+            0
+        )
+        is_res_4j_1b = op.switch(op.OR(
+            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
+            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
+            ),
+            1,
+            0
+        )
+        is_res_4j_2b = op.switch(op.OR(
             op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags)),
             op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))
             ),
@@ -402,24 +458,40 @@ class EventSelection(NanoBaseHHbbWW):
         objects["is_dl_mumu"] = is_dl_mumu
         objects["is_res_1b"] = is_res_1b
         objects["is_res_2b"] = is_res_2b
+        objects["is_res_3j_1b"] = is_res_3j_1b
+        objects["is_res_3j_2b"] = is_res_3j_2b
+        objects["is_res_4j_1b"] = is_res_4j_1b
+        objects["is_res_4j_2b"] = is_res_4j_2b
         objects["is_boosted"] = is_boosted
     
         selections = {
             "SL_e": {
-                "SL_e_res_1b": SL_e_res_1b,
-                "SL_e_res_2b": SL_e_res_2b,
+                "SL_e_res_3j_1b": SL_e_res_3j_1b,
+                "SL_e_res_3j_2b": SL_e_res_3j_2b,
+                "SL_e_3j_resolved": SL_e_3j_resolved,
+                "SL_e_res_4j_1b": SL_e_res_4j_1b,
+                "SL_e_res_4j_2b": SL_e_res_4j_2b,
+                "SL_e_4j_resolved": SL_e_4j_resolved,
                 "SL_e_resolved": SL_e_resolved,
                 "SL_e_boosted": SL_e_boosted,
                 "SL_e": SL_e},
             "SL_mu": {
-                "SL_mu_res_1b": SL_mu_res_1b,
-                "SL_mu_res_2b": SL_mu_res_2b,
+                "SL_mu_res_3j_1b": SL_mu_res_3j_1b,
+                "SL_mu_res_3j_2b": SL_mu_res_3j_2b,
+                "SL_mu_3j_resolved": SL_mu_3j_resolved,
+                "SL_mu_res_4j_1b": SL_mu_res_4j_1b,
+                "SL_mu_res_4j_2b": SL_mu_res_4j_2b,
+                "SL_mu_4j_resolved": SL_mu_4j_resolved,
                 "SL_mu_resolved": SL_mu_resolved,
                 "SL_mu_boosted": SL_mu_boosted,
                 "SL_mu": SL_mu},
             "SL": {
-                "SL_res_1b": SL_res_1b,
-                "SL_res_2b": SL_res_2b,
+                "SL_res_3j_1b": SL_res_3j_1b,
+                "SL_res_3j_2b": SL_res_3j_2b,
+                "SL_3j_resolved": SL_3j_resolved,
+                "SL_res_4j_1b": SL_res_4j_1b,
+                "SL_res_4j_2b": SL_res_4j_2b,
+                "SL_4j_resolved": SL_4j_resolved,
                 "SL_resolved": SL_resolved,
                 "SL_boosted": SL_boosted,
                 "SL": SL},
@@ -467,7 +539,7 @@ class EventSelection(NanoBaseHHbbWW):
         for name in lep_subcat_names:
             self.lep_subcats.update({name: selections[name][name]})
         
-        jet_subcat_names = ["SL_res_1b", "SL_res_2b", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
+        jet_subcat_names = ["SL_res_3j_1b", "SL_res_3j_2b", "SL_res_4j_1b", "SL_res_4j_2b", "SL_boosted", "DL_res_1b", "DL_res_2b", "DL_boosted"]
         self.jet_subcats = {}
         for name in jet_subcat_names:
             SL_or_DL = "SL" if "SL" in name else "DL"
