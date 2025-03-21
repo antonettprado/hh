@@ -184,7 +184,9 @@ class NNInference(NanoBaseHHbbWW):
         DNN.populate(data, DNN_selections)
 
         # These will all be identical for each fold except model_name
-        DNN.update(model_name = model_name.strip(f"_Fold{num_folds-1}"), model_type=model_type, classes=classes, processes=processes, num_folds=num_folds)
+        model_name = model_name.strip(f"_Fold{num_folds-1}")
+        model_name = model_name.strip("_4j")
+        DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes, num_folds=num_folds)
         
         return DNN
 
