@@ -169,14 +169,14 @@ class NNInference(NanoBaseHHbbWW):
         data = {}
         for fold, model_path in fold_paths_3j:
             model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
-            for sel_name, sel in filter(lambda x: num_folds == 1 or (x[0].rsplit('_',1)[-1]==str(fold) and "_3j_" in x[0]), DNN_selections.items()):
+            for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_3j_" in x[0], DNN_selections.items()):
                 # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
                 input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, llr_corr_workdir)
                 sel_data = model(*input_vars)
                 data[sel_name] = sel_data
         for fold, model_path in fold_paths_4j:
             model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
-            for sel_name, sel in filter(lambda x: num_folds == 1 or (x[0].rsplit('_',1)[-1]==str(fold) and "_4j_" in x[0]), DNN_selections.items()):
+            for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_4j_" in x[0], DNN_selections.items()):
                 # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
                 input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, llr_corr_workdir)
                 sel_data = model(*input_vars)
