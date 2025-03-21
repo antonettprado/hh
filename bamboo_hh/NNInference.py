@@ -25,25 +25,26 @@ class NNInference(NanoBaseHHbbWW):
             self.modeldir_list = [modeldir.resolve() for modeldir in Path(self.args.superNNdir).iterdir() if modeldir.is_dir()]
             self.modeldir_list_3j4j = {}
             for modeldir in self.modeldir_list:
-                if modeldir.split("_")[-1] != "3j" and modeldir.split("_")[-1] != "4j":
-                    print ("3j or 4j not specified for model: %s"%modeldir)
+                modeldirname = modeldir.name
+                if modeldirname.split("_")[-1] != "3j" and modeldirname.split("_")[-1] != "4j":
+                    print ("3j or 4j not specified for model: %s"%modeldirname)
                     sys.exit()
-                if  modeldir.split("_")[-1] == "3j":
-                    model = modeldir.split("/")[-1].split("_3j")[0]
+                if modeldirname.split("_")[-1] == "3j":
+                    model = modeldirname.split("/")[-1].split("_3j")[0]
                     if model not in self.modeldir_list_3j4j:
                         self.modeldir_list_3j4j[model] = {}
-                        self.modeldir_list_3j4j[model]["3j"] = ""
-                        self.modeldir_list_3j4j[model]["4j"] = ""
+                        self.modeldir_list_3j4j[model]["3j"] = None
+                        self.modeldir_list_3j4j[model]["4j"] = None
                     self.modeldir_list_3j4j[model]["3j"] = modeldir
-                elif  modeldir.split("_")[-1] == "4j":
-                    model = modeldir.split("/")[-1].split("_4j")[0]
+                elif modeldirname.split("_")[-1] == "4j":
+                    model = modeldirname.split("/")[-1].split("_4j")[0]
                     if model not in self.modeldir_list_3j4j:
                         self.modeldir_list_3j4j[model] = {}
-                        self.modeldir_list_3j4j[model]["3j"] = ""
-                        self.modeldir_list_3j4j[model]["4j"] = ""
+                        self.modeldir_list_3j4j[model]["3j"] = None
+                        self.modeldir_list_3j4j[model]["4j"] = None
                     self.modeldir_list_3j4j[model]["4j"] = modeldir
             for model in self.modeldir_list_3j4j:
-                if self.modeldir_list_3j4j[model]["3j"] == "" or self.modeldir_list_3j4j[model]["4j"] == "":
+                if self.modeldir_list_3j4j[model]["3j"] is None or self.modeldir_list_3j4j[model]["4j"] is None:
                     print ("Model %s does not have both 3j and 4j"%model)
                     sys.exit()
         else:
