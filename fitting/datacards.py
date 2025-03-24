@@ -224,7 +224,7 @@ def combine_datacards_over_selections(datacards: list[Datacard], combine_selecti
         for selection, dcs in groupby(group, key=merged_selection_key):
             dcs = list(dcs)
             root: Path = dcs[0].path.parents[1]
-            comb_dc_name: str = 'datacard_' + '_'.join((part.split('_',2)[-1] for part in selection.split(':'))) + '.txt'
+            comb_dc_name: str = 'datacard_' + '_'.join((part.split('_',1)[-1] for part in selection.split(':'))) + '.txt'
             comb_dc_path: Path = root / comb_dc_name
             combined_datacards.append(Datacard.from_combination(dcs, comb_dc_path))
 
