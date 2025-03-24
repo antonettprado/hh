@@ -86,8 +86,8 @@ def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2
             subcat = sc
             if len(ref) < len(init_ref): break
 
-        if ref.endswith('_llr'):
-            ref = ref.replace('_llr', '')
+        if ref.endswith('_lr'):
+            ref = ref.replace('_lr', '')
             varnames = ref.split('_x_')
             var = LikelihoodRatio(varnames)
         elif ref in ALL_VARNAMES_1D:
@@ -425,7 +425,7 @@ class Variable3D(Variable):
         child.zdata = self.zdata.get(subcat, None)
         return child
 
-# Definitions of the LLR binning for various dimensions of LLR
+# Definitions of the LR binning for various dimensions of LR
 llr_binning = { 
                1: { 'nbins':100, 'min':-3, 'max':3 },
                2: { 'nbins':100, 'min':-3, 'max':3 },
@@ -440,12 +440,28 @@ llr_binning = {
                11:{ 'nbins':75, 'min':-15, 'max':15 },
                17:{ 'nbins':100, 'min':-20, 'max':20 },
               }
+
+lr_binning = { 
+               1: { 'nbins':100, 'min':0, 'max':15 },
+               2: { 'nbins':100, 'min':0, 'max':20 },
+               3: { 'nbins':100, 'min':0, 'max':20 },
+               4: { 'nbins':100, 'min':0, 'max':30 },
+               5: { 'nbins':100, 'min':0, 'max':40 },
+               6: { 'nbins':100, 'min':0, 'max':50 },
+               7: { 'nbins':100, 'min':0, 'max':60 },
+               8: { 'nbins':100, 'min':0, 'max':70 },
+               9: { 'nbins':100, 'min':0, 'max':80 },
+               10:{ 'nbins':100, 'min':0, 'max':100 },
+               11:{ 'nbins':100, 'min':0, 'max':100 },
+               17:{ 'nbins':100, 'min':0, 'max':100 },
+              }
+
 class LikelihoodRatio(Variable):
     '''
     Variable subclass for (multidimensional) likelihood ratios.
 
     Attributes (on top of Variable super class):
-        dimensionality (int): the number of constituent LLRs, used to determin binning from llr_binning
+        dimensionality (int): the number of constituent LRs, used to determin binning from lr_binning
         vars (dict[str:Variable]): dictionary of all the constituent variables
         subcats (list[str]): set intersection of all the constituent variable subcats
     '''
@@ -457,22 +473,22 @@ class LikelihoodRatio(Variable):
         if type(names) == str:
             names = [names]
         self.names = sorted(names)
-        self.name = '_x_'.join(self.names) + '_llr'
+        self.name = '_x_'.join(self.names) + '_lr'
         super().__init__(self.name)
         self.vars = { name: Variable1D(name) for name in self.names if name in ALL_VARNAMES_1D}
         self.vars.update({ name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D})
         self.vars.update({ name: Variable3D(name) for name in self.names if name in ALL_VARNAMES_3D})
         self.dimensionality = len(self.names)
-        self.update(**llr_binning[self.dimensionality])
+        self.update(**lr_binning[self.dimensionality])
         self.generate_eqbin()
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
         self.refs = [ '_'.join((sc, self.name)) for sc in self.subcats ]
-        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' LLR'
+        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' LR'
         self.update(**kwargs)
 
     def generate_eqbin(self):
-        '''Generates the bamboo.plots.EquidistantBinning object from the dimensionality and llr_binning'''
+        '''Generates the bamboo.plots.EquidistantBinning object from the dimensionality and lr_binning'''
         if not all(item in self.__dict__ for item in ['nbins', 'min', 'max']):
             print(f"Could not generate ROOT EqBin for {self.name}. Check json file")
             return

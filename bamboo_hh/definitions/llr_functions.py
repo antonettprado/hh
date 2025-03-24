@@ -6,6 +6,7 @@ from bamboo_hh.plotter.plotter import Plotter
 from bamboo_hh.definitions import variables 
 from typing import Union
 import correctionlib.schemav2 as cs
+import math
 
 INTERPOLATION_SCALE_FACTOR_1D = 9
 INTERPOLATION_SCALE_FACTOR_2D = 3
@@ -22,7 +23,8 @@ def _get_interpolated_axis_data( root_axis, scale_factor):
         return interp_seed_data, interp_bin_centers, interp_bin_edges
 
 def interpolate_1d_root_histogram(root_hist, scale_factor):
-        bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
+        # bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
+        bin_contents = np.array([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
         x_seed_data, interp_bin_centers, interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
         y_seed_data = np.pad(bin_contents, 1, 'edge')
 
@@ -96,6 +98,11 @@ def compute_llrs(plotter: Plotter, outfilename: str = 'corrections_llr', which_p
             ratio_hist = sig_back_dict['Signal'].Clone()
             ratio_hist.Divide(sig_back_dict['Background'])
 
+            for bin in range(1, ratio_hist.GetNbinsX() + 1):
+                bin_content = ratio_hist.GetBinContent(bin)
+                if math.isnan(bin_content) or math.isinf(bin_content):
+                    ratio_hist.SetBinContent(bin, 0.0)
+
             if isinstance(var, variables.Variable1D):
                 bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D)
                 inputs = [cs.Variable(name="xaxis", type="real", description="")]
@@ -106,34 +113,34 @@ def compute_llrs(plotter: Plotter, outfilename: str = 'corrections_llr', which_p
                     content=list(np.round(bin_contents, DECIMAL_PLACES)),
                     flow="clamp",
                 )
-            elif isinstance(var, variables.Variable2D):
-                bin_edges, bin_contents = interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-                bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
-                inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                        cs.Variable(name="yaxis", type="real", description="")]
-                data = cs.MultiBinning(
-                    nodetype="multibinning",
-                    inputs=["xaxis","yaxis"],
-                    edges=bin_edges,
-                    content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
-                    flow="clamp",
-                )
-            elif isinstance(var, variables.Variable3D):
-                bin_edges, bin_contents = interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
-                bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
-                inputs = [cs.Variable(name="xaxis", type="real", description=""),
-                        cs.Variable(name="yaxis", type="real", description=""),
-                        cs.Variable(name="zaxis", type="real", description="")]
-                data = cs.MultiBinning(
-                    nodetype="multibinning",
-                    inputs=["xaxis","yaxis", "zaxis"],
-                    edges=bin_edges,
-                    content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
-                    flow="clamp",
-                )
+            # elif isinstance(var, variables.Variable2D):
+            #     bin_edges, bin_contents = interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
+            #     bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
+            #     inputs = [cs.Variable(name="xaxis", type="real", description=""),
+            #             cs.Variable(name="yaxis", type="real", description="")]
+            #     data = cs.MultiBinning(
+            #         nodetype="multibinning",
+            #         inputs=["xaxis","yaxis"],
+            #         edges=bin_edges,
+            #         content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
+            #         flow="clamp",
+            #     )
+            # elif isinstance(var, variables.Variable3D):
+            #     bin_edges, bin_contents = interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
+            #     bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
+            #     inputs = [cs.Variable(name="xaxis", type="real", description=""),
+            #             cs.Variable(name="yaxis", type="real", description=""),
+            #             cs.Variable(name="zaxis", type="real", description="")]
+            #     data = cs.MultiBinning(
+            #         nodetype="multibinning",
+            #         inputs=["xaxis","yaxis", "zaxis"],
+            #         edges=bin_edges,
+            #         content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
+            #         flow="clamp",
+            #     )
 
             corr = cs.Correction(
-                name=subcat_var.ref + '_llr',
+                name=subcat_var.ref + '_lr',
                 # description = f'llr for {subcat_var.ref}'
                 version=0,
                 inputs=inputs,
@@ -151,26 +158,26 @@ def compute_llrs(plotter: Plotter, outfilename: str = 'corrections_llr', which_p
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Compute LLRs for a given work directory')
+    parser = argparse.ArgumentParser(description='Compute LRs for a given work directory')
     parser.add_argument("-w", "--workdir", action="store", help="work directory. Ex: Z_OUTPUT/VarsReco")
     parser.add_argument("-c", "--configFile", default='bamboo_hh/config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
-    parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
-    parser.add_argument("-o", "--outfilename", default='corrections_llr_All', action='store', help='Name of json output file within results dir')
+    parser.add_argument("-backgs", "--backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into denominator. Default is All")
+    parser.add_argument("-o", "--outfilename", default='corrections_lr', action='store', help='Name of json output file within results dir')
     args = parser.parse_args()
 
-    if args.llr_backgrounds == 'All': 
+    if args.backgrounds == 'All': 
         which_processes = 'All'
         postfix = which_processes
     else:
         processes_available = myPlotter.dirprocesses
-        assert all(llr_back in processes_available for llr_back in args.llr_backgrounds), f"Refer to references.py for allowed processes' names"
-        which_processes = ['HH'] + args.llr_backgrounds
+        assert all(backg in processes_available for backg in args.backgrounds), f"Refer to references.py for allowed processes' names"
+        which_processes = ['HH'] + args.backgrounds
     
     llrPlotter = Plotter(workdir=args.workdir, configFile=args.configFile, which_processes=which_processes)
     compute_llrs(llrPlotter, args.outfilename, which_processes)
     '''
     python3 bamboo_hh/definitions/llr_functions.py -w Z_OUTPUT/VarsReco 
-    python3 bamboo_hh/definitions/llr_functions.py -w Z_OUTPUT/VarsReco -llr_backs ttbar tW
+    python3 bamboo_hh/definitions/llr_functions.py -w Z_OUTPUT/VarsReco -backs ttbar tW
     python3 bamboo_hh/definitions/llr_functions.py -w Z_OUTPUT/VarsReco -c bamboo_hh/config/analysis_2022.yml -e 2022
 
     '''
