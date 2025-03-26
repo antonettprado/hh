@@ -1,5 +1,6 @@
 from pathlib import Path
 import yaml
+import sys
 from collections import defaultdict
 from bamboo.plots import Plot, Skim, SummedPlot
 from bamboo.treefunctions import mvaEvaluator
@@ -22,6 +23,30 @@ class NNInference(NanoBaseHHbbWW):
 
         if self.args.superNNdir is not None:
             self.modeldir_list = [modeldir.resolve() for modeldir in Path(self.args.superNNdir).iterdir() if modeldir.is_dir()]
+            self.modeldir_list_3j4j = {}
+            for modeldir in self.modeldir_list:
+                modeldirname = modeldir.name
+                if modeldirname.split("_")[-1] != "3j" and modeldirname.split("_")[-1] != "4j":
+                    print ("3j or 4j not specified for model: %s"%modeldirname)
+                    sys.exit()
+                if modeldirname.split("_")[-1] == "3j":
+                    model = modeldirname.split("/")[-1].split("_3j")[0]
+                    if model not in self.modeldir_list_3j4j:
+                        self.modeldir_list_3j4j[model] = {}
+                        self.modeldir_list_3j4j[model]["3j"] = None
+                        self.modeldir_list_3j4j[model]["4j"] = None
+                    self.modeldir_list_3j4j[model]["3j"] = modeldir
+                elif modeldirname.split("_")[-1] == "4j":
+                    model = modeldirname.split("/")[-1].split("_4j")[0]
+                    if model not in self.modeldir_list_3j4j:
+                        self.modeldir_list_3j4j[model] = {}
+                        self.modeldir_list_3j4j[model]["3j"] = None
+                        self.modeldir_list_3j4j[model]["4j"] = None
+                    self.modeldir_list_3j4j[model]["4j"] = modeldir
+            for model in self.modeldir_list_3j4j:
+                if self.modeldir_list_3j4j[model]["3j"] is None or self.modeldir_list_3j4j[model]["4j"] is None:
+                    print ("Model %s does not have both 3j and 4j"%model)
+                    sys.exit()
         else:
             self.modeldir_list = self.args.NNdirs    
 
@@ -104,21 +129,31 @@ class NNInference(NanoBaseHHbbWW):
         return input_vars
 
     @staticmethod
-    def get_DNN(modeldir: Path, reco_vars: RecoVariables, tree, llr_corr_workdir=None):
+    def get_DNN(modeldir, reco_vars: RecoVariables, tree, llr_corr_workdir=None):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
+        modeldir_3j = modeldir["3j"]
+        modeldir_4j = modeldir["4j"]
 
         # For k-folds
-        fold_paths = [ 
+        fold_paths_3j = [ 
             ( int(subpath.name[-1]), subpath ) 
-            for subpath in modeldir.iterdir() 
+            for subpath in modeldir_3j.iterdir() 
             if subpath.is_dir() 
-            and modeldir.name in subpath.name 
+            and modeldir_3j.name in subpath.name 
             and subpath.name.rstrip('1234567890').endswith("Fold")
             and subpath.name.split('Fold')[-1].isdigit()
-        ] or [ (0, modeldir) ]
+        ] or [ (0, modeldir_3j) ]
+        fold_paths_4j = [ 
+            ( int(subpath.name[-1]), subpath ) 
+            for subpath in modeldir_4j.iterdir() 
+            if subpath.is_dir() 
+            and modeldir_4j.name in subpath.name 
+            and subpath.name.rstrip('1234567890').endswith("Fold")
+            and subpath.name.split('Fold')[-1].isdigit()
+        ] or [ (0, modeldir_4j) ]
 
-        num_folds = len(fold_paths)
+        num_folds = len(fold_paths_3j)
         DNN_selections: dict = reco_vars._get_selections_subset(subcat_names)
 
         if num_folds > 1:
@@ -132,9 +167,16 @@ class NNInference(NanoBaseHHbbWW):
             DNN.set_refs(DNN.subcats)
 
         data = {}
-        for fold, model_path in fold_paths:
+        for fold, model_path in fold_paths_3j:
             model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
-            for sel_name, sel in filter(lambda x: num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold), DNN_selections.items()):
+            for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_3j_" in x[0], DNN_selections.items()):
+                # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
+                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, llr_corr_workdir)
+                sel_data = model(*input_vars)
+                data[sel_name] = sel_data
+        for fold, model_path in fold_paths_4j:
+            model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
+            for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_4j_" in x[0], DNN_selections.items()):
                 # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
                 input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, llr_corr_workdir)
                 sel_data = model(*input_vars)
@@ -143,7 +185,9 @@ class NNInference(NanoBaseHHbbWW):
         DNN.populate(data, DNN_selections)
 
         # These will all be identical for each fold except model_name
-        DNN.update(model_name = model_name.strip(f"_Fold{num_folds-1}"), model_type=model_type, classes=classes, processes=processes, num_folds=num_folds)
+        model_name = model_name.strip(f"_Fold{num_folds-1}")
+        model_name = model_name.strip("_4j")
+        DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes, num_folds=num_folds)
         
         return DNN
 
@@ -190,8 +234,8 @@ class NNInference(NanoBaseHHbbWW):
         # # ================================== Plots ======================================
         # # ===============================================================================
         self.DNN_LIST = []
-        for modeldir in self.modeldir_list:
-            DNN = NNInference.get_DNN(modeldir, reco_vars, tree, self.args.llr_corr_workdir)
+        for modeldir in self.modeldir_list_3j4j:
+            DNN = NNInference.get_DNN(self.modeldir_list_3j4j[modeldir], reco_vars, tree, self.args.llr_corr_workdir)
             DNN_plots: list[list] = []
             for sel_name in DNN.subcats:
                 dnn = DNN[sel_name]

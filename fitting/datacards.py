@@ -44,11 +44,13 @@ class Datacard():
 
         selections = groupby(map(lambda dc: dc.selection, datacards))
         all_selections_equal: bool = next(selections, True) and not next(selections, False)
-        selection = dc0.selection if all_selections_equal else None
+        selection = "_".join(list(dict.fromkeys([dc.selection for dc in datacards])))  
+        #selection = dc0.selection if all_selections_equal else None
 
         eras = groupby(map(lambda dc: dc.era, datacards))
         all_eras_equal: bool = next(eras, True) and not next(eras, False)
-        era = dc0.era if all_eras_equal else None
+        era = "_".join(list(dict.fromkeys([dc.era for dc in datacards])))  
+        #era = dc0.era if all_eras_equal else None
 
         return cls(path, model=model, era=era, selection=selection, category=category, variable=variable)
 
@@ -226,7 +228,7 @@ def combine_datacards_over_selections(datacards: list[Datacard], combine_selecti
         for selection, dcs in groupby(group, key=merged_selection_key):
             dcs = list(dcs)
             root: Path = dcs[0].path.parents[1]
-            comb_dc_name: str = 'datacard_' + '_'.join((part.split('_',2)[-1] for part in selection.split(':'))) + '.txt'
+            comb_dc_name: str = 'datacard_' + '_'.join((part.split('_',1)[-1] for part in selection.split(':'))) + '.txt'
             comb_dc_path: Path = root / comb_dc_name
             combined_datacards.append(Datacard.from_combination(dcs, comb_dc_path))
 
