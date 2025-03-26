@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 #Sort list by length and in descending order (most specific ones first)
-SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_resolved', 'SL_res_1b', 'SL_res_2b', 'SL_res_2b_x', 'SL_boosted', 'DL_res_1b', 'DL_res_2b', 'DL_boosted', 'Total']
+SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_resolved', 'SL_3j_resolved', 'SL_res_3j_1b', 'SL_res_3j_2b', 'SL_4j_resolved', 'SL_res_4j_1b', 'SL_res_4j_2b', 'SL_boosted', 'DL_res_1b', 'DL_res_2b', 'DL_boosted', 'Total']
 SELECTIONS.sort(key=len, reverse=True)
 
 ERAS = ['2022', '2022EE', '2023', '2023BPix']

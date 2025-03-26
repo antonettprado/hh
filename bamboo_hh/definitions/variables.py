@@ -64,9 +64,9 @@ def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':
 
 def parse_vars_from_refs(refs: 'list[str]') -> 'list[Union[Variable1D, Variable2D, Variable3D, LikelihoodRatio]]':
     '''
-    Helper function that will take in a variable reference (eg. SL_res_2b_x_bjets_mbb_x_bjets_pT_bb_lr) and return
+    Helper function that will take in a variable reference (eg. SL_res_4j_2b_bjets_mbb_x_bjets_pT_bb_lr) and return
     the corresponding Variable object (eg. LikelihoodRatio(['bjets_mbb', 'bjets_pT_bb'])) with ONLY the relevant subcats
-    present (eg. SL_res_2b_x). If two or more references to the same variable with different subcats are included, then
+    present (eg. SL_res_4j_2b). If two or more references to the same variable with different subcats are included, then
     the subcats are added to the original variable
 
     Args:
@@ -214,10 +214,10 @@ class Variable():
         subcat you care about, then access these attributes directly. This is what a child variable does.
         Instead of:
             var = Variable1D('bjets_mbb')
-            bamboo.plots.Plot.Make1D(var.refs['SL_res_2b_x'], var.data['SL_res_2b_x'], var.selections['SL_res_2b_x'] ... )
+            bamboo.plots.Plot.Make1D(var.refs['SL_res_4j_2b'], var.data['SL_res_4j_2b'], var.selections['SL_res_4j_2b'] ... )
         We can do:
             var = Variable1D('bjets_mbb')
-            cvar = var['SL_res_2b_x']
+            cvar = var['SL_res_4j_2b']
             bamboo.plots.Plot.Make1D(cvar.ref, cvar.data, cvar.selection ... )
         The child variable holds all the same information as the parent variable when it is instantiated, but it resolves
         the dictionaries (and lists) that depend on the subcat to the corresponding entries.
@@ -302,8 +302,9 @@ class Variable1D(Variable):
             data (dict[str:FloatProxy]): dictionary of subcat:data
             selections (dict[str:SelectionProxy]): dictionary of subcat:selection
         '''
-        if 'SL_res_1b' in data.keys() and 'SL_res_2b' in data.keys() and 'SL_resolved' not in data.keys() and 'SL_resolved' in self.subcats and data['SL_res_1b'] == data['SL_res_2b']:
-            data['SL_resolved'] = data['SL_res_1b']
+        
+        #if 'SL_res_1b' in data.keys() and 'SL_res_2b' in data.keys() and 'SL_resolved' not in data.keys() and 'SL_resolved' in self.subcats and data['SL_res_1b'] == data['SL_res_2b']:
+        #    data['SL_resolved'] = data['SL_res_1b']
 
         self.data = data
         self.selections = selections

@@ -35,7 +35,7 @@ class NNLLRScores(NanoBaseHHbbWW):
         # ================================== Plots ======================================
         # ===============================================================================
 
-        sel_name = "SL_res_2b_x"
+        sel_name = "SL_4j_resolved"
 
         dnn_score = NNInference.get_dnn_score(self.args.NNdir, objects)
         dnn_score = dnn_score[sel_name]
@@ -57,7 +57,6 @@ class NNLLRScores(NanoBaseHHbbWW):
         self.yields.add(selections['SL_res_1b'], 'SL_res_1b')
         self.yields.add(selections['SL_res_1b_x'], 'SL_res_1b_x')
         self.yields.add(selections['SL_res_2b'], 'SL_res_2b')
-        self.yields.add(selections['SL_res_2b_x'], 'SL_res_2b_x')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
         self.yields.add(selections['DL_res_2b'], 'DL_res_2b')
