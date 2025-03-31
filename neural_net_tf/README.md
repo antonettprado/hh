@@ -1,21 +1,23 @@
 # neural_net_tf Module
 
-To train your neural net(s), run:
+To train your neural net(s) in distributed mode (a single training per job), run:
 ```bash
     # Training mode: simple
-    python3 neural_net_tf/run_training.py -w Z_OUTPUT/Reco -c roster -o NN_roster -t simple
+    python3 neural_net_tf/run_training.py -w Z_OUTPUT/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t simple -d
 
-    # Training mode: multi
-    python3 neural_net_tf/run_training.py -w Z_OUTPUT/Reco -c roster -o NN_roster -t multi --n_iterations 10 
+    # Training mode: kfold
+    python3 neural_net_tf/run_training.py -w Z_OUTPUT/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t kfold -d
 ```
 where:
 ```bash
     -w workdir          # Full path of the work directory to run over
-    -c configfilename   # Name of the yaml file under neural_net_tf/config (don't include the extension .yml)
+    -r roster           # Path to the yaml file under
     -o outdirname       # Name of the output directory to be created under workdir
-    -t trainer          # Training mode. Options: ['simple', 'multi']
-    --n_iterations n    # Provide 'n' only if trainer chosen is 'multi'
+    -t trainer          # Training mode. Options: ['simple', 'kfold]
+    -d                  # Run in distributed mode
 ```
+
+To run the training locally simply remove the `-d` flag.
 
 The model configurations under `neural_net_tf/config` should be YAML files formatted as follows:
 ```yaml

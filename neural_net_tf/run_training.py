@@ -1,81 +1,108 @@
 from argparse import ArgumentParser
 from pathlib import Path
-import time
-from neural_net_tf.utils import set_seed, set_logger, update_summary, log_training_stats, log_class_stats
-from neural_net_tf.model_config import load_model_configs, save_model_config
-from neural_net_tf.model_data import get_data
-from neural_net_tf.model_design import ModelNetwork, ModelEvaluator
-from datetime import timedelta
-import tensorflow as tf
-import gc
+from neural_net_tf.model_config import load_model_configs, get_config
+from typing import Callable
 
-def train(config, modeldir, logger, summaryfile, train_data, val_data, test_data, train_mean, train_var):
-    train_data = train_data.prefetch(tf.data.AUTOTUNE)
-    val_data = val_data.prefetch(tf.data.AUTOTUNE)
-    network = ModelNetwork(config, modeldir, logger)
-    trained_model = network.Run(train_data, val_data, train_mean, train_var)
-    evaluator = ModelEvaluator(config, modeldir, logger, trained_model, test_data)
-    model_metrics = evaluator.Run()
-    save_model_config(config, modeldir / 'model_info.yml')
-    update_summary(summaryfile, config.name, model_metrics)
-    del train_data, val_data                                                        
-    del trained_model, network, evaluator    
-    gc.collect()
-    tf.keras.backend.clear_session()
+class RunDistributed:
 
-def simple(config, workdir, modeldir, logger, summaryfile):
-    train_data, val_data, test_data = get_data(config, workdir, logger)
-    log_class_stats(train_data, val_data, test_data, config, logger)
-    train_mean, train_var = log_training_stats(train_data, config, logger)
-    train(config, modeldir, logger, summaryfile, train_data, val_data, test_data, train_mean, train_var)
+    def __init__(self, config_name: str, roster: Path, workdir: Path, outdirname: str, trainer: str, **kwargs):
+        self.config_name = config_name
+        self.roster = roster
+        self.workdir = workdir
+        self.outdirname = outdirname
+        self.trainer = trainer
+        # self.n_iterations = kwargs.get('n_iterations', None)
+        self.pass_idx = kwargs.get('pass_idx', None)
 
-def multi(config, workdir, modeldir, logger, summaryfile, n_iterations):
-    train_data, val_data, test_data = get_data(config, workdir, logger)
-    log_class_stats(train_data, val_data, test_data, config, logger)
-    train_mean, train_var = log_training_stats(train_data, config, logger)
-    for i in range(n_iterations):
-        iter_start = time.perf_counter()
-        config_i = config.replicate(name=f'{config.name}_{i}')
-        logger.info(f"{60 * '='}\nModel {config_i.name}\n{60 * '='}")
-        model_i_dir = modeldir / f"{config_i.name}"
-        model_i_dir.mkdir(exist_ok=True)
-        train(config_i, model_i_dir, logger, summaryfile, train_data, val_data, test_data, train_mean, train_var)
-        logger.info(f'Time spent in iteration {i}:  {str(timedelta(seconds=time.perf_counter() - iter_start))}\n')
+        self.afs_modeldir = Path("Z_OUTPUT") / self.outdirname / self.config_name
+        self.afs_modeldir.mkdir(exist_ok=True, parents=True)
 
-def kfold(config, workdir, modeldir, logger, summaryfile):
-    pass
+        if self.trainer == 'kfold':
+            self.afs_modeldir = self.afs_modeldir / f'{self.config_name}_Pass{self.pass_idx}'
+            self.afs_modeldir.mkdir(exist_ok=True, parents=True)
 
-def main(workdir: str, configfilename: str, rosterdirname: str, trainer: str, **kwargs):
-    set_seed()
-    workdir = Path(workdir)
-    model_configs = load_model_configs(configfilename)
-    rosterdir = workdir / rosterdirname
-    rosterdir.mkdir(exist_ok=True)
-    summaryfile = rosterdir / 'summary.csv'
+    def _make_executable(self) -> Path:
+        training_args = (
+            '' if self.trainer == 'simple'
+            # else f'-n {self.n_iterations}' if self.trainer == 'multi'
+            else f'-p {self.pass_idx}' if self.trainer == 'kfold'
+            else ''
+        )
+        content = f"""#!/bin/bash
+            source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
+            export PYTHONPATH="${{PYTHONPATH}}:${{PWD}}"
+            export X509_USER_PROXY=$(realpath ~/private/x509up)
+            
+            echo "Starting training"
+            python neural_net_tf/trainers.py -w {str(self.workdir)} -r {str(self.roster)} -o {str(self.outdirname)} -t {self.trainer} {training_args} -cn {self.config_name}
+            echo "Training finished"
+            """
+        executable_path = self.afs_modeldir / 'runTraining.sh'
+        executable_path.write_text(content)
+        executable_path.chmod(0o755)
+        return executable_path
+
+    @staticmethod
+    def submit_job(config_name, roster, workdir, outdirname, trainer, pass_idx=None):
+        import htcondor
+        col = htcondor.Collector()
+        credd = htcondor.Credd()
+        credd.add_user_cred(htcondor.CredTypes.Kerberos, None)
+        rd = RunDistributed(config_name, roster, workdir, outdirname, trainer, pass_idx=pass_idx)
+        executable_path = rd._make_executable()
+        submit_description = htcondor.Submit({
+            "executable": f"{str(executable_path.resolve())}",
+            "output": f"{str(rd.afs_modeldir.resolve())}/condor.out",
+            "error": f"{str(rd.afs_modeldir.resolve())}/condor.err",
+            "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
+            "+JobFlavour": '"workday"',
+            "request_cpus": "2",
+            # "request_gpus": "1",
+            "request_memory": "16GB",
+            "request_disk": "2GB",
+            'MY.SendCredential': True,
+            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net_tf, references"
+        })
+        schedd = htcondor.Schedd()
+        submit_result = schedd.submit(submit_description)
+        jobAd = submit_result.clusterad()
+        (rd.afs_modeldir / 'jobAd.txt').write_text(str(jobAd))
+        print(f"Submitted with Cluster ID {submit_result.cluster()}: {config_name}")
+
+def get_executor(distributed: bool) -> Callable:
+    if distributed:
+        return RunDistributed.submit_job
+    else:
+        from neural_net_tf.trainers import main as submit_locally
+        return submit_locally
+
+def main(args):
+    model_configs = load_model_configs(args.roster)
+    executor = get_executor(args.distributed)
+    print(f'Chosen trainer: {args.trainer}')
     for config in model_configs:
-        modeldir = rosterdir / config.name
-        modeldir.mkdir(exist_ok=True)
-        logger = set_logger(config.name, modeldir / 'training.txt')
-        logger.info(f"\n{120 * '='}\nModel name: {config.name}\n{120 * '='}")
-        logger.info(f"Model directory: {modeldir}")
-        start = time.perf_counter()
-        if trainer == 'simple':
-            simple(config, workdir, modeldir, logger, summaryfile)
-        elif trainer == 'multi':
-            multi(config, workdir, modeldir, logger, summaryfile, kwargs['n_iterations'])
-        elif trainer == 'kfold':
-            kfold(config, workdir, modeldir, logger, summaryfile)
-        logger.info(f'Time spent in config {config.name}:  {str(timedelta(seconds=time.perf_counter() - start))}\n')
-    return rosterdir
-
+        modeldir = args.workdir / args.outdirname / config.name
+        modeldir.mkdir(exist_ok=True, parents=True)
+        if args.trainer == 'simple':
+            executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer)
+        elif args.trainer == 'kfold':
+            for pass_idx in range(5):
+                executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer, pass_idx=pass_idx)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-w", "--workdir", type=str, required=True, help='Full path of work directory')
-    parser.add_argument("-c", "--configfilename", type=str, required=True, help='Name of yaml config file under neural_net/config/')
+    parser.add_argument("-w", "--workdir", type=Path, required=True, help='Full path of work directory')
+    parser.add_argument("-r", "--roster", type=Path, required=True, help="Path to the YAML roster")
     parser.add_argument("-o", "--outdirname", type=str, required=True, help='Name of roster dir under work directory')
-    parser.add_argument("-t", "--trainer", choices=['simple', 'multi'], required=True, help='Training mode')
-    parser.add_argument("--n_iterations", type=int, help='Number of iterations for multi mode')
+    parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='simple', help='Training mode')
+    parser.add_argument("-d", "--distributed", action="store_true", help='Run in distributed mode')
     args = parser.parse_args()
+    main(args)
 
-    main(args.workdir, args.configfilename, args.outdirname, args.trainer, n_iterations=args.n_iterations)
+    '''
+    Simple training:
+    python3 neural_net_tf/run_training.py -w Z_OUTPUT_eos/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t simple
+
+    K-Fold training:
+    python3 neural_net_tf/run_training.py -w Z_OUTPUT_eos/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t kfold
+    '''

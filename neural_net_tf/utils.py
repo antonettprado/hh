@@ -103,20 +103,30 @@ def plot_features(dataset: tf.data.Dataset, features: list[str], outfile: str):
     plt.close() 
 
 def log_class_stats(train_ds, val_ds, test_ds, config, logger):
-
-    logger.info(f'\nTraining dataset:')
-    compute_class_stats(train_ds, config.mapper, logger)
-    logger.info(f'\nValidation dataset:')
-    compute_class_stats(val_ds, config.mapper, logger)
-    logger.info(f'\nTest dataset:')
-    compute_class_stats(test_ds, config.mapper, logger)
+    train_stats = compute_class_stats(train_ds, config.mapper, logger)
+    val_stats = compute_class_stats(val_ds, config.mapper, logger)
+    test_stats = compute_class_stats(test_ds, config.mapper, logger)
+    def stats_to_df(class_stats: dict[str, list]) -> pd.DataFrame:
+        # Add a key to the class_stats dictionary, but add it as the first key
+        # So the first key should be 'Class' and the rest of the keys should be the keys of the class_stats dictionary
+        class_stats =  {'Class':config.mapper.get_classes(), **class_stats}
+        df = pd.DataFrame(class_stats)
+        total_row = pd.Series({'Class': 'Total', 'count': sum(df['count']), 'percentage': '', 'Sample Weight': ''})
+        df = df._append(total_row, ignore_index=True)
+        df['count'] = df['count'].apply(lambda x: f"{x:,}" if isinstance(x, (int, float)) else x)
+        df['percentage'] = df['percentage'].apply(lambda x: f"{x:.3f}%" if isinstance(x, (int, float)) else x)
+        df['Sample Weight'] = df['Sample Weight'].apply(lambda x: f"{x:.1f}" if isinstance(x, (int, float)) else x)
+        return df
+    logger.info(f'\nTraining dataset:\n{stats_to_df(train_stats)}')
+    logger.info(f'\nValidation dataset:\n{stats_to_df(val_stats)}')
+    logger.info(f'\nTest dataset:\n{stats_to_df(test_stats)}')
 
     # logger.info(f'\nPlotting features for training, validation, and testing data')
     # plot_features(train_ds, config.features, modeldir/f'features_train.pdf')
     # plot_features(val_ds, config.features, modeldir/f'features_val.pdf')
     # plot_features(test_ds, config.features, modeldir/f'features_test.pdf')
 
-def compute_class_stats(dataset: tf.data.Dataset, mapper, logger):
+def compute_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict[str, list]:
     """
     Computes total counts, class percentages, and sample weight sums for each class.
     Returns a dictionary containing this information.
@@ -140,38 +150,34 @@ def compute_class_stats(dataset: tf.data.Dataset, mapper, logger):
             "sample_weight_sum": state["sample_weight_sum"] + batch_weighted_sums
         }
 
-    final_state = dataset.reduce(initial_state, reduce_func)
+    final_state: dict[str, tf.Tensor] = dataset.reduce(initial_state, reduce_func)
 
     total_count = tf.reduce_sum(final_state["counts"]).numpy()
     class_percentages = (tf.cast(final_state["counts"], tf_type['float']) / tf.cast(total_count, tf_type['float'])) * 100
-    counts_and_percentages = {}
-    for i in range(num_classes):
-        class_name = mapper._index_to_class[i]
-        counts_and_percentages[class_name] = {
-            "count": int(final_state["counts"][i].numpy()),
-            "percentage": float(class_percentages[i].numpy()),
-            "sample_weight_sum": float(final_state["sample_weight_sum"][i].numpy())
-        }
 
-    logger.info(f"{'Total events'}: {total_count:,}")
-    for class_name, info in counts_and_percentages.items():
-        logger.info(f"Class {class_name}")
-        logger.info(f"\t{'Count':<15}: {info['count']:>15,}")
-        logger.info(f"\t{'Percentage':<15}: {info['percentage']:>15,.3f}%")
-        logger.info(f"\t{'Sample weight':<15}: {info['sample_weight_sum']:>15,.3f}")
-
-    return
+    class_stats = {
+        'count': [int(final_state['counts'][i].numpy()) for i in range(num_classes)],
+        'percentage': [float(class_percentages[i].numpy()) for i in range(num_classes)],
+        'Sample Weight': [float(final_state['sample_weight_sum'][i].numpy()) for i in range(num_classes)]
+    }
+    return class_stats
 
 def log_training_stats(train_data: tf.data.Dataset, config, logger) -> tuple[list, list]:
     features = config.features
-    train_mean, train_var, train_samples = compute_training_stats(train_data, features, ignore_value=UNDEFINED)
-    logger.info(f"\nComputed mean variance for training data:")
-    logger.info("\n".join(f"Feature: {f:<15}\tMean: {m:>12.4f}\tVariance: {v:>12.4f}" for f, m, v in zip(features, train_mean, train_var)))
-    logger.info(f"\nTotal samples in train_data: {train_samples:,}")
-
+    train_mean, train_var, train_samples, valid_train_counts = compute_training_stats(train_data, features, ignore_value=UNDEFINED)
+    def stats_to_df(mean: list[float], variance: list[float]) -> pd.DataFrame:
+        stats = {'Feature': features, 'mean': mean, 'variance': variance}
+        if any(count != train_samples for count in valid_train_counts):
+            stats.update({'valid_counts': valid_train_counts})
+        df = pd.DataFrame(stats)
+        df['mean'] = df['mean'].apply(lambda x: f"{x:.4f}")
+        df['variance'] = df['variance'].apply(lambda x: f"{x:.4f}")
+        return df
+    logger.info(f"\nTraining data statistics:")
+    logger.info(stats_to_df(train_mean, train_var))
     return train_mean, train_var
 
-def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value: int = None) -> tuple[list, list, int]:
+def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value: int = None) -> tuple[list, list, int, list]:
     print(f"\nThe ignore_value is {ignore_value}")
 
     num_features = len(features)
@@ -218,5 +224,6 @@ def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore
     variance = (mean_square - np.square(mean)).tolist()
 
     total_samples = final_state["total_samples"].numpy().item()
+    valid_counts = final_state["valid_counts"].numpy().tolist()
 
-    return mean, variance, total_samples
+    return mean, variance, total_samples, valid_counts

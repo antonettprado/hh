@@ -1,6 +1,5 @@
 import tensorflow as tf
 from pathlib import Path
-import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc, confusion_matrix, roc_auc_score
 import numpy as np
@@ -83,7 +82,8 @@ class ModelNetwork:
             x=train_data,
             epochs=self.epochs,
             callbacks = get_callbacks(self.modeldir, using_validation),
-            validation_data=val_data
+            validation_data=val_data,
+            verbose=2
         )
 
         tf.keras.models.save_model(model, self.modeldir/ 'dnn_model_tf_keras')

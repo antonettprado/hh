@@ -82,10 +82,14 @@ class ModelConfig:
         fields_dict['name'] = name if name else self.name
         return ModelConfig(**fields_dict)
 
+def load_model_configs(roster: Path, verbose: bool = True) -> list[ModelConfig]:
 
-def load_model_configs(configfilename: str) -> list[ModelConfig]:
+    # roster =  NEURALNET / 'config' / f'{configfilename}.yml'
 
-    roster_path =  NEURALNET / 'config' / f'{configfilename}.yml'
+    try:
+        configs = yaml.safe_load(roster.read_text())
+    except Exception as e:
+        raise RuntimeError(f"Failed to load {roster}: {e}")
 
     def validate_processes(model_name: str, processes: list[str]) -> None:
         if len(processes) != len(set(processes)):
@@ -95,12 +99,7 @@ def load_model_configs(configfilename: str) -> list[ModelConfig]:
         if invalid:
             raise ValueError(f"Model {model_name}: Invalid processes: {', '.join(invalid)}")
 
-    try:
-        configs = yaml.safe_load(Path(roster_path).read_text())
-    except Exception as e:
-        raise RuntimeError(f"Failed to load {roster_path}: {e}")
-
-    print(f"\nLoading models from {Path(roster_path).name}:")
+    print(f"Loading models from {roster.name}:")
     
     # Track model names to prevent duplicates
     seen_names = set()
@@ -109,14 +108,13 @@ def load_model_configs(configfilename: str) -> list[ModelConfig]:
         name = config.get('name')
         if not name or name in seen_names:
             raise ValueError(f"Invalid or duplicate model name: {name}")
-            
-        print(f"\t{name}")
         seen_names.add(name)
-        
         # Create and validate model config
         model = ModelConfig(**config)
         validate_processes(name, model.mapper.get_processes())
         model_configs.append(model)
+        if verbose:
+            print(f"\t{name}")
 
     return model_configs
 
@@ -133,3 +131,10 @@ def save_model_config(config: ModelConfig, filepath: Path):
 
     with open(filepath, "w") as f:
         yaml.dump(clean_dict, f, sort_keys=False, default_flow_style=False)
+
+def get_config(config_name: str, roster: Path) -> ModelConfig:
+    model_configs = load_model_configs(roster)
+    config = next((config for config in model_configs if config.name == config_name), None)
+    if config is None:
+        raise ValueError(f"Model config {config_name} not found in roster {roster}")
+    return config
