@@ -45,36 +45,40 @@ PROCESSES_FILES = dict(
     #Fakes=[]
     )
 
-VARPATH = Path(__file__).parents[1] / 'bamboo_hh' / 'input' / 'variables.json'
-with open(VARPATH, 'r') as f:
-    ALL_JSON_DATA = json.load(f)
-    ALL_VARNAMES_1D = ALL_JSON_DATA['1D'].keys()
+all_samples = sum(PROCESSES_FILES.values(), [])
+redundant_files = (len(all_samples) - len(set(all_samples))) > 0 
+if redundant_files: raise Error("There are redudant files in PROCESSES_FILES")
 
-# Function for new convention of sample naming (E.g. bbWW_sl_2022, bbWW_sl_2022EE)
-def _find_root_files(resultsdir: Path) -> list[Path]:
+SUBPROCESS_TO_PROCESS = {subprocess:process for process, subprocesses in PROCESSES_FILES.items() for subprocess in subprocesses}
+
+def get_file_subprocess(root_file: Path) -> str:
+    return root_file.stem.rsplit('_', 1)[0]
+
+def get_file_era(root_file: Path) -> str:
+    return root_file.stem.rsplit('_', 1)[1]
+
+def get_file_process(root_file: Path) -> str:
+    subprocess = get_file_subprocess(root_file)
+    process = SUBPROCESS_TO_PROCESS[subprocess]
+    return process
+
+def get_root_files(resultsdir: Path) -> list[Path]:
     return [file for file in resultsdir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
 
-def _find_processes(resultsdir: Path) -> list[str]:
-    present_files = _find_root_files(resultsdir)
-    present_process_files = sorted(list(set([f.stem.rsplit('_', 1)[0] for f in present_files])))
-    valid_processes = [proc for proc, proc_files in PROCESSES_FILES.items() if any(pf in present_process_files for pf in proc_files)]
-    return valid_processes
+def get_mc_files(resultsdir: Path) -> list[Path]:
+    root_files = get_root_files(resultsdir)
+    mc_files = [f for f in root_files if get_file_subprocess(f) in all_samples]
+    return mc_files
 
-def _find_eras(resultsdir: Path) -> list[str]:
-    present_files = _find_root_files(resultsdir)
-    present_eras = sorted(list(set([f.stem.rsplit('_', 1)[1] for f in present_files])))
-    valid_eras = [era for era in ERAS if era in present_eras]
-    return valid_eras
+def find_mc_processes(resultsdir: Path) -> list[str]:
+    mc_files = get_mc_files(resultsdir)
+    processes = sorted(list(set([get_file_process(f) for f in mc_files])))
+    return processes
 
-def get_process_for_file(file: Path) -> str:
-    subprocess = file.stem.rsplit('_', 1)[0]
-    return get_process_from_subprocess(subprocess)
-
-def get_process_from_subprocess(subprocess: str) -> str:
-    for process, subprocesses in PROCESSES_FILES.items():
-        if subprocess in subprocesses:
-            return process
-    return None
+def find_mc_eras(resultsdir: Path) -> list[str]:
+    mc_files = get_mc_files(resultsdir)
+    eras = sorted(list(set([get_file_era(f) for f in mc_files])))
+    return eras
 
 # Color scheme for plotting processes -----------------
 CLASS_COLOR_MAP = dict(
