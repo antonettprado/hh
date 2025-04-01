@@ -48,7 +48,6 @@ class BasePlotter:
 
         self.refsFile = None
         self.refs = None
-        self.eras: list[str] 
         self.LUMINOSITY:dict[str, float] = dict()         # dict{era: era_lumi}
         self.CROSS_SECTIONS: dict[str, float] = dict()    # dict{subprocess: subprocess_crosssection}
         # self.SAMPLES: dict[str, str] = dict()             # dict{subprocess: era}
@@ -56,7 +55,6 @@ class BasePlotter:
     def _set_configFile_info(self, configFile: Path):
         with open(configFile, "r") as yaml_file:
             yaml_data = yaml.safe_load(yaml_file)
-            self.eras = list(yaml_data['eras'].keys())
             for era in self.eras:
                 self.LUMINOSITY[era] = yaml_data['eras'][era]['luminosity']
             for sample_name, sample_data in yaml_data['samples'].items():
@@ -70,7 +68,7 @@ class BasePlotter:
         '''
         For either a dirtype of 'workdir' or 'superworkdir' set a reference root file to pull all references from
         '''
-        self.refsFile = references._find_root_files(ref_workdir/'results')[0]
+        self.refsFile = references.get_mc_files(ref_workdir/'results')[0]
         tfile = TFile.Open(str(self.refsFile), 'read')
         refs = []
         for key in tfile.GetListOfKeys():
@@ -136,32 +134,37 @@ class BasePlotter:
         
         return hist
 
+def open_root_files(root_files: list[Path]) -> dict[TFile, float]:
+    tfiles_info = {} # dict{TFile: sumWeight}
+    for file in root_files:
+        file = TFile.Open(str(file), 'read')
+        yld_hist = file.Get('yields_genEventSumWeight')
+        if yld_hist:
+            sumw = yld_hist.Integral()
+            tfiles_info[file] = sumw
+        else:
+            raise Exception(f"Error retrieving yields_genEventSumWeight from {file.name}")
+    print(f"TFiles info: {tfiles_info.values()}")
+    return tfiles_info
+
+
 class Plotter(BasePlotter):
 
-    def __init__(self, workdir: str, configFile: str, outdir:str='plotter', which_processes: Union[str, list[str]]="All"):
+    def __init__(self, workdir: str, configFile: str, outdir:str='plotter'):
         super().__init__(workdir, configFile, outdir, dirtype='workdir')
         self.workdir = Path(workdir)
         self.resultsdir = self.workdir / 'results'
-        self.present_processes = references._find_processes(self.resultsdir)
-        self.active_processes = self.present_processes if which_processes == 'All' else which_processes
+        self.processes = references.find_mc_processes(self.resultsdir)
+        self.eras: list[str] = references.find_mc_eras(self.resultsdir)
         self.tfiles_info: dict[TFile, float] = {}            # dict{TFile: sumWeight}
-        self._post_init_(configFile)
-        print(f"Active processes: {self.active_processes}")
-        print(f"Eras: {self.eras}")
-
-    def _post_init_(self, configFile):
         super()._set_configFile_info(Path(configFile))
         super()._set_refs_file_and_refs(ref_workdir=self.workdir)
-        sample_names = []
-        root_files = references._find_root_files(self.resultsdir)
-        for file in root_files:
-            file_name = file.stem
-            proc_file, era = file_name.rsplit('_', 1)[0], file_name.rsplit('_', 1)[1]
-            proc_present = any(proc_file in proc_files for proc in self.active_processes for proc_files in references.PROCESSES_FILES[proc])
-            era_present = era in self.eras
-            if proc_present and era_present:
-                sample_names.append(file)
-        self.tfiles_info = super().open_root_files(self.resultsdir, sample_names)
+        mc_files = references.get_mc_files(self.resultsdir)
+        print(f"All MC files found:")
+        for f in mc_files: print(f.name)
+        self.tfiles_info = open_root_files(mc_files)
+        print(f"Present processes: {self.processes}")
+        print(f"Eras: {self.eras}\n")
     
     def get_signal_and_backg_hists(self, ref: str, process_hist_dict: dict[str, ROOT.TH1]) -> dict[str, ROOT.TH1]:
         hist_dict = {proc: hist.Clone(f"{ref}_{proc}") for proc, hist in process_hist_dict.items()}
@@ -396,15 +399,16 @@ class Plotter(BasePlotter):
 
         return sig_back_dict
 
-@dataclass
 class Reference():
-    ref: str
-    plotter: Plotter 
-    combine_eras: bool
-    norm_type: str
+    def __init__(self, ref: str, plotter: Plotter, combine_eras: bool, norm_type: str):
+        self.ref = ref
+        self.plotter = plotter
+        self.combine_eras = combine_eras
+        self.norm_type = norm_type
+        self._post_init()
 
-    def __post_init__(self):
-        self.processes = self.plotter.active_processes
+    def _post_init(self):
+        self.processes = self.plotter.processes
         self.eras = self.plotter.eras
         self.selection = next((sel for sel in references.SELECTIONS if self.ref.startswith(sel)), 'Others')
         self.dist_name = self.ref.removeprefix(f"{self.selection}_" if self.selection != 'Others' else '')
@@ -459,30 +463,7 @@ class Reference():
         return Path(self.selection) / ref_type / era_type/ self.norm_type 
 
     def __repr__(self):
-        return f"Reference(ref={self.ref}, plotter={self.plotter}, combine_eras={self.combine_eras}, norm_type={self.norm_type}, outdir={self.outdir}, dist_name={self.dist_name})"
-
-# ==== SuperPlotter class NOT YET COMPLETED =====================
-
-class SuperPlotter(BasePlotter):
-
-    def __init__(self, superworkdir: str, configFile: str, eras:list[str]=None):
-        super().__init__(superworkdir, configFile, eras, dirtype='superworkdir')
-        self.superworkdir = Path(superworkdir)
-        self.workdirs = [item for item in self.superworkdir if (item/'results').is_dir()]
-        self.dirprocesses = set([proc for proc, files in references.PROCESSES_FILES.items() for f in self.resultsdir.iterdir() if f.stem in files ])
-        self.SUM_WEIGHTS = {}
-        super().__set_refs_file_and_refs(ref_workdir=self.workdirs[0])
-        super().__set_configFile_info(Path(configFile))
-
-    def compare_refs_from_single_process_across_superworkdir(self, refs:list, process):
-        # assert refs exist in all workdirs
-        hist_list, legend_list = [], []
-        for ref in refs:
-            for workdir in self.workdirs:
-                hist_list.append(self._get_ref_hist_for_process(ref, process, workdir))
-                legend_list.append(workdir.name)
-            outfilepath = ref
-            self._draw_hists_in_one_canvas(outfilepath, hist_list, legend_list)    
+        return f"Reference(ref={self.ref}, plotter={self.plotter}, combine_eras={self.combine_eras}, norm_type={self.norm_type}, outdir={self.outdir}, dist_name={self.dist_name})"  
 
 if __name__ == "__main__":
 
@@ -496,7 +477,7 @@ if __name__ == "__main__":
     myPlotter = Plotter(args.workdir, args.configFile, args.outdir)
     myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False, combine_eras=args.combine_eras)
     myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False, combine_eras=args.combine_eras)
-    # myPlotter.Draw_Processes(normalization='unity', combine_backgs=False, sen_info=False, which_processes=['HH', 'ttbar'])
+    # myPlotter.Draw_Processes(normalization='unity', combine_backgs=False, sen_info=False)
     
     '''
     Examples of use from script:

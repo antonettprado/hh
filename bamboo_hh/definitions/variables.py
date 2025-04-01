@@ -466,7 +466,7 @@ class LikelihoodRatio(Variable):
         vars (dict[str:Variable]): dictionary of all the constituent variables
         subcats (list[str]): set intersection of all the constituent variable subcats
     '''
-    def __init__(self, names: Union['list[str]', str], **kwargs):
+    def __init__(self, names: Union['list[str]', str], llr:bool=False, **kwargs):
         '''
         Constructor. Creates a LikelihoodRatio object from a list of variable names. Variable names can be either 1D, 2D, 3D, or
         any combination of these; the only condition is that they all appear in the JSON file.
@@ -474,18 +474,19 @@ class LikelihoodRatio(Variable):
         if type(names) == str:
             names = [names]
         self.names = sorted(names)
-        self.name = '_x_'.join(self.names) + '_lr'
+        self.name = '_x_'.join(self.names) + ('_llr' if llr else '_lr')
         super().__init__(self.name)
         self.vars = { name: Variable1D(name) for name in self.names if name in ALL_VARNAMES_1D}
         self.vars.update({ name: Variable2D(name) for name in self.names if name in ALL_VARNAMES_2D})
         self.vars.update({ name: Variable3D(name) for name in self.names if name in ALL_VARNAMES_3D})
         self.dimensionality = len(self.names)
-        self.update(**lr_binning[self.dimensionality])
+        binning = llr_binning if llr else lr_binning
+        self.update(**binning[self.dimensionality])
         self.generate_eqbin()
         self.unit = ''
         self.subcats = list(set.intersection(*[set(var.subcats) for var in self.vars.values()]))
         self.refs = [ '_'.join((sc, self.name)) for sc in self.subcats ]
-        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + ' LR'
+        self.full_title = ' X '.join(['('+var.title+')' for var in self.vars.values()]) + (' LLR' if llr else ' LR')
         self.update(**kwargs)
 
     def generate_eqbin(self):

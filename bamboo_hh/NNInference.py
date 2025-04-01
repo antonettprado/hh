@@ -54,8 +54,8 @@ class NNInference(NanoBaseHHbbWW):
         super(NNInference, self).addArgs(parser)
         parser.add_argument("-NN", "--NNdirs", action="store", dest="NNdirs", nargs="+", help="List of dirs where NN models are in (Ex: -NN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model1 Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model2 ", default=None)
         parser.add_argument("-SNN", "--superNNdir", action="store", dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
-        # parser.add_argument("-sk", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
-        parser.add_argument("-llr_cw", "--llr_corr_workdir", action='store', help='The work directory where the llr correction file is')
+        parser.add_argument("-sk", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
+        parser.add_argument("-corr_file", "--correction_file", action='store', help='The work directory where the lr correction file is')
 
     @staticmethod
     def get_DNN_model_info(modeldir: Path):
@@ -67,16 +67,10 @@ class NNInference(NanoBaseHHbbWW):
             model_info = yaml.safe_load(file)
         model_name = model_info['name']
 
-        version_old = ('type' in model_info)
-        if version_old:
-            model_type = model_info['type']
-            classification = model_info['training_setup']['categorization']
-            features = model_info['training_setup']['input_vars']
-        else:
-            model_type = model_info['model_type']
-            classification = model_info['classification']
-            features = model_info['features']
-            
+        model_type = model_info['model_type']
+        classification = model_info['classification']
+        features = model_info['features']
+        
         classes = [class_i for class_i in classification.keys()] if model_type == 'multi' else ["isSignal"]        
         processes = [proc for proc_list in classification.values() for proc in proc_list]
 
@@ -88,44 +82,54 @@ class NNInference(NanoBaseHHbbWW):
         return model, model_name, model_type, features, classes, processes
 
     @staticmethod
-    def gather_input_vars(sel_name, feature_names, reco_vars, llr_corr_workdir=None):
+    def gather_input_vars(sel_name, feature_names, reco_vars, correction_file=None):
 
         vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
         vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
 
-        var_names = [s for s in feature_names if not s.endswith('_llr')]
-        llr_names = [s for s in feature_names if s.endswith('_llr')]
-        input_vars = []
-        
-        # Variables
-        if var_names:
-            input_vars = [ vars_dict[name].data[sel_name] for name in var_names if sel_name in vars_dict[name].subcats]
+        var_names = [s for s in feature_names if not s.endswith('_lr') and not s.endswith('_llr')]
 
-        if llr_names:
-            for llr_name in llr_names:
-                ref = llr_name.replace('_llr', '')
+        if correction_file:
+            if correction_file.endswith('_llr.json'):
+                lr_names = [s for s in feature_names if s.endswith('_llr')]
+                suffix = '_llr'
+                llr = True
+            elif correction_file.endswith('_lr.json'):
+                lr_names = [s for s in feature_names if s.endswith('_lr')]
+                suffix = '_lr'
+                llr = False
+            else:
+                raise ValueError(f"Correction file {correction_file} is not supported")
+        
+        input_vars = []
+        for feature_name in feature_names:
+            if feature_name in var_names:
+                input_vars.append(vars_dict[feature_name][sel_name])
+            elif feature_name in lr_names:
+                ref = feature_name.replace(suffix, '')
                 if '_x_' in ref:
                     varnames = ref.split('_x_')
-                    llr_list = []
+                    lr_list = []
                     for varname in varnames:
                         var = vars_dict[varname]
                         subvar = var[sel_name]
-                        print(f"{subvar.ref}")
-                        # subvar = subvars_dict[varname]
-                        llr = LikelihoodRatio.get_llr_for_sel(subvar, sel_name, llr_corr_workdir, reco_vars)
-                        llr_list.append(llr)
-                    llr_product = LLR(varnames)
-                    llr_product_data = op.sum(*[llr[sel_name].data for llr in llr_list])
-                    llr_product.populate({sel_name: llr_product_data}, reco_vars._get_selections_subset([sel_name]))
-                    input_vars.append(llr_product[sel_name].data)
+                        lr = LikelihoodRatio.get_lr_for_sel(subvar, sel_name, correction_file, reco_vars, llr)
+                        lr_list.append(lr)
+                    multivar_lr = LR(varnames, llr=llr)
+                    if llr:
+                        multivar_lr_data = op.sum(*[lr[sel_name].data for lr in lr_list])
+                    else:
+                        multivar_lr_data = op.product(*[lr[sel_name].data for lr in lr_list])
+                    multivar_lr.populate({sel_name: multivar_lr_data}, reco_vars._get_selections_subset([sel_name]))
+                    input_vars.append(multivar_lr[sel_name])
                 else:
                     varname = ref
                     var = vars_dict[varname]
                     subvar = var[sel_name]
                     # subvar = subvars_dict[varname]
-                    llr = LikelihoodRatio.get_llr_for_sel(subvar, sel_name, llr_corr_workdir, reco_vars)
-                    input_vars.append(llr[sel_name].data)
-
+                    lr = LikelihoodRatio.get_lr_for_sel(subvar, sel_name, correction_file, reco_vars, llr)
+                    input_vars.append(lr[sel_name])
+                    
         return input_vars
 
     @staticmethod
@@ -191,26 +195,15 @@ class NNInference(NanoBaseHHbbWW):
         
         return DNN
 
-    def output_skims(DNN_LIST, sel_name, selections, plots):
-        selection = selections[sel_name]
+    def output_skims(self, DNN_LIST, selection, sel_name: str, plots: list[Plot]):
         for DNN in DNN_LIST:
+            dnn = DNN[sel_name]
             branches = {"event": None}
-            for i, class_i in enumerate(DNN.classes):
-                branches.update({class_i: DNN.data[i]})
-            plots.append(Skim(DNN.model_name, branches, selection))
+            branches.update({input_var.name: input_var.data for input_var in dnn.input_vars})
+            for i, class_i in enumerate(dnn.classes):
+                branches.update({class_i: dnn.data[i]})
+            plots.append(Skim(dnn.model_name, branches, selection))
         return plots
-
-    @staticmethod
-    def update_with_DNN_yields(sel_name, yields, DNN, selections:dict):
-        scores = DNN.data
-        max_score_index = op.rng_max_element_index(scores, lambda score: score)
-        sel = selections[sel_name]
-        for i, process in enumerate(DNN.classes):
-            new_sel_name = '_'.join([sel_name, process])
-            process_sel = sel.refine(new_sel_name, cut = (i == max_score_index))
-            selections[new_sel_name] = process_sel
-            yields.add(process_sel, new_sel_name)
-        return yields
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -220,15 +213,6 @@ class NNInference(NanoBaseHHbbWW):
         objects = VarsReco.get_objects(tree, self.era)
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         reco_vars = RecoVariables(objects, selections)
-
-        delim = '_xx_'
-        def get_plot_selection(plot: Plot) -> str:
-            sel_fold, *_ = plot.name.split(delim)
-            if sel_fold.rsplit('_',1)[-1].isdigit():
-                return delim.join([sel_fold.rsplit('_',1)[0], *_])
-            else:
-                return delim.join([sel_fold, *_])
-
 
         # # ===============================================================================
         # # ================================== Plots ======================================
@@ -284,8 +268,8 @@ class NNInference(NanoBaseHHbbWW):
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
 
-        # if self.args.skim:
-        #     plots = self.output_skims(self.DNN_LIST, sel_name, selections, plots)
+        if self.args.skim:
+            plots = self.output_skims(self.DNN_LIST, selections['SL_resolved'], 'SL_resolved', plots)
 
         return plots
 

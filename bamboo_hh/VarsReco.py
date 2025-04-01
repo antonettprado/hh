@@ -197,23 +197,14 @@ class VarsReco(NanoBaseHHbbWW):
 
         from bamboo_hh.plotter.plotter import Plotter
 
-        myPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes="All")
-        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=True)
+        myPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0])
+        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False)
         myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)
 
 
-        from bamboo_hh.definitions import llr_functions
+        from bamboo_hh.definitions import lr_functions
 
-        if self.args.llr_backgrounds == 'All': 
-            which_processes = 'All'
-            postfix = which_processes
-        else:
-            processes_available = myPlotter.dirprocesses
-            assert all(llr_back in processes_available for llr_back in self.args.llr_backgrounds), f"Refer to references.py for allowed processes' names"
-            which_processes = ['HH'] + self.args.llr_backgrounds
-            postfix = ''.join(self.args.llr_backgrounds)
-
-        llrPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes=which_processes)
-        llr_functions.compute_llrs(plotter=llrPlotter, outfilename='corrections_llr_'+postfix, which_processes=which_processes)
+        lrPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0])
+        lr_functions.compute_lrs(plotter=lrPlotter, configFile=self.args.input[0], apply_log=False)
 
         print(f"\nVarsReco completed using {self.event_nr_sel} events\n")

@@ -25,11 +25,11 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         super(LikelihoodRatio, self).addArgs(parser)
         parser.add_argument("-corr_file", "--correction_file", action='store', help='The work directory where the correction file is')
         parser.add_argument("-ns", "--no_skim", action='store_true', help='Not producing skims')
+        parser.add_argument("-llr", "--llr", action='store_true', help='Calculate LLRs instead of LRs')
         
     @staticmethod
     def map_to_lr(correction_file:str, data: list, var_name, selection, defineOnFirstUse=True):
         corr_file = Path(correction_file)
-        print(var_name)
         if len(data) == 1: 
             return get_correction(corr_file, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None)  
         elif len(data) == 2:
@@ -38,8 +38,8 @@ class LikelihoodRatio(NanoBaseHHbbWW):
             return get_correction(corr_file, var_name, params={"xaxis": data[0],"yaxis":data[1], "zaxis":data[2]}, defineOnFirstUse=defineOnFirstUse, sel=selection)(None) 
 
     @staticmethod
-    def get_lr_for_sel(subvar, sel_name:str, correction_file, reco_vars) -> LR:
-        lr = LR(subvar.name)
+    def get_lr_for_sel(subvar, sel_name:str, correction_file, reco_vars, llr:bool=False) -> LR:
+        lr = LR(subvar.name, llr=llr)
         subvar_data = op.switch(subvar.data < subvar.min, subvar.min + 0.0001*abs(subvar.min), subvar.data)
         subvar_data = op.switch(subvar.data > subvar.max, subvar.max - 0.0001*abs(subvar.max), subvar.data)
         subvar_lr = LikelihoodRatio.map_to_lr(correction_file, [subvar_data], lr[subvar.subcat].ref, subvar.selection)
@@ -49,12 +49,12 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         return lr
 
     @staticmethod
-    def get_lrs_for_1D_vars(correction_file, reco_vars) -> list[LR]:
+    def get_lrs_for_1D_vars(correction_file, reco_vars, llr:bool=False) -> list[LR]:
         vars_1D = reco_vars.gather_all_1D_variables()
         vars_1D = [var for var in vars_1D if var.name != 'era']
         lrs_for_1D_vars = []
         for var in vars_1D:
-            lr = LR(var.name)
+            lr = LR(var.name, llr=llr)
             lr_data = {}
             sel_name = "SL_4j_resolved"
             if sel_name in var.subcats:
@@ -68,28 +68,31 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         return lrs_for_1D_vars
 
     @staticmethod
-    def get_multivar_lrs(correction_file, reco_vars):
+    def get_multivar_lrs(correction_file, reco_vars, llr:bool=False):
 
         multivar_lrs_list = [
-            LR(['bjets_mbb', 'bjets_dR']),
-            LR(['bjets_pt_bb', 'bjets_dR']),
-            LR(['bjets_mbb', 'trijet_mInv']),
-            LR(['bjets_dR', 'bjets_mbb', 'trijet_mInv']),
-            LR(['bjet0_pt', 'bjets_dR', 'bjets_mbb', 'trijet_mInv']),
-            LR(['bjet0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_mbb', 'trijet_mInv']),
-            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat']),
-            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat', 'bjets_pt_bb']),
-            LR(['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat']),
-            LR(['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb']),
-            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat']),
-            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'])
+            LR(['bjets_mbb', 'bjets_dR'], llr=llr),
+            LR(['bjets_pt_bb', 'bjets_dR'], llr=llr),
+            LR(['bjets_mbb', 'trijet_mInv'], llr=llr),
+            LR(['bjets_dR', 'bjets_mbb', 'trijet_mInv'], llr=llr),
+            LR(['bjet0_pt', 'bjets_dR', 'bjets_mbb', 'trijet_mInv'], llr=llr),
+            LR(['bjet0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_mbb', 'trijet_mInv'], llr=llr),
+            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat'], llr=llr),
+            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat', 'bjets_pt_bb'], llr=llr),
+            LR(['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'], llr=llr),
+            LR(['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'], llr=llr),
+            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'], llr=llr),
+            LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'], llr=llr)
         ]
 
         sel_name = "SL_4j_resolved"
-        lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(correction_file, reco_vars)
+        lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(correction_file, reco_vars, llr)
         for multivar_lr in multivar_lrs_list:
             multivar_lr_data = {}
-            multivar_lr_data[sel_name] = op.product(*[lr[sel_name].data for lr in lrs_for_1D_vars if lr.name.strip('_lr') in multivar_lr.vars.keys()])
+            if llr:
+                multivar_lr_data[sel_name] = op.sum(*[lr[sel_name].data for lr in lrs_for_1D_vars if lr.name.strip('_llr') in multivar_lr.vars.keys()])
+            else:
+                multivar_lr_data[sel_name] = op.product(*[lr[sel_name].data for lr in lrs_for_1D_vars if lr.name.strip('_lr') in multivar_lr.vars.keys()])
             multivar_lr.populate(multivar_lr_data, reco_vars._get_selections_subset(multivar_lr_data.keys()))
 
         return multivar_lrs_list
@@ -125,8 +128,8 @@ class LikelihoodRatio(NanoBaseHHbbWW):
 
         sel_name = "SL_4j_resolved"
 
-        lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(self.args.correction_file, reco_vars)
-        multivar_lrs = LikelihoodRatio.get_multivar_lrs(self.args.correction_file, reco_vars)
+        lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(self.args.correction_file, reco_vars, llr=self.args.llr)
+        multivar_lrs = LikelihoodRatio.get_multivar_lrs(self.args.correction_file, reco_vars, llr=self.args.llr)
         all_lrs = lrs_for_1D_vars + multivar_lrs
         plots.extend([Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == sel_name])
         
@@ -134,8 +137,9 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         # ============================= Cutflow Report ==================================
         # ===============================================================================
         
-        self.yields.add(selections['SL_res_1b'], 'SL_res_1b')
-        self.yields.add(selections['SL_res_2b'], 'SL_res_2b')
+        self.yields.add(selections['SL_res_4j_1b'], 'SL_res_4j_1b')
+        self.yields.add(selections['SL_res_4j_2b'], 'SL_res_4j_2b')
+        self.yields.add(selections['SL_4j_resolved'], 'SL_4j_resolved')
         self.yields.add(selections['SL_resolved'], 'SL_resolved')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
@@ -155,7 +159,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         super(LikelihoodRatio, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from bamboo_hh.plotter.plotter import Plotter
-        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0], which_processes='All')
+        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0])
         myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False)
         myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False)
 
