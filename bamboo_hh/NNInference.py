@@ -104,7 +104,7 @@ class NNInference(NanoBaseHHbbWW):
         input_vars = []
         for feature_name in feature_names:
             if feature_name in var_names:
-                input_vars.append(vars_dict[feature_name][sel_name])
+                input_vars.append(vars_dict[feature_name][sel_name].data)
             elif feature_name in lr_names:
                 ref = feature_name.replace(suffix, '')
                 if '_x_' in ref:
@@ -121,19 +121,19 @@ class NNInference(NanoBaseHHbbWW):
                     else:
                         multivar_lr_data = op.product(*[lr[sel_name].data for lr in lr_list])
                     multivar_lr.populate({sel_name: multivar_lr_data}, reco_vars._get_selections_subset([sel_name]))
-                    input_vars.append(multivar_lr[sel_name])
+                    input_vars.append(multivar_lr[sel_name].data)
                 else:
                     varname = ref
                     var = vars_dict[varname]
                     subvar = var[sel_name]
                     # subvar = subvars_dict[varname]
                     lr = LikelihoodRatio.get_lr_for_sel(subvar, sel_name, correction_file, reco_vars, llr)
-                    input_vars.append(lr[sel_name])
+                    input_vars.append(lr[sel_name].data)
                     
         return input_vars
 
     @staticmethod
-    def get_DNN(modeldir, reco_vars: RecoVariables, tree, llr_corr_workdir=None):
+    def get_DNN(modeldir, reco_vars: RecoVariables, tree, correction_file=None):
         DNN = Variable1D("DNN")
         subcat_names = DNN.subcats
         modeldir_3j = modeldir["3j"]
@@ -145,16 +145,16 @@ class NNInference(NanoBaseHHbbWW):
             for subpath in modeldir_3j.iterdir() 
             if subpath.is_dir() 
             and modeldir_3j.name in subpath.name 
-            and subpath.name.rstrip('1234567890').endswith("Fold")
-            and subpath.name.split('Fold')[-1].isdigit()
+            and subpath.name.rstrip('1234567890').endswith("Pass")
+            and subpath.name.split('Pass')[-1].isdigit()
         ] or [ (0, modeldir_3j) ]
         fold_paths_4j = [ 
             ( int(subpath.name[-1]), subpath ) 
             for subpath in modeldir_4j.iterdir() 
             if subpath.is_dir() 
             and modeldir_4j.name in subpath.name 
-            and subpath.name.rstrip('1234567890').endswith("Fold")
-            and subpath.name.split('Fold')[-1].isdigit()
+            and subpath.name.rstrip('1234567890').endswith("Pass")
+            and subpath.name.split('Pass')[-1].isdigit()
         ] or [ (0, modeldir_4j) ]
 
         num_folds = len(fold_paths_3j)
@@ -164,7 +164,7 @@ class NNInference(NanoBaseHHbbWW):
             fold_selections: dict= {}
             for subcat, sel in DNN_selections.items():
                 for i in range(num_folds):
-                    fold_sel = sel.refine(f"{subcat} Fold {i}", cut=[ tree.event % num_folds == i ])
+                    fold_sel = sel.refine(f"{subcat} Pass {i}", cut=[ tree.event % num_folds == i ])
                     fold_selections[f"{subcat}_{i}"] = fold_sel
             DNN_selections = fold_selections
             DNN.subcats = list(fold_selections.keys())
@@ -175,21 +175,21 @@ class NNInference(NanoBaseHHbbWW):
             model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
             for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_3j_" in x[0], DNN_selections.items()):
                 # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
-                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, llr_corr_workdir)
+                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, correction_file)
                 sel_data = model(*input_vars)
                 data[sel_name] = sel_data
         for fold, model_path in fold_paths_4j:
             model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
             for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_4j_" in x[0], DNN_selections.items()):
                 # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
-                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, llr_corr_workdir)
+                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, correction_file)
                 sel_data = model(*input_vars)
                 data[sel_name] = sel_data
         
         DNN.populate(data, DNN_selections)
 
         # These will all be identical for each fold except model_name
-        model_name = model_name.strip(f"_Fold{num_folds-1}")
+        model_name = model_name.strip(f"_Pass{num_folds-1}")
         model_name = model_name.strip("_4j")
         DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes, num_folds=num_folds)
         
@@ -227,7 +227,7 @@ class NNInference(NanoBaseHHbbWW):
         # # ===============================================================================
         self.DNN_LIST = []
         for modeldir in self.modeldir_list_3j4j:
-            DNN = NNInference.get_DNN(self.modeldir_list_3j4j[modeldir], reco_vars, tree, self.args.llr_corr_workdir)
+            DNN = NNInference.get_DNN(self.modeldir_list_3j4j[modeldir], reco_vars, tree, self.args.correction_file)
             DNN_plots: list[list] = []
             for sel_name in DNN.subcats:
                 dnn = DNN[sel_name]
@@ -240,7 +240,7 @@ class NNInference(NanoBaseHHbbWW):
                     sel_NNclass_name = delim.join([sel_name, class_i, dnn.model_name])
                     sel_NNclass = (dnn.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
                     DNN_plots.append(Plot.make1D(delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
-                    # self.yields.add(sel_NNclass, sel_NNclass_name)
+                    self.yields.add(sel_NNclass, sel_NNclass_name)
 
             plots.extend(DNN_plots)
             
