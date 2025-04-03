@@ -214,6 +214,14 @@ class NNInference(NanoBaseHHbbWW):
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         reco_vars = RecoVariables(objects, selections)
 
+        delim = '_xx_'
+        def get_plot_selection(plot: Plot) -> str:
+            sel_fold, *_ = plot.name.split(delim)
+            if sel_fold.rsplit('_',1)[-1].isdigit():
+                return delim.join([sel_fold.rsplit('_',1)[0], *_])
+            else:
+                return delim.join([sel_fold, *_])
+
         # # ===============================================================================
         # # ================================== Plots ======================================
         # # ===============================================================================
