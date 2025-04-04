@@ -62,8 +62,16 @@ def get_file_process(root_file: Path) -> str:
     process = SUBPROCESS_TO_PROCESS[subprocess]
     return process
 
+
 def get_root_files(resultsdir: Path) -> list[Path]:
     return [file for file in resultsdir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
+
+def get_eras(resultsdir: Path) -> list[str]:
+    present_files = get_root_files(resultsdir)
+    present_eras = sorted(list(set([get_file_era(f) for f in present_files])))
+    valid_eras = [era for era in ERAS if era in present_eras]
+    return valid_eras
+
 
 def get_mc_files(resultsdir: Path) -> list[Path]:
     root_files = get_root_files(resultsdir)

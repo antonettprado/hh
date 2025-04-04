@@ -107,8 +107,8 @@ def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict
 
 
 def combine_results(results_dir: Path, hist_names: list[str]=None) -> dict:
-    files: list[Path] = refs._find_root_files(results_dir)
-    eras: list[str] = refs._find_eras(results_dir)
+    files: list[Path] = refs.get_root_files(results_dir)
+    eras: list[str] = refs.get_eras(results_dir)
 
     with open('bamboo_hh/config/analysis_2022.yml') as file:
         config = yaml.safe_load(file)
