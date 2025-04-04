@@ -14,81 +14,50 @@ from bamboo_hh.definitions.variables import LikelihoodRatio as LLR
 from bamboo_hh.definitions.variable_definition import RecoVariables
 
 class NNInference(NanoBaseHHbbWW):
+    num_folds = 5
+    delim = '_xx_'
     def __init__(self, args):
         super(NNInference, self).__init__(args)
-        if self.args.event_nr_sel: 
-            self.event_nr_sel = self.args.event_nr_sel
-        else:
-            self.event_nr_sel = "odd"
-
-        if self.args.superNNdir is not None:
-            self.modeldir_list = [modeldir.resolve() for modeldir in Path(self.args.superNNdir).iterdir() if modeldir.is_dir()]
-            self.modeldir_list_3j4j = {}
-            for modeldir in self.modeldir_list:
-                modeldirname = modeldir.name
-                if modeldirname.split("_")[-1] != "3j" and modeldirname.split("_")[-1] != "4j":
-                    print ("3j or 4j not specified for model: %s"%modeldirname)
-                    sys.exit()
-                if modeldirname.split("_")[-1] == "3j":
-                    model = modeldirname.split("/")[-1].split("_3j")[0]
-                    if model not in self.modeldir_list_3j4j:
-                        self.modeldir_list_3j4j[model] = {}
-                        self.modeldir_list_3j4j[model]["3j"] = None
-                        self.modeldir_list_3j4j[model]["4j"] = None
-                    self.modeldir_list_3j4j[model]["3j"] = modeldir
-                elif modeldirname.split("_")[-1] == "4j":
-                    model = modeldirname.split("/")[-1].split("_4j")[0]
-                    if model not in self.modeldir_list_3j4j:
-                        self.modeldir_list_3j4j[model] = {}
-                        self.modeldir_list_3j4j[model]["3j"] = None
-                        self.modeldir_list_3j4j[model]["4j"] = None
-                    self.modeldir_list_3j4j[model]["4j"] = modeldir
-            for model in self.modeldir_list_3j4j:
-                if self.modeldir_list_3j4j[model]["3j"] is None or self.modeldir_list_3j4j[model]["4j"] is None:
-                    print ("Model %s does not have both 3j and 4j"%model)
-                    sys.exit()
+        self.event_nr_sel = self.args.event_nr_sel if self.args.event_nr_sel else "odd"
+        if self.args.superNNdir:
+            self.modeldir_list = [modeldir for modeldir in self.args.superNNdir.iterdir() if modeldir.is_dir()]
         else:
             self.modeldir_list = self.args.NNdirs    
 
     def addArgs(self, parser):
         super(NNInference, self).addArgs(parser)
         parser.add_argument("-NN", "--NNdirs", action="store", dest="NNdirs", nargs="+", help="List of dirs where NN models are in (Ex: -NN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model1 Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model2 ", default=None)
-        parser.add_argument("-SNN", "--superNNdir", action="store", dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
+        parser.add_argument("-SNN", "--superNNdir", action="store", type=Path, dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
         parser.add_argument("-sk", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
         parser.add_argument("-corr_file", "--correction_file", action='store', help='The work directory where the lr correction file is')
+        parser.add_argument("-trainer", "--trainer", action='store', choices=['simple', 'kfold'], default='simple', help='The trainer used: simple or kfold')
 
     @staticmethod
     def get_DNN_model_info(modeldir: Path):
         model_path = modeldir / "dnn_model.onnx"
         model = mvaEvaluator(model_path, mvaType='ONNXRuntime', otherArgs = ("output"))
-
         model_info_file = modeldir / 'model_info.yml'
         with open(model_info_file, 'r') as file:
             model_info = yaml.safe_load(file)
         model_name = model_info['name']
-
         model_type = model_info['model_type']
         classification = model_info['classification']
         features = model_info['features']
-        
+        training_sel = model_info['tree_names'][0]
         classes = [class_i for class_i in classification.keys()] if model_type == 'multi' else ["isSignal"]        
         processes = [proc for proc_list in classification.values() for proc in proc_list]
-
         print(f"\tModel Name: {model_name}")
         print(f"\t\tType: {model_type}")
         print(f"\t\tClasses: {classes}")
         print(f"\t\tProcesses: {processes}")
 
-        return model, model_name, model_type, features, classes, processes
+        return model, model_name, model_type, features, classes, processes, training_sel
 
     @staticmethod
-    def gather_input_vars(sel_name, feature_names, reco_vars, correction_file=None):
-
+    def gather_input_data(sel_name, feature_names, reco_vars, correction_file=None):
         vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
         vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
-
         var_names = [s for s in feature_names if not s.endswith('_lr') and not s.endswith('_llr')]
-
         if correction_file:
             if correction_file.endswith('_llr.json'):
                 lr_names = [s for s in feature_names if s.endswith('_llr')]
@@ -100,7 +69,6 @@ class NNInference(NanoBaseHHbbWW):
                 llr = False
             else:
                 raise ValueError(f"Correction file {correction_file} is not supported")
-        
         input_vars = []
         for feature_name in feature_names:
             if feature_name in var_names:
@@ -129,71 +97,67 @@ class NNInference(NanoBaseHHbbWW):
                     # subvar = subvars_dict[varname]
                     lr = LikelihoodRatio.get_lr_for_sel(subvar, sel_name, correction_file, reco_vars, llr)
                     input_vars.append(lr[sel_name].data)
-                    
+            else:
+                raise ValueError(f"Feature {feature_name} not found in var_names or lr_names")   
         return input_vars
 
     @staticmethod
-    def get_DNN(modeldir, reco_vars: RecoVariables, tree, correction_file=None):
+    def get_DNN(modeldir:str, reco_vars: RecoVariables, correction_file=None):
         DNN = Variable1D("DNN")
-        subcat_names = DNN.subcats
-        modeldir_3j = modeldir["3j"]
-        modeldir_4j = modeldir["4j"]
-
-        # For k-folds
-        fold_paths_3j = [ 
-            ( int(subpath.name[-1]), subpath ) 
-            for subpath in modeldir_3j.iterdir() 
-            if subpath.is_dir() 
-            and modeldir_3j.name in subpath.name 
-            and subpath.name.rstrip('1234567890').endswith("Pass")
-            and subpath.name.split('Pass')[-1].isdigit()
-        ] or [ (0, modeldir_3j) ]
-        fold_paths_4j = [ 
-            ( int(subpath.name[-1]), subpath ) 
-            for subpath in modeldir_4j.iterdir() 
-            if subpath.is_dir() 
-            and modeldir_4j.name in subpath.name 
-            and subpath.name.rstrip('1234567890').endswith("Pass")
-            and subpath.name.split('Pass')[-1].isdigit()
-        ] or [ (0, modeldir_4j) ]
-
-        num_folds = len(fold_paths_3j)
-        DNN_selections: dict = reco_vars._get_selections_subset(subcat_names)
-
-        if num_folds > 1:
-            fold_selections: dict= {}
-            for subcat, sel in DNN_selections.items():
-                for i in range(num_folds):
-                    fold_sel = sel.refine(f"{subcat} Pass {i}", cut=[ tree.event % num_folds == i ])
-                    fold_selections[f"{subcat}_{i}"] = fold_sel
-            DNN_selections = fold_selections
-            DNN.subcats = list(fold_selections.keys())
-            DNN.set_refs(DNN.subcats)
-
+        DNN_selections = reco_vars._get_selections_subset(DNN.subcats)
+        model, model_name, model_type, feature_names, classes, processes, training_sel_name = NNInference.get_DNN_model_info(modeldir)
+        res_pattern = '3j' if '3j' in training_sel_name else '4j'
+        inference_sel_names = [sel_name for sel_name in DNN_selections.keys() if res_pattern in sel_name]
+        DNN.subcats = inference_sel_names
+        DNN.set_refs(DNN.subcats)
         data = {}
-        for fold, model_path in fold_paths_3j:
-            model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
-            for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_3j_" in x[0], DNN_selections.items()):
-                # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
-                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, correction_file)
-                sel_data = model(*input_vars)
-                data[sel_name] = sel_data
-        for fold, model_path in fold_paths_4j:
-            model, model_name, model_type, feature_names, classes, processes = NNInference.get_DNN_model_info(model_path)
-            for sel_name, sel in filter(lambda x: (num_folds == 1 or x[0].rsplit('_',1)[-1]==str(fold)) and "_4j_" in x[0], DNN_selections.items()):
-                # input_vars = [ vars_dict[name].data[sel_name] for name in feature_names if sel_name in vars_dict[name].subcats]
-                input_vars = NNInference.gather_input_vars(sel_name.rstrip('1234567890').rstrip('_'), feature_names, reco_vars, correction_file)
-                sel_data = model(*input_vars)
-                data[sel_name] = sel_data
-        
-        DNN.populate(data, DNN_selections)
-
-        # These will all be identical for each fold except model_name
-        model_name = model_name.strip(f"_Pass{num_folds-1}")
-        model_name = model_name.strip("_4j")
-        DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes, num_folds=num_folds)
-        
+        for sel_name in inference_sel_names:
+            input_data = NNInference.gather_input_data(sel_name, feature_names, reco_vars, correction_file)
+            sel_data = model(*input_data)
+            data[sel_name] = sel_data
+        DNN.populate(data, {sel_name: DNN_selections[sel_name] for sel_name in inference_sel_names})
+        DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes)
         return DNN
+
+    def trainer_simple(self, modeldir, reco_vars) -> list[Plot]:
+        DNN = NNInference.get_DNN(modeldir, reco_vars, self.args.correction_file)
+        DNN_plots: list[list] = []
+        for sel_name in DNN.subcats:
+            dnn = DNN[sel_name]
+            scores = dnn.data
+            max_score_index = op.rng_max_element_index(scores, lambda score: score)
+            for i, class_i in enumerate(dnn.classes):
+                # Total distribution
+                DNN_plots.append(Plot.make1D(self.delim.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
+                # Cut
+                sel_NNclass_name = self.delim.join([sel_name, class_i, dnn.model_name])
+                sel_NNclass = (dnn.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
+                DNN_plots.append(Plot.make1D(self.delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
+                self.yields.add(sel_NNclass, sel_NNclass_name) 
+        return DNN_plots
+
+    def trainer_kfold(self, modeldir, reco_vars, tree) -> list[Plot]:         
+        kfold_modeldirs = [ ( int(subpath.name[-1]), subpath ) for subpath in modeldir.iterdir() if subpath.is_dir() ]
+        kfold_plots: dict[str, list[Plot]] = defaultdict(list)
+        for pass_idx, pass_modeldir in kfold_modeldirs:
+            DNN = NNInference.get_DNN(pass_modeldir, reco_vars, self.args.correction_file)
+            for sel_name in DNN.subcats:
+                dnn = DNN[sel_name]
+                dnn_sel_pass = (dnn.selection).refine(f"{dnn.model_name}-{sel_name} Pass {pass_idx}", cut=[ tree.event % self.num_folds == pass_idx ])
+                scores = dnn.data
+                max_score_index = op.rng_max_element_index(scores, lambda score: score)
+                for i, class_i in enumerate(dnn.classes):
+                    # Total distribution
+                    plot_name_dnn_whole = self.delim.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name])
+                    kfold_plots[dnn.model_name].append(Plot.make1D(plot_name_dnn_whole, dnn.data[i], dnn_sel_pass, dnn.eqbin, xTitle=dnn.full_title))
+                    # Cut
+                    sel_NNclass_name = self.delim.join([sel_name, class_i, dnn.model_name])
+                    dnn_sel_pass_NNclass = dnn_sel_pass.refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
+                    plot_name_dnn_class = self.delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name])
+                    kfold_plots[dnn.model_name].append(Plot.make1D(plot_name_dnn_class, dnn.data[i], dnn_sel_pass_NNclass, dnn.eqbin, xTitle=dnn.full_title))
+                    self.yields.add(dnn_sel_pass_NNclass, sel_NNclass_name)
+        summed_plots = [SummedPlot(group[0].name.rsplit('_Pass', 1)[0], group) for group in list(zip(*kfold_plots.values()))]
+        return [p for plots in kfold_plots.values() for p in plots] + summed_plots
 
     def output_skims(self, DNN_LIST, selection, sel_name: str, plots: list[Plot]):
         for DNN in DNN_LIST:
@@ -214,47 +178,19 @@ class NNInference(NanoBaseHHbbWW):
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         reco_vars = RecoVariables(objects, selections)
 
-        delim = '_xx_'
-        def get_plot_selection(plot: Plot) -> str:
-            sel_fold, *_ = plot.name.split(delim)
-            if sel_fold.rsplit('_',1)[-1].isdigit():
-                return delim.join([sel_fold.rsplit('_',1)[0], *_])
-            else:
-                return delim.join([sel_fold, *_])
-
         # # ===============================================================================
         # # ================================== Plots ======================================
         # # ===============================================================================
-        self.DNN_LIST = []
-        for modeldir in self.modeldir_list_3j4j:
-            DNN = NNInference.get_DNN(self.modeldir_list_3j4j[modeldir], reco_vars, tree, self.args.correction_file)
-            DNN_plots: list[list] = []
-            for sel_name in DNN.subcats:
-                dnn = DNN[sel_name]
-                scores = dnn.data
-                max_score_index = op.rng_max_element_index(scores, lambda score: score)
-                for i, class_i in enumerate(dnn.classes):
-                    # Total distribution
-                    DNN_plots.append(Plot.make1D(delim.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
-                    # Cut
-                    sel_NNclass_name = delim.join([sel_name, class_i, dnn.model_name])
-                    sel_NNclass = (dnn.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
-                    DNN_plots.append(Plot.make1D(delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
-                    self.yields.add(sel_NNclass, sel_NNclass_name)
 
-            plots.extend(DNN_plots)
-            
-            if not DNN.num_folds > 1:
-                continue
+        for modeldir in self.modeldir_list:
+            if self.args.trainer == 'simple':
+                inference_plots = self.trainer_simple(modeldir, reco_vars)
+            elif self.args.trainer == 'kfold':
+                inference_plots = self.trainer_kfold(modeldir, reco_vars, tree)
+            else:
+                raise ValueError(f"Trainer {self.args.trainer} not supported")
+            plots.extend(inference_plots)
 
-            grouped_plts = defaultdict(list)
-            for plt in DNN_plots:
-                comb_name = get_plot_selection(plt)
-                grouped_plts[comb_name].append(plt)
-
-            plots.extend(SummedPlot(name, plts) for name, plts in grouped_plts.items())
-
-            self.DNN_LIST.append(DNN)
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
@@ -289,14 +225,5 @@ class NNInference(NanoBaseHHbbWW):
         myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0])
         myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False)
         myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False)
-
-
-        # This section plots the DNN results only on processes it has been trained on, and it outputs to different directory
-        # for DNN in self.DNN_LIST:   
-        #     print(f"{DNN.model_name}") 
-        #     for subcat in DNN.subcats:
-            #     customPlotter = Plotter(workdir=workdir, configFile=self.args.input[0], outdir=f'plotter_onlyOnTrainedProcesses/{DNN.model_name}', which_processes=DNN.processes)
-            #     customPlotter.Draw_Refs(normalization='lumi', combine_backgs=False, sen_info=True, refs_endingwith=DNN.model_name)
-            #     customPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False, refs_endingwith=DNN.model_name)
 
         print(f"\nNNInference completed using {self.event_nr_sel} events\n")
