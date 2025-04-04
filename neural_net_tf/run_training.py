@@ -14,7 +14,8 @@ class RunDistributed:
         # self.n_iterations = kwargs.get('n_iterations', None)
         self.pass_idx = kwargs.get('pass_idx', None)
 
-        self.afs_modeldir = Path("Z_OUTPUT") / self.outdirname / self.config_name
+        self.afs_outdir = Path("Z_OUTPUT") / self.outdirname
+        self.afs_modeldir = self.afs_outdir / self.config_name
         self.afs_modeldir.mkdir(exist_ok=True, parents=True)
 
         if self.trainer == 'kfold':
@@ -55,10 +56,10 @@ class RunDistributed:
             "output": f"{str(rd.afs_modeldir.resolve())}/condor.out",
             "error": f"{str(rd.afs_modeldir.resolve())}/condor.err",
             "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
-            "+JobFlavour": '"workday"',
-            "request_cpus": "2",
+            "+JobFlavour": '"tomorrow"',
+            "request_cpus": "4",
             # "request_gpus": "1",
-            "request_memory": "16GB",
+            "request_memory": "30GB",
             "request_disk": "2GB",
             'MY.SendCredential': True,
             "transfer_input_files": f"{str(executable_path.resolve())}, neural_net_tf, references"
@@ -68,7 +69,7 @@ class RunDistributed:
         jobAd = submit_result.clusterad()
         (rd.afs_modeldir / 'jobAd.txt').write_text(str(jobAd))
         print(f"Submitted with Cluster ID {submit_result.cluster()}: {config_name}")
-
+        
 def get_executor(distributed: bool) -> Callable:
     if distributed:
         return RunDistributed.submit_job
