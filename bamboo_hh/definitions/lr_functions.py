@@ -105,6 +105,8 @@ def get_content_replacement(configFile:str, resultsdir:Path, selection:str):
     df_total = pd.DataFrame()
     for file in mc_files:
         with uproot.open(file) as f:
+            if selection not in f:
+                continue
             df_gW = f[selection].arrays(['genWeight'], library='pd')
             df_gW = df_gW['genWeight'].value_counts().reset_index().rename(columns={'index': 'genWeight', 'genWeight': 'Counts'})
             df_gW['sample'] = file.stem
