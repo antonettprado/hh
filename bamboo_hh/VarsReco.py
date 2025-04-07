@@ -1,7 +1,7 @@
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, Skim
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.EventSelection import EventSelection
 from bamboo_hh.definitions.variable_definition import RecoVariables
 from bamboo_hh.definitions.variables import Variable
@@ -36,8 +36,8 @@ class VarsReco(NanoBaseHHbbWW):
         return tree, baseSel, backend, lumiArgs
 
     @staticmethod
-    def get_objects(tree, era):
-        objects = EventSelection.get_objects(tree, era)
+    def get_objects(tree, era, nanov):
+        objects = EventSelection.get_objects(tree, era, nanov)
         ak4_jets = objects["cleaned_ak4_jets"]
         ak4_btags = objects["cleaned_ak4_btags"]
         ak4_loose_btags = objects["cleaned_ak4_loose_btags"]
@@ -136,7 +136,7 @@ class VarsReco(NanoBaseHHbbWW):
         plots.append(self.yields)
         plots.extend(self.base_plots)
 
-        objects = VarsReco.get_objects(tree, self.era)
+        objects = VarsReco.get_objects(tree, self.era, get_nano_version(sampleCfg))
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
 
         reco_vars: RecoVariables = RecoVariables(objects, selections)

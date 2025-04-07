@@ -23,7 +23,7 @@ class VarsGen(NanoAODHistoModule):
 
     def __init__(self, args):
         super(VarsGen, self).__init__(args)
-        self.event_nr_sel = 'even'
+        self.event_nr_sel = 'all'
 
     def addArgs(self, parser):
         super(VarsGen, self).addArgs(parser)
@@ -547,6 +547,14 @@ class VarsGen(NanoAODHistoModule):
         # ================================== Plots ======================================
         # ===============================================================================
 
+        el = self.gen_objects['genElectrons']
+        mu = self.gen_objects['genMuons']
+        lep_pt = op.switch(op.rng_len(el) == 1, el[0].pt, mu[0].pt)
+        plots.append(Plot.make1D("SL_res_2b_x_lep_pT", lep_pt, self.selections["SL_res_2b_x"], EqBin(100, 0, 100), xTitle="lepton p_T (GeV)"))
+        plots.append(Plot.make1D("SL_res_2b_lep_pT", lep_pt, self.selections["SL_res_2b"], EqBin(100, 0, 100), xTitle="lepton p_T (GeV)"))
+        plots.append(Plot.make1D("SL_res_1b_lep_pT", lep_pt, self.selections["SL_res_1b"], EqBin(100, 0, 100), xTitle="lepton p_T (GeV)"))
+        plots.append(Plot.make1D("SL_lep_pT", lep_pt, self.selections["SL"], EqBin(100, 0, 100), xTitle="lepton p_T (GeV)"))
+
         # plots = self.get_bquarks('SL_res_2b_x', plots)
         # plots, SL_res_2b_x_bjets_vars = self.get_bjets_vars('SL_res_2b_x', plots)
         # plots, SL_res_2b_x_top_vars = self.get_top_vars('SL_res_2b_x', plots)
@@ -559,9 +567,9 @@ class VarsGen(NanoAODHistoModule):
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_mbb" , [SL_res_2b_x_bjets_mbb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_MBB, EQBIN_TT_PT], xTitle="m_{bb}", yTitle="m_{inv} for t_{1}"),
         #     Plot.make2D("SL_res_2b_x_t1_mInv_vs_bjets_pT_bb" , [SL_res_2b_x_bjets_pT_bb, SL_res_2b_x_t1_mInv], self.selections['SL_res_2b_x'], [EQBIN_BJETS_PT, EQBIN_TT_PT], xTitle="pT of bb", yTitle="m_{inv} for t_{1}")])
 
-        plots, _ = VarsGen.for_DNN_study(self.gen_objects, 'baseSel', self.selections, plots)
+        # plots, _ = VarsGen.for_DNN_study(self.gen_objects, 'baseSel', self.selections, plots)
 
-        plots = self.get_skims('baseSel', plots)
+        # plots = self.get_skims('baseSel', plots)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================

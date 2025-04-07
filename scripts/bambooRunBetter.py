@@ -234,7 +234,7 @@ def wait_for_condor(logfile: Path) -> tuple[bool, list[str]]:
     job_term: bool = False
     while True:
         time.sleep(10)
-        if logfile.stat().st_size == 0:
+        if not logfile.is_file() or logfile.stat().st_size == 0:
             continue
         with open(logfile, 'r') as f:
             loglines = f.readlines()
