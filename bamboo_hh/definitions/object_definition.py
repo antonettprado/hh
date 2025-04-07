@@ -11,15 +11,8 @@ def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
         global LEPTON_PT
         if lep_pt_from_L1_or_HLT < 15:
             LEPTON_PT['Uniform'] = True
-            if lep_pt_from_L1_or_HLT == 0: 
-                LEPTON_PT['e_pt'] = 0
-                LEPTON_PT['mu_pt'] = 0 
-            elif lep_pt_from_L1_or_HLT == 5:
-                LEPTON_PT['e_pt'] = 5
-                LEPTON_PT['mu_pt'] = 5
-            elif lep_pt_from_L1_or_HLT == 10:
-                LEPTON_PT['e_pt'] = 10
-                LEPTON_PT['mu_pt'] = 10
+            LEPTON_PT['e_pt'] = lep_pt_from_L1_or_HLT
+            LEPTON_PT['mu_pt'] = lep_pt_from_L1_or_HLT
 
 def get_electron_id(el, era, level):
     if "2018" in era or "2017" in era:
