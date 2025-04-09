@@ -1,9 +1,9 @@
 # Triggers
 The config file `hh/triggers/config.yml` will be used to run the bamboo trigger modules by default
 ```bash
-    bambooRun -m triggers/L1_Efficiencies.py triggers/config.yml -o $Z_OUTPUT_eos/Trigger_L1_Effis
+    bambooRun -m triggers/L1_Efficiencies.py triggers/config.yml -o $Z_OUTPUT_eos/Trigger_L1
 
-    bambooRun -m triggers/HLT_Efficiencies.py triggers/config.yml -o $Z_OUTPUT_eos/Triggers_HLT_cutAt0 --lep_pt 5
+    bambooRun -m triggers/HLT_Efficiencies.py triggers/config.yml -o $Z_OUTPUT_eos/Triggers_HLT_5GeV --lep_pt 10
 ```
 To plot the efficiencies, run:
 ```bash

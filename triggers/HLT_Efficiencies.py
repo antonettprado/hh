@@ -373,6 +373,8 @@ class HLT_Efficiencies(NanoAODHistoModule):
                 if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = self.tight_muons
                 plots.extend([
+                    Plot.make1D(sel_name + "_pt_Uniform2", lep[0].pt, sel, EqBin(100, 0, 200)),
+                    Plot.make1D(sel_name + "_pt_Uniform4", lep[0].pt, sel, EqBin(50, 0, 200)),
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,2,4,6,8,10,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,125,150,200])),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(50, -4, 4)),
                     Plot.make1D(sel_name + "_HT", self.HT, sel, VariableBinning([0,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,600,700,800,1000])),
