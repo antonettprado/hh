@@ -164,6 +164,7 @@ def parse_results_files(results_dir: Path) -> tuple[list[Datacard], list[str]]:
     
     template_file: Path = rfiles[0]
     hist_names: list[str] = rfileIO.get_hist_names(template_file)
+    hist_names = list(filter(lambda name: '_Pass' not in name, hist_names))
     
     first_hist_name: str = hist_names[0]
     parts: list[str] = first_hist_name.split('_xx_')

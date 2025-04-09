@@ -78,7 +78,7 @@ def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict
         return default if hist_names is None else hist_name in hist_names
     
     histos: defaultdict[str, list[ROOT.TH1D]] = defaultdict(list) 
-    print(xs)
+    
     for f in root_files:
         subprocess_era = f.stem
         subprocess = subprocess_era.rsplit('_', 1)[0]
