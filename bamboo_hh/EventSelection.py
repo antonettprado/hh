@@ -5,7 +5,7 @@ from bamboo import treefunctions as op
 import bamboo_hh.definitions.object_definition as object_defs
 import bamboo_hh.definitions.event_definition as event_defs
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 
 
 class EventSelection(NanoBaseHHbbWW):
@@ -22,7 +22,7 @@ class EventSelection(NanoBaseHHbbWW):
         parser.add_argument("-s", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
 
     @staticmethod
-    def get_objects(tree, era, MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=None):
+    def get_objects(tree, era, nanov: str, MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=None):
 
         if lep_pt_from_L1_or_HLT is not None: 
             object_defs.is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT)
@@ -56,7 +56,7 @@ class EventSelection(NanoBaseHHbbWW):
         cleaned_taus = object_defs.tau_cleaning(cleaned_taus, fakeable_muons, 0.3)
 
         # Select AK4 Jets
-        ak4_jets = object_defs.ak4_jet_selection(tree.Jet)
+        ak4_jets = object_defs.ak4_jet_selection(tree.Jet, nanov)
         ak4_jets = op.sort(ak4_jets, lambda jet: -jet.pt)
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(ak4_jets, fakeable_electrons)
         cleaned_ak4_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_jets, fakeable_muons)
@@ -85,7 +85,7 @@ class EventSelection(NanoBaseHHbbWW):
         ak8_subjets = tree.SubJet
 
         # Select AK4 VBF Jets
-        ak4_vbf_jets = object_defs.ak4_vbf_jet_selection(tree.Jet)
+        ak4_vbf_jets = object_defs.ak4_vbf_jet_selection(tree.Jet, nanov)
         ak4_vbf_jets = op.sort(ak4_vbf_jets, lambda jet: -jet.pt)
         cleaned_ak4_vbf_jets = object_defs.ak4_jet_cleaning(ak4_vbf_jets, fakeable_electrons)
         cleaned_ak4_vbf_jets = object_defs.ak4_jet_cleaning(cleaned_ak4_vbf_jets, fakeable_muons)
@@ -145,14 +145,10 @@ class EventSelection(NanoBaseHHbbWW):
         met_ld = objects["met_ld"]
 
         # mll Selection
-        mllSel = baseSel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
-
-        # Apply Common Weights
-        genWeight = op.c_float(1.0)
-        if is_MC:
-            genWeight = tree.genWeight
-        pileupWeight, top_pt_weight = op.c_float(1.0), op.c_float(1.0)
-        #mllSel, pileupWeight, top_pt_weight = sf_weights.apply_common_SF(tree, mllSel, is_MC, era, sample)
+        mllSel = baseSel.refine(
+            "mll_cut", 
+            cut=[event_defs.mll_selection(loose_electrons, loose_muons)],
+        )
 
         # Apply B-tag Weights
         btvWeight = op.c_float(1.0)
@@ -172,13 +168,13 @@ class EventSelection(NanoBaseHHbbWW):
         # Apply Trigger SFs
         trigger_sf = op.c_float(1.0)
 
-        objects["gen_Weight"] = genWeight
-        objects["pileupWeight"] = pileupWeight
-        objects["top_pt_weight"] = top_pt_weight
-        objects["btvWeight"] = btvWeight
-        objects["muon_sf"] = muon_sf
-        objects["electron_sf"] = electron_sf
-        objects["trigger_sf"] = trigger_sf
+        objects["gen_Weight"] = op.c_float(1)
+        objects["pileupWeight"] = op.c_float(1)
+        objects["top_pt_weight"] = op.c_float(1)
+        objects["btvWeight"] = op.c_float(1)
+        objects["muon_sf"] = op.c_float(1)
+        objects["electron_sf"] = op.c_float(1)
+        objects["trigger_sf"] = op.c_float(1)
 
         # Event Selection Flags
         is_sl_e = 0
@@ -609,7 +605,7 @@ class EventSelection(NanoBaseHHbbWW):
             "btvWeight": objects["btvWeight"],
             "muon_sf": objects["muon_sf"],
             "electron_sf": objects["electron_sf"],
-            "trigger_sf": objects["trigger_sf"]
+            "trigger_sf": objects["trigger_sf"],
         }
 
         skims_args_list = []
@@ -704,15 +700,19 @@ class EventSelection(NanoBaseHHbbWW):
         cleaned_ak8_jets_btag_sorted = op.sort(objects["cleaned_ak8_btags"], lambda jet: -get_jet_btag(jet, "ak8"))
 
         sel_skim["ak4jet0_pt"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 1, cleaned_ak4_jets_btag_sorted[0].pt, op.c_float(-9999))
+        sel_skim["ak4jet0_id"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 1, cleaned_ak4_jets_btag_sorted[0].jetId, op.c_float(-9999))
         sel_skim["ak4jet0_eta"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 1, cleaned_ak4_jets_btag_sorted[0].eta, op.c_float(-9999))
         sel_skim["ak4jet0_btag"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 1, get_jet_btag(cleaned_ak4_jets_btag_sorted[0], "ak4"), op.c_float(-9999))
         sel_skim["ak4jet1_pt"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 2, cleaned_ak4_jets_btag_sorted[1].pt, op.c_float(-9999))
+        sel_skim["ak4jet1_id"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 2, cleaned_ak4_jets_btag_sorted[1].jetId, op.c_float(-9999))
         sel_skim["ak4jet1_eta"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 2, cleaned_ak4_jets_btag_sorted[1].eta, op.c_float(-9999))
         sel_skim["ak4jet1_btag"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 2, get_jet_btag(cleaned_ak4_jets_btag_sorted[1], "ak4"), op.c_float(-9999))
         sel_skim["ak4jet2_pt"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 3, cleaned_ak4_jets_rest_pt_sorted[0].pt, op.c_float(-9999))
+        sel_skim["ak4jet2_id"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 3, cleaned_ak4_jets_rest_pt_sorted[0].jetId, op.c_float(-9999))
         sel_skim["ak4jet2_eta"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 3, cleaned_ak4_jets_rest_pt_sorted[0].eta, op.c_float(-9999))
         sel_skim["ak4jet2_btag"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 3, get_jet_btag(cleaned_ak4_jets_rest_pt_sorted[0], "ak4"), op.c_float(-9999))
         sel_skim["ak4jet3_pt"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 4, cleaned_ak4_jets_rest_pt_sorted[1].pt, op.c_float(-9999))
+        sel_skim["ak4jet3_id"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 4, cleaned_ak4_jets_rest_pt_sorted[1].jetId, op.c_float(-9999))
         sel_skim["ak4jet3_eta"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 4, cleaned_ak4_jets_rest_pt_sorted[1].eta, op.c_float(-9999))
         sel_skim["ak4jet3_btag"] = op.switch(op.rng_len(objects["cleaned_ak4_jets"]) >= 4, get_jet_btag(cleaned_ak4_jets_rest_pt_sorted[1], "ak4"), op.c_float(-9999))
         sel_skim["ak8jet0_pt"] = op.switch(op.rng_len(objects["cleaned_ak8_btags"]) >= 1, cleaned_ak8_jets_btag_sorted[0].pt, op.c_float(-9999))
@@ -729,7 +729,7 @@ class EventSelection(NanoBaseHHbbWW):
         plots.append(self.yields)
         plots.extend(self.base_plots)
         
-        objects = EventSelection.get_objects(tree, self.era, self.args.mc_truth_b, use_mvaTTH=False) 
+        objects = EventSelection.get_objects(tree, self.era, self.nv, self.args.mc_truth_b, use_mvaTTH=False) 
         selections = EventSelection.get_event_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
         
         self.set_category_groups(selections)
