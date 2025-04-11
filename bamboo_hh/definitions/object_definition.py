@@ -1,4 +1,5 @@
 from bamboo import treefunctions as op
+from bamboo.treeproxies import BoolProxy
 
 LEPTON_PT = {
     'Uniform': False
@@ -251,19 +252,48 @@ def tau_cleaning(taus, leptons, deltar_cut=0.3):
         )
     )
 
-def ak4_jet_selection(jets):
+def corrected_jetIdTight(jet, nanov: str) -> BoolProxy:
+    '''
+    Fix bug present in nanoAOD versions 12 and 13 regarding tight jetId WP
+    Separate recipe for tight lep veto WP not implemented since we don't use it
+    https://gitlab.cern.ch/cms-jetmet/coordination/coordination/-/issues/117
+    For nano 13 and 14, this simply redefines the tight jet ID as all necessary branches are present.
+    For nano 12, this vetoes jets which have bugged jet IDs.
+    '''
+    bad_id_veto: BoolProxy = (jet.jetId & op.c_int(1 << 1)) > 0
+    jeta = op.abs(jet.eta)
+    if nanov == 'v12':
+        return op.multiSwitch(
+            (jeta <= 2.7, 
+                bad_id_veto),
+            (op.AND(jeta > 2.7, jeta <= 3.0), 
+                op.AND(bad_id_veto, jet.neHEF < 0.99)),
+            op.AND(bad_id_veto, jet.neEmEF < 0.4) 
+        )
+    if nanov == 'v13' or nanov == 'v14':
+        return op.multiSwitch(
+            (jeta <= 2.6, 
+                op.AND(jet.neHEF < 0.99, jet.neEmEF < 0.9, jet.chMultiplicity+jet.neMultiplicity > 1, jet.chHEF > 0.01, jet.chMultiplicity > 0)),
+            (op.AND(jeta > 2.6, jeta <= 2.7), 
+                op.AND(jet.neHEF < 0.90, jet.neEmEF < 0.99)),
+            (op.AND(jeta > 2.7, jeta <= 3.0),
+                jet.neHEF < 0.99),
+            op.AND(jet.neMultiplicity >= 2, jet.neEmEF < 0.4)
+        )
+
+def ak4_jet_selection(jets, nanov):
     return op.select(jets, lambda jet: op.AND(
         jet.pt > 25,
         op.abs(jet.eta) < 2.4,
-        jet.jetId >= 2 # WP_T
+        corrected_jetIdTight(jet, nanov)
         )
     )
 
-def ak4_vbf_jet_selection(jets):
+def ak4_vbf_jet_selection(jets, nanov):
     return op.select(jets, lambda jet: op.AND(
         op.switch(op.AND(op.abs(jet.eta) > 2.7, op.abs(jet.eta) , 3.0), jet.pt > 60, jet.pt > 30),
         op.abs(jet.eta) < 4.7,
-        jet.jetId >= 2 # WP_T
+        corrected_jetIdTight(jet, nanov)
         )
     )
 
