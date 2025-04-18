@@ -101,7 +101,7 @@ class HLT_Efficiencies(NanoAODHistoModule):
         self.HLTtriggers = tree.HLT
 
         # Objects for event selection
-        objects = EventSelection.get_objects(tree, self.era, self.nv, use_mvaTTH=False, lep_pt_from_L1_or_HLT=self.args.lep_pt)
+        objects = EventSelection.get_objects(tree, self.era, nanov='v12', MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=self.args.lep_pt)
         self.loose_electrons = objects["loose_electrons"]
         self.tight_electrons = objects["tight_electrons"]
         self.loose_muons = objects["loose_muons"]
