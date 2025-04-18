@@ -368,6 +368,8 @@ class HLT_Efficiencies(NanoAODHistoModule):
         # =================================================================
         # Plot selected selections only ===================================
         # =================================================================
+        custom_Uniform4 = np.arange(10, 200, 4).tolist()               
+        custom_Uniform4.append(200)                                   
         if selections_to_plot:
             for sel_name, sel in selections_to_plot.items():
                 if "EG" in sel_name or "SL_e" in sel_name: lep = self.tight_electrons
@@ -375,12 +377,13 @@ class HLT_Efficiencies(NanoAODHistoModule):
                 plots.extend([
                     Plot.make1D(sel_name + "_pt_Uniform2", lep[0].pt, sel, EqBin(100, 0, 200)),
                     Plot.make1D(sel_name + "_pt_Uniform4", lep[0].pt, sel, EqBin(50, 0, 200)),
+                    Plot.make1D(sel_name + "_pt_Uniform4_start10", lep[0].pt, sel, VariableBinning(custom_Uniform4)),     
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,2,4,6,8,10,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,125,150,200])),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(50, -4, 4)),
                     Plot.make1D(sel_name + "_HT", self.HT, sel, VariableBinning([0,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,600,700,800,1000])),
                     Plot.make1D(sel_name + "_npv", tree.PV.npvs, sel, VariableBinning([0,20,25,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,65,70,100])),
                     Plot.make1D(sel_name + "_npv_good", tree.PV.npvsGood, sel, VariableBinning([0,20,25,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,65,70,100]))
-                ])
+                ]) 
         
         return plots
 
