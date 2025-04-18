@@ -102,8 +102,8 @@ if __name__ == "__main__":
 
     '''
     Simple training:
-    python3 neural_net_tf/run_training.py -w Z_OUTPUT_eos/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t simple
+    python3 neural_net/run_training.py -w Z_OUTPUT_eos/Reco -r neural_net/config/roster.yml -o NN -t simple -d
 
     K-Fold training:
-    python3 neural_net_tf/run_training.py -w Z_OUTPUT_eos/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t kfold
+    python3 neural_net/run_training.py -w Z_OUTPUT_eos/Reco -r neural_net/config/roster.yml -o NN -t kfold -d
     '''
