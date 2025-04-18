@@ -1,4 +1,4 @@
-# neural_net_tf Module
+# neural_net Module
 
 To train your neural net(s) in distributed mode (a single training per job), run:
 ```bash
@@ -19,7 +19,7 @@ where:
 
 To run the training locally simply remove the `-d` flag.
 
-The model configurations under `neural_net_tf/config` should be YAML files formatted as follows:
+The model configurations under `neural_net/config` should be YAML files formatted as follows:
 ```yaml
 - name: 'model1'
   model_type: 'multi'

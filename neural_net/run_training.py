@@ -35,7 +35,7 @@ class RunDistributed:
             export X509_USER_PROXY=$(realpath ~/private/x509up)
             
             echo "Starting training"
-            python neural_net_tf/trainers.py -w {str(self.workdir)} -r {str(self.roster)} -o {str(self.outdirname)} -t {self.trainer} {training_args} -cn {self.config_name}
+            python neural_net/trainers.py -w {str(self.workdir)} -r {str(self.roster)} -o {str(self.outdirname)} -t {self.trainer} {training_args} -cn {self.config_name}
             echo "Training finished"
             """
         executable_path = self.afs_modeldir / 'runTraining.sh'
@@ -62,7 +62,7 @@ class RunDistributed:
             "request_memory": "30GB",
             "request_disk": "2GB",
             'MY.SendCredential': True,
-            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net_tf, references"
+            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references"
         })
         schedd = htcondor.Schedd()
         submit_result = schedd.submit(submit_description)
@@ -74,7 +74,7 @@ def get_executor(distributed: bool) -> Callable:
     if distributed:
         return RunDistributed.submit_job
     else:
-        from neural_net_tf.trainers import main as submit_locally
+        from neural_net.trainers import main as submit_locally
         return submit_locally
 
 def main(args):

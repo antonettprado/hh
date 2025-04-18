@@ -1,7 +1,7 @@
-from neural_net_tf.utils import set_logger, log_training_stats, log_class_stats
-from neural_net_tf.model_config import save_model_config, get_config
-from neural_net_tf.model_data import get_data, prune_ds, print_events, DatasetManager, SHUFFLE_BUFFER_SIZE
-from neural_net_tf.model_design import ModelNetwork, ModelEvaluator
+from neural_net.utils import set_logger, log_training_stats, log_class_stats
+from neural_net.model_config import save_model_config, get_config
+from neural_net.model_data import get_data, prune_ds, print_events, DatasetManager, SHUFFLE_BUFFER_SIZE
+from neural_net.model_design import ModelNetwork, ModelEvaluator
 from datetime import timedelta
 import time
 import tensorflow as tf
@@ -135,8 +135,8 @@ if __name__ == "__main__":
 
     '''
     Simple training:
-    python3 neural_net_tf/trainers.py -w /eos/user/a/anunezde/Z_OUTPUT_eos/Era2022_0211/Reco_even -r neural_net_tf/config/NN_test.yml -o NN_test_0327 -cn multi_HH_tW_v1
+    python3 neural_net/trainers.py -w /eos/user/a/anunezde/Z_OUTPUT_eos/Era2022_0211/Reco_even -r neural_net/config/NN_test.yml -o NN_test_0327 -cn multi_HH_tW_v1
 
     K-Fold training:
-    python3 neural_net_tf/trainers.py -w /eos/user/a/anunezde/Z_OUTPUT_eos/Era2022_0211/Reco_even -r neural_net_tf/config/NN_test.yml -o NN_test_0327_kfold -cn multi_HH_tW_v1 -t kfold -p 0
+    python3 neural_net/trainers.py -w /eos/user/a/anunezde/Z_OUTPUT_eos/Era2022_0211/Reco_even -r neural_net/config/NN_test.yml -o NN_test_0327_kfold -cn multi_HH_tW_v1 -t kfold -p 0
     '''
