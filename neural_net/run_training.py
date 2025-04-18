@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from neural_net_tf.model_config import load_model_configs, get_config
+from neural_net.model_config import load_model_configs, get_config
 from typing import Callable
 
 class RunDistributed:

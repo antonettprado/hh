@@ -18,7 +18,7 @@ class NNInference(NanoBaseHHbbWW):
     delim = '_xx_'
     def __init__(self, args):
         super(NNInference, self).__init__(args)
-        self.event_nr_sel = self.args.event_nr_sel if self.args.event_nr_sel else "odd"
+        self.event_nr_sel = self.args.event_nr_sel if self.args.event_nr_sel else "all"
         if self.args.superNNdir:
             self.modeldir_list = [modeldir for modeldir in self.args.superNNdir.iterdir() if modeldir.is_dir()]
         else:

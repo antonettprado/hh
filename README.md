@@ -304,11 +304,7 @@ python -u scripts/bambooRunBetter.py LikelihoodRatio total_vars_reco -c config/a
 Check the module-specific arguements for the module of interest using `bambooRun -m bamboo_hh/[Module].py --help`
 
 ### To build the neural nets
-First, check `python neural_net/DNNManager.py --help` for available options. Most common use case:
-```bash
-python neural_net/DNNManager.py -w $EOS/[vars_reco_output] -s SL_res_2b SL_res_1b -m train_eval -c NN_roster.yml
-```
-Adapt the yml to your liking to build the models
+Check the README under neural_net/ directory
 
 ### To run the neural net inference
 ```bash

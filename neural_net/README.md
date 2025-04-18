@@ -3,10 +3,10 @@
 To train your neural net(s) in distributed mode (a single training per job), run:
 ```bash
     # Training mode: simple
-    python3 neural_net_tf/run_training.py -w Z_OUTPUT/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t simple -d
+    python3 neural_net/run_training.py -w Z_OUTPUT/Reco -r neural_net/config/NN_roster.yml -o NN_roster -t simple -d
 
     # Training mode: kfold
-    python3 neural_net_tf/run_training.py -w Z_OUTPUT/Reco -r neural_net_tf/config/NN_roster.yml -o NN_roster -t kfold -d
+    python3 neural_net/run_training.py -w Z_OUTPUT/Reco -r neural_net/config/NN_roster.yml -o NN_roster -t kfold -d
 ```
 where:
 ```bash
