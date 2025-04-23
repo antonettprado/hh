@@ -6,7 +6,7 @@ from bamboo.plots import Plot, Skim, SummedPlot
 from bamboo.treefunctions import mvaEvaluator
 from bamboo import treefunctions as op
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.VarsReco import VarsReco
 from bamboo_hh.LikelihoodRatio import LikelihoodRatio
 from bamboo_hh.definitions.variables import Variable1D
@@ -174,7 +174,7 @@ class NNInference(NanoBaseHHbbWW):
         plots.append(self.yields)
         plots.extend(self.base_plots)
         
-        objects = VarsReco.get_objects(tree, self.era, sampleCfg)
+        objects = VarsReco.get_objects(tree, self.era, get_nano_version(sampleCfg))
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
         reco_vars = RecoVariables(objects, selections)
 
