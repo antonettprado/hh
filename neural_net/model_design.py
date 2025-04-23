@@ -403,8 +403,8 @@ class ModelEvaluator:
             fig.savefig(self.outdir / f'{name}.pdf')
             plt.close(fig)
         
-        with open(self.outdir / 'data.json', 'w') as f:
-            json.dump(self.plot_data, f, indent=2)
+        #with open(self.outdir / 'data.json', 'w') as f:
+        #    json.dump(self.plot_data, f, indent=2)
         # Save predictions
         # if isinstance(self.predictions['features'], np.ndarray):
         #     np.save(self.outdir / 'predictions.npy', {
