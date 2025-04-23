@@ -156,7 +156,7 @@ class NNInference(NanoBaseHHbbWW):
                     plot_name_dnn_class = self.delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name])
                     kfold_plots[dnn.model_name].append(Plot.make1D(plot_name_dnn_class, dnn.data[i], dnn_sel_pass_NNclass, dnn.eqbin, xTitle=dnn.full_title))
                     self.yields.add(dnn_sel_pass_NNclass, sel_NNclass_name)
-        summed_plots = [SummedPlot(group[0].name.rsplit('_Pass', 1)[0].removesuffix('_3j')..removesuffix('_4j'), group) for group in list(zip(*kfold_plots.values()))]
+        summed_plots = [SummedPlot(group[0].name.rsplit('_Pass', 1)[0].removesuffix('_3j').removesuffix('_4j'), group) for group in list(zip(*kfold_plots.values()))]
         return [p for plots in kfold_plots.values() for p in plots] + summed_plots
 
     def output_skims(self, DNN_LIST, selection, sel_name: str, plots: list[Plot]):
