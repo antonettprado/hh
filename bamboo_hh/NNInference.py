@@ -30,7 +30,7 @@ class NNInference(NanoBaseHHbbWW):
         parser.add_argument("-SNN", "--superNNdir", action="store", type=Path, dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
         parser.add_argument("-sk", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
         parser.add_argument("-corr_file", "--correction_file", action='store', help='The work directory where the lr correction file is')
-        parser.add_argument("-trainer", "--trainer", action='store', choices=['simple', 'kfold'], default='simple', help='The trainer used: simple or kfold')
+        parser.add_argument("-trainer", "--trainer", action='store', choices=['simple', 'kfold'], default='kfold', help='The trainer used: simple or kfold')
 
     @staticmethod
     def get_DNN_model_info(modeldir: Path):
@@ -157,7 +157,8 @@ class NNInference(NanoBaseHHbbWW):
                     kfold_plots[dnn.model_name].append(Plot.make1D(plot_name_dnn_class, dnn.data[i], dnn_sel_pass_NNclass, dnn.eqbin, xTitle=dnn.full_title))
                     self.yields.add(dnn_sel_pass_NNclass, sel_NNclass_name)
         summed_plots = [SummedPlot(group[0].name.rsplit('_Pass', 1)[0].removesuffix('_3j').removesuffix('_4j'), group) for group in list(zip(*kfold_plots.values()))]
-        return [p for plots in kfold_plots.values() for p in plots] + summed_plots
+        #return [p for plots in kfold_plots.values() for p in plots] + summed_plots
+        return summed_plots
 
     def output_skims(self, DNN_LIST, selection, sel_name: str, plots: list[Plot]):
         for DNN in DNN_LIST:

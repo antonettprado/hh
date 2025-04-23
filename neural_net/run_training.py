@@ -95,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--workdir", type=Path, required=True, help='Full path of work directory')
     parser.add_argument("-r", "--roster", type=Path, required=True, help="Path to the YAML roster")
     parser.add_argument("-o", "--outdirname", type=str, required=True, help='Name of roster dir under work directory')
-    parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='simple', help='Training mode')
+    parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='kfold', help='Training mode')
     parser.add_argument("-d", "--distributed", action="store_true", help='Run in distributed mode')
     args = parser.parse_args()
     main(args)
