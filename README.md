@@ -254,17 +254,23 @@ Clone this repository into the parent directory containing the bamboo installati
 git clone https://gitlab.cern.ch/abdatta/hh.git
 ```
 
+In the virtual environment setup, install the htcondor package:
+```bash
+pip3 install htcondor
+```
+
 Execute these each time you start from a clean shell:
 ```bash
 cd
+
+voms-proxy-init --voms cms -rfc --valid 192:00 
+cp $(voms-proxy-info -p) ~/private/x509up
+export X509_USER_PROXY=$(realpath ~/private/x509up)
+
 source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
 source bamboodev/bamboovenv/bin/activate
 cd bamboodev/hh/
 export PYTHONPATH="${PYTHONPATH}:${PWD}/"
-voms-proxy-init --voms cms -rfc --valid 192:00 
-
-cp $(voms-proxy-info -p) ~/private/x509up
-export X509_USER_PROXY=$(realpath ~/private/x509up)
 ```
 
 ### Setup of Higgs Combine for fitting
