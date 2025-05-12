@@ -1637,7 +1637,7 @@ samples:
     era: "2022EE"
     type: data
     db: das:/JetMET/Run2022E-22Sep2023-v1/NANOAOD
-    run_range: *runs_22C
+    run_range: *runs_22E
     certified_lumi_file: *lumi_cert_22
     split: -2
 
@@ -1646,7 +1646,7 @@ samples:
     era: "2022EE"
     type: data
     db: das:/JetMET/Run2022F-22Sep2023-v2/NANOAOD
-    run_range: *runs_22D
+    run_range: *runs_22F
     certified_lumi_file: *lumi_cert_22
     split: -2
 
@@ -1655,7 +1655,7 @@ samples:
     era: "2022EE"
     type: data
     db: das:/JetMET/Run2022G-22Sep2023-v2/NANOAOD
-    run_range: *runs_22C
+    run_range: *runs_22G
     certified_lumi_file: *lumi_cert_22
     split: -2
 
