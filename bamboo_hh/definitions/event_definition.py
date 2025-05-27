@@ -44,15 +44,16 @@ def sl_e_trigger_selection(is_mc, era, HLT, sample):
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150, 
             HLT.Ele15_IsoVVVL_PFHT450
         )
-        JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
+        #JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
         if not is_mc:
             if sample == "EGamma":
                 return EGamma_trig
-            elif sample == "JetMET":
-                return op.AND(JetMET_trig, op.NOT(EGamma_trig))
+            #elif sample == "JetMET":
+            #    return op.AND(JetMET_trig, op.NOT(EGamma_trig))
             else:
                 return op.c_bool(False)
-        return op.OR(EGamma_trig)
+        return EGamma_trig
+        #return op.OR(EGamma_trig, JetMET_trig)
     
     elif "2023" in era:
         EGamma_trig = op.OR(
@@ -60,18 +61,16 @@ def sl_e_trigger_selection(is_mc, era, HLT, sample):
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150, 
             HLT.Ele15_IsoVVVL_PFHT450
         )
-        JetMET_trig = op.OR(
-            # HLT.QuadPFJet70_50_40_35_PNet2BTagMean0p65, # removed in later part of 2023
-            HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
-        )
+        #JetMET_trig = HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         if not is_mc:
             if sample == "EGamma":
                 return EGamma_trig
-            elif sample == "JetMET":
-                return op.AND(JetMET_trig, op.NOT(EGamma_trig))
+            #elif sample == "JetMET":
+            #    return op.AND(JetMET_trig, op.NOT(EGamma_trig))
             else:
                 return op.c_bool(False)
-        return op.OR(EGamma_trig) 
+        return EGamma_trig
+        #return op.OR(EGamma_trig, JetMET_trig)
     
     elif "2024" in era:
         EGamma_trig = op.OR(
@@ -106,33 +105,32 @@ def sl_mu_trigger_selection(is_mc, era, HLT, sample):
             HLT.IsoMu24, 
             HLT.Mu15_IsoVVVL_PFHT450
         )
-        JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
+        #JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
         if not is_mc:
             if sample == "Muon":
                 return Muon_trig
-            elif sample == "JetMET":
-                return op.AND(JetMET_trig, op.NOT(Muon_trig))
+            #elif sample == "JetMET":
+            #    return op.AND(JetMET_trig, op.NOT(Muon_trig))
             else:
                 return op.c_bool(False)
-        return op.OR(Muon_trig)
+        #return op.OR(Muon_trig, JetMET_trig)
+        return Muon_trig
     
     elif "2023" in era:
         Muon_trig = op.OR(
             HLT.IsoMu24, 
             HLT.Mu15_IsoVVVL_PFHT450
         )
-        JetMET_trig = op.OR(
-            # HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65, # removed in later part of 2023
-            HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
-        )
+        #JetMET_trig = HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         if not is_mc:
             if sample == "Muon":
                 return Muon_trig
-            elif sample == "JetMET":
-                return op.AND(JetMET_trig, op.NOT(Muon_trig))
+            #elif sample == "JetMET":
+            #    return op.AND(JetMET_trig, op.NOT(Muon_trig))
             else:
                 return op.c_bool(False)
-        return op.OR(Muon_trig)
+        #return op.OR(Muon_trig, JetMET_trig)
+        return Muon_trig
     
     elif "2024" in era:
         Muon_trig = op.OR(
@@ -271,7 +269,9 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
         )
 
 def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, sample, noHLT=False, use_mvaTTH=False):
-    if any(y in era for y in ["2022", "2023"]):
+    if any(y in era for y in ["2016", "2017", "2018"]):
+        electron_pt_cut = 30
+    elif any(y in era for y in ["2022", "2023"]):
         electron_pt_cut = 28
     elif any(y in era for y in ["2024", "2025", "2026"]):
         electron_pt_cut = 15
@@ -288,8 +288,9 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
     )
 
 def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, era, HLT, sample, noHLT=False, use_mvaTTH=False):
-
-    if any(y in era for y in ["2022", "2023"]):
+    if any(y in era for y in ["2016", "2017", "2018"]):
+        muon_pt_cut = 25
+    elif any(y in era for y in ["2022", "2023"]):
         muon_pt_cut = 24
     elif any(y in era for y in ["2024", "2025", "2026"]):
         muon_pt_cut = 15
