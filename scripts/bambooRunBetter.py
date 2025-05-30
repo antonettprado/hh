@@ -9,6 +9,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from collections import defaultdict
 
+
 USER: str = os.environ["USER"]
 HOSPITAL_LONG_PROCESS: int = 1800
 HOSPITAL_SLEEP_TIME: int = 120
@@ -92,7 +93,7 @@ class Hospital(threading.Thread):
         self.id_table: dict[ID,int] = dict()
         self.main_cluster_id: int = 0
 
-    def set_main_cluster_id(self, main_cluster_id) -> None:
+    def set_main_cluster_id(self, main_cluster_id: int) -> None:
         self.main_cluster_id = main_cluster_id
 
     @property
@@ -110,8 +111,8 @@ class Hospital(threading.Thread):
         clus_ids.add(str(self.main_cluster_id))
         return list(clus_ids)
 
-    def submit_new_jobs(self, resub_job_nums: list[int]) -> None:
-        outstem: Path = self.batch_dir / "logs" / "condor_$(ClusterId)_$(ProcId)"
+    def submit_new_jobs(self, resub_job_nums: list[int]) -> int:
+        outstem: Path = Path("condor-$(Cluster)_$(Process)")
         
         resubmit_cmd: list[str] = [ 
             "bambooHTCondorResubmit", "--ids", ",".join( str(j) for j in resub_job_nums ), 
@@ -125,24 +126,18 @@ class Hospital(threading.Thread):
 
         for i, j in enumerate(resub_job_nums):
             self.id_table[ID(cluster_id, i)] = j
+        return cluster_id
 
-    def remove_old_jobs(self, old_ids: list[ID]) -> None:
+    def remove_old_jobs(self, old_ids: list[ID]):
         remove_cmd = ['condor_rm'] + [ str(old_id) for old_id in old_ids ]
-        proc = subprocess.run(remove_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if proc.returncode != 0:
-            print(f"Failed to remove old jobs, skipping for now...")
-            return
+        subprocess.run(remove_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for old_id in old_ids:
             self.id_table.pop(old_id)
 
     def _query_condor(self, cmd: list[str], num_cols: int) -> np.ndarray:
-        try:
-            res: str = subprocess.check_output(' '.join(cmd), text=True, shell=True)
-            return np.fromstring(res, dtype=int, sep=' ').reshape(-1, num_cols)
-        except subprocess.CalledProcessError:
-            print("Failed to query condor, skipping for now...")
-            return np.array([], dtype=np.int64).reshape(-1, 3)
-        
+        res: str = subprocess.check_output(' '.join(cmd), text=True, shell=True)
+        return np.fromstring(res, dtype=int, sep=' ').reshape(-1, num_cols)
+
     def get_long_ids(self) -> set[ID]:
         long_process_cmd = (
             ["condor_q"] + self.cluster_ids +
@@ -220,8 +215,8 @@ class Hospital(threading.Thread):
 
     def run(self) -> None:
         while True:
-            completed_ids: set[ID] = self.discharge_completed_jobs()
-            long_ids: set[ID] = self.admit_stuck_jobs()
+            self.discharge_completed_jobs()
+            self.admit_stuck_jobs()
 
             if self.id_table: self.print_id_table()
             elif self.is_complete(): break
@@ -229,15 +224,13 @@ class Hospital(threading.Thread):
             time.sleep(HOSPITAL_SLEEP_TIME)
         print("Complete! Hospital has shut down")
 
-def run_driver(args, mod_args):
+def run_driver(args, mod_args) -> None:
     cmd, afs_output, eos_output = generate_cmd(args, mod_args)
     check_output_dirs(afs_output, eos_output, args)
-
     print(cmd)
     
     condor_id: int = 0
     hospital = Hospital(afs_output / 'batch')
-    # run_local_flag = threading.Event()
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, shell=True) as proc:
         out = []
         if proc.stdout == None:
@@ -266,17 +259,66 @@ def run_driver(args, mod_args):
 
             out.append(line)
     result = subprocess.CompletedProcess(cmd, proc.returncode, stdout=''.join(out))
-    if not hospital.main_cluster_id: hospital.join()
+    if hospital.main_cluster_id != 0: hospital.join()
     
     if not result.returncode and hospital.long_ids:
         print("Finalizing remaining jobs")
         args.driver = ""
         args.finalize = "--distributed=finalize"
-        main(args, mod_args)
+        run_finalize(args, mod_args)
+
+def can_finalize(eos_output: Path) -> bool:
+    opt: Path = eos_output / 'output'
+    expected: int = len([ d for d in opt.iterdir() if d.is_dir() ])
+    found: int = len([ f for f in opt.glob('*/*') if f.is_file() ])
+    return expected == found
+
+def find_missing_jobs(eos_output: Path) -> list[int]:
+    opt: Path = eos_output / 'output'
+    empty_dirs: list[int] = [ 
+        int(d.name) 
+        for d in opt.iterdir() 
+        if d.is_dir() 
+        and d.name.isdigit() 
+        and len(list(d.iterdir())) == 0 
+    ]
+    return empty_dirs
+
+def finalize(finalize_cmd) -> None:
+    print(finalize_cmd)
+    with subprocess.Popen(finalize_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, shell=True) as proc:
+        out= []
+        if proc.stdout == None:
+            raise OSError("bambooRun failed. Check the bambooRun command printed above")
+        for line in proc.stdout:
+            if (line.startswith("WARNING:bamboo.analysisutils:PFN") or 
+                "hadd -f" in line 
+                or line.startswith("Error: could not parse the number of processes to run in parallel passed after -j:")
+                or line.startswith("[TFile::Cp] ")
+                ): continue
+            print(line, end='')
+            out.append(line)
+    result = subprocess.CompletedProcess(finalize_cmd, proc.returncode, stdout=''.join(out))
+    if result.returncode != 0: print("Finalization failed. Check the output above for the problem.")
+
+def run_finalize(args, mod_args) -> None:
+    cmd, afs_output, eos_output = generate_cmd(args, mod_args)
+    if not can_finalize(eos_output): 
+        print('Need to re-run some jobs before finalization.')
+        to_resubmit: list[int] = find_missing_jobs(eos_output)
+        hospital = Hospital(afs_output / 'batch')
+        cluster_id: int = hospital.submit_new_jobs(to_resubmit)
+        print(f"{len(hospital.id_table)} jobs submitted to cluster {cluster_id}.")
+        hospital.run() # No need to run as a separate thread
+
+    if can_finalize(eos_output): finalize(cmd)
+    else: print(f"Some outputs are still missing. You should check {eos_output.absolute()} manually, or try to finalize again.")
 
 def main(args, mod_args) -> None:
     if args.driver:
         run_driver(args, mod_args)
+    elif args.finalize:
+        run_finalize(args, mod_args)
     else:
         cmd, _, _ = generate_cmd(args, mod_args)
         print(cmd)
@@ -285,8 +327,3 @@ def main(args, mod_args) -> None:
 if __name__ == "__main__":
     args, mod_args = parse_args()
     main(args, mod_args)
-
-    #cluster_id: int = 7091876
-    #hospital = Hospital(cluster_id, Path('Z_OUTPUT/test/batch'))
-    #hospital.start()
-    #hospital.join()
