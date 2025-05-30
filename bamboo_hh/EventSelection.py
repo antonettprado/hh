@@ -218,7 +218,7 @@ class EventSelection(NanoBaseHHbbWW):
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
         is_sl_e = op.switch(op.AND(
             event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
-            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
+            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
             ), 
             1, 
             0
