@@ -18,14 +18,14 @@ def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
 def get_electron_id(el, era, level):
     if "2018" in era or "2017" in era:
         if level == 'loose':
-            el_id = el.mvaFall17V2noIso_WPL
+            el_id = el.mvaFall17V2Iso_WPL
         elif level == 'tight':
-            el_id = el.mvaFall17V2noIso_WP90
+            el_id = el.mvaFall17V2Iso_WP90
     elif "2022" in era or "2023" in era or "2024" in era:
         if level == 'loose':
             el_id = el.mvaIso_WP90
         elif level == 'tight':
-            el_id = el.mvaIso_WP90
+            el_id = el.mvaIso_WP80
     return el_id
 
 def elConePt(electrons, jets):
@@ -103,14 +103,15 @@ def electron_loose_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=F
     #print(f"electron_loose_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
-        op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
+        el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
         #el.pfRelIso03_all < 0.4,
-        el.miniPFRelIso_all < 0.4,
-        el.lostHits <= 1,
+        #el.miniPFRelIso_all < 0.4,
+        #el.lostHits <= 1,
         get_electron_id(el, era, 'loose')
         )
     )
@@ -120,46 +121,51 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, era, use_mvaTT
     #print(f"electron_fakeable_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
-        op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
+        el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
         #el.pfRelIso03_all < 0.4,
-        el.miniPFRelIso_all < 0.4,
-        op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
-        el.hoe < 0.10,
-        el.eInvMinusPInv > -0.04,
-        el.convVeto == 1,
-        el.lostHits == 0,
-        op.switch(op.c_bool(use_mvaTTH), 
-            op.AND(op.switch(el.mvaTTH > 0.3, get_electron_id(el, era, 'loose'), get_electron_id(el, era, 'tight')),
-                op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
-                op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, era, "M")), op.NOT(nearbyBtag(el, jets, era, "T")))),
-            op.AND(get_electron_id(el, era, 'loose'),op.NOT(nearbyBtag(el, jets, era, "M")))
-            )
-        ))
+        #el.miniPFRelIso_all < 0.4,
+        #op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
+        #el.hoe < 0.10,
+        #el.eInvMinusPInv > -0.04,
+        #el.convVeto == 1,
+        #el.lostHits == 0,
+        #op.switch(op.c_bool(use_mvaTTH), 
+        #    op.AND(op.switch(el.mvaTTH > 0.3, get_electron_id(el, era, 'loose'), get_electron_id(el, era, 'tight')),
+        #        op.switch(el.mvaTTH <= 0.3, el.jetRelIso < 0.7, 1),
+        #        op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, era, "M")), op.NOT(nearbyBtag(el, jets, era, "T")))),
+        #    op.AND(get_electron_id(el, era, 'loose'),op.NOT(nearbyBtag(el, jets, era, "M")))
+        #    )
+        get_electron_id(el, era, 'loose'),
+        op.NOT(nearbyBtag(el, jets, era, "M"))
+        )
+    )
 
 def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
     #print(f"electron_tight_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
-        op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
+        el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
         #el.pfRelIso03_all < 0.4,
-        el.miniPFRelIso_all < 0.4,
-        op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
-        el.hoe < 0.10,
-        el.eInvMinusPInv > -0.04,
-        el.convVeto == 1,
-        el.lostHits == 0,
-        get_electron_id(el, era, 'loose'),
-        op.NOT(nearbyBtag(el, jets, era, "M")),
-        op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
+        #el.miniPFRelIso_all < 0.4,
+        #op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
+        #el.hoe < 0.10,
+        #el.eInvMinusPInv > -0.04,
+        #el.convVeto == 1,
+        #el.lostHits == 0,
+        get_electron_id(el, era, 'tight'),
+        op.NOT(nearbyBtag(el, jets, era, "M"))
+        #op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
 
 def muon_basic_selection(muons):
@@ -170,13 +176,15 @@ def muon_loose_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
     #print(f"muon_loose_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
-        op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
+        mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        mu.miniPFRelIso_all < 0.4,
+        mu.pfIsoId >= 4,
+        #mu.miniPFRelIso_all < 0.4,
         mu.looseId
         )
     )
@@ -186,40 +194,47 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
     #print(f"muon_fakeable_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
-        op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
+        mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        mu.miniPFRelIso_all < 0.4,
-        mu.looseId,
-        op.switch(op.c_bool(use_mvaTTH), 
-            op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
-                op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
-            op.AND(op.switch(op.NOT(mu.mediumPromptId), mu.jetRelIso < 0.8, 1),
-                op.switch(mu.mediumPromptId, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
-            #op.NOT(nearbyBtag(mu, jets, era, "M"))
-            )
-        ))
+        mu.pfIsoId >= 4,
+        #mu.miniPFRelIso_all < 0.4,
+        mu.mediumId,
+        #op.switch(op.c_bool(use_mvaTTH), 
+        #    op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
+        #        op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
+        #    op.AND(op.switch(op.NOT(mu.mediumPromptId), mu.jetRelIso < 0.8, 1),
+        #        op.switch(mu.mediumPromptId, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
+        #    #op.NOT(nearbyBtag(mu, jets, era, "M"))
+        #    )
+        op.NOT(nearbyBtag(mu, jets, era, "M"))
+        )
+    )
 
 def muon_tight_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False): 
     pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
     #print(f"muon_tight_selection: pt cut of {pt_cut}")
     #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
-        op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
+        mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        mu.miniPFRelIso_all < 0.4,
-        mu.mediumId,
-        op.NOT(nearbyBtag(mu, jets, era, "M")),
-        op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, mu.mediumPromptId)
+        mu.pfIsoId >= 4,
+        #mu.miniPFRelIso_all < 0.4,
+        mu.tightId,
+        op.NOT(nearbyBtag(mu, jets, era, "M"))
+        #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, mu.mediumPromptId)
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
-        ))
+        )
+    )
 
 def electron_cleaning(electrons, muons, deltar_cut=0.3):
     return op.select(electrons, lambda ele: op.NOT(
