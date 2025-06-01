@@ -226,12 +226,14 @@ def combine_datacards_over_selections(datacards: list[Datacard], combine_selecti
 
     datacards = sorted(datacards, key=lambda dc: (dc.model, dc.era, dc.selection))
     for _, group in groupby(datacards, key=lambda dc: (dc.model, dc.era)):
-        for selection, dcs in groupby(group, key=merged_selection_key):
-            dcs = list(dcs)
-            root: Path = dcs[0].path.parents[1]
-            comb_dc_name: str = 'datacard_' + '_'.join((part.split('_',1)[-1] for part in selection.split(':'))) + '.txt'
-            comb_dc_path: Path = root / comb_dc_name
-            combined_datacards.append(Datacard.from_combination(dcs, comb_dc_path))
+        #for selection, dcs in groupby(group, key=merged_selection_key):
+        #    dcs = list(dcs)
+        selection = ':'.join(combine_selections)
+        dcs = [dc for dc in group if dc.selection in combine_selections]
+        root: Path = dcs[0].path.parents[1]
+        comb_dc_name: str = 'datacard_' + '_'.join((part.split('_',1)[-1] for part in selection.split(':'))) + '.txt'
+        comb_dc_path: Path = root / comb_dc_name
+        combined_datacards.append(Datacard.from_combination(dcs, comb_dc_path))
 
     return combined_datacards
 
