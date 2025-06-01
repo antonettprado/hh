@@ -24,6 +24,8 @@ def make_datacards(nndir: Path, results_dir: Path) -> tuple[list[Datacard], list
     sel_dcs: list[Datacard] = datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_3j_2b', 'SL_res_4j_1b', 'SL_res_4j_2b'])
     sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_3j_2b'])
     sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_4j_1b', 'SL_res_4j_2b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_4j_1b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_2b', 'SL_res_4j_2b'])
     sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_3j_resolved', 'SL_4j_resolved'])
     
     # Figure out which selection datacards to combine into a model datacard
@@ -38,6 +40,9 @@ def make_datacards(nndir: Path, results_dir: Path) -> tuple[list[Datacard], list
         raise RuntimeError("Don't know which selection datacards to use to generate combined model datacards")
     '''
     era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_1b_SL_res_3j_2b_SL_res_4j_1b_SL_res_4j_2b']
+    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_3j_resolved_SL_4j_resolved']
+    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_1b_SL_res_4j_1b']
+    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_2b_SL_res_4j_2b']
     model_dcs: list[Datacard] = datacards.combine_datacards_over_eras(era_dcs)
 
     print(f'{time.perf_counter()-start:.2f}s')
