@@ -204,6 +204,8 @@ class NNInference(NanoBaseHHbbWW):
         self.yields.add(selections['SL_res_4j_1b'], 'SL_res_4j_1b')
         self.yields.add(selections['SL_res_4j_2b'], 'SL_res_4j_2b')
         self.yields.add(selections['SL_4j_resolved'], 'SL_4j_resolved')
+        self.yields.add(selections['SL_res_3j4j_1b'], 'SL_res_3j4j_1b')
+        self.yields.add(selections['SL_res_3j4j_2b'], 'SL_res_3j4j_2b')
         self.yields.add(selections['SL_resolved'], 'SL_resolved')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')

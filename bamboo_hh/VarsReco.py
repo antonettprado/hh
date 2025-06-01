@@ -99,6 +99,8 @@ class VarsReco(NanoBaseHHbbWW):
             'SL_res_4j_1b': all_selections['SL']['SL_res_4j_1b'],
             'SL_res_4j_2b': all_selections['SL']['SL_res_4j_2b'],
             'SL_4j_resolved': all_selections['SL']['SL_4j_resolved'],
+            'SL_res_3j4j_1b': all_selections['SL']['SL_res_3j4j_1b'],
+            'SL_res_3j4j_2b': all_selections['SL']['SL_res_3j4j_2b'],
             'SL_resolved': all_selections['SL']['SL_resolved'],
             'SL_boosted': all_selections['SL']['SL_boosted'],
             'DL_res_1b': all_selections['DL']['DL_res_1b'],
@@ -172,6 +174,8 @@ class VarsReco(NanoBaseHHbbWW):
         self.yields.add(selections['SL_res_4j_1b'], 'SL_res_4j_1b')
         self.yields.add(selections['SL_res_4j_2b'], 'SL_res_4j_2b')
         self.yields.add(selections['SL_4j_resolved'], 'SL_4j_resolved')
+        self.yields.add(selections['SL_res_3j4j_1b'], 'SL_res_3j4j_1b')
+        self.yields.add(selections['SL_res_3j4j_2b'], 'SL_res_3j4j_2b')
         self.yields.add(selections['SL_resolved'], 'SL_resolved')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
