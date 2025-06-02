@@ -278,7 +278,8 @@ def sl_e_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc, 
     return (op.AND(
         op.rng_len(electrons) == 1, 
         op.rng_len(muons) == 0,
-        op.switch(op.c_bool(use_mvaTTH), electron_ConePt[electrons[0].idx] > electron_pt_cut, electrons[0].pt > electron_pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), electron_ConePt[electrons[0].idx] > electron_pt_cut, electrons[0].pt > electron_pt_cut),
+        electrons[0].pt > electron_pt_cut,
         op.rng_len(taus) == 0,
         op.OR(
             noHLT,
@@ -298,7 +299,8 @@ def sl_mu_selection(electrons, muons, taus, electron_ConePt, muon_ConePt, is_mc,
     return (op.AND(
         op.rng_len(muons) == 1, 
         op.rng_len(electrons) == 0,
-        op.switch(op.c_bool(use_mvaTTH), muon_ConePt[muons[0].idx] > muon_pt_cut, muons[0].pt > muon_pt_cut),
+        #op.switch(op.c_bool(use_mvaTTH), muon_ConePt[muons[0].idx] > muon_pt_cut, muons[0].pt > muon_pt_cut),
+        muons[0].pt > muon_pt_cut,
         op.rng_len(taus) == 0,
         op.OR(
             noHLT,
