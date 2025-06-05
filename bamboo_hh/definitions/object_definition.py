@@ -23,13 +23,13 @@ def get_electron_id(el, era, level):
             el_id = el.mvaFall17V2Iso_WP90
     elif "2022" in era or "2023" in era or "2024" in era:
         if level == 'loose':
-            #el_id = el.mvaIso_WP90
-            el_id = el.cutBased >= 2
-        elif level == 'medium':
-            el_id = el.cutBased >= 3
+            el_id = el.mvaIso_WP90
+            #el_id = el.cutBased >= 2
+        #elif level == 'medium':
+        #    el_id = el.cutBased >= 3
         elif level == 'tight':
-            #el_id = el.mvaIso_WP80
-            el_id = el.cutBased >= 4
+            el_id = el.mvaIso_WP80
+            #el_id = el.cutBased >= 4
     return el_id
 
 def elConePt(electrons, jets):
@@ -167,7 +167,7 @@ def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=F
         #el.eInvMinusPInv > -0.04,
         #el.convVeto == 1,
         #el.lostHits == 0,
-        get_electron_id(el, era, 'medium'),
+        get_electron_id(el, era, 'tight'),
         op.NOT(nearbyBtag(el, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
@@ -233,7 +233,7 @@ def muon_tight_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         #mu.pfRelIso03_all < 0.4,
         mu.pfIsoId >= 4,
         #mu.miniPFRelIso_all < 0.4,
-        mu.mediumId,
+        mu.tightId,
         op.NOT(nearbyBtag(mu, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, mu.mediumPromptId)
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
