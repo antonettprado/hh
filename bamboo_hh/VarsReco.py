@@ -23,7 +23,7 @@ class VarsReco(NanoBaseHHbbWW):
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)
         parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_3j_resolved', 'SL_4j_resolved'], help='skim tree selections to produce')
-        parser.add_argument("-p", "--plot_selections", nargs="+", action='store', default=['SL_3j_resolved', 'SL_4j_resolved'], help='selections to plot in bamboo')
+        parser.add_argument("-xs", "--plot_selections", nargs="+", action='store', default=['SL_3j_resolved', 'SL_4j_resolved'], help='selections to plot in bamboo')
         parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
