@@ -50,7 +50,7 @@
   # process_events: {"HH_bbWW": "All", "ttbar": 2_000_000, "tW": 900_000}
 
 
-  - name: 'multi_HH_ttbar_tW_WJets_3j'
+- name: 'multi_HH_ttbar_tW_WJets_3j'
   model_type: 'multi'
   classification: {"HH": ["ggHH_kl_1_kt_1_hbbhww", "ggHH_kl_2p45_kt_1_hbbhww", "ggHH_kl_5_kt_1_hbbhww", "ggHH_kl_0_kt_1_hbbhww"], "ttbar": ["ttbar"], "tW": ["tW"], "WJets": ["WJets"]}
   process_sf: {"ggHH_kl_1_kt_1_hbbhww": 1.0, "ggHH_kl_2p45_kt_1_hbbhww": 1.0, "ggHH_kl_5_kt_1_hbbhww": 1.0, "ggHH_kl_0_kt_1_hbbhww": 1.0, "ttbar": 8.0, "tW": 4.0, "WJets": 4.0}
@@ -85,7 +85,7 @@
   # process_events: {"HH_bbWW": "All", "ttbar": 2_000_000, "tW": 900_000}
 
 
-  - name: 'multi_HH_ttbar_t_WJets_3j'
+- name: 'multi_HH_ttbar_t_WJets_3j'
   model_type: 'multi'
   classification: {"HH": ["ggHH_kl_1_kt_1_hbbhww", "ggHH_kl_2p45_kt_1_hbbhww", "ggHH_kl_5_kt_1_hbbhww", "ggHH_kl_0_kt_1_hbbhww"], "ttbar": ["ttbar"], "t": ["tW", "tbq", "tb"], "WJets": ["WJets"]}
   process_sf: {"ggHH_kl_1_kt_1_hbbhww": 1.0, "ggHH_kl_2p45_kt_1_hbbhww": 1.0, "ggHH_kl_5_kt_1_hbbhww": 1.0, "ggHH_kl_0_kt_1_hbbhww": 1.0, "ttbar": 8.0, "tW": 4.0, "tbq": 2.0, "tb": 2.0, "WJets": 4.0}
@@ -120,7 +120,7 @@
   # process_events: {"HH_bbWW": "All", "ttbar": 2_000_000, "tW": 900_000}
 
 
-  - name: 'multi_HH_Top_WJets_3j'
+- name: 'multi_HH_Top_WJets_3j'
   model_type: 'multi'
   classification: {"HH": ["ggHH_kl_1_kt_1_hbbhww", "ggHH_kl_2p45_kt_1_hbbhww", "ggHH_kl_5_kt_1_hbbhww", "ggHH_kl_0_kt_1_hbbhww"], "Top": ["ttbar", "tW", "tbq", "tb"], "WJets": ["WJets"]}
   process_sf: {"ggHH_kl_1_kt_1_hbbhww": 1.0, "ggHH_kl_2p45_kt_1_hbbhww": 1.0, "ggHH_kl_5_kt_1_hbbhww": 1.0, "ggHH_kl_0_kt_1_hbbhww": 1.0, "ttbar": 8.0, "tW": 4.0, "tbq": 2.0, "tb": 2.0, "WJets": 4.0}
@@ -190,7 +190,7 @@
   # process_events: {"HH_bbWW": "All", "ttbar": 2_000_000, "tW": 900_000}
 
 
-  - name: 'multi_HH_Top_WJets_H_3j'
+- name: 'multi_HH_Top_WJets_H_3j'
   model_type: 'multi'
   classification: {"HH": ["ggHH_kl_1_kt_1_hbbhww", "ggHH_kl_2p45_kt_1_hbbhww", "ggHH_kl_5_kt_1_hbbhww", "ggHH_kl_0_kt_1_hbbhww"], "Top": ["ttbar", "tW", "tbq", "tb"], "WJets": ["WJets"], "H": ["GluGluHto2WtoLNu2Q", "GluGluHto2Wto2L2Nu", "VBFHto2WtoLNu2Q", "VBFHto2Wto2L2Nu", "ZH_Hto2B_Zto2L", "ZH_Hto2C_Zto2L", "ZH_ZtoAll_Hto2Wto2L2Nu", "ggZH_Hto2B_Zto2L", "ggZH_Hto2C_Zto2L", "WplusH_Hto2B_WtoLNu", "WplusH_Hto2C_WtoLNu", "WplusH_HtoZG_WtoAll_Zto2L", "WminusH_Hto2B_WtoLNu", "WminusH_Hto2C_WtoLNu", "WminusH_HtoZG_WtoAll_Zto2L", "TTHto2B", "TTHtoNon2B"]}
   process_sf: {"ggHH_kl_1_kt_1_hbbhww": 1.0, "ggHH_kl_2p45_kt_1_hbbhww": 1.0, "ggHH_kl_5_kt_1_hbbhww": 1.0, "ggHH_kl_0_kt_1_hbbhww": 1.0, "ttbar": 8.0, "tW": 4.0, "tbq": 2.0, "tb": 2.0, "WJets": 4.0, "GluGluHto2WtoLNu2Q": 1.0, "GluGluHto2Wto2L2Nu": 1.0, "VBFHto2WtoLNu2Q": 1.0, "VBFHto2Wto2L2Nu": 1.0, "ZH_Hto2B_Zto2L": 1.0, "ZH_Hto2C_Zto2L": 1.0, "ZH_ZtoAll_Hto2Wto2L2Nu": 1.0, "ggZH_Hto2B_Zto2L": 1.0, "ggZH_Hto2C_Zto2L": 1.0, "WplusH_Hto2B_WtoLNu": 1.0, "WplusH_Hto2C_WtoLNu": 1.0, "WplusH_HtoZG_WtoAll_Zto2L": 1.0, "WminusH_Hto2B_WtoLNu": 1.0, "WminusH_Hto2C_WtoLNu": 1.0, "WminusH_HtoZG_WtoAll_Zto2L": 1.0, "TTHto2B": 1.0, "TTHtoNon2B": 1.0}
