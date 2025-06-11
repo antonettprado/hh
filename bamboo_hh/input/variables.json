@@ -567,26 +567,6 @@
             "title": "AK4_3 pt",
             "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
         }, 
-        
-        "ak4_jet4_pt":
-        {
-            "nbins": 50,
-            "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "AK4_4 pt",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        }, 
-
-        "ak4_jet5_pt":
-        {
-            "nbins": 50,
-            "min": 0,
-            "max": 500,
-            "unit": "GeV",
-            "title": "AK4_5 pt",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        }, 
 
         "ak4_jet0_eta":
         {
@@ -625,26 +605,6 @@
             "max": 4,
             "unit": "",
             "title": "AK4_3 #eta",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        },
-
-        "ak4_jet4_eta":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
-            "unit": "",
-            "title": "AK4_4 #eta",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        },
-
-        "ak4_jet5_eta":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
-            "unit": "",
-            "title": "AK4_5 #eta",
             "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
         },
 
@@ -688,26 +648,6 @@
             "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
         },
 
-        "ak4_jet4_phi":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
-            "unit": "",
-            "title": "AK4_4 #phi",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        },
-
-        "ak4_jet5_phi":
-        {
-            "nbins": 50,
-            "min": -4,
-            "max": 4,
-            "unit": "",
-            "title": "AK4_5 #phi",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        },
-
         "ak4_jet0_bscore":
         {
             "nbins": 50,
@@ -745,26 +685,6 @@
             "max": 1,
             "unit": "",
             "title": "AK4_3 btag score",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        },
-
-        "ak4_jet4_bscore":
-        {
-            "nbins": 50,
-            "min": 0,
-            "max": 1,
-            "unit": "",
-            "title": "AK4_4 btag score",
-            "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
-        },
-
-        "ak4_jet5_bscore":
-        {
-            "nbins": 50,
-            "min": 0,
-            "max": 1,
-            "unit": "",
-            "title": "AK4_5 btag score",
             "subcats": ["SL_res_4j_1b", "SL_res_4j_2b", "SL_4j_resolved", "DL_res_1b", "DL_res_2b"]
         },
 

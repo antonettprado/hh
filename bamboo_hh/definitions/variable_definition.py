@@ -206,7 +206,7 @@ class RecoVariables():
 
     def gather_low_level_ak4_jet_vars(self) -> list[Variable1D]:
         ak4_jets = self.objects["sorted_ak4_jets"]
-        num_jets: int = 6
+        num_jets: int = 4
         ak4_jet_vars: list[Variable1D] = []
         for i in range(num_jets):
             pt = op.switch(op.rng_len(ak4_jets) > i, ak4_jets[i].pt, NULL)
