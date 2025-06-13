@@ -6,6 +6,7 @@ import threading
 import subprocess
 import numpy as np
 from pathlib import Path
+from typing import Optional
 from dataclasses import dataclass
 from collections import defaultdict
 
@@ -267,22 +268,27 @@ def run_driver(args, mod_args) -> None:
         args.finalize = "--distributed=finalize"
         run_finalize(args, mod_args)
 
-def can_finalize(eos_output: Path) -> bool:
-    opt: Path = eos_output / 'output'
-    expected: int = len([ d for d in opt.iterdir() if d.is_dir() ])
-    found: int = len([ f for f in opt.glob('*/*') if f.is_file() ])
-    return expected == found
+def is_zombie(file: Path) -> bool:
+    import ROOT
+    return ROOT.TFile(str(file)).IsZombie()
 
-def find_missing_jobs(eos_output: Path) -> list[int]:
+def check_outputs(eos_output: Path, jobs: Optional[list[int]]=None) -> list[int]:
     opt: Path = eos_output / 'output'
-    empty_dirs: list[int] = [ 
-        int(d.name) 
-        for d in opt.iterdir() 
-        if d.is_dir() 
-        and d.name.isdigit() 
-        and len(list(d.iterdir())) == 0 
-    ]
-    return empty_dirs
+    bad_jobs: list[int] = []
+    optfiles = (opt / str(job) for job in jobs) if jobs is not None else opt.iterdir()
+    for d in optfiles:
+        job: int = int(d.name)
+        output_files: list[Path] = list(d.glob('*.root'))
+        if len(output_files) == 0: bad_jobs.append(job)
+        elif len(output_files) > 1: print(d, "has too many output files. Please check manually.")
+        elif is_zombie(output_files[0]): bad_jobs.append(job)
+    return bad_jobs
+
+def check_results(eos_output: Path) -> list[Path]:
+    res: Path = eos_output / 'results'
+    results_files = filter(lambda p: not p.name.startswith("__skeleton__"), res.iterdir())
+    bad_files: list[Path] = [ file for file in results_files if is_zombie(file) ]
+    return bad_files
 
 def finalize(finalize_cmd) -> None:
     print(finalize_cmd)
@@ -299,20 +305,29 @@ def finalize(finalize_cmd) -> None:
             print(line, end='')
             out.append(line)
     result = subprocess.CompletedProcess(finalize_cmd, proc.returncode, stdout=''.join(out))
-    if result.returncode != 0: print("Finalization failed. Check the output above for the problem.")
+    if result.returncode != 0: raise RuntimeError("Finalization failed. Check the output above for the problem.")
 
 def run_finalize(args, mod_args) -> None:
     cmd, afs_output, eos_output = generate_cmd(args, mod_args)
-    if not can_finalize(eos_output): 
+    to_resubmit = check_outputs(eos_output)
+    for p in to_resubmit: (eos_output / 'output' / str(p)).unlink(missing_ok=True)
+
+    if len(to_resubmit) > 0: 
         print('Need to re-run some jobs before finalization.')
-        to_resubmit: list[int] = find_missing_jobs(eos_output)
         hospital = Hospital(afs_output / 'batch')
         cluster_id: int = hospital.submit_new_jobs(to_resubmit)
         print(f"{len(hospital.id_table)} jobs submitted to cluster {cluster_id}.")
         hospital.run() # No need to run as a separate thread
+        to_resubmit = check_outputs(eos_output, jobs=to_resubmit)
 
-    if can_finalize(eos_output): finalize(cmd)
-    else: print(f"Some outputs are still missing. You should check {eos_output.absolute()} manually, or try to finalize again.")
+    if len(to_resubmit) == 0: finalize(cmd)
+    else: raise RuntimeError(f"Some outputs are still missing. You should check {eos_output.absolute()} manually, or try to finalize again.")
+
+    to_refinalize: list[Path] = check_results(eos_output)
+    for p in to_refinalize: p.unlink()
+    if len(to_refinalize) > 0: finalize(cmd)
+    failed_again: list[Path] = check_results(eos_output)
+    if len(failed_again) > 0: raise RuntimeError(f"Failed after multiple finalization attempts. Please check {eos_output.absolute()} manually.")
 
 def main(args, mod_args) -> None:
     if args.driver:
@@ -327,3 +342,4 @@ def main(args, mod_args) -> None:
 if __name__ == "__main__":
     args, mod_args = parse_args()
     main(args, mod_args)
+
