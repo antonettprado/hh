@@ -144,8 +144,8 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, era, use_mvaTT
         #        op.switch(el.mvaTTH > 0.3, op.NOT(nearbyBtag(el, jets, era, "M")), op.NOT(nearbyBtag(el, jets, era, "T")))),
         #    op.AND(get_electron_id(el, era, 'loose'),op.NOT(nearbyBtag(el, jets, era, "M")))
         #    )
-        get_electron_id(el, era, 'loose'),
-        op.NOT(nearbyBtag(el, jets, era, "M"))
+        get_electron_id(el, era, 'loose')
+        #op.NOT(nearbyBtag(el, jets, era, "M"))
         )
     )
 
@@ -167,8 +167,8 @@ def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=F
         #el.eInvMinusPInv > -0.04,
         #el.convVeto == 1,
         #el.lostHits == 0,
-        get_electron_id(el, era, 'tight'),
-        op.NOT(nearbyBtag(el, jets, era, "M"))
+        get_electron_id(el, era, 'tight')
+        #op.NOT(nearbyBtag(el, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
 
@@ -207,7 +207,7 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         #mu.pfRelIso03_all < 0.4,
         mu.pfIsoId >= 4,
         #mu.miniPFRelIso_all < 0.4,
-        mu.looseId,
+        mu.looseId
         #op.switch(op.c_bool(use_mvaTTH), 
         #    op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
         #        op.switch(mu.mvaTTH > 0.5, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))), # TO DO: WP-interp for nearbyBtag if mvaTTH fails
@@ -215,7 +215,7 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         #        op.switch(mu.mediumPromptId, op.NOT(nearbyBtag(mu, jets, era, "M")), op.NOT(nearbyBtag(mu, jets, era, "T")))) # TO DO: WP-interp for nearbyBtag if mvaTTH fails
         #    #op.NOT(nearbyBtag(mu, jets, era, "M"))
         #    )
-        op.NOT(nearbyBtag(mu, jets, era, "M"))
+        #op.NOT(nearbyBtag(mu, jets, era, "M"))
         )
     )
 
@@ -233,8 +233,8 @@ def muon_tight_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         #mu.pfRelIso03_all < 0.4,
         mu.pfIsoId >= 4,
         #mu.miniPFRelIso_all < 0.4,
-        mu.tightId,
-        op.NOT(nearbyBtag(mu, jets, era, "M"))
+        mu.tightId
+        #op.NOT(nearbyBtag(mu, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, mu.mediumPromptId)
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
         )
