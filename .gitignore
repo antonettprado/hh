@@ -19,4 +19,4 @@ Z_OUTPUT/*
 *.cc
 myREADME.md
 notebooks
-bamboo_hh/config/dascache/*
+bamboo_hh/config/dascache*

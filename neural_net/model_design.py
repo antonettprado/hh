@@ -75,8 +75,10 @@ class ModelNetwork:
     def fit(self, model: tf.keras.Model, train_data: tf.data.Dataset, val_data: tf.data.Dataset = None) -> tf.keras.Model:
     
         using_validation = bool(val_data)    
-
         self.logger.info(f"Using validation: {using_validation}")
+
+        train_data = train_data.map(lambda d: (d["features"], d["class_oh"], d["sample_weight"]))
+        val_data = val_data.map(lambda d: (d["features"], d["class_oh"], d["sample_weight"])) if using_validation else None
 
         history = model.fit(
             x=train_data,
@@ -181,7 +183,7 @@ class ModelEvaluator:
         self.figures = {}
         self.plot_data = {}
         
-        self.test_data = test_data.map(lambda *args: (args[0], args[1]))  # Remove sample weights if present
+        self.test_data = test_data.map(lambda d: {"features": d["features"], "class_oh": d["class_oh"]}) # Remove sample weights if present
 
     def Run(self):
         self.logger.info("\nStarting model evaluation...")
@@ -196,17 +198,18 @@ class ModelEvaluator:
         return self.metrics
 
     def _get_predictions(self):
-
         features, labels = [], []
-        for x, y in self.test_data:
-            features.append(x)
-            labels.append(y)
+
+        for batch in self.test_data:
+            features.append(batch["features"])
+            labels.append(batch["class_oh"])
+
         features = tf.concat(features, axis=0)
         labels = tf.concat(labels, axis=0)
 
         probabilities = self.model.predict(features, verbose=0)
         predicted_classes = np.argmax(probabilities, axis=1)
-        
+
         self.predictions['probabilities'] = probabilities
         self.predictions['classes'] = predicted_classes
         self.predictions['true_labels'] = labels
@@ -479,9 +482,10 @@ class CustomStandardizer(tf.keras.layers.Layer):
         super().build(input_shape)
 
     def call(self, inputs):
-        valid_mask = tf.cast(tf.not_equal(inputs, UNDEFINED), inputs.dtype)
-        transformed_inputs = self.standardizer(inputs)
-        outputs = valid_mask * transformed_inputs + (1 - valid_mask) * inputs
+        valid_mask = tf.not_equal(inputs, UNDEFINED)
+        masked_inputs = tf.where(valid_mask, inputs, tf.zeros_like(inputs))
+        transformed_inputs = self.standardizer(masked_inputs)
+        outputs = tf.where(valid_mask, transformed_inputs, tf.constant(UNDEFINED, dtype=inputs.dtype))
         return outputs
 
     def get_config(self):

@@ -15,10 +15,6 @@ class VarsReco(NanoBaseHHbbWW):
             self.event_nr_sel = self.args.event_nr_sel
         else:
             self.event_nr_sel = "all"
-        # self.vars1D = get_all_1D_variables()
-        # self.vars2D = get_all_2D_variables()
-        # self.vars = self.vars1D | self.vars2D # Merge them
-        # If you want to filter any variables out to avoid using in this analysis, do it here for efficiency
         
     def addArgs(self, parser):
         super(VarsReco, self).addArgs(parser)

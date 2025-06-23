@@ -2,12 +2,14 @@ import tensorflow as tf
 import numpy as np
 from pathlib import Path
 import uproot
-import pandas as pd
 from references import references
 import gc
+import pandas as pd
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', 1000)
 
-UNDEFINED= -9999
-SHUFFLE_BUFFER_SIZE = 10_000_000
+UNDEFINED = -9999
+SHUFFLE_BUFFER_SIZE = 20_000_000
 NON_FEATURE_BRANCHES = ['event', 'genWeight']
 
 def get_data(config, workdir, logger):
@@ -56,47 +58,27 @@ def prune_ds(ds, config):
     n_features = len(config.features)
     n_classes = len(config.mapper.get_classes())
     ds_details = ds.details
-    ds = ds.map(lambda batch: (
-                batch['features'], 
-                batch['class_oh'], 
-                batch['sample_weight']
-            ), 
+    ds = ds.map(lambda batch: {
+                'event': batch['event'],
+                'features': batch['features'], 
+                'class_oh': batch['class_oh'], 
+                'sample_weight': batch['sample_weight'],
+                'process': batch['process']
+            }, 
             num_parallel_calls=tf.data.AUTOTUNE
-        ).map(lambda features, class_oh, sample_weight: (
-                tf.ensure_shape(features, (None, n_features)),
-                tf.ensure_shape(class_oh, (None, n_classes)),
-                tf.ensure_shape(sample_weight, (None,))
-            ),
+        ).map(lambda batch: {
+                'event': tf.ensure_shape(batch['event'], (None,)),
+                'features': tf.ensure_shape(batch['features'], (None, n_features)),
+                'class_oh': tf.ensure_shape(batch['class_oh'], (None, n_classes)),
+                'sample_weight': tf.ensure_shape(batch['sample_weight'], (None,)),
+                'process': tf.ensure_shape(batch['process'], (None,))
+            },
             num_parallel_calls=tf.data.AUTOTUNE
         )
     ds.details = ds_details
     return ds
 
-def print_events(ds, config, logger):
-    for batch in ds.take(1):
-        num_events = min(10, batch['features'].shape[0])
-        data = {
-            'event_id': batch['event'].numpy()[:num_events],
-            'class': np.argmax(batch['class_oh'].numpy()[:num_events], axis=1),
-            'weight': batch['sample_weight'].numpy()[:num_events]
-        }
-        feature_names = config.features
-        features_array = batch['features'].numpy()[:num_events]
-        for i, feature_name in enumerate(feature_names):
-            data[feature_name] = features_array[:, i]
-        df = pd.DataFrame(data)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', 1000)
-        logger.info(f"\nSample of first {num_events} events from dataset:")
-        logger.info("\n" + df.to_string(index=False, float_format=lambda x: f"{x:.2f}"))
-
-'''
-=======================================
-Treat data as tf.data.Dataset objects
-=======================================
-'''
-
-def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_size: int=1024, chunk_size: int=100_000, max_events=1_000_000, event_filter=None) -> tf.data.Dataset:
+def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_size: int=1024, chunk_size: int=100_000, max_events=10_000_000, event_filter=None) -> tf.data.Dataset:
 
     branches = NON_FEATURE_BRANCHES + features
 
@@ -150,7 +132,7 @@ class DatasetManager:
         self.features = config.features
         self.process_sf = config.process_sf
         self.batch_size = config.batch_size
-        self.process_events = config.process_events
+        self.process_num_events = config.process_num_events
         self.mapper = config.mapper
         self.logger = logger
         self.ds_meta: pd.DataFrame = None
@@ -192,10 +174,10 @@ class DatasetManager:
         process_totals = self.ds_meta.groupby('Process')['Total Events'].transform('sum')
         self.ds_meta['Process Event Ratio'] = self.ds_meta['Total Events'] / process_totals
 
-        if self.process_events:
-            process_mapping = pd.Series(self.process_events)
+        if self.process_num_events:
+            process_mapping = pd.Series(self.process_num_events)
             is_all_events = self.ds_meta['Process'].map(process_mapping) == 'All'
-            has_specific_events = self.ds_meta['Process'].isin(self.process_events.keys())
+            has_specific_events = self.ds_meta['Process'].isin(self.process_num_events.keys())
             events = pd.Series(1_000_000, index=self.ds_meta.index)
             
             events.loc[is_all_events] = self.ds_meta.loc[is_all_events, 'Total Events']
@@ -307,7 +289,7 @@ class DatasetManager:
                 return {
                     'event': batch['event'],
                     # 'genWeight': batch['genWeight'],
-                    # 'process': tf.fill(tf.shape(batch['event']), process_tensor),
+                    'process': tf.fill(tf.shape(batch['event']), process_tensor),
                     # 'process_sf': tf.fill(tf.shape(batch['event']), process_sf_tensor),
                     'features': batch['features'],
                     'class_oh': tf.one_hot(tf.fill(tf.shape(batch['event']), class_idx_tensor), depth=n_classes),
@@ -398,58 +380,3 @@ class DatasetManager:
             class_datasets[class_name] = class_ds
         return class_datasets
 
-    # ***** new *****
-    def combine_into_one_by_interleaving(self, ds_list: list[tf.data.Dataset]) -> tf.data.Dataset:
-        n_features = len(self.features)
-        n_classes = len(self.mapper.get_classes())
-        ds_ratios = [ds.details['DS Ratio'] for ds in ds_list]
-        ds_list = rebatch_datasets(ds_list, ds_ratios, self.logger)
-        ds = tf.data.Dataset.from_tensor_slices(ds_list)
-        ds = ds.interleave(
-            lambda ds: ds, 
-            cycle_length=len(ds_list),
-            num_parallel_calls=tf.data.AUTOTUNE
-        )
-        combined_dataset.total_events = self.total_events
-        self.logger.info(f"\nTotal Events in combined ds: {combined_dataset.total_events}")
-
-        return combined_dataset
-
-    # ***** new *****
-    def combine_by_class_by_interleaving(self, ds_list: list[tf.data.Dataset]) -> list[tf.data.Dataset]:
-        n_features = len(self.features)
-        n_classes = len(self.mapper.get_classes())
-        class_datasets = []
-        for class_name in self.mapper.get_classes():
-            class_ds_list = [ds for ds in ds_list if ds.details['class_name'] == class_name]
-            class_ds_ratios = [ds.details['Class DS Ratio'] for ds in class_ds_list]
-            class_ds_list = rebatch_datasets(class_ds_list, class_ds_ratios, self.logger)
-            class_ds = tf.data.Dataset.from_tensor_slices(class_ds_list)
-            class_ds = class_ds.interleave(
-                lambda ds: ds, 
-                cycle_length=len(class_ds_list),
-                num_parallel_calls=tf.data.AUTOTUNE
-            )
-            class_ds.total_events = sum(ds.details['total_events'] for ds in class_ds_list)
-            class_ds.ratio = self.info_classes.loc[self.info_classes['Class'] == class_name, 'Ratio'].item()
-            self.logger.info(f"\nTotal Events in {class_name} ds: {class_ds.total_events}")
-            self.logger.debug(f"Ratio of {class_name}/Total: {class_ds.ratio:,.4f}")
-            class_datasets.append(class_ds)
-        return class_datasets
-
-# ***** new *****
-def rebatch_datasets(datasets: list[tf.data.Dataset], ratios: list[float], logger) -> list[tf.data.Dataset]:
-    '''length of datasets and ratios must be the same'''
-    target_total = REF_TOTAL_FOR_REBATCH
-    target_events = np.array(ratios) * target_total
-    target_events = np.round(target_events).astype(int)
-    if any(target_events == 0):
-        raise ValueError("Target events must be greater than 0 - Maybe increase target_total")
-    logger.info(f"Rebatching datasets to:")
-    for i, ds in enumerate(datasets):
-        logger.info(f"{ds.details['file_name']}: {target_events[i]}")
-    for i, ds in enumerate(datasets):
-        ds_details = ds.details
-        ds = ds.rebatch(target_events[i])
-        ds.details = ds_details
-    return datasets

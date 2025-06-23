@@ -11,29 +11,29 @@ def set_seed(seed_value=42):
     tf.keras.utils.set_random_seed(seed_value)
     tf.config.experimental.enable_op_determinism()
 
-def set_logger(model_name: str, outfile: Path, log_level='info'):
+def set_logger(model_name: str, outfile: Path=None, log_level='info'):
 
     log_level = getattr(logging, log_level.upper(), logging.INFO)
 
     logger = logging.getLogger(model_name)
     logger.setLevel(log_level)
 
-    # File Handler
-    file_handler = logging.FileHandler(outfile, mode='w')
-    file_handler.setLevel(log_level)
+    # Formatter
+    formatter = logging.Formatter('%(message)s')
 
     # Console Handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
-
-    # Formatter
-    formatter = logging.Formatter('%(message)s')
-    file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
-
-    logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
+    if outfile:
+        # File Handler
+        file_handler = logging.FileHandler(outfile, mode='w')
+        file_handler.setLevel(log_level)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    
     logger.propagate = False
     return logger
 
@@ -102,7 +102,7 @@ def plot_features(dataset: tf.data.Dataset, features: list[str], outfile: str):
     plt.savefig(outfile, bbox_inches='tight', dpi=300)
     plt.close() 
 
-def log_class_stats(train_ds, val_ds, test_ds, config, logger):
+def log_class_stats(train_ds, val_ds, test_ds, config, logger, modeldir: Path=None):
     train_stats = compute_class_stats(train_ds, config.mapper, logger)
     val_stats = compute_class_stats(val_ds, config.mapper, logger)
     test_stats = compute_class_stats(test_ds, config.mapper, logger)
@@ -121,10 +121,11 @@ def log_class_stats(train_ds, val_ds, test_ds, config, logger):
     logger.info(f'\nValidation dataset:\n{stats_to_df(val_stats)}')
     logger.info(f'\nTest dataset:\n{stats_to_df(test_stats)}')
 
-    # logger.info(f'\nPlotting features for training, validation, and testing data')
-    # plot_features(train_ds, config.features, modeldir/f'features_train.pdf')
-    # plot_features(val_ds, config.features, modeldir/f'features_val.pdf')
-    # plot_features(test_ds, config.features, modeldir/f'features_test.pdf')
+    if modeldir:
+        logger.info(f'\nPlotting features for training, validation, and testing data')
+        plot_features(train_ds, config.features, modeldir/f'features_train.pdf')
+        plot_features(val_ds, config.features, modeldir/f'features_val.pdf')
+        plot_features(test_ds, config.features, modeldir/f'features_test.pdf')
 
 def compute_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict[str, list]:
     """
@@ -142,9 +143,11 @@ def compute_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict[str, l
     }
 
     def reduce_func(state, batch):
-        _, class_oh, sample_weights = batch
-        batch_counts = tf.math.bincount(tf.cast(tf.argmax(class_oh, axis=1), tf.int32), minlength=num_classes, maxlength=num_classes)
-        batch_weighted_sums = tf.math.unsorted_segment_sum(sample_weights, tf.argmax(class_oh, axis=1), num_classes)
+        batch_class_oh = batch['class_oh'] 
+        batch_sample_weight = batch['sample_weight']
+
+        batch_counts = tf.math.bincount(tf.cast(tf.argmax(batch_class_oh, axis=1), tf.int32), minlength=num_classes, maxlength=num_classes)
+        batch_weighted_sums = tf.math.unsorted_segment_sum(batch_sample_weight, tf.argmax(batch_class_oh, axis=1), num_classes)
         return {
             "counts": state["counts"] + batch_counts,
             "sample_weight_sum": state["sample_weight_sum"] + batch_weighted_sums
@@ -164,7 +167,7 @@ def compute_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict[str, l
 
 def log_training_stats(train_data: tf.data.Dataset, config, logger) -> tuple[list, list]:
     features = config.features
-    train_mean, train_var, train_samples, valid_train_counts = compute_training_stats(train_data, features, ignore_value=UNDEFINED)
+    train_mean, train_var, train_samples, valid_train_counts = compute_training_stats(train_data, features)
     def stats_to_df(mean: list[float], variance: list[float]) -> pd.DataFrame:
         stats = {'Feature': features, 'mean': mean, 'variance': variance}
         if any(count != train_samples for count in valid_train_counts):
@@ -173,15 +176,16 @@ def log_training_stats(train_data: tf.data.Dataset, config, logger) -> tuple[lis
         df['mean'] = df['mean'].apply(lambda x: f"{x:.4f}")
         df['variance'] = df['variance'].apply(lambda x: f"{x:.4f}")
         return df
-    logger.info(f"\nTraining data statistics:")
+    logger.info(f"\nTraining data statistics (total samples: {train_samples}):")
     logger.info(stats_to_df(train_mean, train_var))
     return train_mean, train_var
 
-def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value: int = None) -> tuple[list, list, int, list]:
+def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value = UNDEFINED) -> tuple[list, list, int, list]:
     print(f"\nThe ignore_value is {ignore_value}")
 
     num_features = len(features)
     tf_type = {'int': tf.int32, 'float': tf.float32}
+    ignore_val = tf.constant(-9999.0, dtype=tf.float32)
 
     initial_state = {
         "sum": tf.zeros(num_features, dtype=tf_type['float']),
@@ -191,31 +195,23 @@ def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore
     }
 
     def reduce_fn(state, batch):
-        batch_features, *_ = batch
-
-        if ignore_value is not None:
-            valid_mask = tf.not_equal(batch_features, tf.cast(ignore_value, tf_type['float']))
-            valid_features = tf.where(valid_mask, batch_features, tf.zeros_like(batch_features))
-        else:
-            valid_mask = tf.ones_like(batch_features, dtype=tf.bool)
-            valid_features = batch_features
+        batch_features = batch['features']                          # shape: [batch_size, num_features]
+        valid_mask = tf.not_equal(batch_features, ignore_val)
+        valid_features = tf.where(valid_mask, batch_features, tf.zeros_like(batch_features))
 
         batch_sum = tf.reduce_sum(valid_features, axis=0)
         batch_sum_squared = tf.reduce_sum(tf.square(valid_features), axis=0)
         batch_valid_counts = tf.reduce_sum(tf.cast(valid_mask, tf_type['float']), axis=0)
         batch_sample_count = tf.shape(batch_features)[0]
 
-        new_sum = state["sum"] + batch_sum
-        new_sum_squared = state["sum_squared"] + batch_sum_squared
-        new_valid_counts = state["valid_counts"] + batch_valid_counts
-        new_total_samples = state["total_samples"] + batch_sample_count
-
-        return {
-            "sum": new_sum,
-            "sum_squared": new_sum_squared,
-            "valid_counts": new_valid_counts,
-            "total_samples": new_total_samples
+        new_state = {
+            "sum": state["sum"] + batch_sum,
+            "sum_squared": state["sum_squared"] + batch_sum_squared,
+            "valid_counts": state["valid_counts"] + batch_valid_counts,
+            "total_samples": state["total_samples"] + batch_sample_count
         }
+
+        return new_state
 
     final_state = dataset.reduce(initial_state, reduce_fn)
 
@@ -227,3 +223,21 @@ def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore
     valid_counts = final_state["valid_counts"].numpy().tolist()
 
     return mean, variance, total_samples, valid_counts
+
+def print_events(ds, config, logger):
+    for batch in ds.take(1):
+        num_events = min(100, batch['features'].shape[0])
+        data = {
+            'event_id': batch['event'].numpy()[:num_events],
+            'class': np.argmax(batch['class_oh'].numpy()[:num_events], axis=1),
+            'weight': batch['sample_weight'].numpy()[:num_events]
+        }
+        feature_names = config.features
+        features_array = batch['features'].numpy()[:num_events]
+        for i, feature_name in enumerate(feature_names):
+            data[feature_name] = features_array[:, i]
+        df = pd.DataFrame(data)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', 1000)
+        logger.info(f"\nSample of first {num_events} events from dataset:")
+        logger.info("\n" + df.to_string(index=False, float_format=lambda x: f"{x:.2f}"))

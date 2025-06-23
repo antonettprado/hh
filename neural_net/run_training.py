@@ -5,13 +5,14 @@ from typing import Callable
 
 class RunDistributed:
 
-    def __init__(self, config_name: str, roster: Path, workdir: Path, outdirname: str, trainer: str, **kwargs):
+    def __init__(self, config_name: str, roster: Path, workdir: Path, outdirname: str, trainer: str, log_level:str, **kwargs):
         self.config_name = config_name
         self.roster = roster
         self.workdir = workdir
         self.outdirname = outdirname
         self.trainer = trainer
         # self.n_iterations = kwargs.get('n_iterations', None)
+        self.log_level = log_level
         self.pass_idx = kwargs.get('pass_idx', None)
 
         self.afs_outdir = Path("Z_OUTPUT") / self.outdirname
@@ -35,7 +36,7 @@ class RunDistributed:
             export X509_USER_PROXY=$(realpath ~/private/x509up)
             
             echo "Starting training"
-            python neural_net/trainers.py -w {str(self.workdir)} -r {str(self.roster)} -o {str(self.outdirname)} -t {self.trainer} {training_args} -cn {self.config_name}
+            python neural_net/trainers.py -w {str(self.workdir)} -r {str(self.roster)} -o {str(self.outdirname)} -t {self.trainer} {training_args} -cn {self.config_name} -l {self.log_level}
             echo "Training finished"
             """
         executable_path = self.afs_modeldir / 'runTraining.sh'
@@ -44,12 +45,12 @@ class RunDistributed:
         return executable_path
 
     @staticmethod
-    def submit_job(config_name, roster, workdir, outdirname, trainer, pass_idx=None):
+    def submit_job(config_name, roster, workdir, outdirname, trainer, log_level, pass_idx=None):
         import htcondor
         col = htcondor.Collector()
         credd = htcondor.Credd()
         credd.add_user_cred(htcondor.CredTypes.Kerberos, None)
-        rd = RunDistributed(config_name, roster, workdir, outdirname, trainer, pass_idx=pass_idx)
+        rd = RunDistributed(config_name, roster, workdir, outdirname, trainer, log_level, pass_idx=pass_idx)
         executable_path = rd._make_executable()
         submit_description = htcondor.Submit({
             "executable": f"{str(executable_path.resolve())}",
@@ -85,10 +86,10 @@ def main(args):
         modeldir = args.workdir / args.outdirname / config.name
         modeldir.mkdir(exist_ok=True, parents=True)
         if args.trainer == 'simple':
-            executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer)
+            executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer, args.log_level)
         elif args.trainer == 'kfold':
             for pass_idx in range(5):
-                executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer, pass_idx=pass_idx)
+                executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer, log_level= args.log_level, pass_idx=pass_idx)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -97,6 +98,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--outdirname", type=str, required=True, help='Name of roster dir under work directory')
     parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='kfold', help='Training mode')
     parser.add_argument("-d", "--distributed", action="store_true", help='Run in distributed mode')
+    parser.add_argument("-l", "--log_level", choices=['debug', 'info', 'warning'], default='info', help='Logging level (default: info)')
     args = parser.parse_args()
     main(args)
 

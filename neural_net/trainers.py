@@ -1,6 +1,6 @@
-from neural_net.utils import set_logger, log_training_stats, log_class_stats
+from neural_net import utils as nn_utils
 from neural_net.model_config import save_model_config, get_config
-from neural_net.model_data import get_data, prune_ds, print_events, DatasetManager, SHUFFLE_BUFFER_SIZE
+from neural_net.model_data import get_data, prune_ds, DatasetManager, SHUFFLE_BUFFER_SIZE
 from neural_net.model_design import ModelNetwork, ModelEvaluator
 from datetime import timedelta
 import time
@@ -10,11 +10,11 @@ import gc
 KFOLD_NFOLDS = 5
 
 class BaseTrainer:
-    def __init__(self, config, workdir, modeldir, trainer_type='simple'):
+    def __init__(self, config, workdir, modeldir, trainer_type='simple', log_level='info'):
         self.config = config
         self.workdir = workdir
         self.modeldir = modeldir
-        self.logger = set_logger(config.name, modeldir / 'training.txt', log_level='info')
+        self.logger = nn_utils.set_logger(config.name, modeldir / 'training.txt', log_level=log_level)
         self.type = trainer_type
 
         self.logger.info(f"\n{120 * '='}\nModel Config: {self.config.name}\n{120 * '='}")
@@ -45,26 +45,35 @@ class BaseTrainer:
     def run(self):
         start = time.perf_counter()
         train_data, val_data, test_data, train_mean, train_var = self.get_data()
+        self.check_datasets(train_data, val_data, test_data)
         self.train(train_data, val_data, test_data, train_mean, train_var)
         total_time = str(timedelta(seconds=time.perf_counter() - start))
         self.logger.info(f'Time spent in config {self.config.name}: {total_time}\n')
 
+    def check_datasets(self, train_data, val_data, test_data):
+        self.logger.info(f"\Print Train dataset:")
+        nn_utils.print_events(train_data, self.config, self.logger)
+        self.logger.info(f"\Print Validation dataset:")
+        nn_utils.print_events(val_data, self.config, self.logger)
+        self.logger.info(f"\Print Test dataset:")
+        nn_utils.print_events(test_data, self.config, self.logger)
+
 class SimpleTrainer(BaseTrainer):
     def get_data(self):
         train_data, val_data, test_data = get_data(self.config, self.workdir, self.logger)
-        log_class_stats(train_data, val_data, test_data, self.config, self.logger)
-        train_mean, train_var = log_training_stats(train_data, self.config, self.logger)
+        nn_utils.log_class_stats(train_data, val_data, test_data, self.config, self.logger)
+        train_mean, train_var = nn_utils.log_training_stats(train_data, self.config, self.logger)
         return train_data, val_data, test_data, train_mean, train_var
 
 class KFoldTrainer(BaseTrainer):
-    def __init__(self, config, workdir, modeldir, pass_idx):
+    def __init__(self, config, workdir, modeldir, pass_idx, log_level='info'):
         config_i = config.replicate(name=f'{config.name}_Pass{pass_idx}')
         model_i_dir = modeldir / config_i.name
         model_i_dir.mkdir(exist_ok=True) 
-        super().__init__(config_i, workdir, model_i_dir, 'kfold')
+        super().__init__(config_i, workdir, model_i_dir, 'kfold', log_level)
         self.pass_idx = pass_idx
         
-    def get_fold_datasets(self):
+    def _get_fold_datasets(self) -> [tf.data.Dataset]:
         fold_datasets = []
         for fold_idx in range(KFOLD_NFOLDS):
             self.logger.info(f"\n{60 * '='}\nGetting dataset for Fold {fold_idx} ...")
@@ -73,12 +82,12 @@ class KFoldTrainer(BaseTrainer):
             ds = manager.combine_into_one(datasets)
             del manager, datasets
             gc.collect()
-            # print_events(ds, self.config, self.logger)
+            # nn_utils.print_events(ds, self.config)
             ds = prune_ds(ds, self.config)
             fold_datasets.append(ds)
         return fold_datasets
 
-    def get_data_for_pass(self, fold_datasets):
+    def _get_data_for_pass(self, fold_datasets: list[tf.data.Dataset]) -> (tf.data.Dataset, tf.data.Dataset, tf.data.Dataset):
         test_fold_idx = self.pass_idx
         val_fold_idx = (self.pass_idx + 1) % KFOLD_NFOLDS
         train_fold_idxs = [i for i in range(KFOLD_NFOLDS) if i not in [test_fold_idx, val_fold_idx]]
@@ -98,25 +107,23 @@ class KFoldTrainer(BaseTrainer):
         return train_ds, val_ds, test_ds
 
     def get_data(self):
-        fold_datasets = self.get_fold_datasets()
-        train_data, val_data, test_data = self.get_data_for_pass(fold_datasets)
-        log_class_stats(train_data, val_data, test_data, self.config, self.logger)
-        train_mean, train_var = log_training_stats(train_data, self.config, self.logger)
+        fold_datasets = self._get_fold_datasets()
+        train_data, val_data, test_data = self._get_data_for_pass(fold_datasets)
+        nn_utils.log_class_stats(train_data, val_data, test_data, self.config, self.logger)
+        train_mean, train_var = nn_utils.log_training_stats(train_data, self.config, self.logger)
         return train_data, val_data, test_data, train_mean, train_var
 
 
-def main(config_name, roster, workdir, outdirname, trainer, pass_idx=None):
-    print("Available devices:", tf.config.list_physical_devices())
-    print("GPU devices:", tf.config.list_physical_devices('GPU'))
-    print("CPU devices:", tf.config.list_physical_devices('CPU'))
+def main(config_name, roster, workdir, outdirname, trainer, log_level = 'info', pass_idx=None):
     config = get_config(config_name, roster)  
     modeldir = workdir / outdirname / config.name
     modeldir.mkdir(exist_ok=True, parents=True)
     if trainer == 'simple':
-        trainer = SimpleTrainer(config, workdir, modeldir)
+        trainer = SimpleTrainer(config, workdir, modeldir, log_level=log_level)
     elif trainer == 'kfold':
-        trainer = KFoldTrainer(config, workdir, modeldir, pass_idx)
+        trainer = KFoldTrainer(config, workdir, modeldir, pass_idx, log_level=log_level)
     trainer.run()
+    # trainer.check_datasets()  # For debugging purposes, to check if datasets are correctly created
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -129,9 +136,10 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='simple', help='Training mode')
     parser.add_argument("-p", "--pass_idx", type=int, default=None, help='Pass index for kfold mode')
     parser.add_argument("-cn", "--config_name", type=str, default=None, help='Used internally only if distributed mode is used')
+    parser.add_argument("-l", "--log_level", choices=['debug', 'info', 'warning'], default='info', help='Logging level (default: info)')
     args = parser.parse_args()
 
-    main(args.config_name, args.roster, args.workdir, args.outdirname, args.trainer, args.pass_idx)
+    main(args.config_name, args.roster, args.workdir, args.outdirname, args.trainer, args.log_level, args.pass_idx)
 
     '''
     Simple training:
