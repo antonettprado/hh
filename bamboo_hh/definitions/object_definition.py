@@ -16,12 +16,7 @@ def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
             LEPTON_PT['mu_pt'] = lep_pt_from_L1_or_HLT
 
 def get_electron_id(el, era, level):
-    if "2018" in era or "2017" in era:
-        if level == 'loose':
-            el_id = el.mvaFall17V2Iso_WPL
-        elif level == 'tight':
-            el_id = el.mvaFall17V2Iso_WP90
-    elif "2022" in era or "2023" in era or "2024" in era:
+    if "2022" in era or "2023" in era or "2024" in era:
         if level == 'loose':
             el_id = el.mvaIso_WP90
             #el_id = el.cutBased >= 2
@@ -31,24 +26,6 @@ def get_electron_id(el, era, level):
             el_id = el.mvaIso_WP80
             #el_id = el.cutBased >= 4
     return el_id
-
-def elConePt(electrons, jets):
-    return op.map(electrons, lambda lep: op.multiSwitch(
-        (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
-        (op.AND(op.abs(lep.pdgId) == 11, lep.mvaTTH > 0.30), lep.pt),
-        (op.rng_any(jets, lambda j: op.deltaR(lep.p4, j.p4) < 0.4), 0.9*lep.pt*lep.jetRelIso),
-        0.9*lep.pt*(1.+lep.jetRelIso)
-        )
-    )
-
-def muConePt(muons, jets):
-    return op.map(muons, lambda lep: op.multiSwitch(
-        (op.AND(op.abs(lep.pdgId) != 11, op.abs(lep.pdgId) != 13), lep.pt),
-        (op.AND(op.abs(lep.pdgId) == 13, lep.mvaTTH > 0.50), lep.pt),
-        (op.rng_any(jets, lambda j: op.deltaR(lep.p4, j.p4) < 0.4), 0.9*lep.pt*lep.jetRelIso),
-        0.9*lep.pt*(1.+lep.jetRelIso)
-        )
-    )
 
 def nearbyBtag(lep, jets, era, btag_WP):
 
@@ -102,12 +79,9 @@ def calculate_met_quantities(jets, electrons, muons, met_pt):
 def electron_basic_selection(electrons, era):
     return op.select(electrons, lambda el: get_electron_id(el, era, 'loose'))
 
-def electron_loose_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
+def electron_loose_selection(electrons, jets, era):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 7
-    #print(f"electron_loose_selection: pt cut of {pt_cut}")
-    #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
-        #op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
@@ -120,12 +94,9 @@ def electron_loose_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=F
         )
     )
 
-def electron_fakeable_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
+def electron_fakeable_selection(electrons, jets, era):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
-    #print(f"electron_fakeable_selection: pt cut of {pt_cut}")
-    #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
-        #op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
@@ -149,12 +120,9 @@ def electron_fakeable_selection(electrons, electron_ConePt, jets, era, use_mvaTT
         )
     )
 
-def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=False):
+def electron_tight_selection(electrons, jets, era):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
-    #print(f"electron_tight_selection: pt cut of {pt_cut}")
-    #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(electrons, lambda el: op.AND(
-        #op.switch(op.c_bool(use_mvaTTH), electron_ConePt[el.idx] > pt_cut, el.pt > pt_cut),
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
         op.abs(el.dxy) < 0.05,
@@ -175,12 +143,9 @@ def electron_tight_selection(electrons, electron_ConePt, jets, era, use_mvaTTH=F
 def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
 
-def muon_loose_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
+def muon_loose_selection(muons, jets, era):
     pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 5
-    #print(f"muon_loose_selection: pt cut of {pt_cut}")
-    #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
-        #op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
@@ -193,12 +158,9 @@ def muon_loose_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         )
     )
 
-def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
+def muon_fakeable_selection(muons, jets, era):
     pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
-    #print(f"muon_fakeable_selection: pt cut of {pt_cut}")
-    #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
-        #op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,
@@ -219,12 +181,9 @@ def muon_fakeable_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False):
         )
     )
 
-def muon_tight_selection(muons, muon_ConePt, jets, era, use_mvaTTH=False): 
+def muon_tight_selection(muons, jets, era): 
     pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
-    #print(f"muon_tight_selection: pt cut of {pt_cut}")
-    #print(f"Use mvaTTH cuts: {use_mvaTTH}")
     return op.select(muons, lambda mu: op.AND(
-        #op.switch(op.c_bool(use_mvaTTH), muon_ConePt[mu.idx] > pt_cut, mu.pt > pt_cut),
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
         op.abs(mu.dxy) < 0.05,

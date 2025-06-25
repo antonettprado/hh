@@ -22,32 +22,30 @@ class EventSelection(NanoBaseHHbbWW):
         parser.add_argument("-s", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
 
     @staticmethod
-    def get_objects(tree, era, nanov: str, MC_bjets=False, use_mvaTTH=False, lep_pt_from_L1_or_HLT=None):
+    def get_objects(tree, era, nanov: str, MC_bjets=False, lep_pt_from_L1_or_HLT=None):
 
         if lep_pt_from_L1_or_HLT is not None: 
             object_defs.is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT)
 
         # Basic Electron and Muon Selection
         electrons = object_defs.electron_basic_selection(tree.Electron, era)
-        electron_ConePt = object_defs.elConePt(tree.Electron, tree.Jet)
-        electrons = op.sort(electrons, lambda el: op.switch(op.c_bool(use_mvaTTH), -electron_ConePt[el.idx], -el.pt))
+        electrons = op.sort(electrons, lambda el: -el.pt)
 
         muons = object_defs.muon_basic_selection(tree.Muon)
-        muon_ConePt = object_defs.muConePt(tree.Muon, tree.Jet)
-        muons = op.sort(muons, lambda mu: op.switch(op.c_bool(use_mvaTTH), -muon_ConePt[mu.idx], -mu.pt))
+        muons = op.sort(muons, lambda mu: -mu.pt)
 
         # Clean pre-selected electrons 
         electrons = object_defs.electron_cleaning(electrons, muons)
 
         # Select Loose Electrons
-        loose_electrons = object_defs.electron_loose_selection(electrons, electron_ConePt, tree.Jet, era, use_mvaTTH)
-        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, electron_ConePt, tree.Jet, era, use_mvaTTH)
-        tight_electrons = object_defs.electron_tight_selection(electrons, electron_ConePt, tree.Jet, era, use_mvaTTH)
+        loose_electrons = object_defs.electron_loose_selection(electrons, tree.Jet, era)
+        fakeable_electrons = object_defs.electron_fakeable_selection(electrons, tree.Jet, era)
+        tight_electrons = object_defs.electron_tight_selection(electrons, tree.Jet, era)
 
         # Select Muons
-        loose_muons = object_defs.muon_loose_selection(muons, muon_ConePt, tree.Jet, era, use_mvaTTH)
-        fakeable_muons = object_defs.muon_fakeable_selection(muons, muon_ConePt, tree.Jet, era, use_mvaTTH)
-        tight_muons = object_defs.muon_tight_selection(muons, muon_ConePt, tree.Jet, era, use_mvaTTH)
+        loose_muons = object_defs.muon_loose_selection(muons, tree.Jet, era)
+        fakeable_muons = object_defs.muon_fakeable_selection(muons, tree.Jet, era)
+        tight_muons = object_defs.muon_tight_selection(muons, tree.Jet, era)
 
         # Select Taus
         taus = object_defs.tau_selection(tree.Tau, era)
@@ -101,8 +99,6 @@ class EventSelection(NanoBaseHHbbWW):
             "event_nr": tree.event,
             "run_nr": tree.run,
             "ls": tree.luminosityBlock,
-            "electron_ConePt": electron_ConePt,
-            "muon_ConePt": muon_ConePt,
             "loose_electrons": loose_electrons,
             "fakeable_electrons": fakeable_electrons,
             "tight_electrons": tight_electrons,
@@ -123,11 +119,9 @@ class EventSelection(NanoBaseHHbbWW):
         return objects
     
     @staticmethod
-    def get_event_selections(tree, objects, baseSel, yields, is_MC:bool, era:int, sample:str, noHLT=False, use_mvaTTH=False):
+    def get_event_selections(tree, objects, baseSel, yields, is_MC:bool, era:int, sample:str, noHLT=False):
 
         # Retrieve objects
-        electron_ConePt = objects["electron_ConePt"]
-        muon_ConePt = objects["muon_ConePt"]
         loose_electrons = objects["loose_electrons"]
         tight_electrons = objects["tight_electrons"]
         loose_muons = objects["loose_muons"]
@@ -144,10 +138,7 @@ class EventSelection(NanoBaseHHbbWW):
         met_ld = objects["met_ld"]
 
         # mll Selection
-        mllSel = baseSel.refine(
-            "mll_cut", 
-            cut=[event_defs.mll_selection(loose_electrons, loose_muons)],
-        )
+        mllSel = baseSel.refine("mll_cut", cut=[event_defs.mll_selection(loose_electrons, loose_muons)])
 
         # Apply B-tag Weights
         btvWeight = op.c_float(1.0)
@@ -175,293 +166,122 @@ class EventSelection(NanoBaseHHbbWW):
         objects["electron_sf"] = op.c_float(1)
         objects["trigger_sf"] = op.c_float(1)
 
-        # Event Selection Flags
-        is_sl_e = 0
-        is_sl_mu = 0
-        is_dl_ee = 0
-        is_dl_emu = 0
-        is_dl_mumu = 0
-        is_res_1b = 0
-        is_res_2b = 0
-        is_res_3j_1b = 0
-        is_res_3j_2b = 0
-        is_res_4j_1b = 0
-        is_res_4j_2b = 0
-        is_boosted = 0
-        is_sl = 0
-        is_dl = 0
-
         # Using both 3j and 4j selection by default
         sample = sample.rsplit('_')[0] # Gets the first part of the data sample name, e.g. Muon, EGamma, JetMET. Irrelevant for MC
 
         # Single Electron
-        SL_e_only = mllSel.refine("SL_electron_only_selection", cut=[
-            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH)])
-        SL_e_res_3j_1b = SL_e_only.refine("SL_electron_resolved_3j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_res_3j_2b = SL_e_only.refine("SL_electron_resolved_3j_2b_jets_selection", cut=[
-            event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_3j_resolved = SL_e_only.refine("SL_electron_resolved_3j_jet_selection", cut=[
-            event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_res_4j_1b = SL_e_only.refine("SL_electron_resolved_4j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_res_4j_2b = SL_e_only.refine("SL_electron_resolved_4j_2b_jets_selection", cut=[
-            event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_4j_resolved = SL_e_only.refine("SL_electron_resolved_4j_jet_selection", cut=[
-            event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_res_3j4j_1b = SL_e_only.refine("SL_electron_resolved_3j4j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_res_3j4j_2b = SL_e_only.refine("SL_electron_resolved_3j4j_2b_jet_selection", cut=[
-            event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_resolved = SL_e_only.refine("SL_electron_resolved_jet_selection", cut=[
-            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_e_boosted = SL_e_only.refine("SL_electron_boosted_jet_selection", cut=[
-            event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_only = mllSel.refine("SL_electron_only_selection", cut=[event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, is_MC, era, tree.HLT, sample, noHLT)])
+        SL_e_res_3j_1b = SL_e_only.refine("SL_electron_resolved_3j_1b_jet_selection", cut=[event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_res_3j_2b = SL_e_only.refine("SL_electron_resolved_3j_2b_jets_selection", cut=[event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_3j_resolved = SL_e_only.refine("SL_electron_resolved_3j_jet_selection", cut=[event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_res_4j_1b = SL_e_only.refine("SL_electron_resolved_4j_1b_jet_selection", cut=[event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_res_4j_2b = SL_e_only.refine("SL_electron_resolved_4j_2b_jets_selection", cut=[event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_4j_resolved = SL_e_only.refine("SL_electron_resolved_4j_jet_selection", cut=[event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_res_3j4j_1b = SL_e_only.refine("SL_electron_resolved_3j4j_1b_jet_selection", cut=[event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_res_3j4j_2b = SL_e_only.refine("SL_electron_resolved_3j4j_2b_jet_selection", cut=[event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_resolved = SL_e_only.refine("SL_electron_resolved_jet_selection", cut=[event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_e_boosted = SL_e_only.refine("SL_electron_boosted_jet_selection", cut=[event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
         SL_e = SL_e_only.refine("SL_electron_selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
-        is_sl_e = op.switch(op.AND(
-            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
-            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ), 
-            1, 
-            0
-        )
 
         # Single Muon
-        SL_mu_only = mllSel.refine("SL_muon_only_selection", cut=[
-            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH)])
-        SL_mu_res_3j_1b = SL_mu_only.refine("SL_muon_resolved_3j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_res_3j_2b = SL_mu_only.refine("SL_muon_resolved_3j_2b_jets_selection", cut=[
-            event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_3j_resolved = SL_mu_only.refine("SL_muon_resolved_3j_jet_selection", cut=[
-            event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_res_4j_1b = SL_mu_only.refine("SL_muon_resolved_4j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_res_4j_2b = SL_mu_only.refine("SL_muon_resolved_4j_2b_jets_selection", cut=[
-            event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_4j_resolved = SL_mu_only.refine("SL_muon_resolved_4j_jet_selection", cut=[
-            event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_res_3j4j_1b = SL_mu_only.refine("SL_muon_resolved_3j4j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_res_3j4j_2b = SL_mu_only.refine("SL_muon_resolved_3j4j_2b_jet_selection", cut=[
-            event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_resolved = SL_mu_only.refine("SL_muon_resolved_jet_selection", cut=[
-            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_mu_boosted = SL_mu_only.refine("SL_muon_boosted_jet_selection", cut=[
-            event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_only = mllSel.refine("SL_muon_only_selection", cut=[event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, is_MC, era, tree.HLT, sample, noHLT)])
+        SL_mu_res_3j_1b = SL_mu_only.refine("SL_muon_resolved_3j_1b_jet_selection", cut=[event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_res_3j_2b = SL_mu_only.refine("SL_muon_resolved_3j_2b_jets_selection", cut=[event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_3j_resolved = SL_mu_only.refine("SL_muon_resolved_3j_jet_selection", cut=[event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_res_4j_1b = SL_mu_only.refine("SL_muon_resolved_4j_1b_jet_selection", cut=[event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_res_4j_2b = SL_mu_only.refine("SL_muon_resolved_4j_2b_jets_selection", cut=[event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_4j_resolved = SL_mu_only.refine("SL_muon_resolved_4j_jet_selection", cut=[event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_res_3j4j_1b = SL_mu_only.refine("SL_muon_resolved_3j4j_1b_jet_selection", cut=[event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_res_3j4j_2b = SL_mu_only.refine("SL_muon_resolved_3j4j_2b_jet_selection", cut=[event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_resolved = SL_mu_only.refine("SL_muon_resolved_jet_selection", cut=[event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_mu_boosted = SL_mu_only.refine("SL_muon_boosted_jet_selection", cut=[event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
         SL_mu = SL_mu_only.refine("SL_muon_selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
-        is_sl_mu = op.switch(op.AND(
-            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
-            op.OR(event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ), 
-            1, 
-            0
-        )
 
         # Single Lepton
         SL_only = mllSel.refine("SL_lepton_only_selection", cut=[op.OR(
-            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
-            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH))])
-        SL_res_3j_1b = SL_only.refine("SL_resolved_3j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_res_3j_2b = SL_only.refine("SL_resolved_3j_2b_jets_selection", cut=[
-            event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_3j_resolved = SL_only.refine("SL_resolved_3j_jet_selection", cut=[
-            event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_res_4j_1b = SL_only.refine("SL_resolved_4j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_res_4j_2b = SL_only.refine("SL_resolved_4j_2b_jets_selection", cut=[
-            event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_res_3j4j_1b = SL_only.refine("SL_resolved_3j4j_1b_jet_selection", cut=[
-            event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_res_3j4j_2b = SL_only.refine("SL_resolved_3j4j_2b_jet_selection", cut=[
-            event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_4j_resolved = SL_only.refine("SL_resolved_4j_jet_selection", cut=[
-            event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_resolved = SL_only.refine("SL_resolved_jet_selection", cut=[
-            event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        SL_boosted = SL_only.refine("SL_boosted_jet_selection", cut=[
-            event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+            event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, is_MC, era, tree.HLT, sample, noHLT),
+            event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, is_MC, era, tree.HLT, sample, noHLT))])
+        SL_res_3j_1b = SL_only.refine("SL_resolved_3j_1b_jet_selection", cut=[event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_res_3j_2b = SL_only.refine("SL_resolved_3j_2b_jets_selection", cut=[event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_3j_resolved = SL_only.refine("SL_resolved_3j_jet_selection", cut=[event_defs.sl_resolved_3j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_res_4j_1b = SL_only.refine("SL_resolved_4j_1b_jet_selection", cut=[event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_res_4j_2b = SL_only.refine("SL_resolved_4j_2b_jets_selection", cut=[event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_res_3j4j_1b = SL_only.refine("SL_resolved_3j4j_1b_jet_selection", cut=[event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_res_3j4j_2b = SL_only.refine("SL_resolved_3j4j_2b_jet_selection", cut=[event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_4j_resolved = SL_only.refine("SL_resolved_4j_jet_selection", cut=[event_defs.sl_resolved_4j_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_resolved = SL_only.refine("SL_resolved_jet_selection", cut=[event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        SL_boosted = SL_only.refine("SL_boosted_jet_selection", cut=[event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
         SL = SL_only.refine("SL_selection", cut=[op.OR(
             event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
             event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
-        is_sl = op.switch(op.OR(op.c_bool(is_sl_e == 1), op.c_bool(is_sl_mu == 1)),
-            1, 
-            0                    
-        )
 
         # Double Electron
-        DL_ee_only = mllSel.refine("DL_ee_only_selection", cut=[
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH)])
-        DL_ee_res_1b = DL_ee_only.refine("DL_ee_resolved_1b_jet_selection", cut=[
-            event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_ee_res_2b = DL_ee_only.refine("DL_ee_resolved_2b_jets_selection", cut=[
-            event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_ee_resolved = DL_ee_only.refine("DL_ee_resolved_jets_selection", cut=[
-            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_ee_boosted = DL_ee_only.refine("DL_ee_boosted_jets_selection", cut=[
-            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_ee_only = mllSel.refine("DL_ee_only_selection", cut=[event_defs.dl_ee_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT)])
+        DL_ee_res_1b = DL_ee_only.refine("DL_ee_resolved_1b_jet_selection", cut=[event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_ee_res_2b = DL_ee_only.refine("DL_ee_resolved_2b_jets_selection", cut=[event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_ee_resolved = DL_ee_only.refine("DL_ee_resolved_jets_selection", cut=[event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_ee_boosted = DL_ee_only.refine("DL_ee_boosted_jets_selection", cut=[event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
         DL_ee = DL_ee_only.refine("DL_ee_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
-        is_dl_ee = op.switch(op.AND(
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
-            op.OR(event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ), 
-            1, 
-            0
-        )
+
+        # Double Muon
+        DL_mumu_only = mllSel.refine("DL_mumu_only_selection", cut=[event_defs.dl_mumu_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT)])
+        DL_mumu_res_1b = DL_mumu_only.refine("DL_mumu_resolved_1b_jet_selection", cut=[event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_mumu_res_2b = DL_mumu_only.refine("DL_mumu_resolved_2b_jets_selection", cut=[event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_mumu_resolved = DL_mumu_only.refine("DL_mumu_resolved_jets_selection", cut=[event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_mumu_boosted = DL_mumu_only.refine("DL_mumu_boosted_jets_selection", cut=[event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_mumu = DL_mumu_only.refine("DL_mumu_selection", cut=[op.OR(
+            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
+            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
 
         # Electron Muon
-        DL_emu_only = mllSel.refine("DL_emu_only_selection", cut=[
-            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH)])
-        DL_emu_res_1b = DL_emu_only.refine("DL_emu_resolved_1b_jet_selection", cut=[
-            event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_emu_res_2b = DL_emu_only.refine("DL_emu_resolved_2b_jets_selection", cut=[
-            event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_emu_resolved = DL_emu_only.refine("DL_emu_resolved_jets_selection", cut=[
-            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_emu_boosted = DL_emu_only.refine("DL_emu_boosted_jets_selection", cut=[
-            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_emu_only = mllSel.refine("DL_emu_only_selection", cut=[event_defs.dl_emu_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT)])
+        DL_emu_res_1b = DL_emu_only.refine("DL_emu_resolved_1b_jet_selection", cut=[event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_emu_res_2b = DL_emu_only.refine("DL_emu_resolved_2b_jets_selection", cut=[event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_emu_resolved = DL_emu_only.refine("DL_emu_resolved_jets_selection", cut=[event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_emu_boosted = DL_emu_only.refine("DL_emu_boosted_jets_selection", cut=[event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
         DL_emu = DL_emu_only.refine("DL_emu_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
         DL_emu_e0 = DL_emu.refine("DL_emu_e0_selection", cut=[tight_electrons[0].pt>tight_muons[0].pt])
         DL_emu_mu0 = DL_emu.refine("DL_emu_mu0_selection", cut=[tight_muons[0].pt>tight_electrons[0].pt])
-        is_dl_emu = op.switch(op.AND(
-            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
-            op.OR(event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ), 
-            1, 
-            0
-        )
-
-        # Double Muon
-        DL_mumu_only = mllSel.refine("DL_mumu_only_selection", cut=[
-            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH)])
-        DL_mumu_res_1b = DL_mumu_only.refine("DL_mumu_resolved_1b_jet_selection", cut=[
-            event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_mumu_res_2b = DL_mumu_only.refine("DL_mumu_resolved_2b_jets_selection", cut=[
-            event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_mumu_resolved = DL_mumu_only.refine("DL_mumu_resolved_jets_selection", cut=[
-            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_mumu_boosted = DL_mumu_only.refine("DL_mumu_boosted_jets_selection", cut=[
-            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_mumu = DL_mumu_only.refine("DL_mumu_selection", cut=[op.OR(
-            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
-            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
-        is_dl_mumu = op.switch(op.AND(
-            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
-            op.OR(event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ), 
-            1, 
-            0
-        )
 
         # Dilepton 
         DL_only = mllSel.refine("DL_only_selection", cut=[op.OR(
-            event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
-            event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
-            event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH))])
-        DL_res_1b = DL_only.refine("DL_resolved_1b_jet_selection", cut=[
-            event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_res_2b = DL_only.refine("DL_resolved_2b_jets_selection", cut=[
-            event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_resolved = DL_only.refine("DL_resolved_jets_selection", cut=[
-            event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
-        DL_boosted = DL_only.refine("DL_boosted_jets_selection", cut=[
-            event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+            event_defs.dl_ee_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT),
+            event_defs.dl_emu_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT),
+            event_defs.dl_mumu_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT))])
+        DL_res_1b = DL_only.refine("DL_resolved_1b_jet_selection", cut=[event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_res_2b = DL_only.refine("DL_resolved_2b_jets_selection", cut=[event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_resolved = DL_only.refine("DL_resolved_jets_selection", cut=[event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
+        DL_boosted = DL_only.refine("DL_boosted_jets_selection", cut=[event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)])
         DL = DL_only.refine("DL_selection", cut=[op.OR(
             event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
             event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))])
-        is_dl = op.switch(op.OR(op.c_bool(is_dl_ee == 1), op.c_bool(is_dl_emu == 1), op.c_bool(is_dl_mumu == 1)),
-            1, 
-            0                    
-        )
 
         # Overall Selection
         Total_Sel = mllSel.refine("Total_selection", cut=[op.OR(
             op.AND(
                 op.OR(
-                    event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH),
-                    event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, sample, noHLT, use_mvaTTH)
-                ),
+                    event_defs.sl_e_selection(tight_electrons, tight_muons, cleaned_taus, is_MC, era, tree.HLT, sample, noHLT),
+                    event_defs.sl_mu_selection(tight_electrons, tight_muons, cleaned_taus, is_MC, era, tree.HLT, sample, noHLT)),
                 op.OR(
                     event_defs.sl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
-                    event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)
-                )
-            ),
+                    event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))),
             op.AND(
                 op.OR(
-                    event_defs.dl_ee_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
-                    event_defs.dl_emu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH),
-                    event_defs.dl_mumu_selection(tight_electrons, tight_muons, electron_ConePt, muon_ConePt, is_MC, era, tree.HLT, noHLT, use_mvaTTH)
-                ),
+                    event_defs.dl_ee_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT),
+                    event_defs.dl_emu_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT),
+                    event_defs.dl_mumu_selection(tight_electrons, tight_muons, is_MC, era, tree.HLT, noHLT)),
                 op.OR(
                     event_defs.dl_resolved_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags),
-                    event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)
-                )
-            )
+                    event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)))
         )])
-
-        is_res_1b = op.switch(op.OR(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)),
-            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ),
-            1,
-            0
-        )
-        is_res_2b = op.switch(op.OR(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)),
-            op.AND(op.c_bool(is_dl == 1), event_defs.dl_resolved_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ),
-            1,
-            0
-        )
-        is_sl_res_3j_1b = op.switch(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_3j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)),
-            1,
-            0
-        )
-        is_sl_res_3j_2b = op.switch(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_3j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)),
-            1,
-            0
-        )
-        is_sl_res_4j_1b = op.switch(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_4j_1b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)),
-            1,
-            0
-        )
-        is_sl_res_4j_2b = op.switch(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_resolved_4j_2b_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)),
-            1,
-            0
-        )
-        is_boosted = op.switch(op.OR(
-            op.AND(op.c_bool(is_sl == 1), event_defs.sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags)),
-            op.AND(op.c_bool(is_dl == 1), event_defs.dl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak4_loose_btags, cleaned_ak8_btags))
-            ),
-            1,
-            0
-        )
-
-        objects["is_sl_e"] = is_sl_e
-        objects["is_sl_mu"] = is_sl_mu
-        objects["is_dl_ee"] = is_dl_ee 
-        objects["is_dl_emu"] = is_dl_emu
-        objects["is_dl_mumu"] = is_dl_mumu
-        objects["is_res_1b"] = is_res_1b
-        objects["is_res_2b"] = is_res_2b
-        objects["is_sl_res_3j_1b"] = is_sl_res_3j_1b
-        objects["is_sl_res_3j_2b"] = is_sl_res_3j_2b
-        objects["is_sl_res_4j_1b"] = is_sl_res_4j_1b
-        objects["is_sl_res_4j_2b"] = is_sl_res_4j_2b
-        objects["is_boosted"] = is_boosted
     
         selections = {
             "SL_e": {
@@ -578,8 +398,8 @@ class EventSelection(NanoBaseHHbbWW):
         plots.append(self.yields)
         plots.extend(self.base_plots)
         
-        objects = EventSelection.get_objects(tree, self.era, self.nv, self.args.mc_truth_b, use_mvaTTH=False) 
-        selections = EventSelection.get_event_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False, use_mvaTTH=False)
+        objects = EventSelection.get_objects(tree, self.era, self.nv, self.args.mc_truth_b) 
+        selections = EventSelection.get_event_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample, noHLT=False)
         
         self.set_category_groups(selections)
 
