@@ -391,4 +391,3 @@ def dl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags
 
 def dl_boosted_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
     return (op.rng_len(ak8_btags) >= 1)
-

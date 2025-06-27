@@ -70,7 +70,7 @@ def interpolate_3d_root_histogram(root_hist, scale_factor):
     return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
 
 def custom_pretty_print_json(input_file, output_file, indent=4):
-    print(f"Prettifying {input_file}")
+    print(f"Prettifying {input_file} ...")
     def format_list(obj, level=0):
         if isinstance(obj, list):
             if all(isinstance(i, (int, float, str)) for i in obj):
@@ -90,6 +90,7 @@ def custom_pretty_print_json(input_file, output_file, indent=4):
 
     with open(output_file, 'w') as f:
         f.write(format_list(data))
+    print(f"Prettifying {input_file}: DONE")
 
 
 def get_content_replacement(configFile:str, resultsdir:Path, selection:str):
@@ -108,17 +109,25 @@ def get_content_replacement(configFile:str, resultsdir:Path, selection:str):
     for file in mc_files:
         era = references.get_file_era(file)
         era_lumi = eras[era]['luminosity']
+
+        if 'ggHH_kl_1_kt_1_hh_bbww' in file.stem:
+                sample_type = 'signal'
+        elif 'ggHH' in file.stem:
+            continue
+        else:
+            sample_type = 'background'
+
         with uproot.open(file) as f:
             if selection not in f:
                 continue
             df_gW = f[selection].arrays(['genWeight'], library='pd')
             df_gW = df_gW['genWeight'].value_counts().reset_index().rename(columns={'index': 'genWeight', 'genWeight': 'Counts'})
             df_gW['sample'] = file.stem
-            df_gW['type'] = 'signal' if 'bbWW' in file.stem else 'background'
+            df_gW['type'] = 'signal' if 'bbww' in file.stem else 'background'
 
             df_sf = pd.DataFrame({
                 'sample': [file.stem],
-                'type': ['signal' if 'bbWW' in file.stem else 'background'],
+                'type': sample_type,
                 'cross-section': [samples[file.stem]['cross-section']],
                 'sumw': [f['yields_genEventSumWeight'].values().item()]
             })
@@ -208,7 +217,7 @@ def compute_lrs(plotter: Plotter, configFile: str=None, apply_log: bool=False, o
         all_corrections.append(corr)
 
     cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-    output_file = plotter.resultsdir /  (outfilename + ".json")
+    output_file = plotter.basedir /  (outfilename + ".json")
     with open(output_file, "w") as outfile:
         outfile.write(cset.json(exclude_unset=False))
     
@@ -218,7 +227,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Compute LRs for a given work directory')
     parser.add_argument("-w", "--workdir", action="store", help="work directory. Ex: Z_OUTPUT/VarsReco")
-    parser.add_argument("-c", "--configFile", default='bamboo_hh/config/analysis_2022.yml', help="Pick config file within Bamboo_setup/config")
+    parser.add_argument("-c", "--configFile", default='bamboo_hh/config/analysis.yml', help="Pick config file within Bamboo_setup/config")
     parser.add_argument("-llr", "--llr", action='store_true', help="Compute LLRs instead of LRs")
     parser.add_argument("-o", "--output", action='store', default='corrections', help="Output file name")
     args = parser.parse_args()

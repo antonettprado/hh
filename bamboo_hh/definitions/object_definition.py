@@ -1,5 +1,5 @@
 from bamboo import treefunctions as op
-from bamboo.treeproxies import BoolProxy
+from bamboo.treeproxies import BoolProxy, SelectionProxy
 
 LEPTON_PT = {
     'Uniform': False
