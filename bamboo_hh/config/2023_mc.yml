@@ -1,7 +1,7 @@
 # ====================
 # HH -> bbWW 
 # ====================
-ggHH_kl_1_kt_1_hbbhwwsl_2023:
+ggHH_kl_1_kt_1_hh_bbww_sl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v2/NANOAODSIM
@@ -9,7 +9,7 @@ ggHH_kl_1_kt_1_hbbhwwsl_2023:
   cross-section: 3.73125e-3
   generated-events: genEventSumw
   split: &signal_split -2
-ggHH_kl_1_kt_1_hbbhwwsl_2023BPix:
+ggHH_kl_1_kt_1_hh_bbww_sl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -17,7 +17,7 @@ ggHH_kl_1_kt_1_hbbhwwsl_2023BPix:
   cross-section: 3.73125e-3
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_2p45_kt_1_hbbhwwsl_2023:
+ggHH_kl_2p45_kt_1_hh_bbww_sl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-2p45_kt-1p00_c2-0p00_LHEweights_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v15-v4/NANOAODSIM
@@ -25,7 +25,7 @@ ggHH_kl_2p45_kt_1_hbbhwwsl_2023:
   cross-section: 1.472597e-3
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_2p45_kt_1_hbbhwwsl_2023BPix:
+ggHH_kl_2p45_kt_1_hh_bbww_sl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-2p45_kt-1p00_c2-0p00_LHEweights_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v6-v2/NANOAODSIM
@@ -33,7 +33,7 @@ ggHH_kl_2p45_kt_1_hbbhwwsl_2023BPix:
   cross-section: 1.472597e-3
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_5_kt_1_hbbhwwsl_2023:
+ggHH_kl_5_kt_1_hh_bbww_sl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-5p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v2/NANOAODSIM
@@ -41,7 +41,7 @@ ggHH_kl_5_kt_1_hbbhwwsl_2023:
   cross-section: 9.928145e-3
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_5_kt_1_hbbhwwsl_2023BPix:
+ggHH_kl_5_kt_1_hh_bbww_sl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-5p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -49,7 +49,7 @@ ggHH_kl_5_kt_1_hbbhwwsl_2023BPix:
   cross-section: 9.928145e-3
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_0_kt_1_hbbhwwsl_2023:
+ggHH_kl_0_kt_1_hh_bbww_sl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-0p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v2/NANOAODSIM
@@ -57,7 +57,7 @@ ggHH_kl_0_kt_1_hbbhwwsl_2023:
   cross-section:
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_0_kt_1_hbbhwwsl_2023BPix:
+ggHH_kl_0_kt_1_hh_bbww_sl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-0p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -65,7 +65,7 @@ ggHH_kl_0_kt_1_hbbhwwsl_2023BPix:
   cross-section:
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_1_kt_1_hhbbWW_dl_2023:
+ggHH_kl_1_kt_1_hh_bbww_dl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v1/NANOAODSIM
@@ -73,7 +73,7 @@ ggHH_kl_1_kt_1_hhbbWW_dl_2023:
   cross-section: 9.01379e-4
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_1_kt_1_hhbbWW_dl_2023BPix:
+ggHH_kl_1_kt_1_hh_bbww_dl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -81,7 +81,7 @@ ggHH_kl_1_kt_1_hhbbWW_dl_2023BPix:
   cross-section: 9.01379e-4
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_2p45_kt_1_hhbbWW_dl_2023:
+ggHH_kl_2p45_kt_1_hh_bbww_dl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-2p45_kt-1p00_c2-0p00_LHEweights_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v15-v4/NANOAODSIM
@@ -89,7 +89,7 @@ ggHH_kl_2p45_kt_1_hhbbWW_dl_2023:
   cross-section: 3.55743e-4
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_2p45_kt_1_hhbbWW_dl_2023BPix:
+ggHH_kl_2p45_kt_1_hh_bbww_dl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-2p45_kt-1p00_c2-0p00_LHEweights_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v6-v2/NANOAODSIM
@@ -97,7 +97,7 @@ ggHH_kl_2p45_kt_1_hhbbWW_dl_2023BPix:
   cross-section: 3.55743e-4
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_5_kt_1_hhbbWW_dl_2023:
+ggHH_kl_5_kt_1_hh_bbww_dl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-5p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v2/NANOAODSIM
@@ -105,7 +105,7 @@ ggHH_kl_5_kt_1_hhbbWW_dl_2023:
   cross-section: 2.39840e-3
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_5_kt_1_hhbbWW_dl_2023BPix:
+ggHH_kl_5_kt_1_hh_bbww_dl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-5p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -113,7 +113,7 @@ ggHH_kl_5_kt_1_hhbbWW_dl_2023BPix:
   cross-section: 2.39840e-3
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_0_kt_1_hhbbWW_dl_2023:
+ggHH_kl_0_kt_1_hh_bbww_dl_2023:
   group: "HH_bbWW"
   era: "2023"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-0p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v1/NANOAODSIM
@@ -121,7 +121,7 @@ ggHH_kl_0_kt_1_hhbbWW_dl_2023:
   cross-section:
   generated-events: genEventSumw
   split: *signal_split
-ggHH_kl_0_kt_1_hhbbWW_dl_2023BPix:
+ggHH_kl_0_kt_1_hh_bbww_dl_2023BPix:
   group: "HH_bbWW"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-0p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -130,19 +130,18 @@ ggHH_kl_0_kt_1_hhbbWW_dl_2023BPix:
   generated-events: genEventSumw
   split: *signal_split
 
-
 # ====================
 # HH -> bbtautau 
 # ====================
-ggHH_kl_1_kt_1_hbbhtt_2023:
-  group: "HH_bbtautau"
+ggHH_kl_1_kt_1_hh_bbtautau_2023:
+  group: HH_bbtautau
   era: "2023"
   db: das:/GluGlutoHHto2B2Tau_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v3/NANOAODSIM
   type: mc
   cross-section: 2.48064e-3
   generated-events: genEventSumw
   split: 6
-ggHH_kl_1_kt_1_hbbhtt_2023BPix:
+ggHH_kl_1_kt_1_hh_bbtautau_2023BPix:
   group: "HH_bbtautau"
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2Tau_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -150,7 +149,7 @@ ggHH_kl_1_kt_1_hbbhtt_2023BPix:
   cross-section: 2.48064e-3
   generated-events: genEventSumw
   split: 6
-ggHH_kl_2p45_kt_1_hbbhtt_2023:
+ggHH_kl_2p45_kt_1_hh_bbtautau_2023:
   group: HH_bbtautau
   era: '2023'
   db: das:/GluGlutoHHto2B2Tau_kl-2p45_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v15-v3/NANOAODSIM
@@ -158,7 +157,7 @@ ggHH_kl_2p45_kt_1_hbbhtt_2023:
   cross-section: 0.001084
   generated-events: genEventSumw
   split: 6
-ggHH_kl_2p45_kt_1_hbbhtt_2023BPix:
+ggHH_kl_2p45_kt_1_hh_bbtautau_2023BPix:
   group: HH_bbtautau
   era: "2023BPix"
   db: das:/GluGlutoHHto2B2Tau_kl-2p45_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v6-v2/NANOAODSIM
@@ -166,7 +165,7 @@ ggHH_kl_2p45_kt_1_hbbhtt_2023BPix:
   cross-section: 0.001084
   generated-events: genEventSumw
   split: 20
-ggHH_kl_5_kt_1_hbbhtt_2023:
+ggHH_kl_5_kt_1_hh_bbtautau_2023:
   group: HH_bbtautau
   era: '2023'
   db: das:/GluGlutoHHto2B2Tau_kl-5p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-ggHH_powheg_bugfix_133X_mcRun3_2023_realistic_ForNanov13_v1-v2/NANOAODSIM
@@ -174,7 +173,7 @@ ggHH_kl_5_kt_1_hbbhtt_2023:
   cross-section: 0.007243
   generated-events: genEventSumw
   split: 6
-ggHH_kl_5_kt_1_hbbhtt_2023BPix:
+ggHH_kl_5_kt_1_hh_bbtautau_2023BPix:
   group: HH_bbtautau
   era: 2023BPix
   db: das:/GluGlutoHHto2B2Tau_kl-5p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-ggHH_powheg_bugfix_133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -182,7 +181,7 @@ ggHH_kl_5_kt_1_hbbhtt_2023BPix:
   cross-section: 0.007243
   generated-events: genEventSumw
   split: 20
-ggHH_kl_0_kt_1_hbbhtt_2023:
+ggHH_kl_0_kt_1_hh_bbtautau_2023:
   group: HH_bbtautau
   era: '2023'
   db: das:/GluGlutoHHto2B2Tau_kl-0p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv13-ggHH_powheg_bugfix_133X_mcRun3_2023_realistic_ForNanov13_v1-v2/NANOAODSIM
@@ -190,7 +189,7 @@ ggHH_kl_0_kt_1_hbbhtt_2023:
   cross-section: 0.005507
   generated-events: genEventSumw
   split: 6
-ggHH_kl_0_kt_1_hbbhtt_2023BPix:
+ggHH_kl_0_kt_1_hh_bbtautau_2023BPix:
   group: HH_bbtautau
   era: 2023BPix
   db: das:/GluGlutoHHto2B2Tau_kl-0p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv13-ggHH_powheg_bugfix_133X_mcRun3_2023_realistic_postBPix_ForNanov13_v2-v2/NANOAODSIM
@@ -199,8 +198,9 @@ ggHH_kl_0_kt_1_hbbhtt_2023BPix:
   generated-events: genEventSumw
   split: 20
 
-####################################################################################
+# ====================
 # ttbar
+# ====================
 ttbar_sl_2023:
   group: "ttbar"
   era: '2023'
@@ -233,10 +233,26 @@ ttbar_dl_2023BPix:
   cross-section: 97.99
   generated-events: genEventSumw
   split: *nsplit
+ttbar_fh_2023:
+  group: ttbar
+  era: '2023'
+  db: das:/TTto4Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v14-v2/NANOAODSIM
+  type: mc
+  cross-section: 408.4
+  generated-events: genEventSumw
+  split: -9
+ttbar_fh_2023BPix:
+  group: ttbar
+  era: '2023BPix'
+  db: das:/TTto4Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v2-v3/NANOAODSIM
+  type: mc
+  cross-section: 408.4
+  generated-events: genEventSumw
+  split: -9
 
-# The cross-sections below were copied from the 2022 config
-####################################################################################
+# ====================
 # tW
+# ====================
 tbarWplus_sl_2023:
   group: "tW"
   era: '2023'
@@ -302,8 +318,9 @@ tWminus_dl_2023BPix:
   generated-events: genEventSumw
   split: *nsplit
 
-####################################################################################
+# ====================
 # tbq
+# ====================
 TBbarQ_2023:
   group: tbq
   era: '2023'
@@ -337,8 +354,9 @@ TbarBQ_2023BPix:
   generated-events: genEventSumw
   split: -9
 
-####################################################################################
-# tb
+# ====================
+# tbq
+# ====================
 TBbartoLplusNuBbar_2023:
   group: tb
   era: '2023'
@@ -372,8 +390,9 @@ TbarBtoLminusNuB_2023BPix:
   generated-events: genEventSumw
   split: -9
 
-####################################################################################
-# W+jets
+# ====================
+# WJets
+# ====================
 Wjets_0J_2023:
   group: WJets
   era: '2023'
@@ -423,8 +442,9 @@ Wjets_2J_2023BPix:
   generated-events: genEventSumw
   split: 450
 
-####################################################################################
+# ====================
 # DY
+# ====================
 DY_dl_mll_10to50_2023:
   era: '2023'
   db: das:/DYto2L-2Jets_MLL-10to50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v14_ext1-v3/NANOAODSIM
@@ -490,8 +510,9 @@ DY_dl_mll_50_2J_2023BPix:
   generated-events: genEventSumw
   split: 66
 
-####################################################################################
+# ====================
 # VV
+# ====================
 WW_2023:
   era: '2023'
   db: das:/WW_TuneCP5_13p6TeV_pythia8/Run3Summer23NanoAODv13-133X_mcRun3_2023_realistic_ForNanov13_v1-v1/NANOAODSIM
@@ -541,8 +562,9 @@ ZZ_2023BPix:
   generated-events: genEventSumw
   split: 6
 
-####################################################################################
+# ====================
 # QCD
+# ====================
 QCD_pT_15to30_2023:
   era: '2023'
   group: QCD
@@ -788,8 +810,9 @@ QCD_pT_3200_2023BPix:
   generated-events: genEventSumw
   split: -36
 
-####################################################################################
+# ====================
 # ttV
+# ====================
 TTLNu-1Jets_2023:
   era: '2023'
   group: ttV
@@ -823,8 +846,9 @@ TTZ-ZtoQQ-1Jets_2023BPix:
   generated-events: genEventSumw
   split: -9
 
-####################################################################################
+# ====================
 # H
+# ====================
 GluGluHto2WtoLNu2Q_2023:
   era: '2023'
   group: H
