@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 import copy
 VARPATH = Path(__file__).parents[1] / 'input' / 'variables.json'
-CFGPATH = Path(__file__).parents[1] / 'config' / 'analysis_2022.yml'
+# CFGPATH = Path(__file__).parents[1] / 'config' / 'analysis_2022.yml'
 
 # Load all variable names into local namespace (for looping)
 ALL_VARNAMES_1D = None
@@ -20,14 +20,14 @@ with open(VARPATH, 'r') as f:
     ALL_VARNAMES_2D = ALL_JSON_DATA['2D'].keys()
     ALL_VARNAMES_3D = ALL_JSON_DATA['3D'].keys()
 
-# Load config file and get the luminosity and cross sections
-with open(CFGPATH, "r") as yaml_file:
-    yaml_data = yaml.safe_load(yaml_file)
-    LUMINOSITY: float = yaml_data['eras']['2022']['luminosity']
-    CROSS_SECTIONS: 'dict[str, float]' = { 
-        sample_name: sample_data['cross-section'] if sample_data['type'] == 'mc' else 0
-        for sample_name, sample_data in yaml_data['samples'].items() 
-    }
+# # Load config file and get the luminosity and cross sections
+# with open(CFGPATH, "r") as yaml_file:
+#     yaml_data = yaml.safe_load(yaml_file)
+#     LUMINOSITY: float = yaml_data['eras']['2022']['luminosity']
+#     CROSS_SECTIONS: 'dict[str, float]' = { 
+#         sample_name: sample_data['cross-section'] if sample_data['type'] == 'mc' else 0
+#         for sample_name, sample_data in yaml_data['samples'].items() 
+#     }
 
 # Helper utility function for getting the weights stored in root files
 SUM_WEIGHTS = {}
@@ -152,34 +152,34 @@ class Variable():
         self.refs = [ '_'.join((subcat, self.name))  
                      for subcat in subcats ]
 
-    def get_hist_from_file(self, subcat: str, file: TFile) -> Union[TH1F, TH2F]:
-        '''
-        Gets a histogram of a given subcategory from a given file. Given the subcat, this function determines the reference that
-        should be used to look up the histogram in the file, then gets this hitogram. If it is not present in the file, raise
-        a KeyError. Scales the histogram according to the MC weighting and luminosity
+    # def get_hist_from_file(self, subcat: str, file: TFile) -> Union[TH1F, TH2F]:
+    #     '''
+    #     Gets a histogram of a given subcategory from a given file. Given the subcat, this function determines the reference that
+    #     should be used to look up the histogram in the file, then gets this hitogram. If it is not present in the file, raise
+    #     a KeyError. Scales the histogram according to the MC weighting and luminosity
 
-        Args:
-            subcat (str)
-            file (ROOT.TFile)
+    #     Args:
+    #         subcat (str)
+    #         file (ROOT.TFile)
         
-        Returns:
-            ROOT.TH1 or ROOT.TH2: the histogram
-        '''
-        sample_name = Path(file.GetName()).stem
-        hist_name = self[subcat].ref
-        try:
-            hist = file.Get(hist_name)
-            hist.SetDirectory(0)
-        except AttributeError as err:
-            raise KeyError(f"'{hist_name}' not found in {sample_name}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
+    #     Returns:
+    #         ROOT.TH1 or ROOT.TH2: the histogram
+    #     '''
+    #     sample_name = Path(file.GetName()).stem
+    #     hist_name = self[subcat].ref
+    #     try:
+    #         hist = file.Get(hist_name)
+    #         hist.SetDirectory(0)
+    #     except AttributeError as err:
+    #         raise KeyError(f"'{hist_name}' not found in {sample_name}; ensure {self.__class__.__name__}.refs are the same as those in the TFile") from err
         
-        # Scale the histogram
-        if CROSS_SECTIONS[sample_name] != 0:
-            scale_factor = CROSS_SECTIONS[sample_name] * LUMINOSITY / SUM_WEIGHTS[sample_name]
-        else:
-            scale_factor = 1.0
-        hist.Scale(scale_factor)
-        return hist
+    #     # Scale the histogram
+    #     if CROSS_SECTIONS[sample_name] != 0:
+    #         scale_factor = CROSS_SECTIONS[sample_name] * LUMINOSITY / SUM_WEIGHTS[sample_name]
+    #     else:
+    #         scale_factor = 1.0
+    #     hist.Scale(scale_factor)
+    #     return hist
 
     def get_total_hist(self, files: 'list[TFile]'=[], subcat: str='', normalized:bool=False) -> Union[TH1F, TH2F]:
         '''

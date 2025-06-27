@@ -20,7 +20,6 @@ class VarsReco(NanoBaseHHbbWW):
         super(VarsReco, self).addArgs(parser)
         parser.add_argument("-ss", "--skim_selections", nargs="+", action='store', default=['SL_3j_resolved', 'SL_4j_resolved'], help='skim tree selections to produce')
         parser.add_argument("-xs", "--plot_selections", nargs="+", action='store', default=['SL_3j_resolved', 'SL_4j_resolved'], help='selections to plot in bamboo')
-        parser.add_argument("-llr_backs", "--llr_backgrounds", action='store', nargs="+", default='All', help="Pick background processes (as in references.py) to go into LLR denominator. Default is All")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         tree, baseSel, backend, lumiArgs = super(VarsReco, self).prepareTree(tree=tree,
@@ -39,14 +38,11 @@ class VarsReco(NanoBaseHHbbWW):
         ak4_loose_btags = objects["cleaned_ak4_loose_btags"]
         ak8_btags = objects["cleaned_ak8_btags"]
         ak4_non_medbtags = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
-        if era in ["2016", "2017", "2018"]:
-            bjet_sorter = lambda jet: -jet.btagDeepFlavB
-        elif era in ["2022", "2022EE", "2023", "2023BPix"]:
-            bjet_sorter = lambda jet: -jet.btagPNetB
-        sorted_ak4_loose_btags = op.sort(ak4_loose_btags, bjet_sorter)
+        
+        sorted_ak4_loose_btags = op.sort(ak4_loose_btags, lambda jet: -jet.btagPNetB)
         objects['sorted_ak8_btags'] = op.sort(ak8_btags, lambda jet: -jet.pt)
         objects['sorted_ak4_jets'] = op.sort(ak4_jets, lambda jet: -jet.pt)
-        # objects['sorted_ak4_btags'] = op.sort(ak4_btags, bjet_sorter)
+        # objects['sorted_ak4_btags'] = op.sort(ak4_btags, lambda jet: -jet.btagPNetB)
         # objects['ak4_nonbtags'] = ak4_non_medbtags
         # Redefine the ak4 jets in a mutually exclusive way for 1b 2b selections
         # ak4_nonbtags = op.select(
@@ -60,11 +56,11 @@ class VarsReco(NanoBaseHHbbWW):
         #     )
         # )
         # ak4_btags_redef = op.select(ak4_jets, lambda jet: op.NOT(op.rng_any(ak4_nonbtags, lambda nbjet: jet.idx == nbjet.idx)))
-        # objects['sorted_ak4_btags'] = op.sort(ak4_btags_redef, bjet_sorter)
+        # objects['sorted_ak4_btags'] = op.sort(ak4_btags_redef, lambda jet: -jet.btagPNetB)
         # objects['ak4_nonbtags'] = ak4_nonbtags
 
         # 4j selection definitions
-        btag_sorted_ak4_jets = op.sort(ak4_jets, bjet_sorter)
+        btag_sorted_ak4_jets = op.sort(ak4_jets, lambda jet: -jet.btagPNetB)
         objects['sorted_ak4_btags'] = op.select(
             btag_sorted_ak4_jets,
             lambda jet: op.OR(

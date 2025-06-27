@@ -16,6 +16,7 @@ from references import references
 from itertools import product
 from collections import defaultdict
 from dataclasses import dataclass, field
+from bamboo.analysisutils import YMLIncludeLoader
 
 ROOT.gStyle.SetOptStat(1221)
 ROOT.gStyle.SetPalette(ROOT.kBird)
@@ -54,7 +55,7 @@ class BasePlotter:
 
     def _set_configFile_info(self, configFile: Path):
         with open(configFile, "r") as yaml_file:
-            yaml_data = yaml.safe_load(yaml_file)
+            yaml_data = yaml.load(yaml_file, Loader=YMLIncludeLoader)
             for era in self.eras:
                 self.LUMINOSITY[era] = yaml_data['eras'][era]['luminosity']
             for sample_name, sample_data in yaml_data['samples'].items():
@@ -417,6 +418,11 @@ class Reference():
         for process, era in product(self.processes, self.eras):
             era_tfiles = {tfile: sumWeight for tfile, sumWeight in self.plotter.tfiles_info.items() if tfile.GetName().endswith(f"{era}.root")}
             era_process_tfiles = {tfile: sumWeight for tfile, sumWeight in era_tfiles.items() if any(Path(tfile.GetName()).stem.startswith(process_file) for process_file in references.PROCESSES_FILES[process])}
+            
+            if len(era_process_tfiles) == 0:
+                print(f"No info for {process, era}")
+                continue
+            
             tfile_0, sumWeight_0 = list(era_process_tfiles.items())[0]
             hist: ROOT.TH1 = self.plotter.get_hist_from_file(self.ref, era, tfile_0, sumWeight_0)
             if hist:
@@ -449,7 +455,9 @@ class Reference():
         self.outdir = self._set_outdir(era)
         process_hist_dict = {}
         for process in self.processes:
-            process_hist_dict[process] = self.histograms[process][era]
+            hist = self.histograms[process][era]
+            if hist:
+                process_hist_dict[process] = hist
         return process_hist_dict
 
     def _set_outdir(self, era:str=None):

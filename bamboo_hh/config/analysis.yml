@@ -1,0 +1,95 @@
+tree: Events
+
+eras:
+  '2022':
+    luminosity: 7980.4
+  2022EE:
+    luminosity: 26671.7
+  '2023':
+    luminosity: 17794 # pb^-1
+  "2023BPix":
+    luminosity:  9451 #pb^-1
+
+samples: !include [
+  2022_mc.yml, 
+  2023_mc.yml
+  ]
+
+plotIt:
+  configuration:
+    width: 800
+    height: 600
+    margin-left: 0.2
+    margin-right: 0.03
+    margin-top: 0.05
+    margin-bottom: 0.15
+    luminosity-label: '%1$.2f fb^{-1} (13.6 TeV)'
+    experiment: CMS
+    extra-label: Run 3 (2022) - Work in progress
+    error-fill-style: 3154
+    error-fill-color: '#ee556270'
+    ratio-fit-error-fill-style: 1001
+    ratio-fit-error-fill-color: '#aa556270'
+    ratio-fit-line-color: '#0B486B'
+    yields-table-align: v
+  legend:
+    position:
+    - 0.7
+    - 0.6
+    - 0.91
+    - 0.91
+  groups:
+    data:
+      legend: data
+    HH_bbWW:
+      legend: HH_bbWW
+      fill-color: '#EDC951'
+    HH_bbtautau:
+      legend: HH_bbtautau
+      fill-color: '#EDC951'
+    ttbar:
+      legend: ttbar
+      fill-color: '#99ccff'
+    DY:
+      legend: DY
+      fill-color: '#9FFF33'
+    WJets:
+      legend: WJets
+      fill-color: '#FFC300'
+    VV:
+      legend: VV
+      fill-color: '#C900FF'
+    tW:
+      legend: tW
+      fill-color: '#BB2255'
+    tb:
+      legend: tb
+      fill-color: '#BB2255'
+    tbq:
+      legend: tbq
+      fill-color: '#BB2255'
+    tq:
+      legend: tq
+      fill-color: '#BB2255'
+    QCD:
+      legend: QCD
+      fill-color: '#AB2255'
+    H:
+      legend: H
+      fill-color: '#AB2255'
+    ttH:
+      legend: ttH
+      fill-color: '#AB2255'
+  plotdefaults:
+    y-axis: Events
+    y-axis-show-zero: true
+    save-extensions:
+    - pdf
+    show-ratio: true
+    sort-by-yields: true
+    legend-columns: 2
+    ratio-y-axis: '#frac{Data}{MC}'
+    ratio-y-axis-range:
+    - 0.5
+    - 1.5
+    normalized: false

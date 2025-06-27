@@ -79,6 +79,12 @@ def calculate_met_quantities(jets, electrons, muons, met_pt):
 def electron_basic_selection(electrons, era):
     return op.select(electrons, lambda el: get_electron_id(el, era, 'loose'))
 
+def electron_cleaning(electrons, muons, deltar_cut=0.3):
+    return op.select(electrons, lambda ele: op.NOT(
+        op.rng_any(muons, lambda mu: op.deltaR(mu.p4, ele.p4) < deltar_cut)
+        )
+    )
+
 def electron_loose_selection(electrons, jets, era):
     pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 7
     return op.select(electrons, lambda el: op.AND(
@@ -199,16 +205,10 @@ def muon_tight_selection(muons, jets, era):
         )
     )
 
-def electron_cleaning(electrons, muons, deltar_cut=0.3):
-    return op.select(electrons, lambda ele: op.NOT(
-        op.rng_any(muons, lambda mu: op.deltaR(mu.p4, ele.p4) < deltar_cut)
-        )
-    )
-
 def tau_selection(taus, era):
     def get_idDeepTau_cut(tau, era):
-            idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet > 16) if era != '2017' else (1)
-            return idDeepTau_cut
+        idDeepTau_cut = (tau.idDeepTau2017v2p1VSjet >= 5) if era != '2017' else (1)
+        return idDeepTau_cut
 
     return op.select(taus, lambda tau: op.AND(
         tau.pt > 20,

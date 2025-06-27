@@ -12,6 +12,7 @@ import yaml
 from references import references
 import uproot
 import pandas as pd
+from bamboo.analysisutils import YMLIncludeLoader
 
 INTERPOLATION_SCALE_FACTOR_1D = 9
 INTERPOLATION_SCALE_FACTOR_2D = 3
@@ -95,15 +96,18 @@ def get_content_replacement(configFile:str, resultsdir:Path, selection:str):
 
     config = Path(configFile)
     with open(config, 'r') as f:
-        config = yaml.safe_load(f)
-        samples = config['samples']
-        luminosity = config['eras']['2022']['luminosity']
+        config = yaml.load(f, Loader=YMLIncludeLoader)
+    
+    samples = config['samples']
+    eras = config['eras']
 
     mc_files = references.get_mc_files(resultsdir)
     sample, cross_section, sumw = [], [], []
     df_genWeights = pd.DataFrame({'sample': [], 'genWeight': []})
     df_total = pd.DataFrame()
     for file in mc_files:
+        era = references.get_file_era(file)
+        era_lumi = eras[era]['luminosity']
         with uproot.open(file) as f:
             if selection not in f:
                 continue
@@ -118,7 +122,7 @@ def get_content_replacement(configFile:str, resultsdir:Path, selection:str):
                 'cross-section': [samples[file.stem]['cross-section']],
                 'sumw': [f['yields_genEventSumWeight'].values().item()]
             })
-            df_sf['sf'] = df_sf['cross-section'] * luminosity / df_sf['sumw']
+            df_sf['sf'] = df_sf['cross-section'] * era_lumi / df_sf['sumw']
 
         df_genWeights = pd.concat([df_genWeights, df_gW])
         df_total = pd.concat([df_total, df_sf])
@@ -126,7 +130,6 @@ def get_content_replacement(configFile:str, resultsdir:Path, selection:str):
     print('genWeight counts across background samples')
     print(df_genWeights)
 
-    print(f'Scale factors calculated with a luminosity of {luminosity} pb-1')
     min_positive_genWeight = df_genWeights[df_genWeights['genWeight'] > 0 ].groupby('sample').min()['genWeight']
     df_total['min_pos_genWeight'] = df_total['sample'].map(min_positive_genWeight)
     df_total['min_content'] = df_total['sf'] * df_total['min_pos_genWeight']
@@ -220,7 +223,7 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--output", action='store', default='corrections', help="Output file name")
     args = parser.parse_args()
 
-    lrPlotter = Plotter(workdir=args.workdir, configFile=args.configFile, which_processes='All')
+    lrPlotter = Plotter(workdir=args.workdir, configFile=args.configFile)
     compute_lrs(lrPlotter, args.configFile, args.llr, args.output)
     '''
     To compute LRs:
