@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass
 from collections import defaultdict
-
+import shutil
 
 USER: str = os.environ["USER"]
 HOSPITAL_LONG_PROCESS: int = 1800
@@ -310,7 +310,13 @@ def finalize(finalize_cmd) -> None:
 def run_finalize(args, mod_args) -> None:
     cmd, afs_output, eos_output = generate_cmd(args, mod_args)
     to_resubmit = check_outputs(eos_output)
-    for p in to_resubmit: (eos_output / 'output' / str(p)).unlink(missing_ok=True)
+    # for p in to_resubmit: (eos_output / 'output' / str(p)).unlink(missing_ok=True)
+
+    for p in to_resubmit:
+        job_dir = eos_output / 'output' / str(p)
+        if job_dir.exists():
+            if job_dir.is_file():
+                job_dir.unlink()
 
     if len(to_resubmit) > 0: 
         print('Need to re-run some jobs before finalization.')
