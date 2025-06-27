@@ -128,10 +128,6 @@ def log_class_stats(train_ds, val_ds, test_ds, config, logger, modeldir: Path=No
         plot_features(test_ds, config.features, modeldir/f'features_test.pdf')
 
 def compute_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict[str, list]:
-    """
-    Computes total counts, class percentages, and sample weight sums for each class.
-    Returns a dictionary containing this information.
-    """
     if dataset is None: return
 
     num_classes = len(mapper.get_classes())
@@ -142,12 +138,17 @@ def compute_class_stats(dataset: tf.data.Dataset, mapper, logger) -> dict[str, l
         "sample_weight_sum": tf.zeros((num_classes,), dtype=tf_type['float'])
     }
 
-    def reduce_func(state, batch):
-        batch_class_oh = batch['class_oh'] 
-        batch_sample_weight = batch['sample_weight']
+    # Ensure argmax output is int32 in multiclass case
+    if mapper.is_binary():
+        label_fn = lambda class_oh: tf.cast(tf.reshape(class_oh, [-1]), tf.int32)
+    else:
+        label_fn = lambda class_oh: tf.argmax(class_oh, axis=1, output_type=tf.int32)
 
-        batch_counts = tf.math.bincount(tf.cast(tf.argmax(batch_class_oh, axis=1), tf.int32), minlength=num_classes, maxlength=num_classes)
-        batch_weighted_sums = tf.math.unsorted_segment_sum(batch_sample_weight, tf.argmax(batch_class_oh, axis=1), num_classes)
+    def reduce_func(state, batch):
+        labels = label_fn(batch['class_oh'])  # already int32 now
+        sample_weights = batch['sample_weight']
+        batch_counts = tf.math.bincount(labels, minlength=num_classes, maxlength=num_classes)
+        batch_weighted_sums = tf.math.unsorted_segment_sum(sample_weights, labels, num_classes)
         return {
             "counts": state["counts"] + batch_counts,
             "sample_weight_sum": state["sample_weight_sum"] + batch_weighted_sums
@@ -225,11 +226,16 @@ def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore
     return mean, variance, total_samples, valid_counts
 
 def print_events(ds, config, logger):
+    if config.mapper.is_binary():
+        label_fn = lambda class_oh: class_oh.numpy().astype(int).flatten()
+    else:
+        label_fn = lambda class_oh: np.argmax(class_oh.numpy(), axis=1)
+
     for batch in ds.take(1):
         num_events = min(100, batch['features'].shape[0])
         data = {
             'event_id': batch['event'].numpy()[:num_events],
-            'class': np.argmax(batch['class_oh'].numpy()[:num_events], axis=1),
+            'class': label_fn(batch['class_oh'])[:num_events],
             'weight': batch['sample_weight'].numpy()[:num_events]
         }
         feature_names = config.features

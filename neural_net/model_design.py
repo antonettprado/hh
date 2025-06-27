@@ -21,7 +21,6 @@ class ModelNetwork:
         self.features = config.features
         self.batch_size = config.batch_size
         self.network = config.network
-        self.loss = config.loss
         self.optimizer = config.optimizer
         self.epochs = config.epochs
         self.data_split = config.data_split
@@ -53,8 +52,12 @@ class ModelNetwork:
         x2 = tf.keras.layers.Dense(units=units, activation=activation, activity_regularizer=reg, name=f"layer_2")(x1)
         x2 = tf.keras.layers.BatchNormalization()(x2)
         x2 = tf.keras.layers.Dropout(drop_rate)(x2)
-        output = tf.keras.layers.Dense(units=n_classes, kernel_initializer='normal', activation='softmax', activity_regularizer=reg, name=f"output")(x2)
-        
+
+        if self.mapper.is_binary():
+            output = tf.keras.layers.Dense(1, activation='sigmoid', name='output')(x2)
+        else:
+            output = tf.keras.layers.Dense(n_classes, activation='softmax', name='output')(x2)
+
         model = tf.keras.Model(inputs=input_layer, outputs=[output], name='model')
 
         return model
@@ -63,8 +66,8 @@ class ModelNetwork:
 
         model.compile(
             optimizer=get_optimizer(self.optimizer), 
-            loss=self.loss,
-            metrics = get_metrics(),
+            loss='binary_crossentropy' if self.mapper.is_binary() else 'categorical_crossentropy',
+            metrics = get_metrics(self.mapper.is_binary()),
             weighted_metrics=[]
         )
 
@@ -192,10 +195,33 @@ class ModelEvaluator:
         self._plot_roc_curves()
         self._plot_confusion_matrices()
         self._plot_score_distributions()
-        # self._plot_correlation_matrix()
+        self._plot_correlation_matrix()
         self._save_results()
         self.print_summary()
         return self.metrics
+
+    def _get_class_data(self, true_labels, predicted_probs, class_idx):
+        if self.mapper.is_binary():
+            true_class = tf.reshape(true_labels, [-1])
+            pred_class = tf.reshape(predicted_probs, [-1])
+        else:
+            true_class = true_labels[:, class_idx]
+            pred_class = predicted_probs[:, class_idx]
+        return true_class, pred_class
+
+    def _get_true_and_pred_classes(self):
+        true_labels = self.predictions['true_labels']
+        predicted_probs = self.predictions['probabilities']
+        if self.mapper.is_binary():
+            true_classes = true_labels.numpy().flatten()
+            predicted_classes = (predicted_probs > self.optimal_threshold).astype(int).flatten()
+        else:
+            true_classes = np.argmax(true_labels, axis=1)
+            predicted_classes = np.argmax(predicted_probs, axis=1)
+        return true_classes, predicted_classes
+
+    def _get_class_indices(self):
+        return [(name, self.mapper.get_class_index(name)) for name in self.mapper.get_classes()]
 
     def _get_predictions(self):
         features, labels = [], []
@@ -208,7 +234,16 @@ class ModelEvaluator:
         labels = tf.concat(labels, axis=0)
 
         probabilities = self.model.predict(features, verbose=0)
-        predicted_classes = np.argmax(probabilities, axis=1)
+        if self.mapper.is_binary():
+            fpr, tpr, thresholds = roc_curve(labels.numpy(), probabilities)
+            j_scores = tpr - fpr
+            best_idx = np.argmax(j_scores)
+            self.optimal_threshold = thresholds[best_idx]
+            self.logger.info(f"Optimal threshold from ROC curve: {self.optimal_threshold:.4f}")
+            
+            predicted_classes = (probabilities > self.optimal_threshold).astype(int).flatten()
+        else:
+            predicted_classes = np.argmax(probabilities, axis=1)
 
         self.predictions['probabilities'] = probabilities
         self.predictions['classes'] = predicted_classes
@@ -219,15 +254,18 @@ class ModelEvaluator:
         true_labels = self.predictions['true_labels']
         predicted_probs = self.predictions['probabilities']
         
-        self.metrics['loss'] = float(tf.keras.losses.categorical_crossentropy(true_labels, predicted_probs).numpy().mean())
+        if self.mapper.is_binary():
+            loss_fn = tf.keras.losses.binary_crossentropy
+        else:
+            loss_fn = tf.keras.losses.categorical_crossentropy
+
+        self.metrics['loss'] = float(loss_fn(true_labels, predicted_probs).numpy().mean())
         self.metrics['accuracy'] = float(tf.keras.metrics.categorical_accuracy(true_labels, predicted_probs).numpy().mean())
         
-        true_classes = np.argmax(true_labels, axis=1)
-        predicted_classes = np.argmax(predicted_probs, axis=1)
+        true_classes, predicted_classes = self._get_true_and_pred_classes()
         
         # Calculate precision and recall for each class
-        for class_name in self.mapper.get_classes():
-            class_idx = self.mapper.get_class_index(class_name)
+        for class_name, class_idx in self._get_class_indices():
             true_positives = np.sum((true_classes == class_idx) & (predicted_classes == class_idx))
             false_positives = np.sum((true_classes != class_idx) & (predicted_classes == class_idx))
             false_negatives = np.sum((true_classes == class_idx) & (predicted_classes != class_idx))
@@ -244,10 +282,8 @@ class ModelEvaluator:
         
         # Calculate ROC AUC
         auc_scores = []
-        for class_name in self.mapper.get_classes():
-            class_idx = self.mapper.get_class_index(class_name)
-            true_class = true_labels[:, class_idx]
-            pred_class = predicted_probs[:, class_idx]
+        for class_name, class_idx in self._get_class_indices():
+            true_class, pred_class = self._get_class_data(true_labels, predicted_probs, class_idx)
             if len(np.unique(true_class)) > 1:
                 auc_scores.append(roc_auc_score(true_class, pred_class))
         
@@ -267,10 +303,8 @@ class ModelEvaluator:
         }
         
         ax.plot([0, 1], [0, 1], linestyle='--', lw=3, color='k', label='Random Guess')
-        for class_name in self.mapper.get_classes():
-            class_idx = self.mapper.get_class_index(class_name)
-            true_class = true_labels[:, class_idx]
-            pred_class = predicted_probs[:, class_idx]
+        for class_name, class_idx in self._get_class_indices():
+            true_class, pred_class = self._get_class_data(true_labels, predicted_probs, class_idx)
             fpr, tpr, _ = roc_curve(true_class, pred_class)
             roc_auc = auc(fpr, tpr)
 
@@ -300,8 +334,7 @@ class ModelEvaluator:
 
     def _plot_confusion_matrices(self):
         """Generate normalized confusion matrices."""
-        true_classes = np.argmax(self.predictions['true_labels'], axis=1)
-        predicted_classes = self.predictions['classes']
+        true_classes, predicted_classes = self._get_true_and_pred_classes()
         class_names = self.mapper.get_classes()
         
         cm_true = confusion_matrix(true_classes, predicted_classes, normalize='true')
@@ -359,11 +392,18 @@ class ModelEvaluator:
             ax.set_xlim(0, 1)
             target_idx = self.mapper.get_class_index(target_class)
             class_data = {}
+
             for true_class in self.mapper.get_classes():
                 true_idx = self.mapper.get_class_index(true_class)
-                mask = np.argmax(true_labels, axis=1) == true_idx
-                if np.any(mask):  # Only plot if we have events for this class
+
+                if self.mapper.is_binary():
+                    mask = (true_labels.numpy().flatten() == true_idx)
+                    scores = predicted_probs[mask].flatten()
+                else:
+                    mask = np.argmax(true_labels, axis=1) == true_idx
                     scores = predicted_probs[mask, target_idx]
+
+                if np.any(mask):  # Only plot if we have events for this class
                     ax.hist(scores, bins=50, label=f'{true_class} (n={len(scores)})', histtype='step', linewidth=3, density=True)
                     class_data[true_class] = {
                         'scores': scores.tolist(),
@@ -374,10 +414,10 @@ class ModelEvaluator:
 
             ax.set_xlabel(f'{target_class} Score', fontsize=28, labelpad=10)
             ax.set_ylabel('Normalized Number of Events', fontsize=28, labelpad=10)
-            ax.tick_params(axis='x', labelsize=26)  # Set x-axis tick font size
-            ax.tick_params(axis='y', labelsize=26)  # Set y-axis tick font size
+            ax.tick_params(axis='x', labelsize=26)
+            ax.tick_params(axis='y', labelsize=26)
             for spine in ax.spines.values():
-                spine.set_linewidth(2)  # Thicker border
+                spine.set_linewidth(2)
             ax.grid(alpha=0.8)
             ax.legend(fontsize=24, loc='upper right', frameon=True, edgecolor="black", fancybox=True)
             fig.tight_layout()
@@ -388,18 +428,30 @@ class ModelEvaluator:
 
     def _plot_correlation_matrix(self):
         """Plot feature correlation matrix."""
-        if isinstance(self.predictions['features'], np.ndarray):
-            corr = np.corrcoef(self.predictions['features'].T)
-            
-            fig, ax = plt.subplots(figsize=(12, 10))
-            im = ax.imshow(corr, cmap='coolwarm')
-            plt.colorbar(im)
-            
-            ax.set_title('Feature Correlation Matrix')
-            fig.tight_layout()
-            
-            self.figures['correlation_matrix'] = fig
-            plt.close(fig)
+        features = self.predictions['features']
+        if isinstance(features, tf.Tensor):
+            features = features.numpy()
+        if not isinstance(features, np.ndarray):
+            return
+
+        corr = np.corrcoef(features.T)
+        fig, ax = plt.subplots(figsize=(12, 10))
+        im = ax.imshow(corr, cmap='coolwarm', vmin=-1, vmax=1)
+
+        feature_names = self.features
+        ax.set_xticks(np.arange(len(feature_names)))
+        ax.set_yticks(np.arange(len(feature_names)))
+        ax.set_xticklabels(feature_names, rotation=90, fontsize=10)
+        ax.set_yticklabels(feature_names, fontsize=10)
+
+        cbar = plt.colorbar(im)
+        cbar.ax.tick_params(labelsize=10)
+
+        ax.set_title('Feature Correlation Matrix')
+        fig.tight_layout()
+        
+        self.figures['correlation_matrix'] = fig
+        plt.close(fig)
 
     def _save_results(self):        
         for name, fig in self.figures.items():
@@ -546,9 +598,9 @@ def get_optimizer(optimizer: dict):
     return optimizer
 
 
-def get_metrics() -> list[tf.keras.metrics.Metric]:
+def get_metrics(for_binary: bool) -> list[tf.keras.metrics.Metric]:
     metrics= [
-        tf.keras.metrics.CategoricalAccuracy(name='accuracy'), 
+        tf.keras.metrics.BinaryAccuracy(name='accuracy') if for_binary else tf.keras.metrics.CategoricalAccuracy(name='accuracy'), 
         tf.keras.metrics.Precision(name='precision'), 
         tf.keras.metrics.Recall(name='recall'),
         tf.keras.metrics.AUC(name='auc_roc', curve='ROC')

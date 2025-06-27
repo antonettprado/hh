@@ -69,7 +69,7 @@ def prune_ds(ds, config):
         ).map(lambda batch: {
                 'event': tf.ensure_shape(batch['event'], (None,)),
                 'features': tf.ensure_shape(batch['features'], (None, n_features)),
-                'class_oh': tf.ensure_shape(batch['class_oh'], (None, n_classes)),
+                'class_oh': tf.ensure_shape(batch['class_oh'], (None,) if config.mapper.is_binary() else (None, n_classes)),
                 'sample_weight': tf.ensure_shape(batch['sample_weight'], (None,)),
                 'process': tf.ensure_shape(batch['process'], (None,))
             },
@@ -128,6 +128,7 @@ class DatasetManager:
 
     def __init__(self, config, workdir: Path, logger=None):
         self.workdir = workdir
+        self.model_type = config.model_type
         self.tree_names = config.tree_names
         self.features = config.features
         self.process_sf = config.process_sf
@@ -254,7 +255,6 @@ class DatasetManager:
     def _enrich_datasets(self, ds_list: list[tf.data.Dataset]) -> list[tf.data.Dataset]:
         ''' Ensure each dataset maintains its details attribute after enriching'''
         self.logger.debug(f'\nEnriching datasets')
-        n_classes = len(self.mapper.get_classes())
         processes_tensor                    = tf.constant(self.info_processes.index.values, dtype=tf.string)  
         processes_sf_tensor                 = tf.constant(self.info_processes['Process SF'].values, dtype=tf.float32)
         processes_total_genWeight_tensor    = tf.constant(self.info_processes['GenWeight'].values, dtype=tf.float32)
@@ -278,6 +278,14 @@ class DatasetManager:
 
         total_events_tensor = tf.constant(self.total_events, dtype=tf.float32)
 
+        if self.mapper.is_binary():
+            def make_class_oh(batch, class_idx_tensor):
+                return tf.cast(tf.fill(tf.shape(batch['event']), class_idx_tensor), tf.float32)
+        else:
+            def make_class_oh(batch, class_idx_tensor):
+                n_classes = len(self.mapper.get_classes())
+                return tf.one_hot(tf.fill(tf.shape(batch['event']), class_idx_tensor), depth=n_classes)
+
         def enrich_ds(ds):
 
             def enrich_batch(batch, process):
@@ -292,7 +300,7 @@ class DatasetManager:
                     'process': tf.fill(tf.shape(batch['event']), process_tensor),
                     # 'process_sf': tf.fill(tf.shape(batch['event']), process_sf_tensor),
                     'features': batch['features'],
-                    'class_oh': tf.one_hot(tf.fill(tf.shape(batch['event']), class_idx_tensor), depth=n_classes),
+                    'class_oh': make_class_oh(batch, class_idx_tensor),
                     # 'class_idx': tf.fill(tf.shape(batch['event']), class_idx_tensor),
                     'sample_weight': sample_weight
                 }

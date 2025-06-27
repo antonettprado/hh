@@ -10,12 +10,22 @@ import numpy as np
 NEURALNET = Path(__file__).parent
 
 class ClassProcessMapper:
-    def __init__(self, categorization: Dict[str, List[str]]):
+    def __init__(self, categorization: dict[str, list[str]], model_type: str):
+        self._model_type = model_type
         self._class_to_processes = categorization
-        self._class_to_index = {class_name: idx for idx, class_name in enumerate(categorization.keys())}
+        self._class_keys = list(categorization.keys())
+        self._class_to_index = self._init_class_indexing()
         self._index_to_class = {idx: class_name for class_name, idx in self._class_to_index.items()}
         self._process_to_class = {process: class_name for class_name, process_list in categorization.items() for process in process_list}
         self._validate(categorization)
+
+    def _init_class_indexing(self) -> Dict[str, int]:
+        if self._model_type == 'binary':
+            if len(self._class_to_processes) != 2:
+                raise ValueError("Binary classification requires exactly 2 classes")
+            return {self._class_keys[0]: 1, self._class_keys[1]: 0}
+        else:
+            return {class_name: idx for idx, class_name in enumerate(self._class_to_processes)}
 
     def _validate(self, categorization):
         processes = self.get_processes()
@@ -24,6 +34,12 @@ class ClassProcessMapper:
         invalid = set(processes) - set(references.PROCESSES_FILES)
         if invalid:
             raise ValueError(f"Invalid processes: {', '.join(invalid)}")
+
+    def is_binary(self):
+        if self._model_type == 'multi': 
+            return False
+        elif self._model_type == 'binary':
+            return True
 
     def get_class_for_index(self, index: int) -> str:
         return self._index_to_class.get(index, "Unknown")
@@ -69,7 +85,7 @@ class ModelConfig:
     
     def __post_init__(self):
         if self.mapper is None:
-            self.mapper = ClassProcessMapper(categorization=self.classification)
+            self.mapper = ClassProcessMapper(categorization=self.classification, model_type=self.model_type)
         if self.data_split:
             sum_of_ratios = sum(value for value in self.data_split.values())
             assert sum_of_ratios == 1, f"Model {self.name}: Data split ratios do not sum to 1"

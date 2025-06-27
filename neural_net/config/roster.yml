@@ -10,7 +10,6 @@
 #    resnet: True
 #    act_regularizer: {l1: 1e-4}
 #  optimizer: {name: 'adam', lr: 0.001}
-#  loss: 'categorical_crossentropy'
 #  epochs: 1000
 #  data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
 
@@ -27,7 +26,6 @@
     resnet: True
     act_regularizer: {l1: 1e-4}
   optimizer: {name: 'adam', lr: 0.001}
-  loss: 'categorical_crossentropy'
   epochs: 1000
   data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
   # process_events: {"HH_bbWW": "All", "ttbar": 2_000_000, "tW": 900_000}
@@ -44,7 +42,6 @@
     resnet: True
     act_regularizer: {l1: 1e-4}
   optimizer: {name: 'adam', lr: 0.001}
-  loss: 'categorical_crossentropy'
   epochs: 1000
   data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
   # process_events: {"HH_bbWW": "All", "ttbar": 2_000_000, "tW": 900_000}
