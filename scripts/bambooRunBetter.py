@@ -270,6 +270,8 @@ def run_driver(args, mod_args) -> None:
 
 def is_zombie(file: Path) -> bool:
     import ROOT
+    if not file.suffix == ".root":
+        return False   # Only check real ROOT files
     return ROOT.TFile(str(file)).IsZombie()
 
 def check_outputs(eos_output: Path, jobs: Optional[list[int]]=None) -> list[int]:

@@ -62,8 +62,8 @@ class BasePlotter:
                 subprocess = sample_name.rsplit('_', 1)[0]
                 self.CROSS_SECTIONS[subprocess] = sample_data['cross-section'] if sample_data['type'] == 'mc' else None
 
-        print(f"CROSS_SECTIONS: {self.CROSS_SECTIONS}")
-        print(f"LUMINOSITY: {self.LUMINOSITY}")
+        # print(f"CROSS_SECTIONS: {self.CROSS_SECTIONS}")
+        # print(f"LUMINOSITY: {self.LUMINOSITY}")
         
     def _set_refs_file_and_refs(self, ref_workdir: Path):
         '''
@@ -145,7 +145,6 @@ def open_root_files(root_files: list[Path]) -> dict[TFile, float]:
             tfiles_info[file] = sumw
         else:
             raise Exception(f"Error retrieving yields_genEventSumWeight from {file.name}")
-    print(f"TFiles info: {tfiles_info.values()}")
     return tfiles_info
 
 
@@ -161,8 +160,6 @@ class Plotter(BasePlotter):
         super()._set_configFile_info(Path(configFile))
         super()._set_refs_file_and_refs(ref_workdir=self.workdir)
         mc_files = references.get_mc_files(self.resultsdir)
-        print(f"All MC files found:")
-        for f in mc_files: print(f.name)
         self.tfiles_info = open_root_files(mc_files)
         print(f"Present processes: {self.processes}")
         print(f"Eras: {self.eras}\n")

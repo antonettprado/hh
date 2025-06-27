@@ -11,8 +11,8 @@ eras:
     luminosity:  9451 #pb^-1
 
 samples: !include [
-  2022_mc.yml
-  2023_mc.yml
+  2022_mc.yml,
+  2023_mc.yml,
   ]
 
 plotIt:

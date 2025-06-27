@@ -192,15 +192,11 @@ class VarsReco(NanoBaseHHbbWW):
         super(VarsReco, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         from bamboo_hh.plotter.plotter import Plotter
-
         myPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0])
         myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False)
         myPlotter.Draw_Refs(normalization='unity', combine_backgs=False, sen_info=False)
 
-
         from bamboo_hh.definitions import lr_functions
-
-        lrPlotter: Plotter = Plotter(workdir=workdir, configFile=self.args.input[0])
-        lr_functions.compute_lrs(plotter=lrPlotter, configFile=self.args.input[0], apply_log=False)
+        lr_functions.compute_lrs(plotter=myPlotter, configFile=self.args.input[0], apply_log=False)
 
         print(f"\nVarsReco completed using {self.event_nr_sel} events\n")
