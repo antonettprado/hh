@@ -11,8 +11,8 @@ import shap
 from sklearn.inspection import partial_dependence, PartialDependenceDisplay
 from sklearn.calibration import calibration_curve
 from sklearn.manifold import TSNE
+from sklearn.base import BaseEstimator, RegressorMixin
 import seaborn as sns
-
 
 import mplhep as hep
 plt.style.use(hep.style.CMS)
@@ -435,7 +435,7 @@ class ModelEvaluator:
             ax.grid(alpha=0.8)
             ax.legend(fontsize=24, loc='upper right', frameon=True, edgecolor="black", fancybox=True)
             fig.tight_layout()
-            self.figures[f'score_dist_{target_class}'] = fig
+            fig.savefig(self.outdir / f'score_dist_{target_class}.pdf')
             plt.close(fig)
 
         self.plot_data['score_distributions'] = score_dist_data
@@ -464,7 +464,7 @@ class ModelEvaluator:
         ax.set_title('Feature Correlation Matrix')
         fig.tight_layout()
         
-        self.figures['correlation_matrix'] = fig
+        fig.savefig(self.outdir / f'correlation_matrix.pdf')
         plt.close(fig)
 
     def _plot_shap_summary(self):
@@ -472,10 +472,11 @@ class ModelEvaluator:
 
         X_test = self.predictions['features'].numpy()
         sample_size = min(500, len(X_test))
-        X_sample = X_test[np.random.choice(X_test.shape[0], size=sample_size, replace=False)]
-        background = X_sample[:100]  # background set
+        rng = np.random.default_rng(seed=42)  # NEW style RNG
+        X_sample = X_test[rng.choice(X_test.shape[0], size=sample_size, replace=False)]
+        background = X_sample[:100]
 
-        explainer = shap.DeepExplainer(self.model, background)
+        explainer = shap.GradientExplainer(self.model, background)
         shap_values = explainer.shap_values(X_sample)
 
         # Save for reproducibility
@@ -485,23 +486,37 @@ class ModelEvaluator:
         fig, ax = plt.subplots(figsize=(12,8))
         shap.summary_plot(shap_values, X_sample, feature_names=self.features, show=False)
         fig.tight_layout()
-        self.figures['shap_summary'] = fig
+
+        fig.savefig(self.outdir / f'shap_summary.pdf')
         plt.close(fig)
 
     def _plot_partial_dependence(self):
+        class KerasEstimatorWrapper(BaseEstimator, RegressorMixin):
+            def __init__(self, keras_model):
+                self.model = keras_model
+
+            def fit(self, X=None, y=None):
+                self.is_fitted_ = True
+                return self
+
+            def predict(self, X):
+                return self.model.predict(X).flatten()
+
         X = self.predictions['features'].numpy()
-        features = list(range(X.shape[1]))  # or pick indices for interesting features
-        fig, ax = plt.subplots(figsize=(12, 6))
 
-        # wrap your Keras model in a function that outputs predicted probs for scikit-learn
-        def predict_fn(X):
-            return self.model.predict(X)
+        estimator = KerasEstimatorWrapper(self.model)
+        estimator.fit()  # makes it "fitted" to scikit-learn
 
+        fig, ax = plt.subplots(figsize=(10, 8))
         display = PartialDependenceDisplay.from_estimator(
-            predict_fn, X, features=features[:2], ax=ax
+            estimator,
+            X,
+            features=[0, 1],
+            grid_resolution=20,
+            ax=ax
         )
 
-        self.figures['partial_dependence'] = fig
+        fig.savefig(self.outdir / 'partial_dependence.pdf')
         plt.close(fig)
 
     def _plot_calibration(self):
@@ -518,7 +533,7 @@ class ModelEvaluator:
         ax.legend()
         ax.set_title('Calibration Plot')
         fig.tight_layout()
-        self.figures['calibration'] = fig
+        fig.savefig(self.outdir / 'calibration.pdf')
         plt.close(fig)
 
     def _plot_error_vs_feature(self):
@@ -526,13 +541,13 @@ class ModelEvaluator:
         features = self.predictions['features'].numpy()
 
         fig, ax = plt.subplots(figsize=(12, 8))
-        feature_idx = 0  # index of the feature you want to plot against errors
+        feature_idx = 29  # index of the feature you want to plot against errors (bjets_mbb)
         ax.scatter(features[:, feature_idx], errors, alpha=0.5)
         ax.set_xlabel(self.features[feature_idx])
         ax.set_ylabel('Prediction Error')
         ax.set_title(f'Prediction Error vs {self.features[feature_idx]}')
         fig.tight_layout()
-        self.figures[f'error_vs_{self.features[feature_idx]}'] = fig
+        fig.savefig(self.outdir / f'error_vs_{self.features[feature_idx]}.pdf')
         plt.close(fig)
 
     def _plot_lift_chart(self):
@@ -554,7 +569,7 @@ class ModelEvaluator:
         ax.set_title('Cumulative Gain Chart')
         ax.legend()
         fig.tight_layout()
-        self.figures['cumulative_gain'] = fig
+        fig.savefig(self.outdir / 'cumulative_gain.pdf')
         plt.close(fig)
 
     def _plot_tsne_embeddings(self):
@@ -571,7 +586,7 @@ class ModelEvaluator:
         sns.scatterplot(x=X_embedded[:,0], y=X_embedded[:,1], hue=true_classes, palette='tab10', ax=ax)
         ax.set_title('t-SNE Embedding of Latent Space')
         fig.tight_layout()
-        self.figures['tsne_embeddings'] = fig
+        fig.savefig(self.outdir / f'tsne_embeddings.pdf')
         plt.close(fig)
 
     def _save_results(self):        

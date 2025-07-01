@@ -32,6 +32,12 @@ class RunDistributed:
         )
         content = f"""#!/bin/bash
             source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
+            echo "Activating virtual environment"
+            source /afs/cern.ch/user/a/anunezde/bamboodev/bamboovenv/bin/activate
+            echo "Python used: $(which python)"
+            echo "Python version: $(python --version)"
+            echo "shap version: $(python -c 'import shap; print(shap.__version__)')"
+
             export PYTHONPATH="${{PYTHONPATH}}:${{PWD}}"
             export X509_USER_PROXY=$(realpath ~/private/x509up)
             
@@ -61,14 +67,13 @@ class RunDistributed:
             "request_cpus": "4",
             # "request_gpus": "1",
             "request_memory": "30GB",
-            "request_disk": "2GB",
             # "+JobFlavour": "testmatch",   # 3 days
             # "request_cpus": "6",
             # # "request_gpus": "1",
             # "request_memory": "40GB",
-            # "request_disk": "4GB",
+            "request_disk": "5GB",
             'MY.SendCredential': True,
-            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references"
+            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references, /afs/cern.ch/user/a/anunezde/bamboodev/bamboovenv"
         })
         schedd = htcondor.Schedd()
         submit_result = schedd.submit(submit_description)

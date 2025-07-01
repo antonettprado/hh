@@ -58,15 +58,15 @@ def get_objects(tree, era, nanov: str, lep_pt_from_L1_or_HLT=None):
     # Subjets for AK8 jets
     ak8_subjets = tree.SubJet
 
-    # Select AK4 VBF Jets
-    ak4_vbf_jets = ak4_vbf_jet_selection(tree.Jet, nanov)
-    ak4_vbf_jets = op.sort(ak4_vbf_jets, lambda jet: -jet.pt)
-    cleaned_ak4_vbf_jets = ak4_jet_cleaning(ak4_vbf_jets, fakeable_electrons)
-    cleaned_ak4_vbf_jets = ak4_jet_cleaning(cleaned_ak4_vbf_jets, fakeable_muons)
-    cleaned_ak4_vbf_jets = ak4_jet_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak8_btags, 1.2)
-    cleaned_ak4_vbf_jets = ak4_jet_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_btags, 0.8)
-    cleaned_ak4_vbf_resonant_jets = ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "resonant")
-    cleaned_ak4_vbf_nonresonant_jets = ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "nonresonant")
+    # # Select AK4 VBF Jets
+    # ak4_vbf_jets = ak4_vbf_jet_selection(tree.Jet, nanov)
+    # ak4_vbf_jets = op.sort(ak4_vbf_jets, lambda jet: -jet.pt)
+    # cleaned_ak4_vbf_jets = ak4_jet_cleaning(ak4_vbf_jets, fakeable_electrons)
+    # cleaned_ak4_vbf_jets = ak4_jet_cleaning(cleaned_ak4_vbf_jets, fakeable_muons)
+    # cleaned_ak4_vbf_jets = ak4_jet_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak8_btags, 1.2)
+    # cleaned_ak4_vbf_jets = ak4_jet_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_btags, 0.8)
+    # cleaned_ak4_vbf_resonant_jets = ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "resonant")
+    # cleaned_ak4_vbf_nonresonant_jets = ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "nonresonant")
 
     # MET and MHT
     met = tree.PuppiMET
@@ -412,22 +412,18 @@ def ak4_vbf_jet_cleaning(vbf_jets, jets, btags, deltar_cut, type):
     )
 
 def ak4_loose_btag_selection(jets, era):
-    # https://btv-wiki.docs.cern.ch/ScaleFactors/Run3Summer23BPix/
-    if  era == "2016" or era == "2017" or era == "2018":
-        # These eras do not strictly have the correct WPs
-        tagger = lambda jet: jet.btagDeepFlavB > 0.0490
-    else:
-        if era == "2022":
-            wp = 0.047
-        elif era == "2022EE":
-            wp = 0.0499
-        elif era == "2023":
-            wp = 0.0358
-        elif era == "2023BPix":
-            wp = 0.0359
-        else: 
-            raise ValueError(f"{era=} is not expected")
-        tagger = lambda jet: jet.btagPNetB > wp
+    if era == "2022":
+        wp = 0.047
+    elif era == "2022EE":
+        wp = 0.0499
+    elif era == "2023":
+        wp = 0.0358
+    elif era == "2023BPix":
+        wp = 0.0359
+    else: 
+        raise ValueError(f"{era=} is not expected")
+    
+    tagger = lambda jet: jet.btagPNetB > wp
 
     return op.select(jets, tagger)
 
