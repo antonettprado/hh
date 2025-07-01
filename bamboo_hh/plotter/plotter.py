@@ -257,8 +257,8 @@ class Plotter(BasePlotter):
                     if hist_i.GetBinContent(n) > basically_zero: min_bin = n
                 max_bin_list.append(max_bin)
                 min_bin_list.append(min_bin)
-            max_bin = min(var.nbins, max(*[max_bin_j + right_padding for max_bin_j in max_bin_list]))
-            min_bin = max(1, min(*[min_bin_j - left_padding for min_bin_j in min_bin_list]))
+            max_bin = min(var.nbins, max([max_bin_j + right_padding for max_bin_j in max_bin_list]))
+            min_bin = max(1, min([min_bin_j - left_padding for min_bin_j in min_bin_list]))
             list(hist_dict.values())[0].GetXaxis().SetRange(min_bin, max_bin)
         elif ref.dist_name in variables.ALL_VARNAMES_1D:
             var = variables.Variable1D(ref.dist_name)

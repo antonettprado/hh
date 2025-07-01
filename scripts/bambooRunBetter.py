@@ -20,9 +20,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Wrapper for bambooRun to improve error handling and resubmission")
     parser.add_argument("module", type=str, choices=module_choices, help="Module in bamboo_hh to run. Can also add module-specific arguments")
     parser.add_argument("--output", "-o", type=Path, default=Path(f"/eos/user/{USER[0]}/{USER}/hh_output/test"), help=f"Output directory name. Cannot overwrite an existing directory (default: /eos/user/{USER[0]}/{USER}/hh_output/test)")
-    parser.add_argument("--config", "-c", type=Path, default=Path("bamboo_hh/config/analysis_2022_test.yml"), help="Analysis configuration file (default: bamboo_hh/config/analysis_2022_test.yml)")
+    parser.add_argument("--config", "-c", type=Path, default=Path("bamboo_hh/config/analysis.yml"), help="Analysis configuration file (default: bamboo_hh/config/analysis.yml)")
     parser.add_argument("--env-config", type=Path, default=Path("bamboo_hh/config/cern.ini"), help="Environment configuration file (default: bamboo_hh/config/cern.ini)")
-    parser.add_argument("--total", "-t", action="store_true", help="Sets config to analysis_2022.yml (equivalent to -c bamboo_hh/config/analysis_2022.yml)")
+    parser.add_argument("--test", "-t", action="store_true", help="Sets config to analysis_test.yml (equivalent to -c bamboo_hh/config/analysis_test.yml)")
     parser.add_argument("--driver", "-d", action="store_const", default="", const="--distributed=driver", help="Run in batch mode on HTCondor")
     parser.add_argument("--finalize", "-f", action="store_const", default="", const="--distributed=finalize", help="Run finalization only")
     parser.add_argument("--onlypost", "-p", action="store_const", default="", const="--onlypost", help="Run postprocessing only")
@@ -32,8 +32,8 @@ def generate_cmd(args: argparse.Namespace, mod_args: list[str]) -> tuple[str, Pa
     root: Path = Path(__file__).resolve().parents[1]
     user: str = USER
 
-    if args.total:
-        args.config = Path("bamboo_hh/config/analysis_2022.yml")
+    if args.test:
+        args.config = Path("bamboo_hh/config/analysis_test.yml")
 
     cmd: list[str] = ["bambooRun"] # begin the bambooRun command
 

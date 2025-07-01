@@ -2,7 +2,7 @@ from bamboo import treefunctions as op
 from bamboo.plots import Plot, Skim
 from bamboo.scalefactors import get_correction
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.VarsReco import VarsReco
 from bamboo_hh.definitions.variable_definition import RecoVariables
 from bamboo_hh.definitions.variables import LikelihoodRatio as LR
@@ -49,14 +49,13 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         return lr
 
     @staticmethod
-    def get_lrs_for_1D_vars(correction_file, reco_vars, llr:bool=False) -> list[LR]:
+    def get_lrs_for_1D_vars(correction_file, sel_name, reco_vars, llr:bool=False) -> list[LR]:
         vars_1D = reco_vars.gather_all_1D_variables()
         vars_1D = [var for var in vars_1D if var.name != 'era']
         lrs_for_1D_vars = []
         for var in vars_1D:
             lr = LR(var.name, llr=llr)
             lr_data = {}
-            sel_name = "SL_4j_resolved"
             if sel_name in var.subcats:
                 subcat_var = var[sel_name]
                 subcat_var_data = op.switch(subcat_var.data < var.min, var.min + 0.0001*abs(var.min), subcat_var.data)
@@ -68,7 +67,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         return lrs_for_1D_vars
 
     @staticmethod
-    def get_multivar_lrs(correction_file, reco_vars, llr:bool=False):
+    def get_multivar_lrs(correction_file, sel_name, reco_vars, llr:bool=False):
 
         multivar_lrs_list = [
             LR(['bjets_mbb', 'bjets_dR'], llr=llr),
@@ -85,8 +84,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
             LR(['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'], llr=llr)
         ]
 
-        sel_name = "SL_4j_resolved"
-        lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(correction_file, reco_vars, llr)
+        lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(correction_file, sel_name, reco_vars, llr)
         for multivar_lr in multivar_lrs_list:
             multivar_lr_data = {}
             if llr:
@@ -98,26 +96,20 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         return multivar_lrs_list
 
     @staticmethod
-    def get_skims(lrs, vars1d, selection, subcat):
-        sel_name = 'SL_4j_resolved'
+    def get_skims(lrs, vars1d, selection, sel_name):
         skim_data = {"event":None, "genWeight": None}
-
-        subcat_vars: list[Variable] = [ var[subcat] for var in vars1d if subcat in var.subcats ]
+        subcat_vars: list[Variable] = [ var[sel_name] for var in vars1d if sel_name in var.subcats ]
         skim_data.update({v.name: v.data for v in subcat_vars})
-
         lrs_dict = {i.name: i.data for lr in lrs for i in lr if i.subcat == sel_name}
         skim_data.update(lrs_dict)
-
-        skim = Skim(subcat, skim_data, selection)
-
-        return skim
+        return Skim(sel_name, skim_data, selection)
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         plots.append(self.yields)
         plots.extend(self.base_plots)
 
-        objects = VarsReco.get_objects(tree, self.era)
+        objects = VarsReco.get_objects(tree, self.era, get_nano_version(sampleCfg))
         selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
 
         reco_vars: RecoVariables = RecoVariables(objects, selections)
@@ -126,20 +118,27 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         # ================================== Plots ======================================
         # ===============================================================================
 
-        sel_name = "SL_4j_resolved"
+        # sel_names = ["SL_3j_resolved", "SL_4j_resolved"]
+        sel_names = ["SL_4j_resolved"]
 
-        lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(self.args.correction_file, reco_vars, llr=self.args.llr)
-        multivar_lrs = LikelihoodRatio.get_multivar_lrs(self.args.correction_file, reco_vars, llr=self.args.llr)
-        all_lrs = lrs_for_1D_vars + multivar_lrs
-        plots.extend([Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == sel_name])
-        
+        for sel_name in sel_names:
+            lrs_for_1D_vars = LikelihoodRatio.get_lrs_for_1D_vars(self.args.correction_file, sel_name, reco_vars, llr=self.args.llr)
+            multivar_lrs = LikelihoodRatio.get_multivar_lrs(self.args.correction_file, sel_name, reco_vars, llr=self.args.llr)
+            all_lrs = lrs_for_1D_vars + multivar_lrs
+            plots.extend([Plot.make1D(subcat_lr.ref, subcat_lr.data, subcat_lr.selection, lr.eqbin) for lr in all_lrs for subcat_lr in lr if subcat_lr.subcat == sel_name])
+            
         # ===============================================================================
         # ============================= Cutflow Report ==================================
         # ===============================================================================
         
+        # self.yields.add(selections['SL_res_3j_1b'], 'SL_res_3j_1b')
+        # self.yields.add(selections['SL_res_3j_2b'], 'SL_res_3j_2b')
+        # self.yields.add(selections['SL_3j_resolved'], 'SL_3j_resolved')
         self.yields.add(selections['SL_res_4j_1b'], 'SL_res_4j_1b')
         self.yields.add(selections['SL_res_4j_2b'], 'SL_res_4j_2b')
         self.yields.add(selections['SL_4j_resolved'], 'SL_4j_resolved')
+        # self.yields.add(selections['SL_res_3j4j_1b'], 'SL_res_3j4j_1b')
+        # self.yields.add(selections['SL_res_3j4j_2b'], 'SL_res_3j4j_2b')
         self.yields.add(selections['SL_resolved'], 'SL_resolved')
         self.yields.add(selections['SL_boosted'], 'SL_boosted')
         self.yields.add(selections['DL_res_1b'], 'DL_res_1b')
@@ -149,7 +148,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         self.yields.add(selections['DL'], 'DL')
 
         vars_1D = reco_vars.gather_all_1D_variables()
-        if not self.args.no_skim:
+        for sel_name in sel_names:
             plots.append(LikelihoodRatio.get_skims(all_lrs, vars_1D, selections[sel_name], sel_name))
 
         return plots

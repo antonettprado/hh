@@ -176,52 +176,49 @@ def compute_lrs(plotter: Plotter, configFile: str=None, apply_log: bool=False, o
     
     outfilename = outfilename + ('_llr' if apply_log else '_lr')
 
-    selection = ['SL_3j_resolved', 'SL_4j_resolved']
+    selection = 'SL_4j_resolved'
+
+    min_background_bin_content, min_signal_bin_content = get_content_replacement(configFile, plotter.resultsdir, selection)
+
+    vars = variables.parse_vars_from_refs(plotter.refs)
 
     all_corrections = []
-    
-    for selection in selections:
+    for var in vars:
+        subcat_var = var[selection]
+        print(f"\t{subcat_var.ref}")
+        sig_back_dict = plotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, normalization='lumi')
 
-        min_background_bin_content, min_signal_bin_content = get_content_replacement(configFile, plotter.resultsdir, selection)
+        sig_back_dict['Background'] = replace_bin_content(sig_back_dict['Background'], min_background_bin_content)
 
-        vars = variables.parse_vars_from_refs(plotter.refs)
+        # if apply_log:
+        #     sig_back_dict['Signal'] = replace_bin_content(sig_back_dict['Signal'], min_signal_bin_content)
 
-        for var in vars:
-            subcat_var = var[selection]
-            print(f"\t{subcat_var.ref}")
-            sig_back_dict = plotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, normalization='lumi')
+        # Normalize distributions for LR calculation
+        for hist_label, hist in sig_back_dict.items():
+            hist.Scale(1/hist.Integral())
 
-            sig_back_dict['Background'] = replace_bin_content(sig_back_dict['Background'], min_background_bin_content)
+        ratio_hist = sig_back_dict['Signal'].Clone()
+        ratio_hist.Divide(sig_back_dict['Background'])
 
-            # if apply_log:
-            #     sig_back_dict['Signal'] = replace_bin_content(sig_back_dict['Signal'], min_signal_bin_content)
+        if isinstance(var, variables.Variable1D):
+            bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D, apply_log)
+            inputs = [cs.Variable(name="xaxis", type="real", description="")]
+            data = cs.Binning(
+                nodetype="binning",
+                input="xaxis",
+                edges=list(np.round(bin_edges, 3)),
+                content=list(np.round(bin_contents, DECIMAL_PLACES)),
+                flow="clamp",
+            )
 
-            # Normalize distributions for LR calculation
-            for hist_label, hist in sig_back_dict.items():
-                hist.Scale(1/hist.Integral())
+        corr = cs.Correction(
+            name=subcat_var.ref + ('_llr' if apply_log else '_lr'),
+            version=0,
+            inputs=inputs,
+            output=cs.Variable(name="", type="real", description=""),
+            data=data)
 
-            ratio_hist = sig_back_dict['Signal'].Clone()
-            ratio_hist.Divide(sig_back_dict['Background'])
-
-            if isinstance(var, variables.Variable1D):
-                bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D, apply_log)
-                inputs = [cs.Variable(name="xaxis", type="real", description="")]
-                data = cs.Binning(
-                    nodetype="binning",
-                    input="xaxis",
-                    edges=list(np.round(bin_edges, 3)),
-                    content=list(np.round(bin_contents, DECIMAL_PLACES)),
-                    flow="clamp",
-                )
-
-            corr = cs.Correction(
-                name=subcat_var.ref + ('_llr' if apply_log else '_lr'),
-                version=0,
-                inputs=inputs,
-                output=cs.Variable(name="", type="real", description=""),
-                data=data)
-
-            all_corrections.append(corr)
+        all_corrections.append(corr)
 
     cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
     output_file = plotter.basedir /  (outfilename + ".json")

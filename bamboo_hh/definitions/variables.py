@@ -20,15 +20,6 @@ with open(VARPATH, 'r') as f:
     ALL_VARNAMES_2D = ALL_JSON_DATA['2D'].keys()
     ALL_VARNAMES_3D = ALL_JSON_DATA['3D'].keys()
 
-# # Load config file and get the luminosity and cross sections
-# with open(CFGPATH, "r") as yaml_file:
-#     yaml_data = yaml.safe_load(yaml_file)
-#     LUMINOSITY: float = yaml_data['eras']['2022']['luminosity']
-#     CROSS_SECTIONS: 'dict[str, float]' = { 
-#         sample_name: sample_data['cross-section'] if sample_data['type'] == 'mc' else 0
-#         for sample_name, sample_data in yaml_data['samples'].items() 
-#     }
-
 # Helper utility function for getting the weights stored in root files
 SUM_WEIGHTS = {}
 def open_root_files(names: 'list[str]', path: str) -> 'list[TFile]':

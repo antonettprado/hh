@@ -103,29 +103,32 @@ def load_model_configs(roster: Path, verbose: bool = True) -> list[ModelConfig]:
     # roster =  NEURALNET / 'config' / f'{configfilename}.yml'
 
     try:
-        configs = yaml.safe_load(roster.read_text())
+        full_config = yaml.safe_load(roster.read_text())
+        models_list = full_config.get('models')
+        if models_list is None:
+            raise KeyError(f"No 'models' key found in roster")
+
+        print(f"Available top-level keys: {list(full_config.keys())}")
     except Exception as e:
         raise RuntimeError(f"Failed to load {roster}: {e}")
 
     def validate_processes(model_name: str, processes: list[str]) -> None:
         if len(processes) != len(set(processes)):
-            raise ValueError(f"Model {model_name}: Overlapping processes found in mapper")
-        
+            raise ValueError(f"Model {model_name}: Overlapping processes found")
         invalid = set(processes) - set(references.PROCESSES_FILES)
         if invalid:
             raise ValueError(f"Model {model_name}: Invalid processes: {', '.join(invalid)}")
 
-    print(f"Loading models from {roster.name}:")
+    print(f"Loading models from {roster.name}...")
     
-    # Track model names to prevent duplicates
     seen_names = set()
     model_configs = []
-    for config in configs:
+    for config in models_list:
         name = config.get('name')
         if not name or name in seen_names:
             raise ValueError(f"Invalid or duplicate model name: {name}")
         seen_names.add(name)
-        # Create and validate model config
+
         model = ModelConfig(**config)
         validate_processes(name, model.mapper.get_processes())
         model_configs.append(model)

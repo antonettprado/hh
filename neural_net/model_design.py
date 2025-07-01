@@ -7,6 +7,13 @@ import tf2onnx
 import logging
 import json
 
+import shap
+from sklearn.inspection import partial_dependence, PartialDependenceDisplay
+from sklearn.calibration import calibration_curve
+from sklearn.manifold import TSNE
+import seaborn as sns
+
+
 import mplhep as hep
 plt.style.use(hep.style.CMS)
 
@@ -196,6 +203,13 @@ class ModelEvaluator:
         self._plot_confusion_matrices()
         self._plot_score_distributions()
         self._plot_correlation_matrix()
+        self._plot_shap_summary()
+        self._plot_partial_dependence()
+        self._plot_calibration()
+        self._plot_error_vs_feature()
+        self._plot_lift_chart()
+        self._plot_shap_summary()
+        self._plot_tsne_embeddings()
         self._save_results()
         self.print_summary()
         return self.metrics
@@ -451,6 +465,113 @@ class ModelEvaluator:
         fig.tight_layout()
         
         self.figures['correlation_matrix'] = fig
+        plt.close(fig)
+
+    def _plot_shap_summary(self):
+        self.logger.info("Computing SHAP values...")
+
+        X_test = self.predictions['features'].numpy()
+        sample_size = min(500, len(X_test))
+        X_sample = X_test[np.random.choice(X_test.shape[0], size=sample_size, replace=False)]
+        background = X_sample[:100]  # background set
+
+        explainer = shap.DeepExplainer(self.model, background)
+        shap_values = explainer.shap_values(X_sample)
+
+        # Save for reproducibility
+        np.save(self.outdir / 'shap_values.npy', shap_values)
+        np.save(self.outdir / 'X_sample_shap.npy', X_sample)
+
+        fig, ax = plt.subplots(figsize=(12,8))
+        shap.summary_plot(shap_values, X_sample, feature_names=self.features, show=False)
+        fig.tight_layout()
+        self.figures['shap_summary'] = fig
+        plt.close(fig)
+
+    def _plot_partial_dependence(self):
+        X = self.predictions['features'].numpy()
+        features = list(range(X.shape[1]))  # or pick indices for interesting features
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        # wrap your Keras model in a function that outputs predicted probs for scikit-learn
+        def predict_fn(X):
+            return self.model.predict(X)
+
+        display = PartialDependenceDisplay.from_estimator(
+            predict_fn, X, features=features[:2], ax=ax
+        )
+
+        self.figures['partial_dependence'] = fig
+        plt.close(fig)
+
+    def _plot_calibration(self):
+        true_labels = self.predictions['true_labels'].numpy().flatten()
+        pred_probs = self.predictions['probabilities'].flatten()
+
+        prob_true, prob_pred = calibration_curve(true_labels, pred_probs, n_bins=10)
+
+        fig, ax = plt.subplots(figsize=(8,8))
+        ax.plot(prob_pred, prob_true, marker='o', label='Model')
+        ax.plot([0, 1], [0, 1], linestyle='--', label='Perfectly Calibrated')
+        ax.set_xlabel('Mean Predicted Probability')
+        ax.set_ylabel('Fraction of Positives')
+        ax.legend()
+        ax.set_title('Calibration Plot')
+        fig.tight_layout()
+        self.figures['calibration'] = fig
+        plt.close(fig)
+
+    def _plot_error_vs_feature(self):
+        errors = self.predictions['probabilities'].flatten() - self.predictions['true_labels'].numpy().flatten()
+        features = self.predictions['features'].numpy()
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+        feature_idx = 0  # index of the feature you want to plot against errors
+        ax.scatter(features[:, feature_idx], errors, alpha=0.5)
+        ax.set_xlabel(self.features[feature_idx])
+        ax.set_ylabel('Prediction Error')
+        ax.set_title(f'Prediction Error vs {self.features[feature_idx]}')
+        fig.tight_layout()
+        self.figures[f'error_vs_{self.features[feature_idx]}'] = fig
+        plt.close(fig)
+
+    def _plot_lift_chart(self):
+        y_true = self.predictions['true_labels'].numpy().flatten()
+        y_scores = self.predictions['probabilities'].flatten()
+        
+        # Sort by predicted probability
+        sorted_indices = np.argsort(y_scores)[::-1]
+        y_true_sorted = y_true[sorted_indices]
+
+        cum_positive_rate = np.cumsum(y_true_sorted) / np.sum(y_true_sorted)
+        percentage_samples = np.arange(1, len(y_true_sorted)+1) / len(y_true_sorted)
+
+        fig, ax = plt.subplots(figsize=(8,8))
+        ax.plot(percentage_samples, cum_positive_rate, label='Model')
+        ax.plot([0, 1], [0, 1], linestyle='--', label='Baseline')
+        ax.set_xlabel('Percentage of Sample')
+        ax.set_ylabel('Cumulative Positive Rate')
+        ax.set_title('Cumulative Gain Chart')
+        ax.legend()
+        fig.tight_layout()
+        self.figures['cumulative_gain'] = fig
+        plt.close(fig)
+
+    def _plot_tsne_embeddings(self):
+        # Get latent representation if you want
+        intermediate_layer_model = tf.keras.Model(inputs=self.model.input, outputs=self.model.get_layer('layer_2').output)
+        embeddings = intermediate_layer_model(self.predictions['features']).numpy()
+
+        tsne = TSNE(n_components=2, perplexity=30)
+        X_embedded = tsne.fit_transform(embeddings)
+
+        true_classes = np.argmax(self.predictions['true_labels'], axis=1)
+
+        fig, ax = plt.subplots(figsize=(10,10))
+        sns.scatterplot(x=X_embedded[:,0], y=X_embedded[:,1], hue=true_classes, palette='tab10', ax=ax)
+        ax.set_title('t-SNE Embedding of Latent Space')
+        fig.tight_layout()
+        self.figures['tsne_embeddings'] = fig
         plt.close(fig)
 
     def _save_results(self):        

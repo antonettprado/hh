@@ -57,11 +57,16 @@ class RunDistributed:
             "output": f"{str(rd.afs_modeldir.resolve())}/condor.out",
             "error": f"{str(rd.afs_modeldir.resolve())}/condor.err",
             "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
-            "+JobFlavour": '"tomorrow"',
+            "+JobFlavour": "tomorrow",
             "request_cpus": "4",
             # "request_gpus": "1",
             "request_memory": "30GB",
             "request_disk": "2GB",
+            # "+JobFlavour": "testmatch",   # 3 days
+            # "request_cpus": "6",
+            # # "request_gpus": "1",
+            # "request_memory": "40GB",
+            # "request_disk": "4GB",
             'MY.SendCredential': True,
             "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references"
         })

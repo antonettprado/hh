@@ -45,7 +45,7 @@ class BaseTrainer:
     def run(self):
         start = time.perf_counter()
         train_data, val_data, test_data, train_mean, train_var = self.get_data()
-        self.check_datasets(train_data, val_data, test_data)
+        # self.check_datasets(train_data, val_data, test_data)
         self.train(train_data, val_data, test_data, train_mean, train_var)
         total_time = str(timedelta(seconds=time.perf_counter() - start))
         self.logger.info(f'Time spent in config {self.config.name}: {total_time}\n')

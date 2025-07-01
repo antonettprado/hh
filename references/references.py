@@ -119,6 +119,7 @@ CLASS_COLOR_MAP = dict(
     #Fakes=[]
     Others='black', 
     Top='pink', 
-    AllBackgrounds='black'
+    AllBackgrounds='black',
+    non_ttbar='black'
     )
     

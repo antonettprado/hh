@@ -7,7 +7,12 @@ bambooRun -m bamboo_hh/VarsReco.py bamboo_hh/config/analysis_2022_test.yml bambo
 
 ### To use bambooRunBetter.py
 First, check `python scripts/bambooRunBetter.py --help` to see available options as these will be the most up-to-date. Some examples:
+By default `-c bamboo_hh/config/analysis.yml`.
+When testing use `-t`, which will use `-c bamboo_hh/config/analysis_test.yml`
+
 ```bash
+python -u scripts/bambooRunBetter.py LowLevelVars -o $Z_OUTPUT_eos/LowLevelVars_test -t
+
 python -u scripts/bambooRunBetter.py EventSelection -o local_event_selection # local run using config/analysis_2022_test.yml and config/cern.ini as default
 python -u scripts/bambooRunBetter.py VarsReco -o $EOS/vars_reco -c config/analysis_2017.yml -d # driver run using a different config file
 python -u scripts/bambooRunBetter.py NNInference -o $EOS/nn -td -SNN $EOS/vars_reco/[nndir] # distributed=driver run using analysis_2022.yml, SNN passed onto NNInference module
