@@ -244,6 +244,31 @@ def mll_selection(electrons, muons):
         )
     )
 
+# def sl_e_trigger_selection_new(is_mc, era, HLT, sample):
+
+#     triggers = {
+#         "2022": {
+#             "EGamma": op.OR(
+#                     HLT.Ele30_WPTight_Gsf, 
+#                     HLT.Ele28_eta2p1_WPTight_Gsf_HT150, 
+#                     HLT.Ele15_IsoVVVL_PFHT450),
+#             "JetMET": HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65},  
+#         "2023": {
+#             "EGamma": op.OR(
+#                 HLT.Ele30_WPTight_Gsf, 
+#                 HLT.Ele28_eta2p1_WPTight_Gsf_HT150, 
+#                 HLT.Ele15_IsoVVVL_PFHT450),
+#             "JetMET": HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55},
+#         "2024": {
+#             "EGamma": op.OR(
+#                 HLT.Ele30_WPTight_Gsf,
+#                 HLT.Ele15_IsoVVVL_PFHT450,
+#                 HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53),    # new trigger
+#             "JetMET": HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
+#         }
+#     }
+    # return triggers[era]["EGamma"]
+
 def sl_e_trigger_selection(is_mc, era, HLT, sample):
     if "2022" in era:
         EGamma_trig = op.OR(
@@ -412,12 +437,8 @@ def sl_e_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False,
         op.rng_len(muons) == 0,
         electrons[0].pt > electron_pt_cut,
         op.rng_len(taus) == 0,
-        op.OR(
-            noHLT,
-            sl_e_trigger_selection(is_mc, era, HLT, sample)
-            )
+        op.OR(noHLT,sl_e_trigger_selection(is_mc, era, HLT, sample)))
         )
-    )
 
 def sl_mu_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False):
     if any(y in era for y in ["2022", "2023"]):

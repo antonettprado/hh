@@ -78,7 +78,7 @@ def get_objects(tree, era, nanov: str, lep_pt_from_L1_or_HLT=None):
     sorted_ak8_btags = op.sort(cleaned_ak8_btags, lambda jet: -jet.pt)
     sorted_ak4_jets = op.sort(cleaned_ak4_jets, lambda jet: -jet.pt)
 
-    btag_sorted_ak4_jets = op.sort(ak4_jets, lambda jet: -jet.btagPNetB)
+    btag_sorted_ak4_jets = op.sort(cleaned_ak4_jets, lambda jet: -jet.btagPNetB)
     sorted_ak4_btags = op.select(btag_sorted_ak4_jets, lambda jet: op.OR(
             jet.idx == btag_sorted_ak4_jets[0].idx,
             jet.idx == btag_sorted_ak4_jets[1].idx)) 
@@ -96,7 +96,7 @@ def get_objects(tree, era, nanov: str, lep_pt_from_L1_or_HLT=None):
         taus=cleaned_taus,
         ak4_jets=cleaned_ak4_jets,
         ak4_btags=cleaned_ak4_btags,
-        ak4_loose_btags=cleaned_ak4_loose_btags,
+        ak4_loose_btags=cleaned_ak4_loose_btags,    # Not used in event selections
         ak8_btags=cleaned_ak8_btags,
         ak8_subjets=ak8_subjets,
         met=met,
@@ -410,6 +410,29 @@ def ak4_vbf_jet_cleaning(vbf_jets, jets, btags, deltar_cut, type):
         op.rng_any(w_jets, lambda wjet: op.deltaR(wjet.p4, vjet.p4) < deltar_cut)
         )
     )
+
+def ak4_btag_wp_selection(jets, WP, era):
+    """
+    Select jets based on the particleNet working point (WP).
+    L, M, T, XT, XXT
+    """
+    wp_mapping = {
+        '2022': {"L": 0.047, "M": 0.245, "T": 0.6734},
+        '2022EE': {"L": 0.0499, "M": 0.2605, "T": 0.6915},
+        '2023': {"L": 0.0358, "M": 0.1917, "T": 0.6172},
+        '2023BPix': {"L": 0.0359, "M": 0.1919, "T": 0.6133},
+    }
+    if WP in ["L", "M", "T"] :
+        return op.select(jets, lambda jet: jet.btagPNetB > wp_mapping[era][WP])
+    else:
+        raise ValueError(f"Unsupported b-tagging WP: {WP}")
+
+
+def ak4_loose_btag_wp_selection(jets, era):
+    return ak4_btag_wp_selection(jets, "L", era)
+
+def ak4_medium_btag_wp_selection(jets, era):
+    return ak4_btag_wp_selection(jets, "M", era)
 
 def ak4_loose_btag_selection(jets, era):
     if era == "2022":

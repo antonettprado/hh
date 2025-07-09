@@ -32,35 +32,11 @@ def data_bjets_dPhi(ctx):
             'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
             }
 
-@reg(name="bjets_dPhi_abs", nbins=50, xmin=0, xmax=4, unit="", title="|#Delta#phi(b,b)|")
-def get_bjets_dPhi_abs(ctx):
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = ctx._get_bjets_data()
-    res_data = op.switch(two_btags, op.abs(op.deltaPhi(res_bjet0.p4, res_bjet1.p4)), NULL)
-    boost_data = op.abs(op.deltaPhi(boost_bjet0.p4, boost_bjet1.p4))
-    return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
-            'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
-            'SL_res_3j4j_1b': res_data, 'SL_res_3j4j_2b': res_data,
-            'SL_resolved': res_data, 'SL_boosted': boost_data,
-            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
-            }
-
 @reg(name="bjets_dEta", nbins=50, xmin=-7, xmax=7, unit="", title="#Delta#eta(b,b)")
 def get_bjets_dEta(ctx):
     res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = ctx._get_bjets_data()
     res_data = op.switch(two_btags, res_bjet0.eta - res_bjet1.eta, NULL)
     boost_data = boost_bjet0.eta - boost_bjet1.eta
-    return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
-            'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
-            'SL_res_3j4j_1b': res_data, 'SL_res_3j4j_2b': res_data,
-            'SL_resolved': res_data, 'SL_boosted': boost_data,
-            'DL_res_1b': res_data, 'DL_res_2b': res_data, 'DL_boosted': boost_data
-            }
-
-@reg(name="bjets_dEta_abs", nbins=30, xmin=0, xmax=7, unit="", title="|#Delta#eta(b,b)|")
-def get_bjets_dEta_abs(ctx):
-    res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = ctx._get_bjets_data()
-    res_data = op.switch(two_btags, op.abs(res_bjet0.eta - res_bjet1.eta), NULL)
-    boost_data = op.abs(boost_bjet0.eta - boost_bjet1.eta)
     return {'SL_res_3j_1b': res_data, 'SL_res_3j_2b': res_data, 'SL_3j_resolved': res_data,
             'SL_res_4j_1b': res_data, 'SL_res_4j_2b': res_data, 'SL_4j_resolved': res_data,
             'SL_res_3j4j_1b': res_data, 'SL_res_3j4j_2b': res_data,

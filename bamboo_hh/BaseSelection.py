@@ -154,18 +154,38 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
 
         # --------------------------- Base Selection ---------------------------
         # PV Selection
-        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])
+        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood > 0])
 
         # MET Filter Selection
-        baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
+        baseSel = baseSel.refine('met_filter', cut=[
+            tree.Flag.goodVertices, 
+            tree.Flag.globalSuperTightHalo2016Filter, 
+            tree.Flag.EcalDeadCellTriggerPrimitiveFilter
+            tree.Flag.BadPFMuonFilter,
+            tree.Flag.BadPFMuonDzFilter,
+            tree.Flag.hfNoisyHitsFilter,
+            tree.Flag.eeBadScFilter, 
+            # tree.Flag.ecalBadCalibFilter
+            ])
 
         if self.era in ["2017", "2018"]:
             baseSel = baseSel.refine('met_filter_2017_2018', cut=[tree.Flag.ecalBadCalibFilterV2])
         if not self.is_MC:
             baseSel = baseSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
+        
+        # PV_filter = tree.PV.npvsGood > 0
+        # noise_filters = [
+        #     tree.Flag.goodVertices, 
+        #     tree.Flag.globalSuperTightHalo2016Filter, 
+        #     tree.Flag.EcalDeadCellTriggerPrimitiveFilter,
+        #     tree.Flag.BadPFMuonFilter,
+        #     tree.Flag.BadPFMuonDzFilter,
+        #     tree.Flag.hfNoisyHitsFilter,
+        #     tree.Flag.eeBadScFilter       # Do NOT use for 22, 23. Do use for 24
+        # ]
 
+        # baseSel = baseSel.refine('baseSel', cut=op.AND(PV_filter, *noise_filters))
         self.yields.add(baseSel, "baseSel") # Needed to adjust the normalization in post processing scripts
-
         return tree, baseSel, backend, lumiArgs
 
     def readCounters(self, resultsFile):
