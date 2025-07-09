@@ -5,7 +5,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 from neural_net.model_config import load_model_configs
-from job_manager_new import submit_training_jobs, JobManager
+from job_manager import submit_training_jobs, JobManager
 
 def handle_submit(args):
 

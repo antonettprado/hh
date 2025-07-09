@@ -17,6 +17,7 @@ class Job:
     request_memory: Optional[str] = None
     status: Optional[str] = None
     hold_reason: Optional[str] = None
+    exit_code: Optional[int] = None
     proc_id: Optional[int] = 0   # Always default to 0 for single jobs
     idle_analysis: Optional[str] = None
 
@@ -120,7 +121,7 @@ class JobManager:
         ads = self.schedd.query(projection=["ClusterId", "ProcId", "JobStatus", "HoldReason"])
         ad_map = {(ad["ClusterId"], ad["ProcId"]): ad for ad in ads}
 
-        held_jobs, removed_jobs = [], []
+        held_jobs, removed_jobs, failed_jobs = [], [], []
 
         print(f"\n{'JobName':40} {'Cluster.Proc':>15} {'Status':>12}")
         print("=" * 65)
@@ -128,21 +129,31 @@ class JobManager:
         for job in self.batch.jobs:
             if job.status == "Removed":
                 continue  # Don't touch removed jobs
+
             ad = ad_map.get((job.cluster_id, job.proc_id or 0))
+
             if ad:
                 status = int(ad["JobStatus"])
                 job.status = self.map_status(status)
+
                 if job.status == "Held":
                     job.hold_reason = str(ad.get("HoldReason", ""))
                     held_jobs.append(job)
                 elif job.status == "Removed":
                     job.hold_reason = str(ad.get("HoldReason", ""))
                     removed_jobs.append(job)
+
             else:
-                job.status = "Unknown"
+                # ⬇️ Not in queue: look it up in history!
+                self.lookup_history(job)
+
+                # If it completed but failed, treat that separately
+                if job.status == "Completed" and job.hold_reason:
+                    failed_jobs.append(job)
+                elif job.status == "Removed":
+                    removed_jobs.append(job)
 
             cluster_proc = f"{job.cluster_id}.{job.proc_id}"
-
             status_plain = f"{job.status:<12}"
             status_colored = status_plain.replace(job.status, JobManager.colorize_status(job.status))
 
@@ -155,8 +166,13 @@ class JobManager:
             for job in held_jobs:
                 print(f"  - {job.name} [{job.cluster_id}.{job.proc_id}] reason: {job.hold_reason}")
 
+        if failed_jobs:
+            print("\n⚠️  Completed but failed jobs:")
+            for job in failed_jobs:
+                print(f"  - {job.name} [{job.cluster_id}.{job.proc_id}] reason: {job.hold_reason}")
+
         if removed_jobs:
-            print("\n🔍 Removed jobs:")
+            print("\n🗑️  Removed jobs:")
             for job in removed_jobs:
                 print(f"  - {job.name} [{job.cluster_id}.{job.proc_id}] reason: {job.hold_reason}")
 
@@ -164,15 +180,26 @@ class JobManager:
         try:
             ads = list(self.schedd.history(
                 f"ClusterId == {job.cluster_id} && ProcId == {job.proc_id}",
-                projection=["JobStatus", "HoldReason"],
+                projection=["JobStatus", "HoldReason", "RemoveReason", "ExitCode"],
                 match=1
             ))
             if ads:
                 ad = ads[0]
-                job.status = self.map_status(int(ad["JobStatus"]))
-                job.hold_reason = str(ad.get("HoldReason", ""))
+                status = self.map_status(int(ad["JobStatus"]))
+                job.status = status
+
+                if status == "Removed":
+                    job.hold_reason = str(ad.get("RemoveReason", "Unknown RemoveReason"))
+                elif status == "Completed":
+                    exit_code = ad.get("ExitCode", -1)
+                    if exit_code == 0:
+                        job.hold_reason = None  # success
+                    else:
+                        job.hold_reason = f"ExitCode={exit_code} (failure)"
+
             else:
                 job.status = "NotFound"
+
         except htcondor.HTCondorIOError:
             job.status = "HistoryTimeout"
         return job
