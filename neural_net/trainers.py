@@ -16,6 +16,7 @@ class BaseTrainer:
         self.modeldir = modeldir
         self.logger = nn_utils.set_logger(config.name, modeldir / 'training.txt', log_level=log_level)
         self.type = trainer_type
+        self.finito = False
 
         self.logger.info(f"\n{120 * '='}\nModel Config: {self.config.name}\n{120 * '='}")
         self.logger.info(f"Directory: {self.modeldir}")
@@ -43,19 +44,17 @@ class BaseTrainer:
         tf.keras.backend.clear_session()
 
     def run(self):
-        start = time.perf_counter()
         train_data, val_data, test_data, train_mean, train_var = self.get_data()
         # self.check_datasets(train_data, val_data, test_data)
         self.train(train_data, val_data, test_data, train_mean, train_var)
-        total_time = str(timedelta(seconds=time.perf_counter() - start))
-        self.logger.info(f'Time spent in config {self.config.name}: {total_time}\n')
+        self.finito = True
 
     def check_datasets(self, train_data, val_data, test_data):
-        self.logger.info(f"\Print Train dataset:")
+        self.logger.info(f"Print Train dataset:")
         nn_utils.print_events(train_data, self.config, self.logger)
-        self.logger.info(f"\Print Validation dataset:")
+        self.logger.info(f"Print Validation dataset:")
         nn_utils.print_events(val_data, self.config, self.logger)
-        self.logger.info(f"\Print Test dataset:")
+        self.logger.info(f"Print Test dataset:")
         nn_utils.print_events(test_data, self.config, self.logger)
 
 class SimpleTrainer(BaseTrainer):

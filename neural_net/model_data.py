@@ -9,7 +9,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 1000)
 
 UNDEFINED = -9999
-SHUFFLE_BUFFER_SIZE = 20_000_000
+SHUFFLE_BUFFER_SIZE = 11_000_000
 NON_FEATURE_BRANCHES = ['event', 'genWeight']
 
 def get_data(config, workdir, logger):

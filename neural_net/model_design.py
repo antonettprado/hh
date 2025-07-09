@@ -7,15 +7,19 @@ import tf2onnx
 import logging
 import json
 
-import shap
+# import shap
 from sklearn.inspection import partial_dependence, PartialDependenceDisplay
 from sklearn.calibration import calibration_curve
 from sklearn.manifold import TSNE
 from sklearn.base import BaseEstimator, RegressorMixin
 import seaborn as sns
+from scipy.ndimage import uniform_filter1d
 
 import mplhep as hep
 plt.style.use(hep.style.CMS)
+
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 UNDEFINED = -9999
 
@@ -203,14 +207,13 @@ class ModelEvaluator:
         self._plot_confusion_matrices()
         self._plot_score_distributions()
         self._plot_correlation_matrix()
-        self._plot_shap_summary()
+        # self._plot_shap_summary()
         self._plot_partial_dependence()
         self._plot_calibration()
         self._plot_error_vs_feature()
         self._plot_lift_chart()
-        self._plot_shap_summary()
         self._plot_tsne_embeddings()
-        self._save_results()
+        # self._save_results()
         self.print_summary()
         return self.metrics
 
@@ -468,29 +471,51 @@ class ModelEvaluator:
         plt.close(fig)
 
     def _plot_shap_summary(self):
-        self.logger.info("Computing SHAP values...")
+        self.logger.info("🔍 Computing SHAP values...")
 
         X_test = self.predictions['features'].numpy()
+
+        # Subsample for speed
         sample_size = min(500, len(X_test))
-        rng = np.random.default_rng(seed=42)  # NEW style RNG
+        rng = np.random.default_rng(seed=42)
         X_sample = X_test[rng.choice(X_test.shape[0], size=sample_size, replace=False)]
         background = X_sample[:100]
 
         explainer = shap.GradientExplainer(self.model, background)
         shap_values = explainer.shap_values(X_sample)
 
-        # Save for reproducibility
-        np.save(self.outdir / 'shap_values.npy', shap_values)
-        np.save(self.outdir / 'X_sample_shap.npy', X_sample)
+        np.savez(self.outdir / 'shap_output.npz',
+                shap_values=shap_values,
+                X_sample=X_sample,
+                feature_names=self.features)
 
-        fig, ax = plt.subplots(figsize=(12,8))
-        shap.summary_plot(shap_values, X_sample, feature_names=self.features, show=False)
+        if isinstance(shap_values, list):
+            classes = self.mapper.get_classes()
+            signal_idx = 0  # Or classes.index('HH')
+            self.logger.info(f"SHAP outputs → plotting index {signal_idx} ({classes[signal_idx]})")
+            shap_to_plot = shap_values[signal_idx]
+        else:
+            shap_to_plot = shap_values
+
+        print("SHAP to plot shape:", np.array(shap_to_plot).shape)  # Should be (samples, features)
+
+        shap.summary_plot(
+            shap_to_plot,
+            X_sample,
+            feature_names=self.features,
+            max_display=len(self.features),
+            show=False
+        )
+
+        fig = plt.gcf()
         fig.tight_layout()
-
-        fig.savefig(self.outdir / f'shap_summary.pdf')
+        fig.savefig(self.outdir / 'shap_summary.pdf')
         plt.close(fig)
 
+        self.logger.info(f"✅ SHAP summary plot saved to {self.outdir / 'shap_summary.pdf'}")
+
     def _plot_partial_dependence(self):
+        self.logger.info("Plotting partial dependence...")
         class KerasEstimatorWrapper(BaseEstimator, RegressorMixin):
             def __init__(self, keras_model):
                 self.model = keras_model
@@ -505,21 +530,20 @@ class ModelEvaluator:
         X = self.predictions['features'].numpy()
 
         estimator = KerasEstimatorWrapper(self.model)
-        estimator.fit()  # makes it "fitted" to scikit-learn
+        estimator.fit()
 
         fig, ax = plt.subplots(figsize=(10, 8))
         display = PartialDependenceDisplay.from_estimator(
             estimator,
             X,
             features=[0, 1],
-            grid_resolution=20,
             ax=ax
         )
-
         fig.savefig(self.outdir / 'partial_dependence.pdf')
         plt.close(fig)
 
     def _plot_calibration(self):
+        self.logger.info("Plotting calibration ...")
         true_labels = self.predictions['true_labels'].numpy().flatten()
         pred_probs = self.predictions['probabilities'].flatten()
 
@@ -537,20 +561,70 @@ class ModelEvaluator:
         plt.close(fig)
 
     def _plot_error_vs_feature(self):
-        errors = self.predictions['probabilities'].flatten() - self.predictions['true_labels'].numpy().flatten()
-        features = self.predictions['features'].numpy()
+        self.logger.info("🔍 Plotting error vs. each feature with trend line...")
 
-        fig, ax = plt.subplots(figsize=(12, 8))
-        feature_idx = 29  # index of the feature you want to plot against errors (bjets_mbb)
-        ax.scatter(features[:, feature_idx], errors, alpha=0.5)
-        ax.set_xlabel(self.features[feature_idx])
-        ax.set_ylabel('Prediction Error')
-        ax.set_title(f'Prediction Error vs {self.features[feature_idx]}')
-        fig.tight_layout()
-        fig.savefig(self.outdir / f'error_vs_{self.features[feature_idx]}.pdf')
-        plt.close(fig)
+        # True vs predicted
+        true_labels = self.predictions['true_labels'].numpy()
+        predicted_probs = self.predictions['probabilities']
 
+        if self.mapper.is_binary():
+            true_classes = true_labels.flatten()
+            predicted_scores = predicted_probs.flatten()
+        else:
+            # Multiclass: pick your signal index
+            classes = self.mapper.get_classes()
+            signal_idx = 0  # or classes.index('HH')
+            true_classes = true_labels[:, signal_idx]
+            predicted_scores = predicted_probs[:, signal_idx]
+
+        errors = true_classes - predicted_scores
+
+        X = self.predictions['features'].numpy()
+
+        outdir = self.outdir / 'error_vs_features'
+        outdir.mkdir(parents=True, exist_ok=True)
+
+        for idx, feature_name in enumerate(self.features):
+            x_vals = X[:, idx]
+
+            # Mask undefined or nan
+            mask = (x_vals != -9999) & (~np.isnan(x_vals))
+            if not np.any(mask):
+                self.logger.warning(f"⚠️ Feature {feature_name} has only undefined values. Skipping.")
+                continue
+
+            x = x_vals[mask]
+            y = errors[mask]
+
+            # Sort for trend line
+            sort_idx = np.argsort(x)
+            x_sorted = x[sort_idx]
+            y_sorted = y[sort_idx]
+
+            # Running average trend line (window size can be tuned)
+            window = max(10, int(len(x_sorted) * 0.02))  # 2% of data
+            trend = uniform_filter1d(y_sorted, size=window, mode='nearest')
+
+            fig, ax = plt.subplots(figsize=(8, 6))
+            ax.scatter(x, y, alpha=0.3, s=10, label='Events')
+            ax.plot(x_sorted, trend, color='red', lw=2, label='Trend')
+            ax.axhline(0, color='black', linestyle='--', lw=1, label='Zero Bias')
+
+            ax.set_xlabel(f"{feature_name}", fontsize=14)
+            ax.set_ylabel("Prediction Error (True - Pred)", fontsize=14)
+            ax.set_title(f"Error vs. {feature_name}")
+
+            ax.legend(fontsize=10)
+            ax.grid(alpha=0.3)
+            fig.tight_layout()
+
+            fig.savefig(outdir / f'error_vs_{feature_name}.pdf')
+            plt.close(fig)
+
+        self.logger.info(f"✅ Saved error-vs-feature plots with trends in: {outdir}")
+        
     def _plot_lift_chart(self):
+        self.logger.info("Plotting lift chart ...")
         y_true = self.predictions['true_labels'].numpy().flatten()
         y_scores = self.predictions['probabilities'].flatten()
         
@@ -573,8 +647,8 @@ class ModelEvaluator:
         plt.close(fig)
 
     def _plot_tsne_embeddings(self):
-        # Get latent representation if you want
-        intermediate_layer_model = tf.keras.Model(inputs=self.model.input, outputs=self.model.get_layer('layer_2').output)
+        self.logger.info("Plotting tsne embeddings ...")
+        intermediate_layer_model = tf.keras.Model(inputs=self.model.input, outputs=self.model.get_layer('output').output)
         embeddings = intermediate_layer_model(self.predictions['features']).numpy()
 
         tsne = TSNE(n_components=2, perplexity=30)
@@ -589,10 +663,10 @@ class ModelEvaluator:
         fig.savefig(self.outdir / f'tsne_embeddings.pdf')
         plt.close(fig)
 
-    def _save_results(self):        
-        for name, fig in self.figures.items():
-            fig.savefig(self.outdir / f'{name}.pdf')
-            plt.close(fig)
+    # def _save_results(self):        
+    #     for name, fig in self.figures.items():
+    #         fig.savefig(self.outdir / f'{name}.pdf')
+    #         plt.close(fig)
         
         #with open(self.outdir / 'data.json', 'w') as f:
         #    json.dump(self.plot_data, f, indent=2)

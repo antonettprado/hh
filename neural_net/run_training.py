@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from neural_net.model_config import load_model_configs, get_config
 from typing import Callable
+import yaml
 
 class RunDistributed:
 
@@ -23,6 +24,14 @@ class RunDistributed:
             self.afs_modeldir = self.afs_modeldir / f'{self.config_name}_Pass{self.pass_idx}'
             self.afs_modeldir.mkdir(exist_ok=True, parents=True)
 
+        self.manifest_file = self.afs_modeldir / 'manifest.yml'
+        manifest = {
+            'workdir': str(args.workdir.resolve()),
+            'roster': str(args.roster.resolve())
+        }
+        with open(self.manifest_file, 'w') as f:
+                yaml.dump(manifest, f)
+
     def _make_executable(self) -> Path:
         training_args = (
             '' if self.trainer == 'simple'
@@ -32,12 +41,6 @@ class RunDistributed:
         )
         content = f"""#!/bin/bash
             source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
-            echo "Activating virtual environment"
-            source /afs/cern.ch/user/a/anunezde/bamboodev/bamboovenv/bin/activate
-            echo "Python used: $(which python)"
-            echo "Python version: $(python --version)"
-            echo "shap version: $(python -c 'import shap; print(shap.__version__)')"
-
             export PYTHONPATH="${{PYTHONPATH}}:${{PWD}}"
             export X509_USER_PROXY=$(realpath ~/private/x509up)
             
@@ -51,7 +54,7 @@ class RunDistributed:
         return executable_path
 
     @staticmethod
-    def submit_job(config_name, roster, workdir, outdirname, trainer, log_level, pass_idx=None):
+    def submit_job(config_name, roster, workdir, outdirname, trainer, log_level, pass_idx=None, memory:str=None) -> dict:
         import htcondor
         col = htcondor.Collector()
         credd = htcondor.Credd()
@@ -63,17 +66,14 @@ class RunDistributed:
             "output": f"{str(rd.afs_modeldir.resolve())}/condor.out",
             "error": f"{str(rd.afs_modeldir.resolve())}/condor.err",
             "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
-            "+JobFlavour": "tomorrow",
-            "request_cpus": "4",
+            # "+JobFlavour": "testmatch", # 3 days
+            "+MaxRuntime": "259200",  # 3 days in seconds
+            "request_cpus": "6",
             # "request_gpus": "1",
-            "request_memory": "30GB",
-            # "+JobFlavour": "testmatch",   # 3 days
-            # "request_cpus": "6",
-            # # "request_gpus": "1",
-            # "request_memory": "40GB",
+            "request_memory": "40GB" if memory is None else memory,
             "request_disk": "5GB",
             'MY.SendCredential': True,
-            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references, /afs/cern.ch/user/a/anunezde/bamboodev/bamboovenv"
+            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references"
         })
         schedd = htcondor.Schedd()
         submit_result = schedd.submit(submit_description)
@@ -81,34 +81,59 @@ class RunDistributed:
         (rd.afs_modeldir / 'jobAd.txt').write_text(str(jobAd))
         print(f"Submitted with Cluster ID {submit_result.cluster()}: {config_name}")
         
-def get_executor(distributed: bool) -> Callable:
-    if distributed:
-        return RunDistributed.submit_job
+        job_name = f"{config_name}_Pass{pass_idx}" if trainer == "kfold" else config_name
+        job_info = {
+            "cluster_id": submit_result.cluster(),
+            "model": config_name,
+            "pass_idx": pass_idx,
+            "trainer": trainer,
+            "request_memory": "40GB" if memory is None else memory, 
+            "status": "submitted"
+        }
+
+        save_manifest_entry(rd.manifest_file, job_name, job_info)
+
+def save_manifest_entry(manifest_path: Path, job_name: str, job_info: dict):
+    if manifest_path.exists():
+        with open(manifest_path) as f:
+            manifest = yaml.safe_load(f)
     else:
-        from neural_net.trainers import main as submit_locally
-        return submit_locally
+        manifest = {}
+
+    manifest[job_name] = job_info
+
+    with open(manifest_path, 'w') as f:
+        yaml.dump(manifest, f)
 
 def main(args):
     model_configs = load_model_configs(args.roster)
-    executor = get_executor(args.distributed)
-    print(f'Chosen trainer: {args.trainer}')
     for config in model_configs:
         modeldir = args.workdir / args.outdirname / config.name
         modeldir.mkdir(exist_ok=True, parents=True)
-        if args.trainer == 'simple':
-            executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer, args.log_level)
-        elif args.trainer == 'kfold':
-            for pass_idx in range(5):
-                executor(config.name, args.roster, args.workdir, args.outdirname, args.trainer, log_level= args.log_level, pass_idx=pass_idx)
+        if args.distributed:
+            rd = RunDistributed(config.name, args.roster, args.workdir, args.outdirname, args.trainer, args.log_level)
+            if args.trainer == 'simple':
+                RunDistributed.submit_job(config.name, args.roster, args.workdir, args.outdirname, args.trainer, args.log_level, pass_idx=None, memory=args.memory)
+            elif args.trainer == 'kfold':
+                for pass_idx in range(5):
+                    RunDistributed.submit_job(config.name, args.roster, args.workdir, args.outdirname, args.trainer, args.log_level, pass_idx=pass_idx, memory=args.memory)
+        elif not args.distributed:
+            from neural_net.trainers import main as submit_locally
+            submit_locally(config.name, args.roster, args.workdir, args.outdirname, args.trainer, log_level=args.log_level, pass_idx=args.pass_idx)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", type=Path, required=True, help='Full path of work directory')
-    parser.add_argument("-r", "--roster", type=Path, required=True, help="Path to the YAML roster")
+    parser.add_argument("-r", "--roster", type=Path, required=True, default='neural_net/config/roster.yml',help="Path to the YAML roster")
     parser.add_argument("-o", "--outdirname", type=str, required=True, help='Name of roster dir under work directory')
-    parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='kfold', help='Training mode')
     parser.add_argument("-d", "--distributed", action="store_true", help='Run in distributed mode')
     parser.add_argument("-l", "--log_level", choices=['debug', 'info', 'warning'], default='info', help='Logging level (default: info)')
+    driver = parser.add_argument_group("Distributed Mode Options")
+    driver.add_argument("-m", "--memory", type=int, default=None, help='Memory allocation for job, e.g.: 40GB')
+    trainer = parser.add_argument_group("Trainer arguments")
+    parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='kfold', help='Training mode')
+    # parser.add_argument("-p", "--pass_idx", type=int, default=None, help='Pass index for kfold mode')
+
     args = parser.parse_args()
     main(args)
 
