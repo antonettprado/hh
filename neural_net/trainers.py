@@ -1,7 +1,7 @@
 from neural_net import utils as nn_utils
-from neural_net.model_config import save_model_config, get_config
+from neural_net.model_config import save_model_config, get_config, ModelConfig
 from neural_net.model_data import get_data, prune_ds, DatasetManager, SHUFFLE_BUFFER_SIZE
-from neural_net.model_design import ModelNetwork, ModelEvaluator
+from neural_net.model_design import train_model, evaluate_model
 from datetime import timedelta
 import time
 import tensorflow as tf
@@ -10,44 +10,22 @@ import gc
 KFOLD_NFOLDS = 5
 
 class BaseTrainer:
-    def __init__(self, config, workdir, modeldir, trainer_type='simple', log_level='info'):
+    def __init__(self, config, workdir, traindir, log_level='info', **kwargs):
         self.config = config
         self.workdir = workdir
-        self.modeldir = modeldir
-        self.logger = nn_utils.set_logger(config.name, modeldir / 'training.txt', log_level=log_level)
-        self.type = trainer_type
-        self.finito = False
+        self.traindir = traindir
+        self.logger = nn_utils.set_logger(config.name, traindir / 'training.txt', log_level=log_level)
 
         self.logger.info(f"\n{120 * '='}\nModel Config: {self.config.name}\n{120 * '='}")
-        self.logger.info(f"Directory: {self.modeldir}")
+        self.logger.info(f"Directory: {self.traindir}")
 
     def get_data(self):
         ''' Must return:
             train_data: tf.data.Dataset
             val_data: tf.data.Dataset
             test_data: tf.data.Dataset
-            train_mean: list[float]
-            train_var: list[float]
         '''
         raise NotImplementedError("Subclasses must implement this method")
-
-    def train(self, train_data, val_data, test_data, train_mean, train_var):
-        train_data = train_data.prefetch(tf.data.AUTOTUNE)
-        val_data = val_data.prefetch(tf.data.AUTOTUNE)
-        network = ModelNetwork(self.config, self.modeldir, self.logger)
-        trained_model = network.Run(train_data, val_data, train_mean, train_var)
-        evaluator = ModelEvaluator(self.config, self.modeldir, self.logger, trained_model, test_data)
-        model_metrics = evaluator.Run()
-        save_model_config(self.config, self.modeldir / 'model_info.yml')
-        del train_data, val_data, trained_model, network, evaluator     # Removes reference to the python object   v1
-        gc.collect()                                                    # Forces Python to free unreferenced memory
-        tf.keras.backend.clear_session()
-
-    def run(self):
-        train_data, val_data, test_data, train_mean, train_var = self.get_data()
-        # self.check_datasets(train_data, val_data, test_data)
-        self.train(train_data, val_data, test_data, train_mean, train_var)
-        self.finito = True
 
     def check_datasets(self, train_data, val_data, test_data):
         self.logger.info(f"Print Train dataset:")
@@ -57,19 +35,26 @@ class BaseTrainer:
         self.logger.info(f"Print Test dataset:")
         nn_utils.print_events(test_data, self.config, self.logger)
 
+    def run(self):
+        train_data, val_data, test_data = self.get_data()
+        train_data = train_data.prefetch(tf.data.AUTOTUNE)
+        val_data = val_data.prefetch(tf.data.AUTOTUNE)
+        trained_model = train_model(self.config, self.traindir, train_data, val_data, self.logger)
+        model_metrics = evaluate_model(trained_model, self.config, self.traindir, test_data, self.logger)
+        tf.keras.backend.clear_session()
+        return model_metrics
+
 class SimpleTrainer(BaseTrainer):
     def get_data(self):
         train_data, val_data, test_data = get_data(self.config, self.workdir, self.logger)
         nn_utils.log_class_stats(train_data, val_data, test_data, self.config, self.logger)
-        train_mean, train_var = nn_utils.log_training_stats(train_data, self.config, self.logger)
-        return train_data, val_data, test_data, train_mean, train_var
+        return train_data, val_data, test_data
 
 class KFoldTrainer(BaseTrainer):
     def __init__(self, config, workdir, modeldir, pass_idx, log_level='info'):
-        config_i = config.replicate(name=f'{config.name}_Pass{pass_idx}')
-        model_i_dir = modeldir / config_i.name
-        model_i_dir.mkdir(exist_ok=True) 
-        super().__init__(config_i, workdir, model_i_dir, 'kfold', log_level)
+        passdir = modeldir / f"Pass{pass_idx}"
+        passdir.mkdir(exist_ok=True) 
+        super().__init__(config, workdir, passdir, log_level)
         self.pass_idx = pass_idx
         
     def _get_fold_datasets(self) -> [tf.data.Dataset]:
@@ -109,20 +94,24 @@ class KFoldTrainer(BaseTrainer):
         fold_datasets = self._get_fold_datasets()
         train_data, val_data, test_data = self._get_data_for_pass(fold_datasets)
         nn_utils.log_class_stats(train_data, val_data, test_data, self.config, self.logger)
-        train_mean, train_var = nn_utils.log_training_stats(train_data, self.config, self.logger)
-        return train_data, val_data, test_data, train_mean, train_var
+        return train_data, val_data, test_data
 
-
-def main(config_name, roster, workdir, outdirname, trainer, log_level = 'info', pass_idx=None):
-    config = get_config(config_name, roster)  
-    modeldir = workdir / outdirname / config.name
+def main(args):
+    model_config = get_config(args.config_name, args.roster)
+    outdir = args.workdir / args.outdirname
+    modeldir = outdir / model_config.name
     modeldir.mkdir(exist_ok=True, parents=True)
-    if trainer == 'simple':
-        trainer = SimpleTrainer(config, workdir, modeldir, log_level=log_level)
-    elif trainer == 'kfold':
-        trainer = KFoldTrainer(config, workdir, modeldir, pass_idx, log_level=log_level)
+    save_model_config(model_config, modeldir / 'config.yml')
+
+    TRAINERS = {'simple': SimpleTrainer, 'kfold': KFoldTrainer}
+    TrainerClass = TRAINERS.get(args.trainer, None)
+    if TrainerClass is None:
+        raise ValueError(f"Unknown trainer: {args.trainer}")
+
+    print(f"Tensorflow version: {tf.__version__}")
+    
+    trainer = TrainerClass(model_config, args.workdir, modeldir, args.pass_idx)
     trainer.run()
-    # trainer.check_datasets()  # For debugging purposes, to check if datasets are correctly created
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -130,7 +119,7 @@ if __name__ == "__main__":
     
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", type=Path, required=True, help='Full path of work directory')
-    parser.add_argument("-r", "--roster", type=Path, required=True, help="Path to the YAML roster")
+    parser.add_argument("-r", "--roster", type=str, required=True, help="Path to the YAML roster")
     parser.add_argument("-o", "--outdirname", type=str, required=True, help='Name of roster dir under work directory')
     parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='simple', help='Training mode')
     parser.add_argument("-p", "--pass_idx", type=int, default=None, help='Pass index for kfold mode')
@@ -138,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--log_level", choices=['debug', 'info', 'warning'], default='info', help='Logging level (default: info)')
     args = parser.parse_args()
 
-    main(args.config_name, args.roster, args.workdir, args.outdirname, args.trainer, args.log_level, args.pass_idx)
+    main(args)
 
     '''
     Simple training:

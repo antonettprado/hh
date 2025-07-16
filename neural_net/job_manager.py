@@ -3,9 +3,6 @@ from typing import Optional, List, Dict
 import htcondor
 from pathlib import Path
 import yaml
-import concurrent.futures
-import time
-import sys
 
 @dataclass
 class Job:
@@ -46,7 +43,15 @@ def submit_training_jobs(config_name: str, roster: Path, workdir: Path,
 
     echo "Starting training"
     python neural_net/trainers.py "$@"
-    echo "Done"
+    PY_EXIT=$?
+
+    if [[ $PY_EXIT -ne 0 ]]; then
+        echo "Python failed with $PY_EXIT"
+        exit $PY_EXIT
+    fi
+
+    echo "Training finished"
+    exit 0
     """
     executable_path = afs_configdir / "runTraining.sh"
     executable_path.write_text(script)
@@ -59,13 +64,14 @@ def submit_training_jobs(config_name: str, roster: Path, workdir: Path,
         "error": f"{afs_configdir.resolve()}/$(Cluster)_$(Process).err",
         "log": f"{afs_configdir.resolve()}/condor.log",
         # "+JobFlavour": "testmatch", # 3 days
-        "+MaxRuntime": "259200",  # 3 days in seconds
-        "request_cpus": "6",
         # "+JobFlavour": "workday",  # 8 hrs
+        "+MaxRuntime": "259200",  # 3 days in seconds
+        # "+MaxRuntime": "28800",  # 8 hrs in seconds
+        "request_cpus": "6",
         # "request_cpus": "4",
         # "request_gpus": "1",
-        "request_memory": "40GB" if request_memory is None else request_memory,
-        "request_disk": "5GB",
+        "request_memory": "60GB" if request_memory is None else request_memory,
+        "request_disk": "20GB",
         'MY.SendCredential': True,
         "transfer_input_files": f"{executable_path.resolve()}, neural_net, references"
     })
@@ -118,7 +124,9 @@ class JobManager:
             yaml.dump(self.batch.to_dict(), f)
 
     def check_statuses(self):
-        ads = self.schedd.query(projection=["ClusterId", "ProcId", "JobStatus", "HoldReason"])
+        ads = self.schedd.query(
+            projection=["ClusterId", "ProcId", "JobStatus", "HoldReason"]
+        )
         ad_map = {(ad["ClusterId"], ad["ProcId"]): ad for ad in ads}
 
         held_jobs, removed_jobs, failed_jobs = [], [], []
@@ -128,10 +136,9 @@ class JobManager:
 
         for job in self.batch.jobs:
             if job.status == "Removed":
-                continue  # Don't touch removed jobs
+                continue
 
             ad = ad_map.get((job.cluster_id, job.proc_id or 0))
-
             if ad:
                 status = int(ad["JobStatus"])
                 job.status = self.map_status(status)
@@ -144,14 +151,23 @@ class JobManager:
                     removed_jobs.append(job)
 
             else:
-                # ⬇️ Not in queue: look it up in history!
-                self.lookup_history(job)
+                # Check the history
+                hist = self.lookup_history(job)
+                if hist:
+                    exit_code = hist.get("ExitStatus", 1)
+                    job.exit_code = exit_code
 
-                # If it completed but failed, treat that separately
-                if job.status == "Completed" and job.hold_reason:
-                    failed_jobs.append(job)
-                elif job.status == "Removed":
-                    removed_jobs.append(job)
+                    job_dir = Path(f"Z_OUTPUT/{job.model}_Pass{job.pass_idx}") \
+                        if job.pass_idx is not None else Path(f"Z_OUTPUT/{job.model}")
+
+                    if exit_code == 0:
+                        job.status = "Completed"
+                    else:
+                        job.status = "Failed"
+                        job.hold_reason = f"ExitStatus={exit_code}"
+                        failed_jobs.append(job)
+                else:
+                    job.status = job.status or "Unknown"
 
             cluster_proc = f"{job.cluster_id}.{job.proc_id}"
             status_plain = f"{job.status:<12}"
@@ -167,7 +183,7 @@ class JobManager:
                 print(f"  - {job.name} [{job.cluster_id}.{job.proc_id}] reason: {job.hold_reason}")
 
         if failed_jobs:
-            print("\n⚠️  Completed but failed jobs:")
+            print("\n❌ Failed jobs:")
             for job in failed_jobs:
                 print(f"  - {job.name} [{job.cluster_id}.{job.proc_id}] reason: {job.hold_reason}")
 
@@ -175,34 +191,16 @@ class JobManager:
             print("\n🗑️  Removed jobs:")
             for job in removed_jobs:
                 print(f"  - {job.name} [{job.cluster_id}.{job.proc_id}] reason: {job.hold_reason}")
-
+    
     def lookup_history(self, job):
-        try:
-            ads = list(self.schedd.history(
-                f"ClusterId == {job.cluster_id} && ProcId == {job.proc_id}",
-                projection=["JobStatus", "HoldReason", "RemoveReason", "ExitCode"],
-                match=1
-            ))
-            if ads:
-                ad = ads[0]
-                status = self.map_status(int(ad["JobStatus"]))
-                job.status = status
-
-                if status == "Removed":
-                    job.hold_reason = str(ad.get("RemoveReason", "Unknown RemoveReason"))
-                elif status == "Completed":
-                    exit_code = ad.get("ExitCode", -1)
-                    if exit_code == 0:
-                        job.hold_reason = None  # success
-                    else:
-                        job.hold_reason = f"ExitCode={exit_code} (failure)"
-
-            else:
-                job.status = "NotFound"
-
-        except htcondor.HTCondorIOError:
-            job.status = "HistoryTimeout"
-        return job
+        ads = self.schedd.history(
+            f"ClusterId == {job.cluster_id}",
+            projection=["ClusterId", "ProcId", "ExitStatus"],
+            match=1
+        )
+        for ad in ads:
+            return ad
+        return None
 
     @staticmethod
     def map_status(code):

@@ -242,7 +242,7 @@ class DatasetManager:
         self.ds_meta['Class DS Ratio'] = self.ds_meta.groupby(by=['Class'], as_index=False)['DS Ratio'].transform(lambda g: g / g.sum())
 
         self.info_processes = self.ds_meta.groupby(by=['Process'], as_index=True)[['GenWeight', 'DS Events']].sum().rename(columns={'DS Events': 'Events'})
-        self.info_processes['Process SF'] = self.info_processes.index.map(lambda p: self.process_sf.get(p, None))
+        self.info_processes['Process SF'] = self.info_processes.index.map(lambda p: self.process_sf.get(p, 1))
         self.info_processes['Class'] = self.info_processes.index.map(lambda p: self.mapper.get_class_for_process(p))
         self.info_processes['Class Index'] = self.info_processes.index.map(lambda p: self.mapper.get_class_idx_for_process(p))
 

@@ -179,7 +179,7 @@ def log_training_stats(train_data: tf.data.Dataset, config, logger) -> tuple[lis
         return df
     logger.info(f"\nTraining data statistics (total samples: {train_samples}):")
     logger.info(stats_to_df(train_mean, train_var))
-    return train_mean, train_var
+    return train_mean, train_var, train_samples
 
 def compute_training_stats(dataset: tf.data.Dataset, features: list[str], ignore_value = UNDEFINED) -> tuple[list, list, int, list]:
     print(f"\nThe ignore_value is {ignore_value}")

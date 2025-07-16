@@ -98,9 +98,9 @@ class ModelConfig:
         fields_dict['name'] = name if name else self.name
         return ModelConfig(**fields_dict)
 
-def load_model_configs(roster: Path, verbose: bool = True) -> list[ModelConfig]:
+def load_model_configs(roster_name: Path, verbose: bool = True) -> list[ModelConfig]:
 
-    # roster =  NEURALNET / 'config' / f'{configfilename}.yml'
+    roster =  NEURALNET / 'config' / f'{roster_name}.yml'
 
     try:
         full_config = yaml.safe_load(roster.read_text())
@@ -151,9 +151,9 @@ def save_model_config(config: ModelConfig, filepath: Path):
     with open(filepath, "w") as f:
         yaml.dump(clean_dict, f, sort_keys=False, default_flow_style=False)
 
-def get_config(config_name: str, roster: Path) -> ModelConfig:
-    model_configs = load_model_configs(roster)
+def get_config(config_name: str, roster_name: str) -> ModelConfig:
+    model_configs = load_model_configs(roster_name)
     config = next((config for config in model_configs if config.name == config_name), None)
     if config is None:
-        raise ValueError(f"Model config {config_name} not found in roster {roster}")
+        raise ValueError(f"Model config {config_name} not found in roster {roster_name}")
     return config

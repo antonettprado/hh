@@ -15,13 +15,15 @@ USER: str = os.environ["USER"]
 HOSPITAL_LONG_PROCESS: int = 1800
 HOSPITAL_SLEEP_TIME: int = 120
 
+BAMBOO_HH = Path(__file__).parents[1] / "bamboo_hh_new"
+
 def parse_args(): 
-    module_choices: list[str] = [ path.stem for path in Path('bamboo_hh').iterdir() if path.is_file() and not path.name.startswith('_') ]
+    module_choices: list[str] = [ path.stem for path in BAMBOO_HH.iterdir() if path.is_file() and not path.name.startswith('_') ]
     parser = argparse.ArgumentParser(description="Wrapper for bambooRun to improve error handling and resubmission")
     parser.add_argument("module", type=str, choices=module_choices, help="Module in bamboo_hh to run. Can also add module-specific arguments")
     parser.add_argument("--output", "-o", type=Path, default=Path(f"/eos/user/{USER[0]}/{USER}/hh_output/test"), help=f"Output directory name. Cannot overwrite an existing directory (default: /eos/user/{USER[0]}/{USER}/hh_output/test)")
-    parser.add_argument("--config", "-c", type=Path, default=Path("bamboo_hh/config/analysis.yml"), help="Analysis configuration file (default: bamboo_hh/config/analysis.yml)")
-    parser.add_argument("--env-config", type=Path, default=Path("bamboo_hh/config/cern.ini"), help="Environment configuration file (default: bamboo_hh/config/cern.ini)")
+    parser.add_argument("--config", "-c", type=Path, default=BAMBOO_HH/"config/analysis.yml", help="Analysis configuration file (default: bamboo_hh/config/analysis.yml)")
+    parser.add_argument("--env-config", type=Path, default=BAMBOO_HH/"config/cern.ini", help="Environment configuration file (default: bamboo_hh/config/cern.ini)")
     parser.add_argument("--test", "-t", action="store_true", help="Sets config to analysis_test.yml (equivalent to -c bamboo_hh/config/analysis_test.yml)")
     parser.add_argument("--driver", "-d", action="store_const", default="", const="--distributed=driver", help="Run in batch mode on HTCondor")
     parser.add_argument("--finalize", "-f", action="store_const", default="", const="--distributed=finalize", help="Run finalization only")
@@ -33,11 +35,11 @@ def generate_cmd(args: argparse.Namespace, mod_args: list[str]) -> tuple[str, Pa
     user: str = USER
 
     if args.test:
-        args.config = Path("bamboo_hh/config/analysis_test.yml")
+        args.config = BAMBOO_HH / "config/analysis_test.yml"
 
     cmd: list[str] = ["bambooRun"] # begin the bambooRun command
 
-    module: Path = root / 'bamboo_hh' / (args.module + '.py')
+    module: Path = BAMBOO_HH / (args.module + '.py')
     cmd.extend(["-m", str(module)])
 
     config: Path = root / args.config

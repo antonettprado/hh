@@ -176,7 +176,8 @@ def compute_lrs(plotter: Plotter, configFile: str=None, apply_log: bool=False, o
     
     outfilename = outfilename + ('_llr' if apply_log else '_lr')
 
-    selection = ['SL_3j_resolved', 'SL_4j_resolved']
+    # selection = ['SL_3j_resolved', 'SL_4j_resolved']
+    selections = ['SL_4j_resolved']
 
     all_corrections = []
     

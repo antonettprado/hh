@@ -41,8 +41,15 @@ models:
       act_regularizer: {l1: 1e-4}
     optimizer: {name: 'adam', lr: 0.001}
     epochs: 3
+    process_num_events: {
+      "ttbar": 10_000, 
+      "tW": 10_000,
+      "ggHH_kl_1_kt_1_hh_bbww": 2_500, 
+      "ggHH_kl_2p45_kt_1_hh_bbww": 2_500, 
+      "ggHH_kl_5_kt_1_hh_bbww": 2_500, 
+      "ggHH_kl_0_kt_1_hh_bbww": 2_500
+    } 
     data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 10_000, "tW": 10_000} 
 
   - name: 'multi_HH_ttbar_tW_4j'
     model_type: 'multi'
@@ -66,5 +73,12 @@ models:
       act_regularizer: {l1: 1e-4}
     optimizer: {name: 'adam', lr: 0.001}
     epochs: 3
+    process_num_events: {
+      "ttbar": 10_000, 
+      "tW": 10_000,
+      "ggHH_kl_1_kt_1_hh_bbww": 2_500, 
+      "ggHH_kl_2p45_kt_1_hh_bbww": 2_500, 
+      "ggHH_kl_5_kt_1_hh_bbww": 2_500, 
+      "ggHH_kl_0_kt_1_hh_bbww": 2_500
+    } 
     data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 10_000, "tW": 10_000} 

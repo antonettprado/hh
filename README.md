@@ -1,4 +1,8 @@
 # HH to bbWW Analysis
+To open a port for jupyter nbs:
+```bash
+jupyter notebook --no-browser --port=8888
+```
 
 ### To use bambooRun
 ```bash

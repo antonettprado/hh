@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     submit = subparsers.add_parser("submit", help="Submit new jobs")
     submit.add_argument("-w", "--workdir", type=Path, required=True, help="Path to dataset (EOS is fine here)")
-    submit.add_argument("-r", "--roster", type=lambda r: Path('neural_net/config') / f"{r}.yml", required=True, help="Name of roster")
+    submit.add_argument("-r", "--roster", type=str, required=True, help="Name of roster")
     submit.add_argument("-o", "--outdirname", type=str, required=True, help="Name for your output dir under Z_OUTPUT")
     submit.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='simple')
     submit.add_argument("-m", "--memory", type=str, default=None, help="Request memory (e.g., 40GB)")

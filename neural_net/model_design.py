@@ -1,13 +1,14 @@
 import tensorflow as tf
 from pathlib import Path
 import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc, confusion_matrix, roc_auc_score
 import numpy as np
 import tf2onnx
 import logging
-import json
+
+from neural_net import utils as nn_utils
 
 # import shap
+from sklearn.metrics import roc_curve, auc, confusion_matrix, roc_auc_score
 from sklearn.inspection import partial_dependence, PartialDependenceDisplay
 from sklearn.calibration import calibration_curve
 from sklearn.manifold import TSNE
@@ -23,9 +24,41 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 UNDEFINED = -9999
 
+def train_model(config, traindir, train_data, val_data, logger) -> tf.keras.Model:
+    train_mean, train_var, train_samples = nn_utils.log_training_stats(train_data, config, logger)
+    network = ModelNetwork(config, traindir, logger, train_samples)
+    model = network.build_model(train_mean, train_var)
+    trained_model, history = network.fit(model, train_data, val_data)
+    network.package_best_model()
+    network.plot_training_curves(history)
+    return trained_model
+
+def evaluate_model(model, model_config, outdir, test_data, logger) -> dict:
+    logger.info("\nStarting model evaluation...")
+    evaluator = ModelEvaluator(model, model_config, outdir, test_data, logger)
+    evaluator._get_predictions()
+    evaluator._calculate_metrics()
+    evaluator._plot_roc_curves()
+    evaluator._plot_confusion_matrices()
+    evaluator._plot_score_distributions()
+    evaluator._plot_correlation_matrix()
+    # evaluator._plot_shap_summary()
+    evaluator._plot_partial_dependence()
+    evaluator._plot_calibration()
+    evaluator._plot_error_vs_feature()
+    evaluator._plot_lift_chart()
+    # evaluator._plot_tsne_embeddings()
+    # evaluator._save_results()
+    evaluator.print_summary()
+
+    result = {'metrics': evaluator.metrics}
+    if model_config.mapper.is_binary():
+        result['bin_threshold'] = evaluator.optimal_threshold
+    return result
+
 class ModelNetwork:
 
-    def __init__(self, config, modeldir: Path, logger):
+    def __init__(self, config, modeldir: Path, logger, train_samples):
         self.modeldir = modeldir
         self.logger = logger
         self.mapper = config.mapper
@@ -35,8 +68,9 @@ class ModelNetwork:
         self.optimizer = config.optimizer
         self.epochs = config.epochs
         self.data_split = config.data_split
+        self.train_samples = train_samples
 
-    def build_model(self, train_mean, train_var) -> tf.keras.Model:
+    def nominal_model(self, train_mean, train_var) -> tf.keras.Model:
 
         n_classes = len(self.mapper.get_classes())
 
@@ -73,11 +107,29 @@ class ModelNetwork:
 
         return model
 
-    def compile(self, model: tf.keras.Model) -> tf.keras.Model:
+    def build_model(self, train_mean, train_var):
+        last_ckpt = self.modeldir / "last_checkpoint"   # ← match the new path
+        if last_ckpt.exists():
+            self.logger.info(f"🔄 Resuming from {last_ckpt}")
+            model = tf.keras.models.load_model(
+                last_ckpt,
+                custom_objects={
+                    "CustomStandardizer": CustomStandardizer,
+                    "ReplaceUndefinedValuesWithConstant": ReplaceUndefinedValuesWithConstant
+                }
+            )
+        else:
+            self.logger.info("📂 No checkpoint found — creating new model.")
+            model = self.nominal_model(train_mean, train_var)
+            model = self.compile(model)
+        return model
 
+    def compile(self, model: tf.keras.Model) -> tf.keras.Model:
+        loss='binary_crossentropy' if self.mapper.is_binary() else 'categorical_crossentropy'
+        print(f"Chosen loss: {loss}")
         model.compile(
             optimizer=get_optimizer(self.optimizer), 
-            loss='binary_crossentropy' if self.mapper.is_binary() else 'categorical_crossentropy',
+            loss=loss,
             metrics = get_metrics(self.mapper.is_binary()),
             weighted_metrics=[]
         )
@@ -86,27 +138,36 @@ class ModelNetwork:
 
         return model 
 
-    def fit(self, model: tf.keras.Model, train_data: tf.data.Dataset, val_data: tf.data.Dataset = None) -> tf.keras.Model:
-    
+    def fit(self, model: tf.keras.Model, train_data: tf.data.Dataset, val_data: tf.data.Dataset = None) -> tf.keras.Model:    
         using_validation = bool(val_data)    
         self.logger.info(f"Using validation: {using_validation}")
-
         train_data = train_data.map(lambda d: (d["features"], d["class_oh"], d["sample_weight"]))
         val_data = val_data.map(lambda d: (d["features"], d["class_oh"], d["sample_weight"])) if using_validation else None
-
+        steps_per_epoch = self.train_samples // self.batch_size
+        self.logger.info(f"Steps per epoch: {steps_per_epoch}")
         history = model.fit(
             x=train_data,
             epochs=self.epochs,
-            callbacks = get_callbacks(self.modeldir, using_validation),
+            callbacks = get_callbacks(self.modeldir, self.logger, using_validation),
             validation_data=val_data,
             verbose=2
         )
-
-        tf.keras.models.save_model(model, self.modeldir/ 'dnn_model_tf_keras')
-
-        tf2onnx.convert.from_keras(model, output_path=self.modeldir/'dnn_model.onnx')
-
+        # tf.keras.models.save_model(model, self.modeldir/ 'dnn_model_tf_keras')
+        # tf2onnx.convert.from_keras(model, output_path=self.modeldir/'dnn_model.onnx')
         return model, history
+    
+    def package_best_model(self):
+        best_ckpt = self.modeldir / "best_checkpoint"
+        onnx_output = self.modeldir / "dnn_model.onnx"
+        if best_ckpt.exists():
+            self.logger.info(f"Converting best checkpoint to ONNX: {onnx_output}")
+            best_model = tf.keras.models.load_model(
+                best_ckpt,
+                custom_objects={"CustomStandardizer": CustomStandardizer, "ReplaceUndefinedValuesWithConstant": ReplaceUndefinedValuesWithConstant}
+            )
+            tf2onnx.convert.from_keras(best_model, output_path=onnx_output)
+        else:
+            self.logger.warning(f"Best checkpoint not found. Skipping ONNX export.")
 
     def plot_training_curves(self, history):
 
@@ -170,20 +231,12 @@ class ModelNetwork:
         fig.savefig(outdir / 'all_metrics_curves.pdf')
         plt.close(fig)
 
-    def Run(self, train_data, val_data, train_mean, train_var):
-        model = self.build_model(train_mean, train_var)
-        compiled_model = self.compile(model)
-        trained_model, history = self.fit(compiled_model, train_data, val_data)
-        self.plot_training_curves(history)
-        return trained_model
-
-
 class ModelEvaluator:
-    def __init__(self, config, modeldir: Path, logger, model, test_data):
+    def __init__(self, model, config, outdir, test_data, logger):
         self.model = model
         self.mapper = config.mapper
         self.features = config.features
-        self.outdir = modeldir / 'evaluator'
+        self.outdir = outdir / 'evaluator'
         self.logger = logger
         self.outdir.mkdir(parents=True, exist_ok=True)
         
@@ -198,24 +251,6 @@ class ModelEvaluator:
         self.plot_data = {}
         
         self.test_data = test_data.map(lambda d: {"features": d["features"], "class_oh": d["class_oh"]}) # Remove sample weights if present
-
-    def Run(self):
-        self.logger.info("\nStarting model evaluation...")
-        self._get_predictions()
-        self._calculate_metrics()
-        self._plot_roc_curves()
-        self._plot_confusion_matrices()
-        self._plot_score_distributions()
-        self._plot_correlation_matrix()
-        # self._plot_shap_summary()
-        self._plot_partial_dependence()
-        self._plot_calibration()
-        self._plot_error_vs_feature()
-        self._plot_lift_chart()
-        self._plot_tsne_embeddings()
-        # self._save_results()
-        self.print_summary()
-        return self.metrics
 
     def _get_class_data(self, true_labels, predicted_probs, class_idx):
         if self.mapper.is_binary():
@@ -346,6 +381,7 @@ class ModelEvaluator:
         ax.grid(alpha=0.8)
         ax.legend(fontsize=24, loc='lower right', frameon=True, edgecolor="black", fancybox=True)
         fig.tight_layout()
+        fig.savefig(self.outdir / f'roc_curves.pdf')
         self.figures['roc_curves'] = fig
         plt.close(fig)
 
@@ -525,7 +561,7 @@ class ModelEvaluator:
                 return self
 
             def predict(self, X):
-                return self.model.predict(X).flatten()
+                return self.model.predict(X, verbose=0).flatten()
 
         X = self.predictions['features'].numpy()
 
@@ -723,7 +759,17 @@ class LoggingCallback(tf.keras.callbacks.Callback):
         metrics = ", ".join(f"{key}:{value:>8.4f}" for key, value in logs.items())
         self.logger.info(f"Epoch {epoch+1:<4,}- " + metrics)
 
+class LoggingCallbackNew(tf.keras.callbacks.Callback):
+    def __init__(self, logger: logging.Logger):
+        super().__init__()
+        self.logger = logger
 
+    def on_epoch_end(self, epoch, logs=None):
+        metrics = ", ".join(f"{key}:{value:>8.4f}" for key, value in logs.items())
+        self.logger.info(f"Epoch {epoch+1:<4,}- " + metrics)
+
+
+@tf.keras.utils.register_keras_serializable()
 class CustomStandardizer(tf.keras.layers.Layer):
     '''
     Applies Normalization layer only to valid inputs (i.e. those not undefined),
@@ -758,7 +804,7 @@ class CustomStandardizer(tf.keras.layers.Layer):
         })
         return config
 
-
+@tf.keras.utils.register_keras_serializable()
 class ReplaceUndefinedValuesWithConstant(tf.keras.layers.Layer):
     def __init__(self, constant=-9, **kwargs):
         super().__init__(**kwargs)
@@ -818,17 +864,32 @@ def get_metrics(for_binary: bool) -> list[tf.keras.metrics.Metric]:
     return metrics
 
 
-def get_callbacks(outdir: Path = None, using_validation: bool = False) -> list[tf.keras.callbacks.Callback]:
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=0, mode='min', restore_best_weights=True)
-    reduce_plateau = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_delta=0.001, patience=10, min_lr=1e-8, verbose=0, mode='min')
+def get_callbacks(outdir, logger, using_validation: bool = False) -> list[tf.keras.callbacks.Callback]:
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    reduce_plateau = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5)
     terminate_on_nan = tf.keras.callbacks.TerminateOnNaN()
 
-    callbacks = [LoggingCallback(outdir), terminate_on_nan]
+    last_ckpt_file = str(outdir / "last_checkpoint")
+    last_ckpt_cb = tf.keras.callbacks.ModelCheckpoint(
+        filepath= last_ckpt_file,
+        save_weights_only=False,
+        save_best_only=False,
+        save_freq='epoch'   # Save last after every epoch
+    )
+
+    best_ckpt_file = str(outdir / "best_checkpoint")
+    best_ckpt_cb = tf.keras.callbacks.ModelCheckpoint(
+        filepath= best_ckpt_file,
+        monitor='val_loss',
+        mode='min',
+        save_weights_only=False,
+        save_best_only=True  # Save only the best one
+    )
+
+    callbacks = [LoggingCallbackNew(logger), terminate_on_nan, last_ckpt_cb, best_ckpt_cb]
     if using_validation:
         callbacks.extend([early_stopping, reduce_plateau])
-
     return callbacks
-
 
 def check_compiled_model_losses(model, dataset):
     '''

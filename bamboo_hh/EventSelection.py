@@ -5,7 +5,7 @@ from bamboo import treefunctions as op
 import bamboo_hh.definitions.object_definition as object_defs
 import bamboo_hh.definitions.event_definition as event_defs
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 
 
 class EventSelection(NanoBaseHHbbWW):
