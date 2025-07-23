@@ -2,8 +2,6 @@ import numpy as np
 import scipy.interpolate
 import json
 import argparse
-from bamboo_hh_new.utils.plotter import Plotter
-from bamboo_hh_new.definitions import variables # FIX
 from bamboo.analysisutils import YMLIncludeLoader
 from typing import Union
 import correctionlib.schemav2 as cs
@@ -13,6 +11,8 @@ import yaml
 from references import references
 import uproot
 import pandas as pd
+from bamboo_hh_new.utils.more_utils import get_signal_background
+
 pd.set_option('display.max_rows', None)   # Show all rows
 pd.set_option('display.max_columns', None)   # Optional: show all columns too
 pd.set_option('display.width', 0)  # Disable line wrapping based on width
@@ -23,7 +23,7 @@ INTERPOLATION_SCALE_FACTOR_2D = 3
 INTERPOLATION_SCALE_FACTOR_3D = 3
 DECIMAL_PLACES = 5
 
-def _get_interpolated_axis_data( root_axis, scale_factor):
+def _get_interpolated_axis_data(root_axis, scale_factor):
         bin_centers = np.array([root_axis.GetBinCenter(bin) for bin in range(1, root_axis.GetNbins() + 1)])
         hbw = (bin_centers[1] - bin_centers[0]) / 2
         bin_edges = np.append(bin_centers - hbw, bin_centers[-1] + hbw)
@@ -32,46 +32,18 @@ def _get_interpolated_axis_data( root_axis, scale_factor):
         interp_seed_data = np.pad(bin_centers, 1, constant_values=(bin_edges[0], bin_edges[-1]))
         return interp_seed_data, interp_bin_centers, interp_bin_edges
 
-def interpolate_1d_root_histogram(root_hist, scale_factor, apply_log: bool=False):
-        
-        if apply_log:
-            bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
-        else:
-            bin_contents = np.array([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
+def interpolate_1d_root_histogram(root_hist, scale_factor, take_log: bool=False):
+    if take_log:
+        bin_contents = np.log([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
+    else:
+        bin_contents = np.array([root_hist.GetBinContent(bin) for bin in range(1, root_hist.GetNbinsX() + 1)])
 
-        x_seed_data, interp_bin_centers, interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-        y_seed_data = np.pad(bin_contents, 1, 'edge')
+    x_seed_data, interp_bin_centers, interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
+    y_seed_data = np.pad(bin_contents, 1, 'edge')
 
-        interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
+    interp_bin_contents = scipy.interpolate.interpn([x_seed_data], y_seed_data, interp_bin_centers, method='linear')
 
-        return interp_bin_edges, interp_bin_contents
-
-def interpolate_2d_root_histogram(root_hist, scale_factor):
-    bin_contents = np.log([[root_hist.GetBinContent(xbin, ybin) for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
-    x_seed_data, x_interp_bin_centers, x_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-    y_seed_data, y_interp_bin_centers, y_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
-    z_seed_data = np.pad(bin_contents, 1, 'edge')
-
-    interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, indexing='ij')).reshape(2,-1).T
-
-    interp_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data], z_seed_data, interpolated_bin_centers, method='linear')
-    interp_bin_contents = interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers))).flatten()
-
-    return [x_interp_bin_edges, y_interp_bin_edges], interp_bin_contents
-
-def interpolate_3d_root_histogram(root_hist, scale_factor):
-    bin_contents = np.log([[[root_hist.GetBinContent(xbin, ybin, zbin) for zbin in range(1, root_hist.GetNbinsZ() + 1)] for ybin in range(1, root_hist.GetNbinsY() + 1)] for xbin in range(1, root_hist.GetNbinsX() + 1)])
-    x_seed_data, x_interp_bin_centers, x_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetXaxis(), scale_factor)
-    y_seed_data, y_interp_bin_centers, y_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetYaxis(), scale_factor)
-    z_seed_data, z_interp_bin_centers, z_interp_bin_edges = _get_interpolated_axis_data(root_hist.GetZaxis(), scale_factor)
-    a_seed_data = np.pad(bin_contents, 1, 'edge')
-
-    interpolated_bin_centers = np.array(np.meshgrid(x_interp_bin_centers, y_interp_bin_centers, z_interp_bin_centers, indexing='ij')).reshape(3,-1).T
-
-    interp_bin_contents = scipy.interpolate.interpn([x_seed_data, y_seed_data, z_seed_data], a_seed_data, interpolated_bin_centers, method='linear')
-    interp_bin_contents = interp_bin_contents.reshape((len(x_interp_bin_centers), len(y_interp_bin_centers), len(z_interp_bin_centers))).flatten()
-
-    return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
+    return interp_bin_edges, interp_bin_contents
 
 def custom_pretty_print_json(input_file, output_file, indent=4):
     print(f"Prettifying {input_file} ...")
@@ -168,76 +140,70 @@ def replace_bin_content(hist, min_bin_content):
             hist.SetBinContent(bin, min_bin_content)
     return hist
 
-def compute_lrs(plotter: Plotter, configFile: str=None, apply_log: bool=False, outfilename: str='corrections'):
-    print(f"------------------ Calculating Likelihood Ratios --------------------")
+def get_hist_refs_from_file(file: Path) -> list[str]:
+    with uproot.open(file) as upfile:
+        refs = []
+        for key, obj in upfile.items():
+            class_name = obj.classname
+            if class_name.startswith("TH1") or class_name.startswith("TH2"):
+                if not key.startswith("yields_") and key != "generated_sum_corrected":
+                    refs.append(key)
+    return refs
 
-    if apply_log: 
-        print('\nApplying log to likelihood ratio\n')
-    
-    outfilename = outfilename + ('_llr' if apply_log else '_lr')
+def compute_lr_correction(ref, config_path, resultsdir, take_log=False, min_background=None):
+    sig_back_dict = get_signal_background(ref, resultsdir, config_path, signal_processes, background_processes)
+    if min_background:
+        sig_back_dict['Background'] = replace_bin_content(sig_back_dict['Background'], min_background)
+    for hist in sig_back_dict.values():
+        hist.Scale(1.0/hist.Integral())
+    ratio_hist = sig_back_dict['Signal'].Clone()
+    ratio_hist.Divide(sig_back_dict['Background'])
+    bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D, take_log)
+    return cs.Correction(
+        name=ref + ('_llr' if take_log else '_lr'),
+        version=0,
+        inputs=[cs.Variable(name="xaxis", type="real", description="")],
+        output=cs.Variable(name="", type="real", description=""),
+        data=cs.Binning(
+            nodetype="binning",
+            input="xaxis",
+            edges=list(np.round(bin_edges, 3)),
+            content=list(np.round(bin_contents, DECIMAL_PLACES)),
+            flow="clamp")
+        )
 
-    selection = 'SL_4j_resolved'
+def main(workdir: Path, configFile: str=None, take_log: bool=False, outfilename: str='corrections'):
 
-    min_background_bin_content, min_signal_bin_content = get_content_replacement(configFile, plotter.resultsdir, selection)
-
-    vars = variables.parse_vars_from_refs(plotter.refs)
+    selections = ['SL_4j_resolved']
+    resultsdir = workdir / 'results'
+    all_root_files = references.get_root_files(resultsdir)
+    all_refs = get_hist_refs_from_file(all_root_files[0])
 
     all_corrections = []
-    for var in vars:
-        subcat_var = var[selection]
-        print(f"\t{subcat_var.ref}")
-        sig_back_dict = plotter.Get_Signal_Background_for_ref(ref=subcat_var.ref, normalization='lumi')
-
-        sig_back_dict['Background'] = replace_bin_content(sig_back_dict['Background'], min_background_bin_content)
-
-        # if apply_log:
-        #     sig_back_dict['Signal'] = replace_bin_content(sig_back_dict['Signal'], min_signal_bin_content)
-
-        # Normalize distributions for LR calculation
-        for hist_label, hist in sig_back_dict.items():
-            hist.Scale(1/hist.Integral())
-
-        ratio_hist = sig_back_dict['Signal'].Clone()
-        ratio_hist.Divide(sig_back_dict['Background'])
-
-        if isinstance(var, variables.Variable1D):
-            bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D, apply_log)
-            inputs = [cs.Variable(name="xaxis", type="real", description="")]
-            data = cs.Binning(
-                nodetype="binning",
-                input="xaxis",
-                edges=list(np.round(bin_edges, 3)),
-                content=list(np.round(bin_contents, DECIMAL_PLACES)),
-                flow="clamp",
-            )
-
-        corr = cs.Correction(
-            name=subcat_var.ref + ('_llr' if apply_log else '_lr'),
-            version=0,
-            inputs=inputs,
-            output=cs.Variable(name="", type="real", description=""),
-            data=data)
-
-        all_corrections.append(corr)
+    for sel_name in selections:
+        sel_refs = references.get_refs_for_selection(all_refs, sel_name)
+        min_background_bin_content, _ = get_content_replacement(configFile, resultsdir, sel_name)
+        for ref in sel_refs:
+            all_corrections.append(compute_lr_correction(ref, configFile, resultsdir, take_log, min_background_bin_content))
 
     cset = cs.CorrectionSet(schema_version=2, description=f"Likelihood corrections", corrections=all_corrections) 
-    output_file = plotter.basedir /  (outfilename + ".json")
+    output_file = workdir /  (outfilename + ".json")
     with open(output_file, "w") as outfile:
         outfile.write(cset.json(exclude_unset=False))
     
     custom_pretty_print_json(output_file, output_file)
 
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Compute LRs for a given work directory')
-    parser.add_argument("-w", "--workdir", action="store", help="work directory. Ex: Z_OUTPUT/VarsReco")
+    parser.add_argument("-w", "--workdir", action="store", type=Path, help="work directory. Ex: Z_OUTPUT/VarsReco")
     parser.add_argument("-c", "--configFile", default='bamboo_hh_new/config/analysis.yml', help="Pick config file within Bamboo_setup/config")
-    parser.add_argument("-llr", "--llr", action='store_true', help="Compute LLRs instead of LRs")
+    parser.add_argument("-llr", "--take_log", action='store_true', help="Compute LLRs instead of LRs")
     parser.add_argument("-o", "--output", action='store', default='corrections', help="Output file name")
     args = parser.parse_args()
 
-    lrPlotter = Plotter(workdir=args.workdir, configFile=args.configFile)
-    compute_lrs(lrPlotter, args.configFile, args.llr, args.output)
+    main(args.workdir, args.configFile, args.llr, args.output)
     '''
     To compute LRs:
     python3 bamboo_hh_new/definitions/lr_functions.py -w Z_OUTPUT_eos/Reco -c bamboo_hh_new/config/analysis_2022.yml

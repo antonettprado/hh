@@ -2,20 +2,29 @@ import json
 from pathlib import Path
 
 #Sort list by length and in descending order (most specific ones first)
-SELECTIONS = ['_noSel', 'noSel', 'baseSel', 'SL_resolved', 'SL_3j_resolved', 'SL_res_3j_1b', 'SL_res_3j_2b', 'SL_4j_resolved', 'SL_res_4j_1b', 'SL_res_4j_2b', 'SL_boosted', 'DL_res_1b', 'DL_res_2b', 'DL_boosted', 'Total']
+SELECTIONS = ['_noSel', 'noSel', 'baseSel', 
+    'SL_resolved', 
+    'SL_3j_resolved', 'SL_res_3j_1b', 'SL_res_3j_2b', 
+    'SL_4j_resolved', 'SL_res_4j_1b', 'SL_res_4j_2b', 
+    'SL_res_3j4j_1b', 'SL_res_3j4j_2b'
+    'SL_boosted', 
+    'DL_res_1b', 'DL_res_2b', 'DL_boosted',
+    'Total']
 SELECTIONS.sort(key=len, reverse=True)
 
 ERAS = ['2022', '2022EE', '2023', '2023BPix']
 
 PROCESSES_FILES = dict(
-    ggHH_kl_1_kt_1_hh_bbww=['ggHH_kl_1_kt_1_hh_bbww_sl', 'ggHH_kl_1_kt_1_hh_bbww_dl',],
-    ggHH_kl_2p45_kt_1_hh_bbww=['ggHH_kl_2p45_kt_1_hh_bbww_sl', 'ggHH_kl_2p45_kt_1_hh_bbww_dl',],
-    ggHH_kl_5_kt_1_hh_bbww=['ggHH_kl_5_kt_1_hh_bbww_sl', 'ggHH_kl_5_kt_1_hh_bbww_dl',],
-    ggHH_kl_0_kt_1_hh_bbww=['ggHH_kl_0_kt_1_hh_bbww_sl', 'ggHH_kl_0_kt_1_hh_bbww_dl',],
-    ggHH_kl_1_kt_1_hh_bbtautau = ['ggHH_kl_1_kt_1_hh_bbtautau'],
-    ggHH_kl_2p45_kt_1_hh_bbtautau = ['ggHH_kl_2p45_kt_1_hh_bbtautau'],
-    ggHH_kl_5_kt_1_hh_bbtautau = ['ggHH_kl_5_kt_1_hh_bbtautau'],
-    ggHH_kl_0_kt_1_hh_bbtautau = ['ggHH_kl_0_kt_1_hh_bbtautau'],
+    ggHH_kl_1_kt_1_bbww=['ggHH_kl_1_kt_1_bbww_sl', 'ggHH_kl_1_kt_1_bbww_dl',],
+    ggHH_kl_2p45_kt_1_bbww=['ggHH_kl_2p45_kt_1_bbww_sl', 'ggHH_kl_2p45_kt_1_bbww_dl',],
+    ggHH_kl_5_kt_1_bbww=['ggHH_kl_5_kt_1_bbww_sl', 'ggHH_kl_5_kt_1_bbww_dl',],
+    ggHH_kl_0_kt_1_bbww=['ggHH_kl_0_kt_1_bbww_sl', 'ggHH_kl_0_kt_1_bbww_dl',],
+    
+    ggHH_kl_1_kt_1_bbtautau = ['ggHH_kl_1_kt_1_bbtautau'],
+    ggHH_kl_2p45_kt_1_bbtautau = ['ggHH_kl_2p45_kt_1_bbtautau'],
+    ggHH_kl_5_kt_1_bbtautau = ['ggHH_kl_5_kt_1_bbtautau'],
+    ggHH_kl_0_kt_1_bbtautau = ['ggHH_kl_0_kt_1_bbtautau'],
+    
     ttbar=['ttbar_sl', 'ttbar_dl', 'ttbar_fh'],
     tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
     tbq=['TBbarQ', 'TbarBQ'],
@@ -29,15 +38,15 @@ PROCESSES_FILES = dict(
         'QCD_pT_1000to1400', 'QCD_pT_1400to1800', 'QCD_pT_1800to2400', 'QCD_pT_2400to3200', 'QCD_pT_3200'
     ],
     ttV=["TTLNu-1Jets", "TTZ-ZtoQQ-1Jets"],
-    H=[
-      "GluGluHto2WtoLNu2Q", "GluGluHto2Wto2L2Nu", "VBFHto2WtoLNu2Q", "VBFHto2Wto2L2Nu",
-      "ZH_Hto2B_Zto2L", "ZH_Hto2C_Zto2L", "ZH_ZtoAll_Hto2Wto2L2Nu", 
-      "ggZH_Hto2B_Zto2L", "ggZH_Hto2C_Zto2L",
-      "WplusH_Hto2B_WtoLNu", "WplusH_Hto2C_WtoLNu", "WplusH_HtoZG_WtoAll_Zto2L", 
-      "WminusH_Hto2B_WtoLNu", "WminusH_Hto2C_WtoLNu", "WminusH_HtoZG_WtoAll_Zto2L",
-      "TTHto2B", "TTHtoNon2B"
-    ],
-
+    # Previously H. =======================
+    ggH = ["GluGluHto2WtoLNu2Q", "GluGluHto2Wto2L2Nu"],
+    VBFH = ["VBFHto2WtoLNu2Q", "VBFHto2Wto2L2Nu"],
+    WH = ["WplusH_Hto2B_WtoLNu", "WplusH_Hto2C_WtoLNu", "WplusH_HtoZG_WtoAll_Zto2L",
+          "WminusH_Hto2B_WtoLNu", "WminusH_Hto2C_WtoLNu", "WminusH_HtoZG_WtoAll_Zto2L"],
+    ZH = ["ZH_Hto2B_Zto2L", "ZH_Hto2C_Zto2L", "ZH_ZtoAll_Hto2Wto2L2Nu",
+            "ggZH_Hto2B_Zto2L", "ggZH_Hto2C_Zto2L"],
+    ttH=["TTHto2B", "TTHtoNon2B"],
+    # ====================================
     #VVV=[]
     #ttVV=[]
     #tH=[]
@@ -72,7 +81,6 @@ def get_eras(resultsdir: Path) -> list[str]:
     valid_eras = [era for era in ERAS if era in present_eras]
     return valid_eras
 
-
 def get_mc_files(resultsdir: Path) -> list[Path]:
     root_files = get_root_files(resultsdir)
     mc_files = [f for f in root_files if get_file_subprocess(f) in all_samples]
@@ -88,16 +96,21 @@ def find_mc_eras(resultsdir: Path) -> list[str]:
     eras = sorted(list(set([get_file_era(f) for f in mc_files])))
     return eras
 
+def select_refs_for_selection(refs: list[str], sel_name: str) -> list[str]:
+    if sel_name not in SELECTIONS:
+        raise ValueError(f"'{sel_name}' is not a recognized selection. Available: {SELECTIONS}")
+    return [ref for ref in refs if ref.startswith(sel_name + "_")]
+
 # Color scheme for plotting processes -----------------
 CLASS_COLOR_MAP = dict(
-    ggHH_kl_1_kt_1_hh_bbww='blue',
-    ggHH_kl_2p45_kt_1_hh_bbww='blue',
-    ggHH_kl_5_kt_1_hh_bbww='blue',
-    ggHH_kl_0_kt_1_hh_bbww = 'blue',
-    ggHH_kl_1_kt_1_hh_bbtautau = 'blue',
-    ggHH_kl_2p45_kt_1_hh_bbtautau = 'blue',
-    ggHH_kl_5_kt_1_hh_bbtautau = 'blue',
-    ggHH_kl_0_kt_1_hh_bbtautau = 'blue',
+    ggHH_kl_1_kt_1_bbww='blue',
+    ggHH_kl_2p45_kt_1_bbww='blue',
+    ggHH_kl_5_kt_1_bbww='blue',
+    ggHH_kl_0_kt_1_bbww = 'blue',
+    ggHH_kl_1_kt_1_bbtautau = 'blue',
+    ggHH_kl_2p45_kt_1_bbtautau = 'blue',
+    ggHH_kl_5_kt_1_bbtautau = 'blue',
+    ggHH_kl_0_kt_1_bbtautau = 'blue',
     HH='blue', 
     ttbar='red', 
     tW='green', 

@@ -70,7 +70,7 @@ def submit_training_jobs(config_name: str, roster: Path, workdir: Path,
         "request_cpus": "6",
         # "request_cpus": "4",
         # "request_gpus": "1",
-        "request_memory": "60GB" if request_memory is None else request_memory,
+        "request_memory": "80GB" if request_memory is None else request_memory,
         "request_disk": "20GB",
         'MY.SendCredential': True,
         "transfer_input_files": f"{executable_path.resolve()}, neural_net, references"

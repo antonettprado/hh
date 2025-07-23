@@ -1,65 +1,22 @@
 from bamboo.plots import EquidistantBinning as EqBin
 import copy
 
-class AnalysisSelections:
-    def __init__(self, **kwargs):
-        self.data = dict(kwargs)
-
-    def __getattr__(self, item):
-        try:
-            return self.data[item]
-        except KeyError as e:
-            raise AttributeError(f"{self.__class__.__name__!r} has no attribute {item!r}") from e
-
-    def __getitem__(self, key):
-        return self.data[key]
-
-    def keys(self):
-        return self.data.keys()
-
-    # def values(self):
-    #     return self.data.values()
-
-    # def items(self):
-    #     return self.data.items()
-
-    def __repr__(self):
-        keys = ", ".join(sorted(self.data.keys()))
-        return f"<{self.__class__.__name__} with keys: {keys}>"
-
-    def __contains__(self, key):
-        return key in self.data
-
-class AnalysisObjects(AnalysisSelections):
-    pass
-
-class AnalysisEventSelections(AnalysisSelections):
-    pass
-
-'''
-Sample usage
-objs = AnalysisObjects(loose_muons=loose_muons, tight_muons=myTightMuons)
-muons = objs.loose_muons
-muons = objs['tight_muons']
-
-if 'tight_muons' in objs:
-    print("Yup")
-
-print(objs)  # <AnalysisObjects with keys: loose_muons, tight_muons>
-'''
-
 class VariableRegister:
     def __init__(self):
         self._registry = []
 
     def __call__(self, **metadata):
         def decorator(func):
-            def wrapper (ctx):
-                data = func(ctx)
-                subcat_names = ctx.selections.keys()
+            def wrapper (container):
+                data = func(container['objects'])
+                subcat_names = container['selections'].keys()
                 if not isinstance(data, dict):
-                    # Assume data is the same for all subcats
-                    data = { subcat: data for subcat in subcat_names}
+                    if isinstance(data, (list, tuple)):
+                        if len(data) == 1:
+                            data = data[0]
+                        else:
+                            raise ValueError(f"Expected single value or dict, but got multiple values")
+                    data = {subcat: data for subcat in subcat_names}
                 return MyVariable(**metadata, data=data)
             self._registry.append(wrapper)
             return wrapper
@@ -77,26 +34,63 @@ class MyVariable:
         self.unit = unit
         self.title = title
         self.data: dict = data
-        self.subcats = data.keys()
+        self.subcats = list(data.keys())
+        self.eqbin = EqBin(self.nbins, self.xmin, self.xmax)
+        self.refs = {subcat: '_'.join((subcat, self.name))  for subcat in self.subcats }
+        self.full_title = self.title + f' ({self.unit})' if self.unit else self.title
         self.update(**kwargs)
-
-        self.generate_eqbin()
-        self.set_refs(self.subcats)
-        self.full_title = self.title
-        if self.unit: self.full_title = self.title + f' ({self.unit})'
 
     def update(self, **kwargs):
         self.__dict__.update(**kwargs)
 
-    def generate_eqbin(self):
-        '''
-        Takes the nbins, min, and max from the json file and creates a bamboo.plots.EquidistantBinning object
-        '''
-        if not all(item in self.__dict__ for item in ['nbins', 'xmin', 'xmax']):
-            print(f"Could not generate ROOT EqBin for {self.name}. Must provide: 'nbins', 'xmin', 'xmax'")
-            return
-        self.eqbin = EqBin(self.nbins, self.xmin, self.xmax)
+    def is_child(self) -> bool:
+        return hasattr(self, "subcat")
 
-    def set_refs(self, subcats: 'list[str]'):
+    def __getitem__(self, subcat: str):
+        '''
+        Get a subcat-specific "child" variable of the existing variable. Since many of the attributes of a Variable
+        object are dictionaries with keys equal to the list of subcats, it is sometimes helpful to first specify which
+        subcat you care about, then access these attributes directly. This is what a child variable does.
+        Instead of:
+            var = Variable1D('bjets_mbb')
+            bamboo.plots.Plot.Make1D(var.refs['SL_res_4j_2b'], var.data['SL_res_4j_2b'], var.selections['SL_res_4j_2b'] ... )
+        We can do:
+            var = Variable1D('bjets_mbb')
+            cvar = var['SL_res_4j_2b']
+            bamboo.plots.Plot.Make1D(cvar.ref, cvar.data, cvar.selection ... )
+        The child variable holds all the same information as the parent variable when it is instantiated, but it resolves
+        the dictionaries (and lists) that depend on the subcat to the corresponding entries.
+        Note: Once created, a child variable is not linked with its parent; altering the child in some way will not affect 
+        the parent and vice versa
+        '''
+        if self.is_child(): return self
+        # If invalid subcat, raise error
+        if subcat not in self.subcats:
+            raise ValueError(f"{subcat} is not a valid subcategory of {self.name}")
+        child = copy.copy(self)
+        # Delete the non-subcat specific attributes of the subcat_specific child.
+        # I do this so you get helpful errors if you accidentally try to use one of these
+        delattr(child, "subcats")
+        delattr(child, "refs")
+        # Add new, subcat-specific attributes to the child
+        # Note that I prefer the singular name for the attribute now
+        child.subcat = subcat
+        child.ref = self.refs[subcat]
+        child.data = self.data.get(subcat, None)
+        return child
+
+class MyLR:
+    def __init__(self, var:MyVariable, apply_log: bool, **kwargs):
+        self.name = name
+        self.nbins = nbins
+        self.xmin = xmin
+        self.xmax = xmax
+        self.unit = unit
+        self.title = title
+        self.data: dict = data
+        self.subcats = list(data.keys())
+        self.eqbin = EqBin(self.nbins, self.xmin, self.xmax)
         self.refs = {subcat: '_'.join((subcat, self.name))  for subcat in self.subcats }
+        self.full_title = self.title + f' ({self.unit})' if self.unit else self.title
+        self.update(**kwargs)
 

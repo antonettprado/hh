@@ -1,9 +1,8 @@
 from bamboo.treeproxies import BoolProxy, SelectionProxy
 from bamboo import treefunctions as op
-from bamboo_hh_new.utils.utils import AnalysisObjects
 
 
-def get_objects(tree, era, nanov: str, lep_pt_from_L1_or_HLT=None):
+def get_objects(tree, era: str, nanov: str, lep_pt_from_L1_or_HLT=None) -> dict:
 
     if lep_pt_from_L1_or_HLT is not None: 
         is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT)
@@ -58,23 +57,10 @@ def get_objects(tree, era, nanov: str, lep_pt_from_L1_or_HLT=None):
     # Subjets for AK8 jets
     ak8_subjets = tree.SubJet
 
-    # # Select AK4 VBF Jets
-    # ak4_vbf_jets = ak4_vbf_jet_selection(tree.Jet, nanov)
-    # ak4_vbf_jets = op.sort(ak4_vbf_jets, lambda jet: -jet.pt)
-    # cleaned_ak4_vbf_jets = ak4_jet_cleaning(ak4_vbf_jets, fakeable_electrons)
-    # cleaned_ak4_vbf_jets = ak4_jet_cleaning(cleaned_ak4_vbf_jets, fakeable_muons)
-    # cleaned_ak4_vbf_jets = ak4_jet_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak8_btags, 1.2)
-    # cleaned_ak4_vbf_jets = ak4_jet_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_btags, 0.8)
-    # cleaned_ak4_vbf_resonant_jets = ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "resonant")
-    # cleaned_ak4_vbf_nonresonant_jets = ak4_vbf_jet_cleaning(cleaned_ak4_vbf_jets, cleaned_ak4_jets, cleaned_ak4_btags, 0.4, "nonresonant")
-
     # MET and MHT
     met = tree.PuppiMET
     ht_jets, mht, met_ld = calculate_met_quantities(cleaned_ak4_jets, fakeable_electrons, fakeable_muons, met.pt)
 
-    # From VarsReco.get_objects()
-    # ak4_non_medbtags = op.select(ak4_jets, lambda ak4: op.NOT(op.rng_any(ak4_btags, lambda ak4_btag: ak4_btag.idx == ak4.idx)))
-    # sorted_ak4_loose_btags = op.sort(ak4_loose_btags, lambda jet: -jet.btagPNetB)
     sorted_ak8_btags = op.sort(cleaned_ak8_btags, lambda jet: -jet.pt)
     sorted_ak4_jets = op.sort(cleaned_ak4_jets, lambda jet: -jet.pt)
 
@@ -86,7 +72,7 @@ def get_objects(tree, era, nanov: str, lep_pt_from_L1_or_HLT=None):
             jet.idx == btag_sorted_ak4_jets[0].idx,
             jet.idx == btag_sorted_ak4_jets[1].idx))) 
 
-    return AnalysisObjects(
+    return dict(
         loose_muons=loose_muons,
         loose_electrons=loose_electrons,
         fakeable_muons=fakeable_muons,
@@ -106,7 +92,8 @@ def get_objects(tree, era, nanov: str, lep_pt_from_L1_or_HLT=None):
         sorted_ak8_btags=sorted_ak8_btags,
         sorted_ak4_jets=sorted_ak4_jets,
         sorted_ak4_btags=sorted_ak4_btags,
-        ak4_nonbtags = ak4_nonbtags
+        ak4_nonbtags = ak4_nonbtags,
+        era=era
     )
 
 LEPTON_PT = {
@@ -452,21 +439,17 @@ def ak4_loose_btag_selection(jets, era):
 
 def ak4_btag_selection(jets, era):
     # https://btv-wiki.docs.cern.ch/ScaleFactors/Run3Summer23BPix/
-    if  era == "2016" or era == "2017" or era == "2018":
-        # These eras do not strictly have the correct WPs
-        tagger = lambda jet: jet.btagDeepFlavB > 0.2783
-    else:
-        if era == "2022":
-            wp = 0.245
-        elif era == "2022EE":
-            wp = 0.2605
-        elif era == "2023":
-            wp = 0.1917
-        elif era == "2023BPix":
-            wp = 0.1919
-        else: 
-            raise ValueError(f"{era=} is not expected")
-        tagger = lambda jet: jet.btagPNetB > wp
+    if era == "2022":
+        wp = 0.245
+    elif era == "2022EE":
+        wp = 0.2605
+    elif era == "2023":
+        wp = 0.1917
+    elif era == "2023BPix":
+        wp = 0.1919
+    else: 
+        raise ValueError(f"{era=} is not expected")
+    tagger = lambda jet: jet.btagPNetB > wp
 
     return  op.select(jets, tagger)
 

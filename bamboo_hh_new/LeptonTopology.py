@@ -3,9 +3,8 @@ from bamboo.plots import EquidistantBinning as EqBin
 from bamboo_hh_new.BaseSelection import NanoBaseHHbbWW
 from bamboo_hh_new.definitions.object_definition_new import get_objects
 from bamboo_hh_new.definitions.event_definition_new import get_event_selections
-from bamboo_hh_new.definitions.variables_definition_new import VariableCollector
 
-class LowLevelVars(NanoBaseHHbbWW):
+class LeptonTopology(NanoBaseHHbbWW):
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
@@ -13,7 +12,7 @@ class LowLevelVars(NanoBaseHHbbWW):
         plots.extend(self.base_plots)
         
         objects = get_objects(tree, self.era, self.nv) 
-        selections = get_event_selections(tree, objects, baseSel, self.is_MC, self.era, self.sample, noHLT=False)
+        selections = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample, noHLT=False)
 
         tight_electrons = objects.tight_electrons
         tight_muons     = objects.tight_muons
@@ -132,7 +131,7 @@ class LowLevelVars(NanoBaseHHbbWW):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        # super(LowLevelVars, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        # super(LeptonTopology, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
         
         from bamboo.plots import CutFlowReport
         if not self.plotList:

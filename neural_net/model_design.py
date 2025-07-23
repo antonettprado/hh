@@ -427,10 +427,14 @@ class ModelEvaluator:
 
             fig.tight_layout()
             return fig
-        
-        self.figures['confusion_matrix_true'] = plot_confusion_matrix(cm_true, 'Confusion Matrix (Normalized by True Class)')
-        self.figures['confusion_matrix_pred'] = plot_confusion_matrix(cm_pred, 'Confusion Matrix (Normalized by Predicted Class)')
-        
+                
+        fig_true = plot_confusion_matrix(cm_true, 'Confusion Matrix (Normalized by True Class)')
+        fig_true.savefig(self.outdir / 'confusion_matrix_true.pdf')
+        self.figures['confusion_matrix_true'] = fig_true
+
+        fig_pred = plot_confusion_matrix(cm_pred, 'Confusion Matrix (Normalized by Predicted Class)')
+        fig_pred.savefig(self.outdir / 'confusion_matrix_pred.pdf')
+        self.figures['confusion_matrix_pred'] = fig_pred
         plt.close('all')
 
     def _plot_score_distributions(self):
@@ -626,7 +630,7 @@ class ModelEvaluator:
             # Mask undefined or nan
             mask = (x_vals != -9999) & (~np.isnan(x_vals))
             if not np.any(mask):
-                self.logger.warning(f"⚠️ Feature {feature_name} has only undefined values. Skipping.")
+                self.logger.warning(f"Feature {feature_name} has only undefined values. Skipping.")
                 continue
 
             x = x_vals[mask]
@@ -657,7 +661,7 @@ class ModelEvaluator:
             fig.savefig(outdir / f'error_vs_{feature_name}.pdf')
             plt.close(fig)
 
-        self.logger.info(f"✅ Saved error-vs-feature plots with trends in: {outdir}")
+        self.logger.info(f"Saved error-vs-feature plots with trends in: {outdir}")
         
     def _plot_lift_chart(self):
         self.logger.info("Plotting lift chart ...")
