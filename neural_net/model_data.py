@@ -193,31 +193,7 @@ class DatasetManager:
             events = pd.Series(1_000_000, index=self.ds_meta.index)
         
         self.ds_meta['Take events'] = events
-
-    def _load_trees_concurrently(self) -> list[tf.data.Dataset]:
-
-        self.logger.debug(f'\nLoading trees concurrently')
-        treeloader = ConcurrentTreeLoader()
-        
-        # Group by File first
-        grouped_df = self.ds_meta.groupby('File')
-        
-        def process_file(file_path, file_group):
-            datasets = []
-            # Process trees in this file sequentially
-            for row in file_group.itertuples(index=True, name='Row'):
-                ds = treeloader.load_tree_as_ds_from_generator(row.File, row.Tree, self.features, self.batch_size)
-                ds.details['class_name'] = self.mapper.get_class_for_process(ds.details['process'])
-                datasets.append(ds)
-            return datasets
-
-        # Still process different files concurrently
-        with ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE) as executor:
-            futures = [executor.submit(process_file, file_path, file_group) for file_path, file_group in grouped_df]
-            results = [ds for future in futures for ds in future.result()]  # Flatten results
-
-        return results
-
+    
     def _load_trees_sequentially(self, event_filter=None) -> list[tf.data.Dataset]:
         self.logger.debug(f'\nLoading trees sequentially')
         ds_list = []
@@ -226,7 +202,8 @@ class DatasetManager:
             ds.details = {}
             ds.details['process'] = row['Process']
             ds.details['class_name'] = self.mapper.get_class_for_process(ds.details['process'])
-            ds.details['genWeight_total'] = ds.reduce(initial_state=tf.constant(0.0), reduce_func=lambda state, batch: state + tf.reduce_sum(batch['genWeight'])).numpy()
+            ds.details['genWeight_total'] = ds.reduce(initial_state=tf.constant(0.0), 
+                                                      reduce_func=lambda state, batch: state + tf.reduce_sum(batch['genWeight'])).numpy()
             ds.details['total_events'] = ds.reduce(initial_state=tf.constant(0, dtype=tf.int32), reduce_func=lambda state, batch: state + tf.cast(tf.shape(batch['event'])[0], tf.int32)).numpy()
             ds.details['file_name'] = row['File'].stem
             ds.details['tree_name'] = row['Tree']
@@ -387,4 +364,3 @@ class DatasetManager:
             self.logger.debug(f"Ratio of {class_name}/Total: {class_ds.details['ratio']:,.4f}")
             class_datasets[class_name] = class_ds
         return class_datasets
-

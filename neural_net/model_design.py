@@ -772,7 +772,6 @@ class LoggingCallbackNew(tf.keras.callbacks.Callback):
         metrics = ", ".join(f"{key}:{value:>8.4f}" for key, value in logs.items())
         self.logger.info(f"Epoch {epoch+1:<4,}- " + metrics)
 
-
 @tf.keras.utils.register_keras_serializable()
 class CustomStandardizer(tf.keras.layers.Layer):
     '''
@@ -832,7 +831,6 @@ class ReplaceUndefinedValuesWithConstant(tf.keras.layers.Layer):
         })
         return config
 
-
 def get_activity_regularizer(act_reg: dict):
     if 'l1' in act_reg and 'l2' in act_reg:
         return tf.keras.regularizers.l1_l2(l1=float(act_reg['l1']), l2=float(act_reg['l2']))
@@ -840,7 +838,6 @@ def get_activity_regularizer(act_reg: dict):
         return tf.keras.regularizers.l1(float(act_reg['l1']))
     elif 'l2' in act_reg:
         return tf.keras.regularizers.l2(float(act_reg['l2']))
-
 
 def get_optimizer(optimizer: dict):
     optimizer_name = optimizer['name'].lower()
@@ -857,7 +854,6 @@ def get_optimizer(optimizer: dict):
 
     return optimizer
 
-
 def get_metrics(for_binary: bool) -> list[tf.keras.metrics.Metric]:
     metrics= [
         tf.keras.metrics.BinaryAccuracy(name='accuracy') if for_binary else tf.keras.metrics.CategoricalAccuracy(name='accuracy'), 
@@ -866,7 +862,6 @@ def get_metrics(for_binary: bool) -> list[tf.keras.metrics.Metric]:
         tf.keras.metrics.AUC(name='auc_roc', curve='ROC')
     ]
     return metrics
-
 
 def get_callbacks(outdir, logger, using_validation: bool = False) -> list[tf.keras.callbacks.Callback]:
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)

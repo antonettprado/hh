@@ -322,10 +322,10 @@ tWminus_dl_2023BPix:
   split: *nsplit
 
 # ====================
-# tbq
+# single_top
 # ====================
 TBbarQ_2023:
-  group: tbq
+  group: single_top
   era: '2023'
   db: das:/TBbarQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v15-v2/NANOAODSIM
   type: mc
@@ -333,7 +333,7 @@ TBbarQ_2023:
   generated-events: genEventSumw
   split: -9
 TBbarQ_2023BPix:
-  group: tbq
+  group: single_top
   era: '2023BPix'
   db: das:/TBbarQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v6-v2/NANOAODSIM
   type: mc
@@ -341,7 +341,7 @@ TBbarQ_2023BPix:
   generated-events: genEventSumw
   split: -9
 TbarBQ_2023:
-  group: tbq
+  group: single_top
   era: '2023'
   db: das:/TbarBQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v15-v2/NANOAODSIM
   type: mc
@@ -349,19 +349,15 @@ TbarBQ_2023:
   generated-events: genEventSumw
   split: -9
 TbarBQ_2023BPix:
-  group: tbq
+  group: single_top
   era: '2023BPix'
   db: das:/TbarBQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v6-v2/NANOAODSIM
   type: mc
   cross-section: 87.2
   generated-events: genEventSumw
   split: -9
-
-# ====================
-# tbq
-# ====================
 TBbartoLplusNuBbar_2023:
-  group: tb
+  group: single_top
   era: '2023'
   db: das:/TBbartoLplusNuBbar-s-channel-4FS_TuneCP5_13p6TeV_amcatnlo-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v15-v2/NANOAODSIM
   type: mc
@@ -369,7 +365,7 @@ TBbartoLplusNuBbar_2023:
   generated-events: genEventSumw
   split: -9
 TBbartoLplusNuBbar_2023BPix:
-  group: tb
+  group: single_top
   era: '2023BPix'
   db: das:/TBbartoLplusNuBbar-s-channel-4FS_TuneCP5_13p6TeV_amcatnlo-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v6-v2/NANOAODSIM
   type: mc
@@ -377,7 +373,7 @@ TBbartoLplusNuBbar_2023BPix:
   generated-events: genEventSumw
   split: -9
 TbarBtoLminusNuB_2023:
-  group: tb
+  group: single_top
   era: '2023'
   db: das:/TbarBtoLminusNuB-s-channel-4FS_TuneCP5_13p6TeV_amcatnlo-pythia8/Run3Summer23NanoAODv12-130X_mcRun3_2023_realistic_v15-v2/NANOAODSIM
   type: mc
@@ -385,7 +381,7 @@ TbarBtoLminusNuB_2023:
   generated-events: genEventSumw
   split: -9
 TbarBtoLminusNuB_2023BPix:
-  group: tb
+  group: single_top
   era: '2023BPix'
   db: das:/TbarBtoLminusNuB-s-channel-4FS_TuneCP5_13p6TeV_amcatnlo-pythia8/Run3Summer23BPixNanoAODv12-130X_mcRun3_2023_realistic_postBPix_v6-v2/NANOAODSIM
   type: mc

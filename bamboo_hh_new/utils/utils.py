@@ -1,45 +1,47 @@
 from bamboo.plots import EquidistantBinning as EqBin
+from dataclasses import dataclass, field
 import copy
 
 class VariableRegister:
     def __init__(self):
-        self._registry = []
+        self._vars1D_meta = []  # list of (metadata, data_func)
+        self._varsND_meta = []  # list of metadata dicts
 
-    def __call__(self, **metadata):
+    def var1D(self, **metadata):
         def decorator(func):
-            def wrapper (container):
-                data = func(container['objects'])
-                subcat_names = container['selections'].keys()
-                if not isinstance(data, dict):
-                    if isinstance(data, (list, tuple)):
-                        if len(data) == 1:
-                            data = data[0]
-                        else:
-                            raise ValueError(f"Expected single value or dict, but got multiple values")
-                    data = {subcat: data for subcat in subcat_names}
-                return MyVariable(**metadata, data=data)
-            self._registry.append(wrapper)
-            return wrapper
+            self._vars1D_meta.append((metadata, func))
+            return func
         return decorator
 
-    def get_registry(self):
-        return self._registry
+    def varND(self, **metadata):
+        self._varsND_meta.append(metadata)
 
-class MyVariable:
-    def __init__(self, name:str , nbins: int, xmin: int, xmax: int, unit:str, title:str, data:dict, **kwargs):
-        self.name = name
-        self.nbins = nbins
-        self.xmin = xmin
-        self.xmax = xmax
-        self.unit = unit
-        self.title = title
-        self.data: dict = data
-        self.subcats = list(data.keys())
-        self.eqbin = EqBin(self.nbins, self.xmin, self.xmax)
-        self.refs = {subcat: '_'.join((subcat, self.name))  for subcat in self.subcats }
-        self.full_title = self.title + f' ({self.unit})' if self.unit else self.title
-        self.update(**kwargs)
+    def build(self, objects, selections) -> list:
+        subcats = selections.keys()
+        # 1D variables
+        vars1D = []
+        for meta, data_func in self._vars1D_meta:
+            data = data_func(objects)
+            if not isinstance(data, dict):
+                if isinstance(data, (list, tuple)):
+                    if len(data) == 1:
+                        data = data[0]
+                    else:
+                        raise ValueError(f"Expected single value or dict, but got multiple values")
+                data = {subcat: data for subcat in subcats}
+            var = Variable1D(**meta, data=data)
+            vars1D.append(var)
+        vars1D_dict = {v.name: v for v in vars1D}
 
+        # ND variables
+        varsND = []
+        for meta in self._varsND_meta:
+            varND = VariableND(meta["name"], list(vars1D_dict[name] for name in meta["vars"]))
+            varsND.append(varND)
+
+        return vars1D + varsND
+
+class Variable:
     def update(self, **kwargs):
         self.__dict__.update(**kwargs)
 
@@ -79,18 +81,29 @@ class MyVariable:
         child.data = self.data.get(subcat, None)
         return child
 
-class MyLR:
-    def __init__(self, var:MyVariable, apply_log: bool, **kwargs):
+class Variable1D(Variable):
+    def __init__(self, name:str , nbins: int, min: int, max: int, unit:str, title:str, data:dict):
         self.name = name
+        self.ndim = 1
         self.nbins = nbins
-        self.xmin = xmin
-        self.xmax = xmax
+        self.min = min
+        self.max = max
+        self.eqbin = EqBin(self.nbins, self.min, self.max)
         self.unit = unit
         self.title = title
-        self.data: dict = data
         self.subcats = list(data.keys())
-        self.eqbin = EqBin(self.nbins, self.xmin, self.xmax)
         self.refs = {subcat: '_'.join((subcat, self.name))  for subcat in self.subcats }
+        self.data: dict = data
+        
         self.full_title = self.title + f' ({self.unit})' if self.unit else self.title
-        self.update(**kwargs)
 
+class VariableND(Variable):
+    def __init__(self, name: str, vars: list[Variable1D]):
+        self.name = name
+        self.ndim = len(vars)
+        self.vars = vars
+        self.eqbin = [var.eqbin for var in vars]
+        self.subcats = set.intersection(*[set(v.subcats) for v in self.vars])
+        self.refs = {subcat: '_'.join((subcat, self.name)) for subcat in self.subcats}
+        self.data = {subcat: [var.data[subcat] for var in vars] for subcat in self.subcats}
+        

@@ -4,14 +4,14 @@ from bamboo.plots import Plot, Skim
 from bamboo_hh_new.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh_new.definitions.objects import get_objects
 from bamboo_hh_new.definitions.event_selections import get_event_selections
-from bamboo_hh_new.definitions.variables import get_all_vars
+from bamboo_hh_new.definitions.variables import get_vars
 from bamboo_hh_new.utils.selection_containers import HigherSelectionsContainer, HigherSelection
 
 class JetTopology(NanoBaseHHbbWW):
 
     def get_skim(self, hs: HigherSelection):
         skim_data = {"event": None, "genWeight": None}
-        skim_data.update({var.name: var.data for var in hs.vars})
+        skim_data.update({var.name: var.data for var in hs.vars1D})
         return Skim(hs.name, skim_data, hs.sel)
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
@@ -21,7 +21,7 @@ class JetTopology(NanoBaseHHbbWW):
 
         objects: dict = get_objects(tree, self.era, get_nano_version(sampleCfg))
         selections: dict = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample)
-        vars: list = get_all_vars(objects, selections)
+        vars: list = get_vars(objects, selections)
         hsc = HigherSelectionsContainer.from_selections_and_vars(selections, vars)
 
         # ===============================================================================
@@ -63,8 +63,12 @@ class JetTopology(NanoBaseHHbbWW):
             hsc.SL_res_2b,
             hsc.SL_resolved,
         ]
-        hists = [Plot.make1D(v.ref, v.data, hs.sel, v.eqbin, xTitle=v.full_title) for hs in plot_selections for v in hs.vars ]
-        plots.extend(hists)
+        hists1D = [Plot.make1D(v.ref, v.data, hs.sel, v.eqbin, xTitle=v.full_title) for hs in plot_selections for v in hs.vars1D ]
+        plots.extend(hists1D)
+
+        hists2D = [Plot.make2D(v.ref, v.data, hs.sel, v.eqbin) for hs in plot_selections for v in hs.vars2D]
+        plots.extend(hists2D)
+
         # # ===============================================================================
         # # ================================== Skims ======================================
         # # ===============================================================================

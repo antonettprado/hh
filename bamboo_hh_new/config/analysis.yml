@@ -41,8 +41,11 @@ plotIt:
   groups:
     data:
       legend: data
-    HH_bbWW:
-      legend: HH_bbWW
+    ggHH_kl_1_kt_1_bbww:
+      legend: ggHH_bbWW
+      fill-color: '#EDC951'
+    ggHH_kl_1_kt_1_bbtautau:
+      legend: ggHH_bbtautau
       fill-color: '#EDC951'
     HH_bbtautau:
       legend: HH_bbtautau
@@ -62,24 +65,27 @@ plotIt:
     tW:
       legend: tW
       fill-color: '#BB2255'
-    tb:
-      legend: tb
-      fill-color: '#BB2255'
-    tbq:
-      legend: tbq
-      fill-color: '#BB2255'
-    tq:
-      legend: tq
+    single_top:
+      legend: single_top
       fill-color: '#BB2255'
     QCD:
       legend: QCD
       fill-color: '#AB2255'
-    H:
-      legend: H
-      fill-color: '#AB2255'
+    ggH:
+      legend: ggH
+      fill-color: '#AB0055'
+    VBFH:
+      legend: VBFH
+      fill-color: '#AB0055'
+    WH:
+      legend: WH
+      fill-color: '#AB0055'
+    ZH:
+      legend: ZH
+      fill-color: '#AB0055'
     ttH:
       legend: ttH
-      fill-color: '#AB2255'
+      fill-color: '#AB1155'
   plotdefaults:
     y-axis: Events
     y-axis-show-zero: true
@@ -92,4 +98,5 @@ plotIt:
     ratio-y-axis-range:
     - 0.5
     - 1.5
-    normalized: True
+    normalized: false
+
