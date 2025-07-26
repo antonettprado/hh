@@ -107,10 +107,10 @@ def main(args):
     TRAINERS = {'simple': SimpleTrainer, 'kfold': KFoldTrainer}
     TrainerClass = TRAINERS.get(args.trainer)
 
-    if args.trainer == 'simple'
+    if args.trainer == 'simple':
         trainer = SimpleTrainer(model_config, args.workdir, modeldir, args.log_level)
     elif args.trainer == 'kfold':
-        trainer = SimpleTrainer(model_config, args.workdir, modeldir, args.pass_idx, args.log_level)
+        trainer = KFoldTrainer(model_config, args.workdir, modeldir, args.pass_idx, args.log_level)
     trainer.run()
 
 if __name__ == "__main__":

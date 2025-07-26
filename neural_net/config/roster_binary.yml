@@ -33,20 +33,116 @@ models:
       "tW": 4.0, 
       "ttbar": 8.0}
     batch_size: 1024
-    tree_names: ['SL_4j_resolved']
+    tree_names: ['SL_res_4j_1b', 'SL_res_4j_2b']
     features: *SL_4j_resolved_vars
     network:
-      units: 128
+      units: 32
       resnet: True
       act_regularizer: {l1: 1e-4}
     optimizer: {name: 'adam', lr: 0.001}
     epochs: 20
     process_num_events: {
-      "ttbar": 100_000, 
-      "tW": 50_000,
-      "ggHH_kl_1_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_5_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_0_kt_1_hh_bbww": 2_500
+      "ttbar": 10_000, 
+      "tW": 500,
+      "ggHH_kl_1_kt_1_hh_bbww": 100, 
+      "ggHH_kl_2p45_kt_1_hh_bbww": 100, 
+      "ggHH_kl_5_kt_1_hh_bbww": 100, 
+      "ggHH_kl_0_kt_1_hh_bbww": 100
     } 
     # data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
+
+  - name: 'binary_1'
+    model_type: 'binary'
+    classification: *classification1
+    process_sf: {
+      "ggHH_kl_1_kt_1_hh_bbww": 1.0, 
+      "ggHH_kl_2p45_kt_1_hh_bbww": 1.0, 
+      "ggHH_kl_5_kt_1_hh_bbww": 1.0, 
+      "ggHH_kl_0_kt_1_hh_bbww": 1.0,
+      "tW": 4.0, 
+      "ttbar": 8.0}
+    batch_size: 1024
+    tree_names: ['SL_res_4j_1b', 'SL_res_4j_2b']
+    features: *SL_4j_resolved_vars
+    network:
+      units: 256
+      resnet: True
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: 'adam', lr: 0.001}
+    epochs: 1000
+    process_num_events: {
+      "ttbar": 8_000_000, 
+      "tW": 4_000_000
+    } 
+
+  - name: 'binary_2'
+    model_type: 'binary'
+    classification: *classification1
+    process_sf: {
+      "ggHH_kl_1_kt_1_hh_bbww": 1.0, 
+      "ggHH_kl_2p45_kt_1_hh_bbww": 1.0, 
+      "ggHH_kl_5_kt_1_hh_bbww": 1.0, 
+      "ggHH_kl_0_kt_1_hh_bbww": 1.0,
+      "tW": 4.0, 
+      "ttbar": 8.0}
+    batch_size: 1024
+    tree_names: ['SL_res_4j_1b', 'SL_res_4j_2b']
+    features: *SL_4j_resolved_vars
+    network:
+      units: 300
+      resnet: True
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: 'adam', lr: 0.001}
+    epochs: 1000
+    process_num_events: {
+      "ttbar": 8_000_000, 
+      "tW": 4_000_000
+    } 
+
+  - name: 'binary_3'
+    model_type: 'binary'
+    classification: *classification1
+    process_sf: {
+      "ggHH_kl_1_kt_1_hh_bbww": 0.5, 
+      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_hh_bbww": 0.25,
+      "tW": 4.0, 
+      "ttbar": 8.0}
+    batch_size: 1024
+    tree_names: ['SL_res_4j_1b', 'SL_res_4j_2b']
+    features: *SL_4j_resolved_vars
+    network:
+      units: 300
+      resnet: True
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: 'adam', lr: 0.001}
+    epochs: 1000
+    process_num_events: {
+      "ttbar": 8_000_000, 
+      "tW": 4_000_000
+    } 
+
+  - name: 'binary_4'
+    model_type: 'binary'
+    classification: *classification1
+    process_sf: {
+      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_hh_bbww": 0.25,
+      "tW": 4.0, 
+      "ttbar": 8.0}
+    batch_size: 1024
+    tree_names: ['SL_res_4j_1b', 'SL_res_4j_2b']
+    features: *SL_4j_resolved_vars
+    network:
+      units: 300
+      resnet: True
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: 'adam', lr: 0.001}
+    epochs: 1000
+    process_num_events: {
+      "ttbar": 8_000_000, 
+      "tW": 4_000_000
+    } 

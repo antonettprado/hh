@@ -45,19 +45,20 @@ def log_msg(msg, level='info', logger=None):
     else:
         print(msg)
 
-def convert_model_to_onnx(saved_model: Path, logger=None):    
-    onnx_output = modeldir / "dnn_model.onnx"
-    if saved_model.exists():
-        log_msg(f"Converting best checkpoint to ONNX: {onnx_output}")
-        best_model = tf.keras.models.load_model(
-            saved_model,
-            custom_objects={
-                "CustomStandardizer": CustomStandardizer, 
-                "ReplaceUndefinedValuesWithConstant": ReplaceUndefinedValuesWithConstant}
-        )
-        tf2onnx.convert.from_keras(best_model, output_path=onnx_output)
-    else:
-        log_msg(f"Saved model {saved_model.resolve()} not found. Skipping ONNX export.")
+def convert_model_to_onnx(saved_model: Path, outdir:Path, logger=None):    
+    onnx_output = outdir / "dnn_model.onnx"
+    try:
+        if saved_model.exists():
+            log_msg(f"Converting best checkpoint to ONNX: {onnx_output}")
+            best_model = tf.keras.models.load_model(
+                saved_model,
+                custom_objects={
+                    "CustomStandardizer": CustomStandardizer, 
+                    "ReplaceUndefinedValuesWithConstant": ReplaceUndefinedValuesWithConstant}
+            )
+            tf2onnx.convert.from_keras(best_model, output_path=onnx_output)
+    except Exception as e:
+        log_msg(f"ONNX conversion failed: {e}", logger)
 
 def log_class_stats(train_ds, val_ds, test_ds, config, logger, modeldir: Path=None):
     train_stats = compute_class_stats(train_ds, config.mapper, logger)

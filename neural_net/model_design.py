@@ -17,7 +17,7 @@ def train_model(config, traindir, train_data, val_data, logger) -> tf.keras.Mode
     model = network.build_model(train_mean, train_var)
     trained_model, history = network.fit(model, train_data, val_data)
     best_ckpt = network.modeldir / "best_checkpoint"
-    convert_model_to_onnx(best_ckpt, network.logger)
+    convert_model_to_onnx(best_ckpt, network.modeldir, network.logger)
     plot_training_curves(network.modeldir, history)
     return trained_model
 
