@@ -1,7 +1,8 @@
 from neural_net import utils as nn_utils
 from neural_net.model_config import save_model_config, get_config, ModelConfig
 from neural_net.model_data import get_data, prune_ds, DatasetManager, SHUFFLE_BUFFER_SIZE
-from neural_net.model_design import train_model, evaluate_model
+from neural_net.model_design import train_model
+from neural_net.model_evaluator import evaluate_model
 from datetime import timedelta
 import time
 import tensorflow as tf
@@ -104,13 +105,12 @@ def main(args):
     save_model_config(model_config, modeldir / 'config.yml')
 
     TRAINERS = {'simple': SimpleTrainer, 'kfold': KFoldTrainer}
-    TrainerClass = TRAINERS.get(args.trainer, None)
-    if TrainerClass is None:
-        raise ValueError(f"Unknown trainer: {args.trainer}")
+    TrainerClass = TRAINERS.get(args.trainer)
 
-    print(f"Tensorflow version: {tf.__version__}")
-    
-    trainer = TrainerClass(model_config, args.workdir, modeldir, args.pass_idx)
+    if args.trainer == 'simple'
+        trainer = SimpleTrainer(model_config, args.workdir, modeldir, args.log_level)
+    elif args.trainer == 'kfold':
+        trainer = SimpleTrainer(model_config, args.workdir, modeldir, args.pass_idx, args.log_level)
     trainer.run()
 
 if __name__ == "__main__":

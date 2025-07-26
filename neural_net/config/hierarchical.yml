@@ -16,39 +16,32 @@ models:
     classification: {
       "ttbar": ["ttbar"], 
       "non_ttbar": [
-        "ggHH_kl_1_kt_1_hh_bbww", 
-        "ggHH_kl_2p45_kt_1_hh_bbww", 
-        "ggHH_kl_5_kt_1_hh_bbww", 
-        "ggHH_kl_0_kt_1_hh_bbww",
+        "ggHH_kl_1_kt_1_bbww", 
+        "ggHH_kl_2p45_kt_1_bbww", 
+        "ggHH_kl_5_kt_1_bbww", 
+        "ggHH_kl_0_kt_1_bbww",
         "tW"
-        # "tbq",
-        # "tb",
-        # "WJets",
-        # "DY",
-        # "VV",
-        # "QCD",
-        # "ttV",
-        # "H"
       ]
     }
     process_sf: {
       "ggHH_kl_1_kt_1_hh_bbww": 1.0, 
       "ggHH_kl_2p45_kt_1_hh_bbww": 1.0, 
       "ggHH_kl_5_kt_1_hh_bbww": 1.0, 
-      "ggHH_kl_0_kt_1_hh_bbww": 1.0, 
+      "ggHH_kl_0_kt_1_hh_bbww": 1.0,
+      "tW": 4.0, 
       "ttbar": 8.0}
     batch_size: 1024
     tree_names: ['SL_4j_resolved']
     features: *SL_4j_resolved_vars
     network:
-      units: 32
+      units: 128
       resnet: True
       act_regularizer: {l1: 1e-4}
     optimizer: {name: 'adam', lr: 0.001}
-    epochs: 2
+    epochs: 10
     process_num_events: {
-      "ttbar": 10_000, 
-      "tW": 10_000,
+      "ttbar": 40_000, 
+      "tW": 20_000,
       "ggHH_kl_1_kt_1_hh_bbww": 2_500, 
       "ggHH_kl_2p45_kt_1_hh_bbww": 2_500, 
       "ggHH_kl_5_kt_1_hh_bbww": 2_500, 
