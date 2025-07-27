@@ -19,6 +19,8 @@ PROCESSES_FILES = dict(
     ggHH_kl_2p45_kt_1_bbww=['ggHH_kl_2p45_kt_1_bbww_sl', 'ggHH_kl_2p45_kt_1_bbww_dl',],
     ggHH_kl_5_kt_1_bbww=['ggHH_kl_5_kt_1_bbww_sl', 'ggHH_kl_5_kt_1_bbww_dl',],
     ggHH_kl_0_kt_1_bbww=['ggHH_kl_0_kt_1_bbww_sl', 'ggHH_kl_0_kt_1_bbww_dl',],
+
+    HH_bbWW=['bbWW_sl', 'bbWW_dl'],
     
     ggHH_kl_1_kt_1_bbtautau = ['ggHH_kl_1_kt_1_bbtautau'],
     ggHH_kl_2p45_kt_1_bbtautau = ['ggHH_kl_2p45_kt_1_bbtautau'],
@@ -26,6 +28,8 @@ PROCESSES_FILES = dict(
     ggHH_kl_0_kt_1_bbtautau = ['ggHH_kl_0_kt_1_bbtautau'],
     
     ttbar=['ttbar_sl', 'ttbar_dl', 'ttbar_fh'],
+    TTbar=['TTbar_sl', 'TTbar_dl'],
+
     tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
     tbq=['TBbarQ', 'TbarBQ'],
     tb=['TBbartoLplusNuBbar', 'TbarBtoLminusNuB'],
@@ -71,7 +75,6 @@ def get_file_process(root_file: Path) -> str:
     process = SUBPROCESS_TO_PROCESS[subprocess]
     return process
 
-
 def get_root_files(resultsdir: Path) -> list[Path]:
     return [file for file in resultsdir.iterdir() if file.suffix=='.root' and '__skeleton__' not in file.name]
 
@@ -99,7 +102,52 @@ def find_mc_eras(resultsdir: Path) -> list[str]:
 def select_refs_for_selection(refs: list[str], sel_name: str) -> list[str]:
     if sel_name not in SELECTIONS:
         raise ValueError(f"'{sel_name}' is not a recognized selection. Available: {SELECTIONS}")
-    return [ref for ref in refs if ref.startswith(sel_name + "_")]
+    return [ref for ref in refs if ref.startswith(f"{sel_name}_")]
+
+def filter_files_by_process_and_era(resultsdir: Path, processes: list[str] = None, eras: list[str] = None) -> list[Path]:
+    """
+    - If processes is None, includes all known processes
+    - If eras is None, includes all eras present in resultsdir
+    """
+    root_files = get_root_files(resultsdir)
+    matched_files = []
+
+    all_processes = set(SUBPROCESS_TO_PROCESS.values())
+    processes = set(processes) if processes is not None else all_processes
+
+    available_eras = set(get_eras(resultsdir))
+    eras = set(eras) if eras is not None else available_eras
+    for f in root_files:
+        try:
+            proc = get_file_process(f)
+            era = get_file_era(f)
+            if proc in processes and era in eras:
+                matched_files.append(f)
+        except KeyError:
+            print(f"Warning: Unknown process or malformed filename: {f.name}")
+            continue
+
+    print(matched_files)
+
+    return matched_files
+
+def get_files(resultsdir: Path, filenames: list[str]) -> list[Path]:
+    """
+    Given a list of full ROOT filenames (without .root extension), return a list of matching Path objects.
+    
+    Example: ['ggHH_kl_1_kt_1_bbww_sl_2022', 'ttbar_dl_2023']
+    """
+    all_files = get_root_files(resultsdir)
+    filename_set = set(filenames)
+
+    matched_files = [f for f in all_files if f.stem in filename_set]
+
+    # Warn or raise if some requested files aren't found
+    missing = filename_set - {f.stem for f in matched_files}
+    if missing:
+        raise FileNotFoundError(f"Missing files in {resultsdir}: {missing}")
+
+    return matched_files
 
 # Color scheme for plotting processes -----------------
 CLASS_COLOR_MAP = dict(
