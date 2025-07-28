@@ -28,7 +28,7 @@ def get_nano_version(sampleCfg: dict) -> str:
 class NanoBaseHHbbWW(NanoAODHistoModule):
     def __init__(self, args):
         super(NanoBaseHHbbWW, self).__init__(args)
-        self.event_nr_sel = "all"
+        self.event_nr_sel = self.args.event_nr_sel
 
     def addArgs(self, parser):
         super(NanoBaseHHbbWW, self).addArgs(parser)

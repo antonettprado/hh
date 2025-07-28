@@ -3,8 +3,18 @@ import uproot
 from pathlib import Path
 from bamboo_hh_new.utils.analysis_config import AnalysisConfig
 from references import references  # your module
+import numpy as np
+import pandas as pd
 
 ROOT.gROOT.SetBatch(True)
+
+def normalize_hist(hist: ROOT.TH1) -> ROOT.TH1:
+    integral = hist.Integral()
+    if integral > 0:
+        hist.Scale(1.0 / integral)
+    else:
+        raise ValueError(f"Cannot normalize histogram '{hist.GetName()}': integral is zero.")
+    return hist
 
 def get_hist_refs_from_file(file: Path) -> list[str]:
     with uproot.open(file) as upfile:
@@ -32,15 +42,7 @@ def get_scaled_hist(file: Path, histname: str, xsec: float, lumi: float, sumw: f
     h.Scale((xsec * lumi) / sumw if sumw > 0 else 1.0)
     return h
 
-def normalize_hist(hist: ROOT.TH1) -> ROOT.TH1:
-    integral = hist.Integral()
-    if integral > 0:
-        hist.Scale(1.0 / integral)
-    else:
-        raise ValueError(f"Cannot normalize histogram '{hist.GetName()}': integral is zero.")
-    return hist
-
-def sum_hists(hists) -> ROOT.TH1:
+def add_hists(hists: list[ROOT.TH1]) -> ROOT.TH1:
     if not hists:
         return None
     total = hists[0].Clone()
@@ -64,6 +66,24 @@ def get_total_hist(ref: str, files: list[Path], config: AnalysisConfig) -> ROOT.
             print(f"Skipping: {file.name} for {process}, {era}: {e}")
         except ValueError as e:
             print(f"Missing config entry: {e}")
-    return sum_hists(hists)
+    return add_hists(hists)
 
-    
+# ======================================================
+def make_scaled_hist(df: pd.DataFrame, file: Path, var: str, nbins: int, xmin: float, xmax: float, config: AnalysisConfig) -> ROOT.TH1F:
+    era = references.get_file_era(file)
+    subprocess = references.get_file_subprocess(file)
+
+    xsec = config.get_cross_section(subprocess)
+    lumi = config.get_luminosity(era)
+    sumw = get_sum_weights(file)
+    scale = (xsec * lumi) / sumw if sumw > 0 else 0.0
+
+    histname = f"{var}_{file.stem}"
+    hist = ROOT.TH1F(histname, histname, nbins, xmin, xmax)
+    hist.SetDirectory(0)
+
+    for val in df[var].values:
+        hist.Fill(val)
+
+    hist.Scale(scale)
+    return hist

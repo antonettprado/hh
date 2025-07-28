@@ -8,7 +8,7 @@ jupyter notebook --no-browser --port=8888
 
 python -u scripts/bambooRunBetter.py JetTopology -o $Z_OUTPUT_eos/JetTop_test -t
 
-python -u scripts/bambooRunBetter.py LikelihoodRatioNew -o $Z_OUTPUT_eos/LRNew_test -lrf /eos/user/a/anunezde/Z_OUTPUT_eos_archived/Era2022_0215_HHttbartW/Reco_even/results/corrections_lr.json
+python -u scripts/bambooRunBetter.py LikelihoodRatioNew -o $Z_OUTPUT_eos/LRNew_test -lrf $Z_OUTPUT_eos/JetTop/llr_functions_from_even.json -log --event_nr_sel odd -t
 
 ```
 

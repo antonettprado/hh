@@ -6,8 +6,8 @@ from bamboo.scalefactors import get_correction
 from bamboo_hh_new.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh_new.definitions.objects import get_objects
 from bamboo_hh_new.definitions.event_selections import get_event_selections
-from bamboo_hh_new.definitions.variables import get_supervars
-from bamboo_hh_new.utils.selection_containers import HigherSelectionsContainer, HigherSelection, HSVar
+from bamboo_hh_new.definitions.variables import get_vars
+from bamboo_hh_new.utils.selection_containers import HigherSelectionsContainer, HigherSelection
 
 from pathlib import Path
 
@@ -17,14 +17,13 @@ class MyLR:
         'lr': { 'nbins':100, 'min':0, 'max':15 },
         'llr': { 'nbins':100, 'min':-3, 'max':3 }}
 
-    def __init__(self, hs_var: HSVar, apply_log: bool, **kwargs):
-        self.name = hs_var.name + ('_llr' if apply_log else '_lr')
+    def __init__(self, var, apply_log: bool, **kwargs):
+        self.name = var.name + ('_llr' if apply_log else '_lr')
         binning = self.binning_opts['llr'] if apply_log else self.binning_opts['lr']
         self.__dict__.update(**binning)
-        self.sel_name = hs_var.sel_name
         self.eqbin = EqBin(self.nbins, self.min, self.max)
-        self.ref = '_'.join((self.sel_name, self.name))
-        self.full_title = hs_var.title + (' LLR' if apply_log else ' LR')
+        self.ref = '_'.join((var.subcat, self.name))
+        self.full_title = var.title + (' LLR' if apply_log else ' LR')
 
 
 class LikelihoodRatioNew(NanoBaseHHbbWW):  
@@ -32,10 +31,11 @@ class LikelihoodRatioNew(NanoBaseHHbbWW):
     def addArgs(self, parser):
         super(LikelihoodRatioNew, self).addArgs(parser)
         parser.add_argument("-lrf", "--lr_functions", type=Path, action='store', help='The work directory where the correction file is')
-        parser.add_argument("-llr", "--llr", action='store_true', help='Calculate LLRs instead of LRs')
+        parser.add_argument("-log", "--apply_log", action='store_true', help='Calculate LLRs instead of LRs')
         
-    def map_to_lr(self, data: list, var_name, sel, defineOnFirstUse=True):
-        corr_file = self.args.lr_functions #Path
+    @staticmethod
+    def map_to_lr(lr_functions: Path, data: list, var_name, sel, defineOnFirstUse=True):
+        corr_file = lr_functions#Path
         if len(data) == 1: 
             return get_correction(corr_file, var_name, params={"xaxis": data[0]}, defineOnFirstUse=defineOnFirstUse, sel=sel)(None)  
         elif len(data) == 2:
@@ -43,16 +43,16 @@ class LikelihoodRatioNew(NanoBaseHHbbWW):
         elif len(data) == 3:
             return get_correction(corr_file, var_name, params={"xaxis": data[0],"yaxis":data[1], "zaxis":data[2]}, defineOnFirstUse=defineOnFirstUse, sel=sel)(None) 
 
-    def attach_lrs_to_hs(self, hs: HigherSelection, apply_log:bool=False) -> HigherSelection:
+    @staticmethod
+    def attach_lrs_to_hs(lr_functions: Path, hs: HigherSelection, apply_log:bool=False) -> HigherSelection:
         lrs = []
-        for hs_var in [hs_var for hs_var in hs.vars1D if hs_var.name != 'era']:
-            if 'bjets' in hs_var.name:
-                lr = MyLR(hs_var, apply_log=apply_log)
-                var_data = op.switch(hs_var.data < hs_var.xmin, hs_var.xmin + 0.0001*abs(hs_var.xmin), hs_var.data)
-                var_data = op.switch(hs_var.data > hs_var.xmax, hs_var.xmax - 0.0001*abs(hs_var.xmax), hs_var.data)
-                lr.data = self.map_to_lr([var_data], lr.ref, hs.sel)
-                lrs.append(lr)
-        hs.attach_lrs = lrs
+        for var in [var for var in hs.vars1D if var.name != 'era']:
+            lr = MyLR(var, apply_log=apply_log)
+            var_data = op.switch(var.data < var.min, var.min + 0.0001*abs(var.min), var.data)
+            var_data = op.switch(var.data > var.max, var.max - 0.0001*abs(var.max), var.data)
+            lr.data = LikelihoodRatioNew.map_to_lr(lr_functions, [var_data], lr.ref, hs.sel)
+            lrs.append(lr)
+        hs.lrs = lrs
         return hs
 
     def get_skim(self, hs: HigherSelection):
@@ -68,8 +68,8 @@ class LikelihoodRatioNew(NanoBaseHHbbWW):
 
         objects: dict = get_objects(tree, self.era, get_nano_version(sampleCfg))
         selections: dict = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample)
-        supervars: list = get_supervars(objects, selections)
-        hsc = HigherSelectionsContainer.from_selections_and_vars(selections, supervars)
+        vars: list = get_vars(objects, selections)
+        hsc = HigherSelectionsContainer.from_selections_and_vars(selections, vars)
 
         # ===============================================================================
         # ============================= Plots & Skims ===================================
@@ -77,11 +77,11 @@ class LikelihoodRatioNew(NanoBaseHHbbWW):
 
         sels = [
             # hsc.SL_3j_resolved,
-            # hsc.SL_4j_resolved,
-            hsc.SL_resolved
+            hsc.SL_4j_resolved,
+            # hsc.SL_resolved
         ]
 
-        sels = [self.attach_lrs_to_hs(hs) for hs in sels]
+        sels = [self.attach_lrs_to_hs(self.args.lr_functions, hs, self.args.apply_log) for hs in sels]
         
         hists = [Plot.make1D(lr.ref, lr.data, hs.sel, lr.eqbin, xTitle=lr.full_title) for hs in sels for lr in hs.lrs ]
         plots.extend(hists)

@@ -7,8 +7,9 @@ from pathlib import Path
 from references import references
 import uproot
 import pandas as pd
-from bamboo_hh_new.utils.histograms import get_hist_refs_from_file, get_sum_weights, get_total_hist, normalize_hist
+from bamboo_hh_new.utils.histograms import get_hist_refs_from_file, get_sum_weights, get_total_hist, normalize_hist,get_total_hist_from_tree
 from bamboo_hh_new.utils.analysis_config import AnalysisConfig
+from bamboo_hh_new.definitions.variables import REG
 from typing import Optional
 
 pd.set_option('display.max_rows', None)   # Show all rows
@@ -129,7 +130,7 @@ def get_min_bin_content(files: list[Path], config: AnalysisConfig, selection: st
             })
 
     if not df_genWeights or not df_scale_factors:
-        raise RuntimeError(f"No valid samples were found for the: {selection}, {processes}, and {eras}.")
+        raise RuntimeError(f"No valid samples were found for the: {selection}")
 
     df_genWeights = pd.concat(df_genWeights, ignore_index=True)
     df_scale_factors = pd.DataFrame(df_scale_factors)
@@ -164,43 +165,41 @@ def replace_bin_content(hist, min_bin_content):
 def compute_lr(signal_hist, background_hist):
     normalized_signal = normalize_hist(signal_hist)
     normalized_background = normalize_hist(background_hist)
-    # if min_background:
-    #     sig_back_dict['Background'] = replace_bin_content(sig_back_dict['Background'], min_background)
     ratio_hist = normalized_signal.Clone()
     ratio_hist.Divide(normalized_background)
     return ratio_hist
 
-def main(workdir: Path, take_log: bool=False, outfilename: str = 'lr_mappings'):
+def main(workdir: Path, take_log: bool=False, outfilename: str = 'lr_mappings', events:str = None):
 
     # selections = ['SL_res_4j_1b', 'SL_res_4j_2b']
     selections = ['SL_4j_resolved']
-    signal_processes = ['ggHH_kl_1_kt_1_bbww']
-    background_processes = ['ttbar', 'tW']
-    eras = ['2022']
 
+    if events == 'even':
+        filter = lambda ev: ev % 2 == 0
+    elif events == 'odd':
+        filter = lambda ev: ev % 2 == 1
+    else:
+        filter = None
+    
     config = AnalysisConfig()
     resultsdir = workdir / 'results'
-    all_root_files = references.get_mc_files(resultsdir)
-    all_refs = get_hist_refs_from_file(all_root_files[0])
+    var1D_names = REG.get_var1D_names()
 
     signal_filenames = ['ggHH_kl_1_kt_1_bbww_sl_2022', 'ggHH_kl_1_kt_1_bbww_dl_2022']
     background_filenames = ['ttbar_sl_2022', 'ttbar_dl_2022']
     signal_files = references.get_files(resultsdir, signal_filenames)
     background_files = references.get_files(resultsdir, background_filenames)
     
-    
     all_corrections = []
     for sel_name in selections:
-        sel_refs = references.select_refs_for_selection(all_refs, sel_name)
-        # min_signal = get_min_bin_content(signal_files, config, sel_name, min_sf=0.1)
-        # min_background = get_min_bin_content(background_files, config, sel_name, min_sf=0.1)
-        for ref in sel_refs:
-            signal_hist = get_total_hist(ref, signal_files, config)
-            background_hist = get_total_hist(ref, background_files, config)
+        for varname in var1D_names:
+            binning = REG.get_var1D_binning(varname)
+            signal_hist = get_total_hist_from_tree(varname, sel_name, signal_files, config, binning, filter)
+            background_hist = get_total_hist_from_tree(varname, sel_name, background_files, config, binning, filter)
             ratio_hist = compute_lr(signal_hist, background_hist)
             bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_1D, take_log)
             all_corrections.append(cs.Correction(
-                name=ref + ('_llr' if take_log else '_lr'),
+                name=f"{sel_name}_{varname}" + ('_llr' if take_log else '_lr'),
                 version=0,
                 inputs=[cs.Variable(name="xaxis", type="real", description="")],
                 output=cs.Variable(name="", type="real", description=""),
@@ -224,13 +223,14 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--workdir", action="store", type=Path, help="work directory. Ex: Z_OUTPUT/VarsReco")
     parser.add_argument("-l", "--take_log", action='store_true', help="Compute LLRs instead of LRs")
     parser.add_argument("-o", "--outfilename", help="Compute LLRs instead of LRs")
+    parser.add_argument("-e", "--events", help="Event numbers to consider: even or odd or all")
     args = parser.parse_args()
 
-    main(args.workdir, args.take_log, args.outfilename)
+    main(args.workdir, args.take_log, args.outfilename, args.events)
     '''
     To compute LRs:
-    python3 bamboo_hh_new/definitions/lr_mapping.py -w Z_OUTPUT_eos/Reco
+    python3 bamboo_hh_new/utils/lr_mapping.py -w Z_OUTPUT_eos/Reco
 
     To compute LLRs:
-    python3 bamboo_hh_new/definitions/lr_mapping.py -w Z_OUTPUT_eos/Reco -llr
+    python3 bamboo_hh_new/utils/lr_mapping.py -w Z_OUTPUT_eos/Reco -llr
     '''

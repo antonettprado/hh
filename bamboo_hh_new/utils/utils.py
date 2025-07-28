@@ -1,11 +1,13 @@
 from bamboo.plots import EquidistantBinning as EqBin
 from dataclasses import dataclass, field
+from pathlib import Path
 import copy
 
 class VariableRegister:
     def __init__(self):
         self._vars1D_meta = []  # list of (metadata, data_func)
-        self._varsND_meta = []  # list of metadata dicts
+        self._vars2D_meta = []  # list of metadata dicts
+        self._vars3D_meta = []  # list of metadata dicts
 
     def var1D(self, **metadata):
         def decorator(func):
@@ -13,12 +15,33 @@ class VariableRegister:
             return func
         return decorator
 
-    def varND(self, **metadata):
-        self._varsND_meta.append(metadata)
+    def var2D(self, **metadata):
+        self._vars2D_meta.append(metadata)
+
+    def var3D(self, **metadata):
+        self._vars3D_meta.append(metadata)
+
+    def get_var1D_names(self) -> list:
+        """Returns a list of registered 1D variable names."""
+        return [meta["name"] for meta, _ in self._vars1D_meta]
+
+    def get_var2D_names(self) -> list:
+        """Returns a list of registered ND variable names."""
+        return [meta["name"] for meta in self._vars2D_meta]
+    
+    def get_var3D_names(self) -> list:
+        """Returns a list of registered ND variable names."""
+        return [meta["name"] for meta in self._vars3D_meta]
+
+    def get_var1D_binning(self, var_name: str) -> tuple[int, int, int]:
+        """Returns the binning parameters for a given 1D variable name."""
+        for meta, _ in self._vars1D_meta:
+            if meta["name"] == var_name:
+                return (meta['nbins'], meta['min'], meta['max'])
+        raise KeyError(f"1D variable '{var_name}' not found")
 
     def build(self, objects, selections) -> list:
         subcats = selections.keys()
-        # 1D variables
         vars1D = []
         for meta, data_func in self._vars1D_meta:
             data = data_func(objects)
@@ -33,13 +56,28 @@ class VariableRegister:
             vars1D.append(var)
         vars1D_dict = {v.name: v for v in vars1D}
 
-        # ND variables
-        varsND = []
-        for meta in self._varsND_meta:
-            varND = VariableND(meta["name"], list(vars1D_dict[name] for name in meta["vars"]))
-            varsND.append(varND)
-
+        _varsND_meta = self._vars2D_meta + self._vars3D_meta
+        varsND = [VariableND(meta["name"], [vars1D_dict[name] for name in meta["vars"]]) for meta in _varsND_meta]
         return vars1D + varsND
+
+    def get_present_vars(self, var_kind, root_file: Path, tree_name: str) -> list[str]:
+        """Return the list of 1D variable names that are present in the specified ROOT tree."""
+        if var_kind == '1D':
+            var_names = self.get_var1D_names()
+        elif var_kind == '2D':
+            var_names = self.get_var2D_names()
+        elif var_kind == '3D':
+            var_names = self.get_var3D_names()
+        import uproot
+        try:
+            with uproot.open(root_file) as f:
+                tree = f[tree_name]
+                leaf_names = tree.keys()
+                var_names = self.get_var1D_names()
+                present_vars = [var for var in var_names if var in leaf_names]
+                return present_vars
+        except Exception as e:
+            raise RuntimeError(f"Failed to read {tree_name} from {root_file}: {e}")
 
 class Variable:
     def update(self, **kwargs):

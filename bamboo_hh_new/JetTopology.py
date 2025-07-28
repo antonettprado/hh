@@ -12,6 +12,8 @@ class JetTopology(NanoBaseHHbbWW):
     def get_skim(self, hs: HigherSelection):
         skim_data = {"event": None, "genWeight": None}
         skim_data.update({var.name: var.data for var in hs.vars1D})
+        skim_data.update({var.name: var.data for var in hs.vars2D})
+        skim_data.update({var.name: var.data for var in hs.vars3D})
         return Skim(hs.name, skim_data, hs.sel)
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
@@ -76,8 +78,10 @@ class JetTopology(NanoBaseHHbbWW):
         skim_selections = [
             hsc.SL_res_3j_1b,
             hsc.SL_res_3j_2b,
+            hsc.SL_3j_resolved,
             hsc.SL_res_4j_1b,
             hsc.SL_res_4j_2b,
+            hsc.SL_4j_resolved
         ]
         skims = [self.get_skim(hs) for hs in skim_selections]
         plots.extend(skims)

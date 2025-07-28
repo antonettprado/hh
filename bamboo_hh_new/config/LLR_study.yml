@@ -1,0 +1,169 @@
+tree: Events
+
+eras:
+  '2022':
+    luminosity: 7980.4
+
+samples: 
+  ggHH_kl_1_kt_1_bbww_sl_2022:
+    group: ggHH_kl_1_kt_1_bbww
+    era: '2022'
+    db: das:/GluGlutoHHto2B2WtoLNu2Q_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    type: mc
+    cross-section: 0.003776
+    generated-events: genEventSumw
+    split: 2
+  ggHH_kl_1_kt_1_bbww_dl_2022:
+    group: ggHH_kl_1_kt_1_bbww
+    era: '2022'
+    db: das:/GluGlutoHHto2B2Vto2L2Nu_kl-1p00_kt-1p00_c2-0p00_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v1/NANOAODSIM
+    type: mc
+    cross-section: 0.000948
+    generated-events: genEventSumw
+    split: 3
+  ttbar_sl_2022:
+    group: ttbar
+    era: '2022'
+    db:
+    - das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 407.8
+    generated-events: genEventSumw
+    split: 83
+  ttbar_dl_2022:
+    group: ttbar
+    era: '2022'
+    db:
+    - das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 101.8
+    generated-events: genEventSumw
+    split: 40
+  tbarWplus_sl_2022:
+    group: tW
+    era: '2022'
+    db:
+    - das:/TbarWplustoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TbarWplustoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 19.31
+    generated-events: genEventSumw
+    split: 16
+  tbarWplus_dl_2022:
+    group: tW
+    era: '2022'
+    db:
+    - das:/TbarWplusto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TbarWplusto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 4.67
+    generated-events: genEventSumw
+    split: 6
+  tWminus_sl_2022:
+    group: tW
+    era: '2022'
+    db:
+    - das:/TWminustoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TWminustoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 19.31
+    generated-events: genEventSumw
+    split: 16
+  tWminus_dl_2022:
+    group: tW
+    era: '2022'
+    db:
+    - das:/TWminusto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TWminusto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 4.67
+    generated-events: genEventSumw
+    split: 6
+
+plotIt:
+  configuration:
+    width: 800
+    height: 600
+    margin-left: 0.2
+    margin-right: 0.03
+    margin-top: 0.05
+    margin-bottom: 0.15
+    luminosity-label: '%1$.2f fb^{-1} (13.6 TeV)'
+    experiment: CMS
+    extra-label: Run 3 - Work in progress
+    error-fill-style: 3154
+    error-fill-color: '#ee556270'
+    ratio-fit-error-fill-style: 1001
+    ratio-fit-error-fill-color: '#aa556270'
+    ratio-fit-line-color: '#0B486B'
+    yields-table-align: v
+  legend:
+    position:
+    - 0.7
+    - 0.6
+    - 0.91
+    - 0.91
+  groups:
+    data:
+      legend: data
+    ggHH_kl_1_kt_1_bbww:
+      legend: ggHH_bbWW
+      fill-color: '#EDC951'
+    ggHH_kl_1_kt_1_bbtautau:
+      legend: ggHH_bbtautau
+      fill-color: '#EDC951'
+    HH_bbtautau:
+      legend: HH_bbtautau
+      fill-color: '#EDC951'
+    ttbar:
+      legend: ttbar
+      fill-color: '#99ccff'
+    DY:
+      legend: DY
+      fill-color: '#9FFF33'
+    WJets:
+      legend: WJets
+      fill-color: '#FFC300'
+    VV:
+      legend: VV
+      fill-color: '#C900FF'
+    tW:
+      legend: tW
+      fill-color: '#BB2255'
+    single_top:
+      legend: single_top
+      fill-color: '#BB2255'
+    QCD:
+      legend: QCD
+      fill-color: '#AB2255'
+    ggH:
+      legend: ggH
+      fill-color: '#AB0055'
+    VBFH:
+      legend: VBFH
+      fill-color: '#AB0055'
+    WH:
+      legend: WH
+      fill-color: '#AB0055'
+    ZH:
+      legend: ZH
+      fill-color: '#AB0055'
+    ttH:
+      legend: ttH
+      fill-color: '#AB1155'
+  plotdefaults:
+    y-axis: Events
+    y-axis-show-zero: true
+    save-extensions:
+    - pdf
+    show-ratio: true
+    sort-by-yields: true
+    legend-columns: 2
+    ratio-y-axis: '#frac{Data}{MC}'
+    ratio-y-axis-range:
+    - 0.5
+    - 1.5
+    normalized: false
+

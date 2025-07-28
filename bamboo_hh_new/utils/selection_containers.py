@@ -5,45 +5,46 @@ class HigherSelection:
     def __init__(self, name: str, sel: Selection, vars: list):
         self.name = name
         self.sel = sel
-        self.hs_vars = vars
+        self.vars = vars
+        self._lrs = None
         self._update_lookup()
 
     def _update_lookup(self):
-        self._hs_vars_by_name = {v.name: v for v in self.hs_vars}
-
-    def attach_lrs(self, lrs: list):
-        self.hs_vars.extend(lrs)
-        self._update_lookup()
+        self._vars_by_name = {v.name: v for v in self.vars}
 
     def __getitem__(self, name: str):
         try:
-            return self._hs_vars_by_name[name]
+            return self._vars_by_name[name]
         except KeyError:
-            raise KeyError(f"'{name}' not found in self.hs_vars in HigherSelection '{self.name}'")
+            raise KeyError(f"'{name}' not found in self.vars in HigherSelection '{self.name}'")
 
     @property
     def vars1D(self):
-        return [v for v in self.hs_vars if getattr(v, "ndim") == 1]
+        return [v for v in self.vars if getattr(v, "ndim") == 1]
 
     @property
     def vars2D(self):
-        return [v for v in self.hs_vars if getattr(v, "ndim") == 2]
+        return [v for v in self.vars if getattr(v, "ndim") == 2]
 
     @property
     def vars3D(self):
-        return [v for v in self.hs_vars if getattr(v, "ndim") == 3]
+        return [v for v in self.vars if getattr(v, "ndim") == 3]
 
     @property
     def lrs(self):
-        return [v for v in self.hs_vars if isinstance(v, )]
+        return self._lrs
+    
+    @lrs.setter
+    def lrs(self, value):
+        self._lrs = value
 
-    def keys(self): return self._hs_vars_by_name.keys()
-    def values(self): return self._hs_vars_by_name.values()
-    def items(self): return self._hs_vars_by_name.items()
-    def __iter__(self): return iter(self._hs_vars_by_name)
+    def keys(self): return self._vars_by_name.keys()
+    def values(self): return self._vars_by_name.values()
+    def items(self): return self._vars_by_name.items()
+    def __iter__(self): return iter(self._vars_by_name)
 
     def __repr__(self):
-        return f"<HigherSelection: {self.name}, {len(self.hs_vars)} vars, {len(self.lrs or [])} lrs>"
+        return f"<HigherSelection: {self.name}, {len(self.vars)} vars, {len(self.lrs or [])} lrs>"
 
 
 class HigherSelectionsContainer:
