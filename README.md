@@ -10,6 +10,8 @@ python -u scripts/bambooRunBetter.py JetTopology -o $Z_OUTPUT_eos/JetTop_test -t
 
 python -u scripts/bambooRunBetter.py LikelihoodRatioNew -o $Z_OUTPUT_eos/LRNew_test -lrf $Z_OUTPUT_eos/JetTop/llr_functions_from_even.json -log --event_nr_sel odd -t
 
+python -u scripts/bambooRunBetter.py LikelihoodRatioNew -o $Z_OUTPUT_eos/LLR_Study_Replication_v2 -lrf $Z_OUTPUT_eos/JetTop/llr_functions_from_even.json -log --event_nr_sel odd -t
+
 ```
 
 ### To use bambooRun
