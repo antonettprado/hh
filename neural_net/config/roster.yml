@@ -26,14 +26,14 @@ models:
   - name: 'multi_HH_ttbar_tW_3j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "tW": ["tW"]}
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "tW": 4.0}
     batch_size: 1024
@@ -51,15 +51,15 @@ models:
   - name: 'multi_HH_ttbar_tW_4j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "tW": ["tW"]
     }
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "tW": 4.0, 
     }
@@ -78,15 +78,15 @@ models:
   - name: 'multi_HH_ttbar_WJets_3j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "WJets": ["WJets"]
       }
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "WJets": 4.0}
     batch_size: 1024
@@ -104,15 +104,15 @@ models:
   - name: 'multi_HH_ttbar_WJets_4j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "WJets": ["WJets"]
     }
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "WJets": 4.0
     }
@@ -131,15 +131,15 @@ models:
   - name: 'multi_HH_ttbar_tW_WJets_3j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "tW": ["tW"], 
       "WJets": ["WJets"]}
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "tW": 4.0, 
       "WJets": 4.0}
@@ -158,16 +158,16 @@ models:
   - name: 'multi_HH_ttbar_tW_WJets_4j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "tW": ["tW"], 
       "WJets": ["WJets"]
     }
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "tW": 4.0, 
       "WJets": 4.0

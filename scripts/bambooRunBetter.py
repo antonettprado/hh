@@ -15,7 +15,7 @@ USER: str = os.environ["USER"]
 HOSPITAL_LONG_PROCESS: int = 1800
 HOSPITAL_SLEEP_TIME: int = 120
 
-BAMBOO_HH = Path(__file__).parents[1] / "bamboo_hh_new"
+BAMBOO_HH = Path(__file__).parents[1] / "bamboo_hh"
 
 def parse_args(): 
     module_choices: list[str] = [ path.stem for path in BAMBOO_HH.iterdir() if path.is_file() and not path.name.startswith('_') ]

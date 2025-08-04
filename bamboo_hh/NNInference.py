@@ -33,11 +33,8 @@ class NNInference(NanoBaseHHbbWW):
         parser.add_argument("-trainer", "--trainer", action='store', choices=['simple', 'kfold'], default='kfold', help='The trainer used: simple or kfold')
 
     @staticmethod
-    def get_DNN_model_info(modeldir: Path):
-        model_path = modeldir / "dnn_model.onnx"
-        model = mvaEvaluator(model_path, mvaType='ONNXRuntime', otherArgs = ("output"))
-        model_info_file = modeldir / 'model_info.yml'
-        with open(model_info_file, 'r') as file:
+    def get_model_config_info(model_config_path: Path):
+        with open(model_config_path, 'r') as file:
             model_info = yaml.safe_load(file)
         model_name = model_info['name']
         model_type = model_info['model_type']
@@ -51,7 +48,7 @@ class NNInference(NanoBaseHHbbWW):
         print(f"\t\tClasses: {classes}")
         print(f"\t\tProcesses: {processes}")
 
-        return model, model_name, model_type, features, classes, processes, training_sel
+        return model_name, model_type, features, classes, processes, training_sel
 
     @staticmethod
     def gather_input_data(sel_name, feature_names, reco_vars, correction_file=None):
@@ -102,10 +99,12 @@ class NNInference(NanoBaseHHbbWW):
         return input_vars
 
     @staticmethod
-    def get_DNN(modeldir:str, reco_vars: RecoVariables, correction_file=None):
+    def get_DNN(modeldir:str, reco_vars: RecoVariables, model_config_path: Path, correction_file=None, pass_idx=None):
         DNN = Variable1D("DNN")
         DNN_selections = reco_vars._get_selections_subset(DNN.subcats)
-        model, model_name, model_type, feature_names, classes, processes, training_sel_name = NNInference.get_DNN_model_info(modeldir)
+        model = mvaEvaluator(modeldir / "dnn_model.onnx", mvaType='ONNXRuntime', otherArgs = ("output"))
+        model_name, model_type, feature_names, classes, processes, training_sel_name = NNInference.get_model_config_info(model_config_path)
+        model_name  = f"{model_name}_Pass{pass_idx}"
         res_pattern = '3j' if '3j' in training_sel_name else '4j'
         inference_sel_names = [sel_name for sel_name in DNN_selections.keys() if res_pattern in sel_name]
         DNN.subcats = inference_sel_names
@@ -119,8 +118,8 @@ class NNInference(NanoBaseHHbbWW):
         DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes)
         return DNN
 
-    def trainer_simple(self, modeldir, reco_vars) -> list[Plot]:
-        DNN = NNInference.get_DNN(modeldir, reco_vars, self.args.correction_file)
+    def trainer_simple(self, modeldir, reco_vars, model_config_path) -> list[Plot]:
+        DNN = NNInference.get_DNN(modeldir, reco_vars, model_config_path, self.args.correction_file)
         DNN_plots: list[list] = []
         for sel_name in DNN.subcats:
             dnn = DNN[sel_name]
@@ -136,11 +135,11 @@ class NNInference(NanoBaseHHbbWW):
                 self.yields.add(sel_NNclass, sel_NNclass_name) 
         return DNN_plots
 
-    def trainer_kfold(self, modeldir, reco_vars, tree) -> list[Plot]:         
+    def trainer_kfold(self, modeldir, reco_vars, tree, model_config_path) -> list[Plot]:         
         kfold_modeldirs = [ ( int(subpath.name[-1]), subpath ) for subpath in modeldir.iterdir() if subpath.is_dir() ]
         kfold_plots: dict[str, list[Plot]] = defaultdict(list)
         for pass_idx, pass_modeldir in kfold_modeldirs:
-            DNN = NNInference.get_DNN(pass_modeldir, reco_vars, self.args.correction_file)
+            DNN = NNInference.get_DNN(pass_modeldir, reco_vars, model_config_path, self.args.correction_file, pass_idx)
             for sel_name in DNN.subcats:
                 dnn = DNN[sel_name]
                 dnn_sel_pass = (dnn.selection).refine(f"{dnn.model_name}-{sel_name} Pass {pass_idx}", cut=[ tree.event % self.num_folds == pass_idx ])
@@ -183,10 +182,11 @@ class NNInference(NanoBaseHHbbWW):
         # # ===============================================================================
 
         for modeldir in self.modeldir_list:
+            model_config_path = modeldir / 'config.yml'
             if self.args.trainer == 'simple':
-                inference_plots = self.trainer_simple(modeldir, reco_vars)
+                inference_plots = self.trainer_simple(modeldir, reco_vars, model_config_path)
             elif self.args.trainer == 'kfold':
-                inference_plots = self.trainer_kfold(modeldir, reco_vars, tree)
+                inference_plots = self.trainer_kfold(modeldir, reco_vars, tree, model_config_path)
             else:
                 raise ValueError(f"Trainer {self.args.trainer} not supported")
             plots.extend(inference_plots)
