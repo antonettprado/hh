@@ -156,6 +156,13 @@ class LikelihoodRatioNew(NanoBaseHHbbWW):
         skims = [self.get_skim(hs) for hs in sels]
         plots.extend(skims)
 
+        # ===============================================================================
+        # ================================== Yields =====================================
+        # ===============================================================================
+
+        for hs in sels:
+            self.yields.add(hs.sel, hs.name)
+
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):

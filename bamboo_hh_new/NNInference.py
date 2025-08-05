@@ -1,36 +1,34 @@
+from bamboo import treefunctions as op
+from bamboo.plots import Plot, Skim, SummedPlot
+from bamboo.plots import EquidistantBinning as EqBin
+from bamboo.treefunctions import mvaEvaluator
+
+from bamboo_hh_new.BaseSelection import NanoBaseHHbbWW, get_nano_version
+from bamboo_hh_new.definitions.objects import get_objects
+from bamboo_hh_new.definitions.event_selections import get_event_selections
+from bamboo_hh_new.definitions.variables import get_vars
+from bamboo_hh_new.utils.selection_containers import HigherSelectionsContainer, HigherSelection
+
+from neural_net.model_config import 
 from pathlib import Path
 import yaml
-import sys
-from collections import defaultdict
-from bamboo.plots import Plot, Skim, SummedPlot
-from bamboo.treefunctions import mvaEvaluator
-from bamboo import treefunctions as op
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
-from bamboo_hh.VarsReco import VarsReco
-from bamboo_hh.LikelihoodRatio import LikelihoodRatio
-from bamboo_hh.definitions.variables import Variable1D
-from bamboo_hh.definitions.variables import LikelihoodRatio as LLR
-from bamboo_hh.definitions.variable_definition import RecoVariables
+class NN:
+    def __init__(self, config):
+        #initialize from config
+        pass
+
 
 class NNInference(NanoBaseHHbbWW):
-    num_folds = 5
-    delim = '_xx_'
+
     def __init__(self, args):
         super(NNInference, self).__init__(args)
-        self.event_nr_sel = self.args.event_nr_sel if self.args.event_nr_sel else "all"
-        if self.args.superNNdir:
-            self.modeldir_list = [modeldir for modeldir in self.args.superNNdir.iterdir() if modeldir.is_dir()]
-        else:
-            self.modeldir_list = self.args.NNdirs    
+        self.modeldir_list = [modeldir for modeldir in self.args.superNNdir.iterdir() if modeldir.is_dir()]
 
     def addArgs(self, parser):
         super(NNInference, self).addArgs(parser)
-        parser.add_argument("-NN", "--NNdirs", action="store", dest="NNdirs", nargs="+", help="List of dirs where NN models are in (Ex: -NN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model1 Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets/model2 ", default=None)
         parser.add_argument("-SNN", "--superNNdir", action="store", type=Path, dest="superNNdir", help="Dir containining multiple NN models (Ex: -SNN Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets", default=None)
-        parser.add_argument("-sk", "--skim", action='store_true', dest = "skim", help='Whether to store skims')
         parser.add_argument("-corr_file", "--correction_file", action='store', help='The work directory where the lr correction file is')
-        parser.add_argument("-trainer", "--trainer", action='store', choices=['simple', 'kfold'], default='kfold', help='The trainer used: simple or kfold')
 
     @staticmethod
     def get_model_config_info(model_config_path: Path):
@@ -118,64 +116,15 @@ class NNInference(NanoBaseHHbbWW):
         DNN.update(model_name = model_name, model_type=model_type, classes=classes, processes=processes)
         return DNN
 
-    def trainer_simple(self, modeldir, reco_vars, model_config_path) -> list[Plot]:
-        DNN = NNInference.get_DNN(modeldir, reco_vars, model_config_path, self.args.correction_file)
-        DNN_plots: list[list] = []
-        for sel_name in DNN.subcats:
-            dnn = DNN[sel_name]
-            scores = dnn.data
-            max_score_index = op.rng_max_element_index(scores, lambda score: score)
-            for i, class_i in enumerate(dnn.classes):
-                # Total distribution
-                DNN_plots.append(Plot.make1D(self.delim.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
-                # Cut
-                sel_NNclass_name = self.delim.join([sel_name, class_i, dnn.model_name])
-                sel_NNclass = (dnn.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
-                DNN_plots.append(Plot.make1D(self.delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
-                self.yields.add(sel_NNclass, sel_NNclass_name) 
-        return DNN_plots
-
-    def trainer_kfold(self, modeldir, reco_vars, tree, model_config_path) -> list[Plot]:         
-        kfold_modeldirs = [ ( int(subpath.name[-1]), subpath ) for subpath in modeldir.iterdir() if subpath.is_dir() ]
-        kfold_plots: dict[str, list[Plot]] = defaultdict(list)
-        for pass_idx, pass_modeldir in kfold_modeldirs:
-            DNN = NNInference.get_DNN(pass_modeldir, reco_vars, model_config_path, self.args.correction_file, pass_idx)
-            for sel_name in DNN.subcats:
-                dnn = DNN[sel_name]
-                dnn_sel_pass = (dnn.selection).refine(f"{dnn.model_name}-{sel_name} Pass {pass_idx}", cut=[ tree.event % self.num_folds == pass_idx ])
-                scores = dnn.data
-                max_score_index = op.rng_max_element_index(scores, lambda score: score)
-                for i, class_i in enumerate(dnn.classes):
-                    # Total distribution
-                    plot_name_dnn_whole = self.delim.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name])
-                    kfold_plots[dnn.model_name].append(Plot.make1D(plot_name_dnn_whole, dnn.data[i], dnn_sel_pass, dnn.eqbin, xTitle=dnn.full_title))
-                    # Cut
-                    sel_NNclass_name = self.delim.join([sel_name, class_i, dnn.model_name])
-                    dnn_sel_pass_NNclass = dnn_sel_pass.refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
-                    plot_name_dnn_class = self.delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name])
-                    kfold_plots[dnn.model_name].append(Plot.make1D(plot_name_dnn_class, dnn.data[i], dnn_sel_pass_NNclass, dnn.eqbin, xTitle=dnn.full_title))
-                    self.yields.add(dnn_sel_pass_NNclass, sel_NNclass_name)
-        summed_plots = [SummedPlot(group[0].name.rsplit('_Pass', 1)[0].removesuffix('_3j').removesuffix('_4j'), group) for group in list(zip(*kfold_plots.values()))]
-        return [p for plots in kfold_plots.values() for p in plots] + summed_plots
-
-    def output_skims(self, DNN_LIST, selection, sel_name: str, plots: list[Plot]):
-        for DNN in DNN_LIST:
-            dnn = DNN[sel_name]
-            branches = {"event": None}
-            branches.update({input_var.name: input_var.data for input_var in dnn.input_vars})
-            for i, class_i in enumerate(dnn.classes):
-                branches.update({class_i: dnn.data[i]})
-            plots.append(Skim(dnn.model_name, branches, selection))
-        return plots
-
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = []
         plots.append(self.yields)
         plots.extend(self.base_plots)
-        
-        objects = VarsReco.get_objects(tree, self.era, get_nano_version(sampleCfg))
-        selections = VarsReco.get_selections(tree, objects, baseSel, self.yields, self.is_MC, self.era, self.sample)
-        reco_vars = RecoVariables(objects, selections)
+
+        objects: dict = get_objects(tree, self.era, get_nano_version(sampleCfg))
+        selections: dict = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample)
+        vars: list = get_vars(objects, selections)
+        hsc = HigherSelectionsContainer.from_selections_and_vars(selections, vars)
 
         # # ===============================================================================
         # # ================================== Plots ======================================
@@ -183,13 +132,22 @@ class NNInference(NanoBaseHHbbWW):
 
         for modeldir in self.modeldir_list:
             model_config_path = modeldir / 'config.yml'
-            if self.args.trainer == 'simple':
-                inference_plots = self.trainer_simple(modeldir, reco_vars, model_config_path)
-            elif self.args.trainer == 'kfold':
-                inference_plots = self.trainer_kfold(modeldir, reco_vars, tree, model_config_path)
-            else:
-                raise ValueError(f"Trainer {self.args.trainer} not supported")
-            plots.extend(inference_plots)
+            DNN = NNInference.get_DNN(modeldir, reco_vars, model_config_path, self.args.correction_file)
+            DNN_plots: list[list] = []
+            for sel_name in DNN.subcats:
+                dnn = DNN[sel_name]
+                scores = dnn.data
+                max_score_index = op.rng_max_element_index(scores, lambda score: score)
+                for i, class_i in enumerate(dnn.classes):
+                    # Total distribution
+                    DNN_plots.append(Plot.make1D(self.delim.join([sel_name, 'DNN_Whole', 'score'+class_i, dnn.model_name]), dnn.data[i], dnn.selection, dnn.eqbin, xTitle=dnn.full_title))
+                    # Cut
+                    sel_NNclass_name = self.delim.join([sel_name, class_i, dnn.model_name])
+                    sel_NNclass = (dnn.selection).refine(sel_NNclass_name, cut = (op.AND(i == max_score_index)))
+                    DNN_plots.append(Plot.make1D(self.delim.join([sel_name, 'DNN_'+class_i, 'score'+class_i, dnn.model_name]), dnn.data[i], sel_NNclass, dnn.eqbin, xTitle=dnn.full_title))
+                    self.yields.add(sel_NNclass, sel_NNclass_name) 
+            
+            plots.extend(DNN_plots)
 
         # ===============================================================================
         # ============================= Cutflow Report ==================================
@@ -214,18 +172,8 @@ class NNInference(NanoBaseHHbbWW):
         self.yields.add(selections['SL'], 'SL')
         self.yields.add(selections['DL'], 'DL')
 
-        if self.args.skim:
-            plots = self.output_skims(self.DNN_LIST, selections['SL_resolved'], 'SL_resolved', plots)
-
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-
         super(NNInference, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-
-        from bamboo_hh.plotter.plotter import Plotter
-        myPlotter = Plotter(workdir=workdir, configFile=self.args.input[0])
-        myPlotter.Draw_Refs(normalization='lumi', combine_backgs=True, sen_info=False)
-        myPlotter.Draw_Refs(normalization='unity', combine_backgs=True, sen_info=False)
-
-        print(f"\nNNInference completed using {self.event_nr_sel} events\n")
+        print(f"\NNInference completed using {self.event_nr_sel} events\n")

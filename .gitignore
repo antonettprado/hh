@@ -18,5 +18,4 @@ Z_OUTPUT/*
 .gitignore
 *.cc
 myREADME.md
-notebooks
 bamboo_hh/config/dascache*

@@ -66,13 +66,13 @@ class RunDistributed:
             "output": f"{str(rd.afs_modeldir.resolve())}/condor.out",
             "error": f"{str(rd.afs_modeldir.resolve())}/condor.err",
             "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
-            # "+JobFlavour": "testmatch", # 3 days
-            "+MaxRuntime": "259200",  # 3 days in seconds
+            "+MaxRuntime": "172800",  # 2 days in seconds
+            # "+MaxRuntime": "259200",  # 3 days in seconds
             # "+MaxRuntime": "432000",  # 5 days in seconds
-            "request_cpus": "6",
+            "request_cpus": "4",
             # "request_gpus": "1",
-            "request_memory": "60GB" if memory is None else memory,
-            "request_disk": "20GB",
+            "request_memory": "40GB" if memory is None else memory,
+            "request_disk": "10GB",
             'MY.SendCredential': True,
             "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references"
         })
@@ -125,7 +125,7 @@ def main(args):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", type=Path, required=True, help='Full path of work directory')
-    parser.add_argument("-r", "--rostername", type=str, required=True, default='neural_net/config/roster.yml',help="Path to the YAML roster")
+    parser.add_argument("-r", "--rostername", type=str, required=True, default='roster',help="Pick one of the options within neural_net/config")
     parser.add_argument("-o", "--outdirname", type=str, required=True, help='Name of roster dir under work directory')
     parser.add_argument("-d", "--distributed", action="store_true", help='Run in distributed mode')
     parser.add_argument("-l", "--log_level", choices=['debug', 'info', 'warning'], default='info', help='Logging level (default: info)')

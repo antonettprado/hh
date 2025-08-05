@@ -81,7 +81,7 @@ def prune_ds(ds, config):
 def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_size: int=1024, chunk_size: int=100_000, max_events=10_000_000, event_filter=None) -> tf.data.Dataset:
 
     branches = NON_FEATURE_BRANCHES + features
-
+    
     if event_filter:
         total_event_filter = lambda chunk: (chunk['genWeight'] > 0) & event_filter(chunk['event'])
     else:
@@ -96,12 +96,25 @@ def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_
             for chunk in tree.iterate(branches, step_size=chunk_size, library="np"):
                 valid_indices = total_event_filter(chunk)
                 feature_arrays = [chunk[feature][valid_indices] for feature in features]
-                feature_data = np.column_stack(feature_arrays)
                 events = chunk['event'][valid_indices]
                 genWeight = chunk['genWeight'][valid_indices]
 
-                # Replace inf, -inf, NaN, and None values with UNDEFINED
-                feature_data = np.nan_to_num(feature_data, nan=UNDEFINED, posinf=UNDEFINED, neginf=UNDEFINED)
+                # ✅ Check for invalid values before stacking
+                for i, arr in enumerate(feature_arrays):
+                    invalid_mask = ~np.isfinite(arr)
+                    if np.any(invalid_mask):
+                        feature_name = features[i]
+                        bad_events = events[invalid_mask]
+                        print(f"\n❌ Invalid values detected!")
+                        print(f"   → File: {file_path}")
+                        print(f"   → Feature: '{feature_name}'")
+                        print(f"   → Count: {invalid_mask.sum()}")
+                        print(f"   → Bad event numbers (up to 10): {bad_events[:10]}")
+                        raise ValueError("Aborting due to invalid feature values.")
+
+                feature_data = np.column_stack(feature_arrays)
+
+                # ✅ No need to sanitize values now, since we've verified they’re finite
 
                 # Determine how many events we can yield without exceeding max_events
                 remaining_events = max_events - total_events_yielded
