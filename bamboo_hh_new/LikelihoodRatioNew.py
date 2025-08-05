@@ -93,7 +93,7 @@ class LikelihoodRatioNew(NanoBaseHHbbWW):
 
     def addArgs(self, parser):
         super(LikelihoodRatioNew, self).addArgs(parser)
-        parser.add_argument("-lrf", "--lr_functions", type=Path, action='store', help='The work directory where the correction file is')
+        parser.add_argument("-lrf", "--lr_functions", type=Path, action='store', help='Path to the lr corrections json file')
         parser.add_argument("-log", "--apply_log", action='store_true', help='Calculate LLRs instead of LRs')
         
     @staticmethod
