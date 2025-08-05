@@ -260,3 +260,62 @@ def plot_features(dataset: tf.data.Dataset, features: list[str], outfile: str):
     plt.tight_layout()
     plt.savefig(outfile, bbox_inches='tight', dpi=300)
     plt.close() 
+
+@tf.keras.utils.register_keras_serializable()
+class CustomStandardizer(tf.keras.layers.Layer):
+    '''
+    Applies Normalization layer only to valid inputs (i.e. those not undefined),
+    leaving undefined inputs as is
+    '''
+    def __init__(self, mean, variance, **kwargs):
+        super().__init__(**kwargs)
+        self.mean = mean
+        self.variance = variance
+        
+    def build(self, input_shape):
+        self.standardizer = tf.keras.layers.Normalization(
+            mean=self.mean,
+            variance=self.variance,
+            name='Normalization',
+            axis=-1)
+        self.standardizer.build(input_shape)
+        super().build(input_shape)
+
+    def call(self, inputs):
+        valid_mask = tf.not_equal(inputs, UNDEFINED)
+        masked_inputs = tf.where(valid_mask, inputs, tf.zeros_like(inputs))
+        transformed_inputs = self.standardizer(masked_inputs)
+        outputs = tf.where(valid_mask, transformed_inputs, tf.constant(UNDEFINED, dtype=inputs.dtype))
+        return outputs
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "mean": self.mean,
+            "variance": self.variance
+        })
+        return config
+
+@tf.keras.utils.register_keras_serializable()
+class ReplaceUndefinedValuesWithConstant(tf.keras.layers.Layer):
+    def __init__(self, constant=-9, **kwargs):
+        super().__init__(**kwargs)
+        self.constant = constant  # Value to replace the undefined value with
+        self.undefined = UNDEFINED
+    
+    def call(self, inputs):
+        undefined_tensor = tf.constant(self.undefined, dtype=inputs.dtype)
+        constant_tensor = tf.constant(self.constant, dtype=inputs.dtype)
+        inputs_replaced = tf.where(
+            tf.equal(inputs, undefined_tensor),
+            tf.fill(tf.shape(inputs), constant_tensor),
+            inputs
+        )
+        return inputs_replaced
+    
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "constant": self.constant
+        })
+        return config
