@@ -6,7 +6,6 @@ class HigherSelection:
         self.name = name
         self.sel = sel
         self.vars = vars
-        self._lrs = None
         self._update_lookup()
 
     def _update_lookup(self):
@@ -30,13 +29,6 @@ class HigherSelection:
     def vars3D(self):
         return [v for v in self.vars if getattr(v, "ndim") == 3]
 
-    @property
-    def lrs(self):
-        return self._lrs
-    
-    @lrs.setter
-    def lrs(self, value):
-        self._lrs = value
 
     def keys(self): return self._vars_by_name.keys()
     def values(self): return self._vars_by_name.values()
