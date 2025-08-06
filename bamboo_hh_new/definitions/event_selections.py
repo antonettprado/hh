@@ -257,7 +257,7 @@ def sl_e_trigger_selection(is_mc, era, HLT, sample):
             HLT.Ele28_eta2p1_WPTight_Gsf_HT150, 
             HLT.Ele15_IsoVVVL_PFHT450
         )
-        #JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
+        JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65           ### EDITED FOR DISCRIMINANT STUDY REPLICA
         if not is_mc:
             if sample == "EGamma":
                 return EGamma_trig
@@ -265,8 +265,7 @@ def sl_e_trigger_selection(is_mc, era, HLT, sample):
             #    return op.AND(JetMET_trig, op.NOT(EGamma_trig))
             else:
                 return op.c_bool(False)
-        return EGamma_trig
-        #return op.OR(EGamma_trig, JetMET_trig)
+        return op.OR(EGamma_trig, JetMET_trig)                                          ### EDITED FOR DISCRIMINANT STUDY REPLICA
     
     elif "2023" in era:
         EGamma_trig = op.OR(
@@ -307,7 +306,7 @@ def sl_mu_trigger_selection(is_mc, era, HLT, sample):
             HLT.IsoMu24, 
             HLT.Mu15_IsoVVVL_PFHT450
         )
-        #JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
+        JetMET_trig = HLT.QuadPFJet70_50_40_35_PFBTagParticleNet_2BTagSum0p65
         if not is_mc:
             if sample == "Muon":
                 return Muon_trig
@@ -315,9 +314,8 @@ def sl_mu_trigger_selection(is_mc, era, HLT, sample):
             #    return op.AND(JetMET_trig, op.NOT(Muon_trig))
             else:
                 return op.c_bool(False)
-        #return op.OR(Muon_trig, JetMET_trig)
-        return Muon_trig
-    
+        return op.OR(Muon_trig, JetMET_trig)                                            ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        
     elif "2023" in era:
         Muon_trig = op.OR(
             HLT.IsoMu24, 
