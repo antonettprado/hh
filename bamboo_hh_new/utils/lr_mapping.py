@@ -190,8 +190,8 @@ if __name__ == '__main__':
     main(args.workdir, args.take_log, args.outfilename, args.events)
     '''
     To compute LRs:
-    python3 bamboo_hh_new/utils/lr_mapping_NEW.py -w $Z_OUTPUT_eos/JetTop -e even
+    python3 bamboo_hh_new/utils/lr_mapping.py -w $Z_OUTPUT_eos/JetTop -e even
 
     To compute LLRs:
-    python3 bamboo_hh_new/utils/lr_mapping_NEW.py -w $Z_OUTPUT_eos/Reco -llr
+    python3 bamboo_hh_new/utils/lr_mapping.py -w $Z_OUTPUT_eos/Reco -llr
     '''

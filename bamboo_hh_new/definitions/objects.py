@@ -358,7 +358,8 @@ def ak4_jet_selection(jets, nanov):
     return op.select(jets, lambda jet: op.AND(
         jet.pt > 25,
         op.abs(jet.eta) < 2.4,
-        corrected_jetIdTight(jet, nanov)
+        # corrected_jetIdTight(jet, nanov)
+        jet.jetId >= 2 # WP_T
         )
     )
 
