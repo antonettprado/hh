@@ -230,13 +230,13 @@ def electron_tight_selection(electrons, jets, era):
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
         #el.pfRelIso03_all < 0.4,
-        #el.miniPFRelIso_all < 0.4,
+        el.miniPFRelIso_all < 0.4,                      ### EDITED FOR DISCRIMINANT STUDY REPLICA
         #op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
         #el.hoe < 0.10,
         #el.eInvMinusPInv > -0.04,
         #el.convVeto == 1,
         #el.lostHits == 0,
-        get_electron_id(el, era, 'tight')
+        get_electron_id(el, era, 'loose')               ### EDITED FOR DISCRIMINANT STUDY REPLICA
         #op.NOT(nearbyBtag(el, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
@@ -253,8 +253,8 @@ def muon_loose_selection(muons, jets, era):
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        mu.pfIsoId >= 4,
-        #mu.miniPFRelIso_all < 0.4,
+        # mu.pfIsoId >= 4,                  ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        mu.miniPFRelIso_all < 0.4,          ### EDITED FOR DISCRIMINANT STUDY REPLICA
         mu.looseId
         )
     )
@@ -268,8 +268,8 @@ def muon_fakeable_selection(muons, jets, era):
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        mu.pfIsoId >= 4,
-        #mu.miniPFRelIso_all < 0.4,
+        # mu.pfIsoId >= 4,                  ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        mu.miniPFRelIso_all < 0.4,          ### EDITED FOR DISCRIMINANT STUDY REPLICA
         mu.looseId
         #op.switch(op.c_bool(use_mvaTTH), 
         #    op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
@@ -291,9 +291,9 @@ def muon_tight_selection(muons, jets, era):
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        mu.pfIsoId >= 4,
-        #mu.miniPFRelIso_all < 0.4,
-        mu.tightId
+        # mu.pfIsoId >= 4,              ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        mu.miniPFRelIso_all < 0.4,      ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        mu.mediumId                      ### EDITED FOR DISCRIMINANT STUDY REPLICA from tightId to mediumId
         #op.NOT(nearbyBtag(mu, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, mu.mediumPromptId)
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
