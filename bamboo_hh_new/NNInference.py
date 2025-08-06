@@ -38,54 +38,6 @@ class NNInference(NanoBaseHHbbWW):
         parser.add_argument("-lrf", "--lr_functions", action='store', help='Path to the lr corrections json file')
         parser.add_argument("-log", "--apply_log", action='store_true', help='Calculate LLRs instead of LRs')
 
-    @staticmethod
-    def gather_input_data(sel_name, feature_names, reco_vars, correction_file=None):
-        vars: list[Variable1D] = reco_vars.gather_all_1D_variables()
-        vars_dict: dict[str, Variable1D] = { var.name: var for var in vars }
-        var_names = [s for s in feature_names if not s.endswith('_lr') and not s.endswith('_llr')]
-        if correction_file:
-            if correction_file.endswith('_llr.json'):
-                lr_names = [s for s in feature_names if s.endswith('_llr')]
-                suffix = '_llr'
-                llr = True
-            elif correction_file.endswith('_lr.json'):
-                lr_names = [s for s in feature_names if s.endswith('_lr')]
-                suffix = '_lr'
-                llr = False
-            else:
-                raise ValueError(f"Correction file {correction_file} is not supported")
-        input_vars = []
-        for feature_name in feature_names:
-            if feature_name in var_names:
-                input_vars.append(vars_dict[feature_name][sel_name].data)
-            elif feature_name in lr_names:
-                ref = feature_name.replace(suffix, '')
-                if '_x_' in ref:
-                    varnames = ref.split('_x_')
-                    lr_list = []
-                    for varname in varnames:
-                        var = vars_dict[varname]
-                        subvar = var[sel_name]
-                        lr = LikelihoodRatio.get_lr_for_sel(subvar, sel_name, correction_file, reco_vars, llr)
-                        lr_list.append(lr)
-                    multivar_lr = LR(varnames, llr=llr)
-                    if llr:
-                        multivar_lr_data = op.sum(*[lr[sel_name].data for lr in lr_list])
-                    else:
-                        multivar_lr_data = op.product(*[lr[sel_name].data for lr in lr_list])
-                    multivar_lr.populate({sel_name: multivar_lr_data}, reco_vars._get_selections_subset([sel_name]))
-                    input_vars.append(multivar_lr[sel_name].data)
-                else:
-                    varname = ref
-                    var = vars_dict[varname]
-                    subvar = var[sel_name]
-                    # subvar = subvars_dict[varname]
-                    lr = LikelihoodRatio.get_lr_for_sel(subvar, sel_name, correction_file, reco_vars, llr)
-                    input_vars.append(lr[sel_name].data)
-            else:
-                raise ValueError(f"Feature {feature_name} not found in var_names or lr_names")   
-        return input_vars
-
     def get_features(self, hs: HigherSelection, feature_names: list[str]) -> list:
         var_lookup = {v.name: v for v in hs.vars1D}
         missing_features = frozenset(feature_names) - frozenset(var_lookup.keys())

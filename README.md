@@ -12,6 +12,11 @@ python -u scripts/bambooRunBetter.py LikelihoodRatioNew -o $Z_OUTPUT_eos/Discrim
 
 python -u scripts/bambooRunBetter.py LikelihoodRatioNew -o $Z_OUTPUT_eos/Discriminant_Study_Replica/0805_LR_odd -lrf $Z_OUTPUT_eos/Discriminant_Study_Replica/0804_JetTop_even/lr_mapping_all.json --event_nr_sel odd -c bamboo_hh_new/config/analysis_DiscStudy.yml -d
 
+
+python -u scripts/bambooRunBetter.py NNInference -o $Z_OUTPUT_eos/Disc_Study_Rep/0806_NNInf_even_test -lrf $Z_OUTPUT_eos/Disc_Study_Rep/0805_JetTop_even/lr_mapping_all.json -SNN $Z_OUTPUT_eos/Disc_Study_Rep/0805_LR_odd/NN_DiscStudyReplica --event_nr_sel even -t
+
+python -u scripts/bambooRunBetter.py NNInference -o $Z_OUTPUT_eos/Discriminant_Study_Replica/0805_NNInf_even -lrf $Z_OUTPUT_eos/Discriminant_Study_Replica/0804_JetTop_even/lr_mapping_all.json --event_nr_sel even -c bamboo_hh_new/config/analysis_DiscStudy.yml -d
+
 ```
 
 ### To use bambooRun
