@@ -408,7 +408,7 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
 
 def sl_e_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False, use_mvaTTH=False):
     if any(y in era for y in ["2022", "2023"]):
-        electron_pt_cut = 28
+        electron_pt_cut = 15                                ### EDITED FOR DISCRIMINANT STUDY REPLICA - from 28
     elif any(y in era for y in ["2024", "2025", "2026"]):
         electron_pt_cut = 15
     return (op.AND(
@@ -421,7 +421,7 @@ def sl_e_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False,
 
 def sl_mu_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False):
     if any(y in era for y in ["2022", "2023"]):
-        muon_pt_cut = 24
+        muon_pt_cut = 15                                    ### EDITED FOR DISCRIMINANT STUDY REPLICA - from 24
     elif any(y in era for y in ["2024", "2025", "2026"]):
         muon_pt_cut = 15
 
