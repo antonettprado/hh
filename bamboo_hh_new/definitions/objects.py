@@ -113,13 +113,11 @@ def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
 def get_electron_id(el, era, level):
     if "2022" in era or "2023" in era or "2024" in era:
         if level == 'loose':
-            el_id = el.mvaIso_WP90
-            #el_id = el.cutBased >= 2
-        #elif level == 'medium':
-        #    el_id = el.cutBased >= 3
+            # el_id = el.mvaIso_WP90
+            el_id = el.cutBased >= 3
         elif level == 'tight':
-            el_id = el.mvaIso_WP80
-            #el_id = el.cutBased >= 4
+            # el_id = el.mvaIso_WP80
+            el_id = el.cutBased >= 4
     return el_id
 
 def nearbyBtag(lep, jets, era, btag_WP):
@@ -196,7 +194,7 @@ def electron_loose_selection(electrons, jets, era):
     )
 
 def electron_fakeable_selection(electrons, jets, era):
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 15
     return op.select(electrons, lambda el: op.AND(
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
@@ -222,7 +220,7 @@ def electron_fakeable_selection(electrons, jets, era):
     )
 
 def electron_tight_selection(electrons, jets, era):
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 10
+    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 15
     return op.select(electrons, lambda el: op.AND(
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
@@ -230,13 +228,13 @@ def electron_tight_selection(electrons, jets, era):
         op.abs(el.dz) < 0.1,
         el.sip3d < 8,
         #el.pfRelIso03_all < 0.4,
-        el.miniPFRelIso_all < 0.4,                      ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        #el.miniPFRelIso_all < 0.4,
         #op.switch(op.abs(el.eta + el.deltaEtaSC)<=1.479, el.sieie < 0.011, el.sieie < 0.030),
         #el.hoe < 0.10,
         #el.eInvMinusPInv > -0.04,
         #el.convVeto == 1,
         #el.lostHits == 0,
-        get_electron_id(el, era, 'loose')               ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        get_electron_id(el, era, 'tight')
         #op.NOT(nearbyBtag(el, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), el.mvaTTH > 0.3, 1)
         ))
@@ -253,14 +251,14 @@ def muon_loose_selection(muons, jets, era):
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        # mu.pfIsoId >= 4,                  ### EDITED FOR DISCRIMINANT STUDY REPLICA
-        mu.miniPFRelIso_all < 0.4,          ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        mu.pfIsoId >= 4,
+        #mu.miniPFRelIso_all < 0.4,
         mu.looseId
         )
     )
 
 def muon_fakeable_selection(muons, jets, era):
-    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
+    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 15
     return op.select(muons, lambda mu: op.AND(
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
@@ -268,8 +266,8 @@ def muon_fakeable_selection(muons, jets, era):
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        # mu.pfIsoId >= 4,                  ### EDITED FOR DISCRIMINANT STUDY REPLICA
-        mu.miniPFRelIso_all < 0.4,          ### EDITED FOR DISCRIMINANT STUDY REPLICA
+        mu.pfIsoId >= 4,
+        #mu.miniPFRelIso_all < 0.4,
         mu.looseId
         #op.switch(op.c_bool(use_mvaTTH), 
         #    op.AND(op.switch(mu.mvaTTH <= 0.5, mu.jetRelIso < 0.8, 1),
@@ -283,7 +281,7 @@ def muon_fakeable_selection(muons, jets, era):
     )
 
 def muon_tight_selection(muons, jets, era): 
-    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 10
+    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 15
     return op.select(muons, lambda mu: op.AND(
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
@@ -291,9 +289,9 @@ def muon_tight_selection(muons, jets, era):
         op.abs(mu.dz) < 0.1,
         mu.sip3d < 8,
         #mu.pfRelIso03_all < 0.4,
-        # mu.pfIsoId >= 4,              ### EDITED FOR DISCRIMINANT STUDY REPLICA
-        mu.miniPFRelIso_all < 0.4,      ### EDITED FOR DISCRIMINANT STUDY REPLICA
-        mu.mediumId                      ### EDITED FOR DISCRIMINANT STUDY REPLICA from tightId to mediumId
+        mu.pfIsoId >= 4,
+        #mu.miniPFRelIso_all < 0.4,
+        mu.tightId
         #op.NOT(nearbyBtag(mu, jets, era, "M"))
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, mu.mediumPromptId)
         #op.switch(op.c_bool(use_mvaTTH), mu.mvaTTH > 0.5, 1)
@@ -358,8 +356,7 @@ def ak4_jet_selection(jets, nanov):
     return op.select(jets, lambda jet: op.AND(
         jet.pt > 25,
         op.abs(jet.eta) < 2.4,
-        # corrected_jetIdTight(jet, nanov)
-        jet.jetId >= 2 # WP_T
+        corrected_jetIdTight(jet, nanov)
         )
     )
 
