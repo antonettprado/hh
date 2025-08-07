@@ -114,9 +114,6 @@ plotIt:
     ggHH_kl_1_kt_1_bbtautau:
       legend: ggHH_bbtautau
       fill-color: '#EDC951'
-    HH_bbtautau:
-      legend: HH_bbtautau
-      fill-color: '#EDC951'
     ttbar:
       legend: ttbar
       fill-color: '#99ccff'
