@@ -52,6 +52,7 @@ class VariableND:
     name: str
     vars: list[Variable1D]
     def __post_init__(self):
+        self.data = [var.data for var in self.vars]
         if len(set(v.subcat for v in self.vars)) != 1:
             raise ValueError(f"All vars for {self.name} must have the same subcat")
         self.subcat = self.vars[0].subcat
@@ -98,13 +99,6 @@ class VariableRegister:
             supervars.append(SuperVariable1D(**meta, data_by_subcat=data_by_subcat))
         return supervars
     
-    # def get_var1D_binning(self, var_name: str) -> tuple[int, int, int]:
-    #     """Returns the binning parameters for a given 1D variable name."""
-    #     for meta, _ in self._vars1D_meta:
-    #         if meta["name"] == var_name:
-    #             return (meta['nbins'], meta['min'], meta['max'])
-    #     raise KeyError(f"1D variable '{var_name}' not found")
-
     def get_present_vars(self, var_dim, root_file: Path, sel_name: str=None, tree_name: str = None) -> list[str]:
         """Return the list of variable names that are present in the specified ROOT tree or histograms."""
         var_names = self.get_var_names(var_dim)
@@ -130,3 +124,10 @@ class VariableRegister:
                 return present_vars
         except Exception as e:
             raise RuntimeError(f"Failed to read from {root_file}: {e}")
+        
+    def get_var1D_binning(self, var_name: str) -> tuple[int, int, int]:
+        """Returns the binning parameters for a given 1D variable name."""
+        for meta, _ in self._vars1D_meta:
+            if meta["name"] == var_name:
+                return (meta['nbins'], meta['min'], meta['max'])
+        raise KeyError(f"1D variable '{var_name}' not found")

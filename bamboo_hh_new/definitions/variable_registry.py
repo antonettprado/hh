@@ -834,6 +834,7 @@ REG.reg_var2D(name="trijet_mInv_vs_bjets_mbb", vars=["bjets_mbb", "trijet_mInv"]
 REG.reg_var2D(name="trijet_mInv_vs_bjets_pt_bb", vars=["bjets_pt_bb", "trijet_mInv"])
 REG.reg_var2D(name="lep0_pt_vs_mjj", vars=["mjj", "lep0_pt"])
 
+# 3D composite variable registrations
 REG.reg_var3D(name="trijet_mInv_vs_bjets_dPhi_vs_mbb", vars=["bjets_mbb", "bjets_dPhi", "trijet_mInv"])
 REG.reg_var3D(name="trijet_mInv_vs_bjets_dEta_vs_mbb", vars=["bjets_mbb", "bjets_dEta", "trijet_mInv"])
 REG.reg_var3D(name="trijet_mInv_vs_mjj_vs_bjets_mbb", vars=["bjets_mbb", "mjj", "trijet_mInv"])
