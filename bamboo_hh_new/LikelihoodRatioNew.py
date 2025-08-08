@@ -6,7 +6,7 @@ from bamboo.scalefactors import get_correction
 from bamboo_hh_new.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh_new.definitions.objects import get_objects
 from bamboo_hh_new.definitions.event_selections import get_event_selections
-from bamboo_hh_new.definitions.variables import get_vars
+from bamboo_hh_new.definitions.variable_registry import get_vars
 from bamboo_hh_new.utils.selection_containers import HigherSelectionsContainer, HigherSelection
 
 from pathlib import Path
