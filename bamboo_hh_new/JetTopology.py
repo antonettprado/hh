@@ -20,7 +20,7 @@ class JetTopology(NanoBaseHHbbWW):
 
         objects: dict = get_objects(tree, self.era, get_nano_version(sampleCfg))
         selections: dict = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample)
-        hsc = HigherSelectionsContainer.from_selections_and_vars(objects, selections)
+        hsc = HigherSelectionsContainer.from_objects_and_selections(objects, selections)
 
         # ===============================================================================
         # ================================== Yields =====================================
