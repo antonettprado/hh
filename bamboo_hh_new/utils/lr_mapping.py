@@ -149,11 +149,9 @@ def main(workdir: Path, take_log: bool=False, outfilename: str = None, events:st
     resultsdir = workdir / 'results'
     selections = ['SL_4j_resolved']
 
-    signal_filenames = ['bbWW_sl_2022', 'bbWW_dl_2022']
+    signal_filenames = ['bbWW_sl_2022']
     background_filenames = [
-        'TTbar_sl_2022', 'TTbar_dl_2022', 
-        'tbarWplus_sl_2022', 'tbarWplus_dl_2022',
-        'tWminus_sl_2022', 'tWminus_dl_2022'
+        'tbarWplus_sl_2022'
     ]
 
     signal_files = references.get_files(resultsdir, signal_filenames)
