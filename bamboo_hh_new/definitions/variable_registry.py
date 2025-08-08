@@ -5,9 +5,6 @@ from bamboo_hh_new.utils.utils import VariableRegister
 
 REG = VariableRegister()
 
-def get_vars(objects, selections) -> list:
-    return REG.TEMP_build(objects, selections)
-
 # ====================
 # bjet vars
 # ====================

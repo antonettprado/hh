@@ -72,16 +72,3 @@ class HigherSelectionsContainer(dict):
     def get_selections(self, sel_names: list[str]) -> list[HigherSelection]:
         """Get multiple selections, skipping missing ones"""
         return [self[name] for name in sel_names if name in self]
-
-# =================================================
-# =============== temporary =======================
-# =================================================
-
-
-    @classmethod
-    def from_selections_and_vars(cls, selections: dict, vars: list):
-        higher_selections = []
-        for sel_name, sel in selections.items():
-            sel_vars = [var[sel_name] for var in vars if sel_name in var.subcats]
-            higher_selections.append(HigherSelection(sel_name, sel, sel_vars))
-        return cls(higher_selections)
