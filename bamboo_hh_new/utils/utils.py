@@ -52,6 +52,7 @@ class VariableND:
     name: str
     vars: list[Variable1D]
     def __post_init__(self):
+        self.data = [var.data for var in self.vars]
         if len(set(v.subcat for v in self.vars)) != 1:
             raise ValueError(f"All vars for {self.name} must have the same subcat")
         self.subcat = self.vars[0].subcat
