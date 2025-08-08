@@ -129,36 +129,3 @@ class LeptonTopology(NanoBaseHHbbWW):
         self.yields.add(selections.DL, "DL")
 
         return plots
-
-    def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        # super(LeptonTopology, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
-        
-        from bamboo.plots import CutFlowReport
-        if not self.plotList:
-            self.plotList = self.getPlotList(resultsdir=resultsdir, config=config)
-
-        plotList_cutflowreport = [ap for ap in self.plotList if isinstance(ap, CutFlowReport)]
-
-        from bamboo_hh_new.utils.yields import get_custom_yields
-
-        for report in plotList_cutflowreport:
-            print(f"📊 Running custom yields for: {report.name}")
-            # ✅ Call your function: it handles era/lumi/counters/normalization/CSV
-            eraMode, eras = self.args.eras
-            if not eras:  # from config if not specified
-                eras = list(config["eras"].keys())
-            print(f"eraMode: {eraMode}")
-            print(f"eras: {eras}")
-            get_custom_yields(
-                report,
-                eraMode,
-                eras,
-                config,
-                workdir,
-                resultsdir,
-                self.readCounters
-            )
-
-        print("✅ Custom yields done for all reports.")        
-
-        print(f"\nLowLevel completed using {self.event_nr_sel} events\n")

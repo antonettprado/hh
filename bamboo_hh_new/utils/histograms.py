@@ -9,6 +9,7 @@ import pandas as pd
 ROOT.gROOT.SetBatch(True)
 
 def normalize_hist(hist: ROOT.TH1) -> ROOT.TH1:
+    # This works for TH1D, TH2D, TH3D, etc.
     integral = hist.Integral()
     if integral > 0:
         hist.Scale(1.0 / integral)
@@ -16,16 +17,21 @@ def normalize_hist(hist: ROOT.TH1) -> ROOT.TH1:
         raise ValueError(f"Cannot normalize histogram '{hist.GetName()}': integral is zero.")
     return hist
 
-def get_hist_refs_from_file(file: Path) -> list[str]:
+def get_hist_refs_from_file(file: Path, hist_dim: str = 'All') -> list[str]:
+    valid_dims = {"TH1", "TH2", "TH3"}
+    if hist_dim != "All" and hist_dim not in valid_dims:
+        raise ValueError(f"Invalid dim '{hist_dim}'. Choose from 'TH1', 'TH2', 'TH3', or 'All'.")
+
     with uproot.open(file) as upfile:
-        refs = []
-        for key in upfile.keys(cycle=False):  # <- removes ';1'
-            obj = upfile[key]
-            class_name = obj.classname
-            if class_name.startswith("TH1") or class_name.startswith("TH2"):
-                if not key.startswith("yields_") and key != "generated_sum_corrected":
-                    refs.append(key)
-    return refs
+        return [
+            key
+            for key, obj in upfile.items(cycle=False)
+            if (
+                obj.classname.startswith(hist_dim if hist_dim != "All" else tuple(valid_dims))
+                and not key.startswith("yields_")
+                and key != "generated_sum_corrected"
+            )
+        ]
 
 def get_sum_weights(file: Path) -> float:
     with uproot.open(file) as f:
