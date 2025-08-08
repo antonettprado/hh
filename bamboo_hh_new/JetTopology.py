@@ -4,7 +4,6 @@ from bamboo.plots import Plot, Skim
 from bamboo_hh_new.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh_new.definitions.objects import get_objects
 from bamboo_hh_new.definitions.event_selections import get_event_selections
-from bamboo_hh_new.definitions.variables import get_vars
 from bamboo_hh_new.utils.selection_containers import HigherSelectionsContainer, HigherSelection
 
 class JetTopology(NanoBaseHHbbWW):
@@ -21,8 +20,7 @@ class JetTopology(NanoBaseHHbbWW):
 
         objects: dict = get_objects(tree, self.era, get_nano_version(sampleCfg))
         selections: dict = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample)
-        vars: list = get_vars(objects, selections)
-        hsc = HigherSelectionsContainer.from_selections_and_vars(selections, vars)
+        hsc = HigherSelectionsContainer.from_selections_and_vars(objects, selections)
 
         # ===============================================================================
         # ================================== Yields =====================================
