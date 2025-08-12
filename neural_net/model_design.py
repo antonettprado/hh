@@ -243,13 +243,13 @@ def plot_training_curves(modeldir, history):
 
     # Create individual figures for each metric type
     for metric_type in metric_types:
-        fig = plt.figure(figsize=(6, 4))
+        fig = plt.figure(figsize=(8, 6))
         for metric in history_dict.keys():
             if metric.startswith(metric_type):
                 plt.plot(epochs, history_dict[metric], label=f'{metric}')
                 if f'val_{metric}' in history_dict.keys():
                     plt.plot(epochs, history_dict[f'val_{metric}'], lw=2, label=f'val_{metric}')
-        plt.title(f"{metric_type} vs epochs")
+        # plt.title(f"{metric_type} vs epochs")
         plt.xlabel('Epochs')
         plt.ylabel(metric_type)
         plt.legend(loc='best')

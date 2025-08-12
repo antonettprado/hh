@@ -9,7 +9,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 1000)
 
 UNDEFINED = -9999
-SHUFFLE_BUFFER_SIZE = 11_000_000
+SHUFFLE_BUFFER_SIZE = 20_000_000
 NON_FEATURE_BRANCHES = ['event', 'genWeight']
 
 def get_data(config, workdir, logger):
@@ -99,22 +99,20 @@ def load_tree_as_ds(file_path: Path, tree_name: str, features: list[str], batch_
                 events = chunk['event'][valid_indices]
                 genWeight = chunk['genWeight'][valid_indices]
 
-                # ✅ Check for invalid values before stacking
+                # Check for invalid values before stacking
                 for i, arr in enumerate(feature_arrays):
                     invalid_mask = ~np.isfinite(arr)
                     if np.any(invalid_mask):
                         feature_name = features[i]
                         bad_events = events[invalid_mask]
-                        print(f"\n❌ Invalid values detected!")
-                        print(f"   → File: {file_path}")
-                        print(f"   → Feature: '{feature_name}'")
-                        print(f"   → Count: {invalid_mask.sum()}")
-                        print(f"   → Bad event numbers (up to 10): {bad_events[:10]}")
+                        print(f"\n Invalid values detected!")
+                        print(f"\tFile: {file_path}")
+                        print(f"\tFeature: '{feature_name}'")
+                        print(f"\tCount: {invalid_mask.sum()}")
+                        print(f"\tBad event numbers (up to 10): {bad_events[:10]}")
                         raise ValueError("Aborting due to invalid feature values.")
 
                 feature_data = np.column_stack(feature_arrays)
-
-                # ✅ No need to sanitize values now, since we've verified they’re finite
 
                 # Determine how many events we can yield without exceeding max_events
                 remaining_events = max_events - total_events_yielded
