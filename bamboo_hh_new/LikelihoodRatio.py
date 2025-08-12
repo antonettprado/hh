@@ -153,8 +153,8 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         skim_data = {"event": None, "genWeight": None}
         skim_data.update({var.name: var.data for var in hs.vars1D})
         skim_data.update({lr.name: lr.data for lr in hs.lrs_for_vars1D})
-        # skim_data.update({lr.name: lr.data for lr in hs.lrs_for_vars2D})
-        # skim_data.update({lr.name: lr.data for lr in hs.lrs_for_vars3D})
+        skim_data.update({lr.name: lr.data for lr in hs.lrs_for_vars2D})
+        skim_data.update({lr.name: lr.data for lr in hs.lrs_for_vars3D})
         skim_data.update({lr.name: lr.data for lr in hs.lrs_for_multivars1D})
         return Skim(hs.name, skim_data, hs.sel)
 
@@ -179,18 +179,18 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         for hs in sels:
             lr_factory = LRFactory(self.args.lr_functions, hs, apply_log=self.args.apply_log)
             hs.lrs_for_vars1D = lr_factory.get_lrs_for_vars1D()
-            # hs.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
-            # hs.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
+            hs.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
+            hs.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
             hs.lrs_for_multivars1D = LikelihoodRatio.get_LRmultivars(lr_factory)
         
         hists_lrs_for_vars1D = [Plot.make1D(lr.ref, lr.data, hs.sel, lr.eqbin, xTitle=lr.full_title) for hs in sels for lr in hs.lrs_for_vars1D ]
         plots.extend(hists_lrs_for_vars1D)
 
-        # hists_lrs_for_vars2D = [Plot.make1D(lr.ref, lr.data, hs.sel, lr.eqbin, xTitle=lr.full_title) for hs in sels for lr in hs.lrs_for_vars2D ]
-        # plots.extend(hists_lrs_for_vars2D)
+        hists_lrs_for_vars2D = [Plot.make1D(lr.ref, lr.data, hs.sel, lr.eqbin, xTitle=lr.full_title) for hs in sels for lr in hs.lrs_for_vars2D ]
+        plots.extend(hists_lrs_for_vars2D)
 
-        # hists_lrs_for_vars3D = [Plot.make1D(lr.ref, lr.data, hs.sel, lr.eqbin, xTitle=lr.full_title) for hs in sels for lr in hs.lrs_for_vars3D ]
-        # plots.extend(hists_lrs_for_vars3D)
+        hists_lrs_for_vars3D = [Plot.make1D(lr.ref, lr.data, hs.sel, lr.eqbin, xTitle=lr.full_title) for hs in sels for lr in hs.lrs_for_vars3D ]
+        plots.extend(hists_lrs_for_vars3D)
 
         hists_lrsmultivar = [Plot.make1D(lr.ref, lr.data, hs.sel, lr.eqbin, xTitle=lr.full_title) for hs in sels for lr in hs.lrs_for_multivars1D ]
         plots.extend(hists_lrsmultivar)

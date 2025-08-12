@@ -114,16 +114,17 @@ def custom_pretty_print_json(input_file, output_file, indent=4):
         f.write(format_list(data))
     print(f"DONE")
 
-def main(workdir: Path, take_log: bool=False, outfilename: str = None):
+def main(workdir: Path, config_path: Path, take_log: bool=False, outfilename: str = None):
 
-    config_path = '/afs/cern.ch/user/a/anunezde/bamboodev/hh/bamboo_hh_new/config/analysis_DiscStudy.yml'
     config = AnalysisConfig(config_path)
     resultsdir = workdir / 'results'
     selections = ['SL_4j_resolved']
 
-    signal_filenames = ['bbWW_sl_2022']
+    signal_filenames = ['ggHH_kl_1_kt_1_bbww_sl_2022', 'ggHH_kl_1_kt_1_bbww_dl_2022']
     background_filenames = [
-        'tbarWplus_sl_2022'
+        'ttbar_sl_2022', 'ttbar_dl_2022', 
+        'tbarWplus_sl_2022', 'tbarWplus_dl_2022',
+        'tWminus_sl_2022', 'tWminus_dl_2022'
     ]
 
     signal_files = references.get_files(resultsdir, signal_filenames)
@@ -135,8 +136,8 @@ def main(workdir: Path, take_log: bool=False, outfilename: str = None):
     for sel_name in selections:
         sel_refs = references.select_refs_for_selection(all_refs, sel_name)
         present_vars1D = REG.get_present_vars('1D', signal_files[0], sel_name=sel_name)
-        # present_vars2D = REG.get_present_vars('2D', signal_files[0], sel_name=sel_name)
-        # present_vars3D = REG.get_present_vars('3D', signal_files[0], sel_name=sel_name)
+        present_vars2D = REG.get_present_vars('2D', signal_files[0], sel_name=sel_name)
+        present_vars3D = REG.get_present_vars('3D', signal_files[0], sel_name=sel_name)
         for ref in sel_refs:
             signal_hist = get_total_hist_from_histograms(ref, signal_files, config)
             background_hist = get_total_hist_from_histograms(ref, background_files, config)
@@ -152,31 +153,31 @@ def main(workdir: Path, take_log: bool=False, outfilename: str = None):
                     content=list(np.round(bin_contents, DECIMAL_PLACES)),
                     flow="clamp",
                 )
-            # elif var_name in present_vars2D:
-            #     bin_edges, bin_contents = interpolate_2d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_2D)
-            #     bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
-            #     inputs = [cs.Variable(name="xaxis", type="real", description=""),
-            #             cs.Variable(name="yaxis", type="real", description="")]
-            #     data = cs.MultiBinning(
-            #         nodetype="multibinning",
-            #         inputs=["xaxis","yaxis"],
-            #         edges=bin_edges,
-            #         content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
-            #         flow="clamp",
-            #     )
-            # if var_name in present_vars3D:
-            #     bin_edges, bin_contents = interpolate_3d_root_histogram(ratio_hist, INTERPOLATION_SCALE_FACTOR_3D)
-            #     bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
-            #     inputs = [cs.Variable(name="xaxis", type="real", description=""),
-            #             cs.Variable(name="yaxis", type="real", description=""),
-            #             cs.Variable(name="zaxis", type="real", description="")]
-            #     data = cs.MultiBinning(
-            #         nodetype="multibinning",
-            #         inputs=["xaxis","yaxis", "zaxis"],
-            #         edges=bin_edges,
-            #         content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
-            #         flow="clamp",
-            #     )
+            elif var_name in present_vars2D:
+                bin_edges, bin_contents = interpolate_2d_root_histogram(ratio_hist, take_log)
+                bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
+                inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                        cs.Variable(name="yaxis", type="real", description="")]
+                data = cs.MultiBinning(
+                    nodetype="multibinning",
+                    inputs=["xaxis","yaxis"],
+                    edges=bin_edges,
+                    content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
+                    flow="clamp",
+                )
+            if var_name in present_vars3D:
+                bin_edges, bin_contents = interpolate_3d_root_histogram(ratio_hist, take_log)
+                bin_edges = [ np.round(axis, DECIMAL_PLACES).tolist() for axis in bin_edges ]
+                inputs = [cs.Variable(name="xaxis", type="real", description=""),
+                        cs.Variable(name="yaxis", type="real", description=""),
+                        cs.Variable(name="zaxis", type="real", description="")]
+                data = cs.MultiBinning(
+                    nodetype="multibinning",
+                    inputs=["xaxis","yaxis", "zaxis"],
+                    edges=bin_edges,
+                    content=np.round(bin_contents, DECIMAL_PLACES).tolist(),
+                    flow="clamp",
+                )
             corr = cs.Correction(
                 name=ref + ('_llr' if take_log else '_lr'),
                 # description = f'llr for {subcat_var.ref}'
@@ -200,9 +201,10 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--workdir", action="store", type=Path, help="work directory. Ex: Z_OUTPUT/VarsReco")
     parser.add_argument("-l", "--take_log", action='store_true', help="Compute LLRs instead of LRs")
     parser.add_argument("-o", "--outfilename", action="store",  help="Compute LLRs instead of LRs")
+    parser.add_argument("-c", "--config", action="store",  type=Path, help="Analysis Config path")
     args = parser.parse_args()
 
-    main(args.workdir, args.take_log, args.outfilename)
+    main(args.workdir, args.config, args.take_log, args.outfilename)
     '''
     To compute LRs:
     python3 bamboo_hh_new/utils/lr_mapping.py -w $Z_OUTPUT_eos/JetTop -o lr_mapping

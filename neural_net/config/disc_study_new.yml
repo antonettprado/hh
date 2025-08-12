@@ -69,12 +69,12 @@ models:
   - name: 'multi_HH_ttbar_tW_vars'
     model_type: 'multi'
     classification:
-      HH: [HH_bbWW]
-      TTbar: [TTbar]
-      tW: [tW]
+      HH: ["ggHH_kl_1_kt_1_bbww"]
+      ttbar: ["ttbar"]
+      tW: ["tW"]
     process_sf: 
       HH_bbWW: 1.0
-      TTbar: 8.0
+      ttbar: 8.0
       tW: 4.0
     batch_size: 1024
     tree_names: *tree_sel_names
@@ -90,12 +90,12 @@ models:
   - name: 'multi_HH_ttbar_tW_lrs'
     model_type: 'multi'
     classification:
-      HH: [HH_bbWW]
-      TTbar: [TTbar]
-      tW: [tW]
+      HH: ["ggHH_kl_1_kt_1_bbww"]
+      ttbar: ["ttbar"]
+      tW: ["tW"]
     process_sf: 
       HH_bbWW: 1.0
-      TTbar: 8.0
+      ttbar: 8.0
       tW: 4.0
     batch_size: 1024
     tree_names: *tree_sel_names
@@ -111,12 +111,12 @@ models:
   - name: 'multi_HH_ttbar_tW_both'
     model_type: 'multi'
     classification:
-      HH: [HH_bbWW]
-      TTbar: [TTbar]
-      tW: [tW]
+      HH: ["ggHH_kl_1_kt_1_bbww"]
+      ttbar: ["ttbar"]
+      tW: ["tW"]
     process_sf: 
       HH_bbWW: 1.0
-      TTbar: 8.0
+      ttbar: 8.0
       tW: 4.0
     batch_size: 1024
     tree_names: *tree_sel_names
