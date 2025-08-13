@@ -12,7 +12,7 @@ import math
 from typing import Union
 import yaml
 from bamboo_hh_new.utils import variables
-from references import references
+from references import constants
 from itertools import product
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -69,7 +69,7 @@ class BasePlotter:
         '''
         For either a dirtype of 'workdir' or 'superworkdir' set a reference root file to pull all references from
         '''
-        self.refsFile = references.get_mc_files(ref_workdir/'results')[0]
+        self.refsFile = constants.get_mc_files(ref_workdir/'results')[0]
         tfile = TFile.Open(str(self.refsFile), 'read')
         refs = []
         for key in tfile.GetListOfKeys():
@@ -154,12 +154,12 @@ class Plotter(BasePlotter):
         super().__init__(workdir, configFile, outdir, dirtype='workdir')
         self.workdir = Path(workdir)
         self.resultsdir = self.workdir / 'results'
-        self.processes = references.find_mc_processes(self.resultsdir)
-        self.eras: list[str] = references.find_mc_eras(self.resultsdir)
+        self.processes = constants.find_mc_processes(self.resultsdir)
+        self.eras: list[str] = constants.find_mc_eras(self.resultsdir)
         self.tfiles_info: dict[TFile, float] = {}            # dict{TFile: sumWeight}
         super()._set_configFile_info(Path(configFile))
         super()._set_refs_file_and_refs(ref_workdir=self.workdir)
-        mc_files = references.get_mc_files(self.resultsdir)
+        mc_files = constants.get_mc_files(self.resultsdir)
         self.tfiles_info = open_root_files(mc_files)
         print(f"Present processes: {self.processes}")
         print(f"Eras: {self.eras}\n")
@@ -408,13 +408,13 @@ class Reference():
     def _post_init(self):
         self.processes = self.plotter.processes
         self.eras = self.plotter.eras
-        self.selection = next((sel for sel in references.SELECTIONS if self.ref.startswith(sel)), 'Others')
+        self.selection = next((sel for sel in constants.SELECTIONS if self.ref.startswith(sel)), 'Others')
         self.dist_name = self.ref.removeprefix(f"{self.selection}_" if self.selection != 'Others' else '')
         self.histograms = defaultdict(lambda: defaultdict(dict))
         # Set histograms for each process and era
         for process, era in product(self.processes, self.eras):
             era_tfiles = {tfile: sumWeight for tfile, sumWeight in self.plotter.tfiles_info.items() if tfile.GetName().endswith(f"{era}.root")}
-            era_process_tfiles = {tfile: sumWeight for tfile, sumWeight in era_tfiles.items() if any(Path(tfile.GetName()).stem.startswith(process_file) for process_file in references.PROCESSES_FILES[process])}
+            era_process_tfiles = {tfile: sumWeight for tfile, sumWeight in era_tfiles.items() if any(Path(tfile.GetName()).stem.startswith(process_file) for process_file in constants.PROCESSES_FILES[process])}
             
             if len(era_process_tfiles) == 0:
                 print(f"No info for {process, era}")
@@ -431,7 +431,7 @@ class Reference():
                         print(f"Warning: Histogram for file {tfile.GetName()} and ref {self.ref} is None")
             else:
                 print(f"Warning: Initial histogram for ref {self.ref} is None")
-            hist.SetLineColor(kcolor_map[references.CLASS_COLOR_MAP[process]])
+            hist.SetLineColor(kcolor_map[constants.CLASS_COLOR_MAP[process]])
 
             if hist:
                 self.histograms[process][era] = hist

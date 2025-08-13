@@ -2,7 +2,7 @@ from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.treeproxies import FloatProxy, IntProxy
 from dataclasses import dataclass
 from typing import Optional, Union
-from pathlib import Path
+from references.functions import build_ref
 
 @dataclass
 class SuperVarData:
@@ -45,7 +45,7 @@ class Variable1D(SuperVarData):
         super().__post_init__()
         self.ndim = 1
         self.eqbin = EqBin(self.nbins, self.min, self.max)
-        self.ref = f"{self.subcat}_{self.name}"
+        self.ref = build_ref(for_channel=[self.subcat], for_discriminant=[self.name])
 
 @dataclass
 class VariableND:
@@ -58,4 +58,4 @@ class VariableND:
         self.subcat = self.vars[0].subcat
         self.ndim = len(self.vars)
         self.eqbin = [var.eqbin for var in self.vars]
-        self.ref = f"{self.subcat}_{self.name}"
+        self.ref = build_ref(for_channel=[self.subcat], for_discriminant=[self.name])

@@ -6,6 +6,7 @@ from bamboo.scalefactors import get_correction
 from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
+from references.functions import build_ref
 
 from pathlib import Path
 
@@ -42,10 +43,10 @@ class LR:
 
     def __init__(self, var_names, sel_name, apply_log: bool):
         self.var_names = var_names if isinstance(var_names, list) else [var_names]
-        self.sel_name = sel_name  # assume same subcat
+        self.sel_name = sel_name
         self.base_name = "_x_".join(self.var_names) if len(self.var_names) > 1 else self.var_names[0]
         self.name = self.base_name + ('_llr' if apply_log else '_lr')
-        self.ref = '_'.join((self.sel_name, self.name))
+        self.ref = build_ref([self.sel_name], [self.name])
         self.full_title = self.base_name + (' LLR' if apply_log else ' LR')
         binning_type = self.llr_binning if apply_log else self.lr_binning
         self.__dict__.update(**binning_type.get(len(self.var_names)))

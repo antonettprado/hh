@@ -2,7 +2,7 @@
 from bamboo_hh_new.variables.definitions import REG 
 from utils.analysis_config import AnalysisConfig
 from utils.histograms import normalize_hist, get_hist_refs_from_file, get_total_hist_from_histograms
-from references import references
+from references import constants
 
 import argparse
 import uproot
@@ -127,14 +127,14 @@ def main(workdir: Path, config_path: Path, take_log: bool=False, outfilename: st
         'tWminus_sl_2022', 'tWminus_dl_2022'
     ]
 
-    signal_files = references.get_files(resultsdir, signal_filenames)
-    background_files = references.get_files(resultsdir, background_filenames)
+    signal_files = constants.get_files(resultsdir, signal_filenames)
+    background_files = constants.get_files(resultsdir, background_filenames)
 
     all_refs = get_hist_refs_from_file(signal_files[0])
     
     all_corrections = []
     for sel_name in selections:
-        sel_refs = references.select_refs_for_selection(all_refs, sel_name)
+        sel_refs = constants.select_refs_for_selection(all_refs, sel_name)
         present_vars1D = REG.get_present_vars('1D', signal_files[0], sel_name=sel_name)
         present_vars2D = REG.get_present_vars('2D', signal_files[0], sel_name=sel_name)
         present_vars3D = REG.get_present_vars('3D', signal_files[0], sel_name=sel_name)

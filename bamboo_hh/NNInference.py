@@ -7,6 +7,7 @@ from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
 from bamboo_hh.LikelihoodRatio import LRFactory
+from references.functions import build_ref
 
 from neural_net.model_config import ModelConfig
 from pathlib import Path
@@ -78,11 +79,13 @@ class NNInference(NanoBaseHHbbWW):
                 max_score_index = op.rng_max_element_index(nn_scores, lambda score: score)
                 eqbin = EqBin(400, 0, 1)
                 for i, class_i in enumerate(nn.classes):
-                    total_dist = Plot.make1D(f"{sb.name}_{nn.name}_{class_i}", nn_scores[i], sb.sel, eqbin, xTitle=f"{nn.name} {class_i} score")
-                    nn_class_name = f"{sb.name}_{nn.name}_{class_i}_max"
-                    nn_class = sb.sel.refine(nn_class_name, cut = (op.AND(i == max_score_index)))
-                    partial_dist = Plot.make1D(f"{sb.name}_{nn.name}_{class_i}_sub", nn_scores[i], nn_class, eqbin, xTitle=f"{nn.name} {class_i} score (max)")
-                    self.yields.add(nn_class, nn_class_name)
+                    ref_for_total = build_ref(for_channel=[sb.name], for_discriminant=[nn.name, class_i])
+                    total_dist = Plot.make1D(ref_for_total, nn_scores[i], sb.sel, eqbin, xTitle=f"{nn.name} {class_i} score")
+                    ref_for_partial = build_ref(for_channel=[sb.name, class_i], for_discriminant=[nn.name, class_i])
+                    sel_nn_cat = sb.sel.refine(f"{ref_for_partial}_sel", cut = (op.AND(i == max_score_index)))
+                    self.yields.add(sel_nn_cat, f"{ref_for_partial}_sel")
+                    partial_dist = Plot.make1D(ref_for_partial, nn_scores[i], sel_nn_cat, eqbin, xTitle=f"{nn.name} {class_i} score (max)")
+                    
                     plots.extend([total_dist, partial_dist])
 
         return plots

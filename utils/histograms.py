@@ -2,7 +2,7 @@ import ROOT
 import uproot
 from pathlib import Path
 from utils.analysis_config import AnalysisConfig
-from references import references
+from references import constants
 import numpy as np
 
 ROOT.gROOT.SetBatch(True)
@@ -39,8 +39,8 @@ def get_sum_weights(file: Path) -> float:
 
 def get_scale_factor(file: Path, config: AnalysisConfig) -> float:
     """Calculate scale factor for a given file using config."""
-    era = references.get_file_era(file)
-    subprocess = references.get_file_subprocess(file)
+    era = constants.get_file_era(file)
+    subprocess = constants.get_file_subprocess(file)
     xsec = config.get_cross_section(subprocess)
     lumi = config.get_luminosity(era)
     sumw = get_sum_weights(file)
