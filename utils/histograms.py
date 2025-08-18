@@ -2,7 +2,7 @@ import ROOT
 import uproot
 from pathlib import Path
 from utils.analysis_config import AnalysisConfig
-from references import constants
+from references import constants, functions
 import numpy as np
 
 ROOT.gROOT.SetBatch(True)
@@ -39,8 +39,8 @@ def get_sum_weights(file: Path) -> float:
 
 def get_scale_factor(file: Path, config: AnalysisConfig) -> float:
     """Calculate scale factor for a given file using config."""
-    era = constants.get_file_era(file)
-    subprocess = constants.get_file_subprocess(file)
+    era = functions.get_file_era(file)
+    subprocess = functions.get_file_subprocess(file)
     xsec = config.get_cross_section(subprocess)
     lumi = config.get_luminosity(era)
     sumw = get_sum_weights(file)
@@ -59,7 +59,7 @@ def get_scaled_hist_from_file(file: Path, histname: str, config: AnalysisConfig)
 
 def create_hist_from_data(var: str, data: np.ndarray, file: Path, config: AnalysisConfig) -> ROOT.TH1:
     """Create and fill histogram from data array."""
-    from bamboo_hh_new.variables.definitions import REG 
+    from bamboo_hh.variables import REG 
     histname = f"{var}_{file.stem}"
     nbins, xmin, xmax = REG.get_var1D_binning(var)
     hist = ROOT.TH1F(histname, histname, nbins, xmin, xmax)
@@ -81,8 +81,7 @@ def add_hists(hists: list[ROOT.TH1]) -> ROOT.TH1:
         total.Add(h)
     return total
 
-def process_files_to_hists(files: list[Path], config: AnalysisConfig, 
-                          hist_getter_func, *args) -> ROOT.TH1:
+def process_files_to_hists(files: list[Path], config: AnalysisConfig, hist_getter_func, *args) -> ROOT.TH1:
     """Generic function to process files and combine histograms."""
     hists = []
     for file in files:
@@ -111,3 +110,8 @@ def get_total_hist_from_histograms(ref: str, files: list[Path], config: Analysis
 def get_total_hist_from_branches(files: list[Path], tree_name: str, var: str, config: AnalysisConfig) -> ROOT.TH1:
     """Get total histogram by combining histograms created from tree data."""
     return process_files_to_hists(files, config, _get_hist_from_tree, tree_name, var)
+
+def write_hists_to_root(path: Path, histos: dict[str, any]) -> None:
+    with uproot.recreate(path) as outfile:
+        for name, hist in histos.items():
+            outfile[name] = hist

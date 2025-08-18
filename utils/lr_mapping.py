@@ -1,5 +1,5 @@
 
-from bamboo_hh_new.variables.definitions import REG 
+from bamboo_hh.variables import REG 
 from utils.analysis_config import AnalysisConfig
 from utils.histograms import normalize_hist, get_hist_refs_from_file, get_total_hist_from_histograms
 from references import constants

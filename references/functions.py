@@ -16,6 +16,24 @@ def parse_ref(ref):
         raise ValueError(f"Invalid ref format: {ref!r}")
     return parts[0], parts[1]
 
+# ----------------------------------------------------------------------
+
+def split_parts(string):
+    """Split a string into parts using WITHIN_GROUP_DELIM."""
+    return string.split(WITHIN_GROUP_DELIM)
+
+def is_simple(string):
+    """Check if string is simple (no WITHIN_GROUP_DELIM)."""
+    return WITHIN_GROUP_DELIM not in string
+
+def process_is_bkg(proc: str) -> bool:
+    return all(not proc.split('_',1)[0] == pattern for pattern in ['data', 'ggHH', 'qqHH'])
+
+def process_is_sm_sig(proc: str) -> bool:
+    return any(proc.rsplit('_',1)[0] == pattern for pattern in ['ggHH_kl_1_kt_1', 'qqHH_CV_1_C2V_1_kl_1'])
+
+# ----------------------------------------------------------------------
+
 def get_file_subprocess(root_file: Path) -> str:
     return root_file.stem.rsplit('_', 1)[0]
 
@@ -78,8 +96,6 @@ def filter_files_by_process_and_era(resultsdir: Path, processes: list[str] = Non
         except KeyError:
             print(f"Warning: Unknown process or malformed filename: {f.name}")
             continue
-
-    print(matched_files)
 
     return matched_files
 

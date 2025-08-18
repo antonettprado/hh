@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 1000)
-from references import references
+from references import constants
 
 NON_FEATURE_BRANCHES = ['event', 'genWeight']
 UNDEFINED = -9999
@@ -62,8 +62,8 @@ def main(config_name, roster, workdir, max_workers=4):
     processes = config.mapper.get_processes()
     features = config.features
 
-    files = references.get_root_files(workdir / 'results')
-    files = [f for f in files if references.get_file_process(f) in processes]
+    files = constants.get_root_files(workdir / 'results')
+    files = [f for f in files if constants.get_file_process(f) in processes]
 
     summary_rows = []
 
@@ -85,8 +85,8 @@ def main(config_name, roster, workdir):
     processes = config.mapper.get_processes()
     print(processes)
     features = config.features
-    files = references.get_root_files(workdir / 'results')
-    files = [f for f in files if references.get_file_process(f) in processes]
+    files = constants.get_root_files(workdir / 'results')
+    files = [f for f in files if constants.get_file_process(f) in processes]
 
     summary_rows = []
     for file in files:

@@ -3,7 +3,7 @@ import ROOT
 from pathlib import Path
 from typing import Iterable
 from collections import defaultdict
-from references import references as refs
+from references import constants as refs
 
 # Incomplete function to get the normalizations from the fitDiagnostics root file
 def get_fit_normalizations(file: Path) -> tuple[list,list,list]:
@@ -78,11 +78,11 @@ def combine_histos_from_root_files(root_files: Iterable[Path], process_map: dict
         return default if hist_names is None else hist_name in hist_names
     
     histos: defaultdict[str, list[ROOT.TH1D]] = defaultdict(list) 
-    print(xs)
+    
     for f in root_files:
-        subprocess_era = f.stem
-        subprocess = subprocess_era.rsplit('_', 1)[0]
-        x = xs[subprocess_era]
+        era = refs.get_file_era(f)
+        subprocess = refs.get_file_subprocess(f)
+        x = xs[f'{subprocess}_{era}']
         process = process_map[subprocess]
 
         tfile = ROOT.TFile.Open(str(f))
@@ -110,7 +110,7 @@ def combine_results(results_dir: Path, hist_names: list[str]=None) -> dict:
     files: list[Path] = refs.get_root_files(results_dir)
     eras: list[str] = refs.get_eras(results_dir)
 
-    with open('bamboo_hh_new/config/analysis_DiscStudy.yml') as file:
+    with open('bamboo_hh/config/disc_study_new.yml') as file:
         config = yaml.safe_load(file)
         lumis = { era: v['luminosity'] for era, v in config['eras'].items() if era in eras }
         xs = { subprocess_era: v['cross-section'] for subprocess_era, v in config['samples'].items() }

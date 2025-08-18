@@ -66,13 +66,13 @@ class RunDistributed:
             "output": f"{str(rd.afs_modeldir.resolve())}/condor.out",
             "error": f"{str(rd.afs_modeldir.resolve())}/condor.err",
             "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
-            # "+MaxRuntime": "172800",  # 2 days in seconds
-            "+MaxRuntime": "259200",  # 3 days in seconds
+            "+MaxRuntime": "172800",  # 2 days in seconds
+            # "+MaxRuntime": "259200",  # 3 days in seconds
             # "+MaxRuntime": "432000",  # 5 days in seconds
-            "request_cpus": "6",
+            "request_cpus": "4",
             # "request_gpus": "1",
-            "request_memory": "60GB" if memory is None else memory,
-            "request_disk": "10GB",
+            "request_memory": "20GB" if memory is None else memory,
+            "request_disk": "5GB",
             'MY.SendCredential': True,
             "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references"
         })

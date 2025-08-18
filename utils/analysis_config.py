@@ -1,11 +1,9 @@
-from utils.yaml_loader import YMLIncludeLoader
+from utils.yaml_loader import parseAnalysisConfig
 from pathlib import Path
-import yaml
 
 class AnalysisConfig:
-    def __init__(self, config_path: Path = Path(__file__).parents[1] / 'config' / 'analysis.yml'):
-        with open(config_path, "r") as f:
-            self.config = yaml.load(f, Loader=YMLIncludeLoader)
+    def __init__(self, config_path: Path = Path(__file__).parents[1] / 'bamboo_hh' / 'config' / 'analysis.yml'):
+        self.config = parseAnalysisConfig(config_path)
         self.samples = self.config.get("samples", {})
         self.eras = self.config.get("eras", {})
 

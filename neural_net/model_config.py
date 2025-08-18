@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Union, Optional
 import yaml
 from pathlib import Path
 from typing import Set
-from references import references
+from references import constants
 from collections import OrderedDict
 import numpy as np
 
@@ -31,7 +31,7 @@ class ClassProcessMapper:
         processes = self.get_processes()
         if len(processes) != len(set(processes)):
             raise ValueError(f"Overlapping processes found in mapper")
-        invalid = set(processes) - set(references.PROCESSES_FILES)
+        invalid = set(processes) - set(constants.PROCESSES_FILES)
         if invalid:
             raise ValueError(f"Invalid processes: {', '.join(invalid)}")
 
@@ -115,7 +115,7 @@ def load_model_configs(roster_name: Path, verbose: bool = True) -> list[ModelCon
     def validate_processes(model_name: str, processes: list[str]) -> None:
         if len(processes) != len(set(processes)):
             raise ValueError(f"Model {model_name}: Overlapping processes found")
-        invalid = set(processes) - set(references.PROCESSES_FILES)
+        invalid = set(processes) - set(constants.PROCESSES_FILES)
         if invalid:
             raise ValueError(f"Model {model_name}: Invalid processes: {', '.join(invalid)}")
 

@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from pathlib import Path
 import uproot
-from references import references
+from references import constants
 import gc
 import pandas as pd
 pd.set_option('display.max_columns', None)
@@ -153,16 +153,16 @@ class DatasetManager:
         self.total_events = 0
 
     def _create_info_ds_meta(self):
-        all_root_files = references.get_mc_files(self.workdir / 'results')
+        all_root_files = constants.get_mc_files(self.workdir / 'results')
         relevant_files = []
         for file in all_root_files:
-            process = references.get_file_process(file)
+            process = constants.get_file_process(file)
             if process in self.mapper.get_processes():
                 relevant_files.append(file)
 
         rows = []
         for file_path in relevant_files:
-            process = references.get_file_process(file_path)
+            process = constants.get_file_process(file_path)
             with uproot.open(file_path) as upfile:
                 for tree_name in self.tree_names:
                     if tree_name in upfile:
