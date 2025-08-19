@@ -27,10 +27,10 @@ def is_simple(string):
     return WITHIN_GROUP_DELIM not in string
 
 def process_is_bkg(proc: str) -> bool:
-    return all(not proc.split('_',1)[0] == pattern for pattern in ['data', 'ggHH', 'qqHH'])
+    return all(not proc.split('_',1)[0] == pattern for pattern in ['data', 'ggHH', 'qqHH', 'HH_bbWW'])
 
 def process_is_sm_sig(proc: str) -> bool:
-    return any(proc.rsplit('_',1)[0] == pattern for pattern in ['ggHH_kl_1_kt_1', 'qqHH_CV_1_C2V_1_kl_1'])
+    return any(proc.rsplit('_',1)[0] == pattern for pattern in ['ggHH_kl_1_kt_1', 'qqHH_CV_1_C2V_1_kl_1', 'HH_bbWW'])
 
 # ----------------------------------------------------------------------
 

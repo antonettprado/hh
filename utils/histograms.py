@@ -111,7 +111,11 @@ def get_total_hist_from_branches(files: list[Path], tree_name: str, var: str, co
     """Get total histogram by combining histograms created from tree data."""
     return process_files_to_hists(files, config, _get_hist_from_tree, tree_name, var)
 
-def write_hists_to_root(path: Path, histos: dict[str, any]) -> None:
-    with uproot.recreate(path) as outfile:
-        for name, hist in histos.items():
-            outfile[name] = hist
+def write_hists_to_root(path: Path, histos: dict[str, ROOT.TH1D]) -> None:
+    outfile = ROOT.TFile.Open(str(path), "RECREATE")
+    outfile.cd()
+    for name, hist in histos.items():
+        hist.SetName(name)
+        hist.SetDirectory(outfile)
+        hist.Write()
+    outfile.Close()
