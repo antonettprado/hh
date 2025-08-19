@@ -1,38 +1,12 @@
 from pathlib import Path
 from .constants import *
 
-def build_ref(for_channel: list[str], for_discriminant: list[str]):
-    # Handle both string and list inputs
-    assert all(isinstance(arg, list) for arg in [for_channel, for_discriminant]), "Arguments must be lists"
-    channel = WITHIN_GROUP_DELIM.join(for_channel)
-    discriminant = WITHIN_GROUP_DELIM.join(for_discriminant)
-    
-    return CHANNEL_DISCRIMINANT_DELIM.join([channel, discriminant])
-
-def parse_ref(ref):
-    """Split a ref string into (channel, category)."""
-    parts = ref.split(CHANNEL_DISCRIMINANT_DELIM, 1)
-    if len(parts) != 2:
-        raise ValueError(f"Invalid ref format: {ref!r}")
-    return parts[0], parts[1]
-
-# ----------------------------------------------------------------------
-
-def split_parts(string):
-    """Split a string into parts using WITHIN_GROUP_DELIM."""
-    return string.split(WITHIN_GROUP_DELIM)
-
-def is_simple(string):
-    """Check if string is simple (no WITHIN_GROUP_DELIM)."""
-    return WITHIN_GROUP_DELIM not in string
 
 def process_is_bkg(proc: str) -> bool:
     return all(not proc.split('_',1)[0] == pattern for pattern in ['data', 'ggHH', 'qqHH', 'HH_bbWW'])
 
 def process_is_sm_sig(proc: str) -> bool:
     return any(proc.rsplit('_',1)[0] == pattern for pattern in ['ggHH_kl_1_kt_1', 'qqHH_CV_1_C2V_1_kl_1', 'HH_bbWW'])
-
-# ----------------------------------------------------------------------
 
 def get_file_subprocess(root_file: Path) -> str:
     return root_file.stem.rsplit('_', 1)[0]

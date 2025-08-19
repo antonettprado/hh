@@ -2,7 +2,8 @@ import ROOT
 import uproot
 from pathlib import Path
 from utils.analysis_config import AnalysisConfig
-from references import constants, functions
+from references import functions
+from references.reference import Reference
 import numpy as np
 
 ROOT.gROOT.SetBatch(True)
@@ -111,6 +112,23 @@ def get_total_hist_from_branches(files: list[Path], tree_name: str, var: str, co
     """Get total histogram by combining histograms created from tree data."""
     return process_files_to_hists(files, config, _get_hist_from_tree, tree_name, var)
 
+def get_process_hists(processes:list[str], era: str, reference: Reference, resultsdir: Path, config: AnalysisConfig) -> dict[str, ROOT.TH1]:
+    """Get process histograms for a specific reference."""
+    process_hists = {}
+    for process in processes:
+        files = functions.filter_files_by_process_and_era(resultsdir, [process], [era])
+        process_hists[process] = get_total_hist_from_histograms(reference.name, files, config)
+
+    relevant_processes = [k for k in process_hists if (functions.process_is_sm_sig(k) or functions.process_is_bkg(k))]
+    if relevant_processes:
+        asimov_hist = process_hists[relevant_processes[0]].Clone('asimov')
+        for proc in relevant_processes[1:]:
+            asimov_hist.Add(process_hists[proc])
+        process_hists['asimov'] = asimov_hist
+
+    return process_hists
+
+
 def write_hists_to_root(path: Path, histos: dict[str, ROOT.TH1D]) -> None:
     outfile = ROOT.TFile.Open(str(path), "RECREATE")
     outfile.cd()
@@ -119,3 +137,4 @@ def write_hists_to_root(path: Path, histos: dict[str, ROOT.TH1D]) -> None:
         hist.SetDirectory(outfile)
         hist.Write()
     outfile.Close()
+
