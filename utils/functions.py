@@ -1,12 +1,13 @@
 from pathlib import Path
-from .constants import *
-
+from references.constants import *
 
 def process_is_bkg(proc: str) -> bool:
-    return all(not proc.split('_',1)[0] == pattern for pattern in ['data', 'ggHH', 'qqHH', 'HH_bbWW'])
+    """True if proc is background (i.e. not in signal/data patterns)."""
+    return all(proc.split('_', 1)[0] != pattern for pattern in BKG_EXCLUDE_PATTERNS)
 
 def process_is_sm_sig(proc: str) -> bool:
-    return any(proc.rsplit('_',1)[0] == pattern for pattern in ['ggHH_kl_1_kt_1', 'qqHH_CV_1_C2V_1_kl_1', 'HH_bbWW'])
+    """True if proc is an SM signal process."""
+    return any(proc.rsplit('_', 1)[0] == pattern for pattern in SM_SIGNAL_PATTERNS)
 
 def get_file_subprocess(root_file: Path) -> str:
     return root_file.stem.rsplit('_', 1)[0]

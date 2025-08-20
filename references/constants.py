@@ -9,10 +9,21 @@ SELECTIONS = ['_noSel', 'noSel', 'baseSel',
     'Total']
 SELECTIONS.sort(key=len, reverse=True)
 
-ERAS = ['2022', '2022EE', '2023', '2023BPix']
+ERA_ENUM = {
+    "2022": 1,
+    "2022EE": 2,
+    "2023": 3,
+    "2023BPix": 4,
+    "2024": 5,
+    "2025": 6,
+    "2026": 7,
+}
 
 CHANNEL_DISCRIMINANT_DELIM = "___"
 WITHIN_GROUP_DELIM = "__"
+
+BKG_EXCLUDE_PATTERNS = ('data', 'ggHH', 'HH_bbWW')
+SM_SIGNAL_PATTERNS   = ('ggHH_kl_1_kt_1', 'HH_bbWW')
 
 PROCESSES_FILES = dict(
     ggHH_kl_1_kt_1_bbww=['ggHH_kl_1_kt_1_bbww_sl', 'ggHH_kl_1_kt_1_bbww_dl',],

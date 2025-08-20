@@ -6,10 +6,9 @@ from typing import Callable
 from multiprocessing import Pool
 from fitting_new import fitter
 from fitting_new.disc import get_discriminants, Discriminant
-from fitting_new.binning import run2_binning_strategy
-from utils.analysis_config import AnalysisConfig
+from references.analysis_config import AnalysisConfig
 
-def run_fits_multiprocessed(datacards: list[Path]):
+def run_fits_multiprocessed(datacards: list[Path]) -> list[Path]:
     start = time.perf_counter()
     with Pool() as p:
         print(f"{'Creating Workspaces':.<22}", end=' ', flush=True)
@@ -32,7 +31,7 @@ def run_fits_multiprocessed(datacards: list[Path]):
     for i, (wksp, _) in enumerate(workspaces_and_results_files):
         dc_slice: slice = slice(i_start := i*dc_result_length, i_start + dc_result_length)
         dc_fit_results: str = ''.join(fit_results[dc_slice])
-        dc_res_file: Path = wksp.parent / ('fit_results_' + wksp.stem.split('_',1)[-1] + '.txt')
+        dc_res_file: Path = wksp.parent / ('fit_results_' + wksp.stem + '.txt')
         dc_res_file.write_text(dc_fit_results)
         results_files.append(dc_res_file)
     
@@ -45,20 +44,34 @@ def multifit(workspace_and_res_file: tuple[Path, Path], func: Callable[[Path,str
 
 def write_summary(results_files, outdir):
     # Gather data for summary file
-    model_limits: dict[str, float] = {}
+    model_limits = {}
     for res_file in results_files:
-        if res_file.parent.name.startswith('era_'):
-            continue
+        model_name = res_file.parents[2].stem
+        print(model_name)
         with open(res_file, 'r') as f:
             for i, line in enumerate(f):
                 if i > 11: break
                 if i < 11: continue
-                limit: float = float(line.split()[-1])
-                model_limits[res_file.parent.stem] = limit
+
+                parts = line.split()
+                if not parts:  # empty line
+                    model_limits[model_name] = None
+                    continue
+
+                try:
+                    limit: float = float(parts[-1])
+                except ValueError:
+                    limit = None
+                model_limits[model_name] = limit
 
     # Write summary file
     field_size: int = max(len(k) for k in model_limits)
-    model_limits = dict(sorted(model_limits.items(), key=lambda item: item[1])) # Sort by upper limit
+    # model_limits = dict(sorted(model_limits.items(), key=lambda item: item[1])) # Sort by upper limit
+    # sort with None at the end
+    model_limits = dict(sorted(
+        model_limits.items(),
+        key=lambda item: (item[1] is None, item[1] if item[1] is not None else float('inf'))
+    ))
     summary_limits_file: Path = outdir / 'summary_results.txt'
     with open(summary_limits_file, 'w') as f:
         f.write(r'Summary of blinded, expected 50% asymptotic limits:')
@@ -71,15 +84,16 @@ def main(workdir, config) -> None:
     Creates datacards given a directory of DNN results and runs blinded and unblinded asymptotic 
     and diagnostic fits. Uses multiprocessing to run fits in parallel.
     '''
-    fitsdir: Path = workdir / 'fits_claude'
+    fitsdir: Path = workdir / 'fits_new'
     fitsdir.mkdir(exist_ok=True)
     resultsdir = workdir / 'results'
     config = AnalysisConfig(config)
     discs: list[Discriminant] = get_discriminants(fitsdir, resultsdir, config)
     dcs_for_fit: list[Path] = [p for disc in discs for p in disc.datacards.values()]
-
     # # dcs_for_fit: list[Path] = [ dc.path for dc in sel_dcs + model_dcs ]
     results_files: list[Path] = run_fits_multiprocessed(dcs_for_fit)
+    for result in results_files:
+        print(str(result))
     write_summary(results_files, outdir = fitsdir)
 
     
@@ -87,8 +101,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("workdir", type=Path, help="Neural Nets bamboo output directory to pull info from. Ex: Z_OUTPUT/<nndir>")
     parser.add_argument("-c", "--config", help="Path to analysis config")
+    parser.add_argument("-s", "--summary_only", action="store_true")
     args = parser.parse_args()
-    main(args.workdir, args.config)
+    if args.summary_only:
+        print('Doing summary only')
+        fitsdir: Path = args.workdir / 'fits_new'
+        print(f"Looking in: {fitsdir.resolve()}")
+        print("Subdirs:", [p.name for p in fitsdir.iterdir() if p.is_dir()])
+        results_files = list(fitsdir.glob("*/2022/SL_4j_resolved/fit_results_datacard.txt"))
+        print("Matches:", results_files)
+        write_summary(results_files, outdir = fitsdir)
+    else:
+        main(args.workdir, args.config)
 
     '''
     python3 scripts/run_dc_and_fits.py $Z_OUTPUT_eos/Disc_Study_Rep/0806_NNInf_even -c bamboo_hh/config/analysis_DiscStudy.yml

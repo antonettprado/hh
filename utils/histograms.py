@@ -1,9 +1,9 @@
 import ROOT
 import uproot
 from pathlib import Path
-from utils.analysis_config import AnalysisConfig
-from references import functions
+from references.analysis_config import AnalysisConfig
 from references.reference import Reference
+from utils import functions
 import numpy as np
 
 ROOT.gROOT.SetBatch(True)
