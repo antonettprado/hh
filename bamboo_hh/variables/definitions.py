@@ -800,20 +800,20 @@ def get_ll_pt(objs):
     data = (lep0_p4 + lep1_p4).Pt()
     return {'DL_res_1b':data, 'DL_res_2b':data}
 
-@REG.reg_var1D(name="era", nbins=6, min=0, max=6, unit="", title="Enumerated Era")
-def get_era(objs):
-    era = objs["era"]
-    # Enumerate
-    era_enum = {
-        "2022": 1,
-        "2022EE": 2,
-        "2023": 3,
-        "2023BPix": 4,
-        "2024": 5,
-        "2025": 6,
-        "2026": 7,
-    }
-    return op.c_int(era_enum[era])
+# @REG.reg_var1D(name="era", nbins=6, min=0, max=6, unit="", title="Enumerated Era")
+# def get_era(objs):
+#     era = objs["era"]
+#     # Enumerate
+#     era_enum = {
+#         "2022": 1,
+#         "2022EE": 2,
+#         "2023": 3,
+#         "2023BPix": 4,
+#         "2024": 5,
+#         "2025": 6,
+#         "2026": 7,
+#     }
+#     return op.c_int(era_enum[era])
 
 # 2D composite variable registrations
 REG.reg_var2D(name="bjets_dR_vs_pt_bb", vars=["bjets_pt_bb", "bjets_dR"])

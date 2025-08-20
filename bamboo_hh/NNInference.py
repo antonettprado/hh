@@ -7,7 +7,7 @@ from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
 from bamboo_hh.LikelihoodRatio import LRFactory
-from references.functions import build_ref
+from utils.functions import build_ref
 
 from neural_net.model_config import ModelConfig
 from pathlib import Path
