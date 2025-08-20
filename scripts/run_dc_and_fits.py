@@ -2,60 +2,12 @@ import time
 import argparse
 import itertools
 from pathlib import Path
-from fitting import fitter
 from typing import Callable
-from fitting import datacards
 from multiprocessing import Pool
-from fitting.datacards import Datacard
-from fitting.binning import run2_binning_strategy
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("nndir", type=Path, help="Neural Nets bamboo output directory to pull info from. Ex: Z_OUTPUT/<nndir>")
-    parser.add_argument("-i", "--input", action="store", type=Path, help="directory containing the DNN fit root files (default: <nndir>/results)")
-    args = parser.parse_args()
-    return args
-
-def make_datacards(nndir: Path, results_dir: Path) -> tuple[list[Datacard], list[Datacard]]:
-    start = time.perf_counter()
-    print(f"{'Making Datacards':.<22}", end=' ', flush=True)
-    dcs: list[Datacard] = datacards.make_datacards(nndir, results_dir=results_dir, rebin=run2_binning_strategy)
-
-    sel_dcs: list[Datacard] = datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_2b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_4j_1b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_4j_2b'])
-    #sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j4j_1b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_3j_resolved'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_4j_resolved'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_3j_2b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_4j_1b', 'SL_res_4j_2b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_4j_1b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_2b', 'SL_res_4j_2b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_3j_resolved', 'SL_4j_resolved'])
-    #sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j4j_1b', 'SL_res_3j_2b', 'SL_res_4j_2b'])
-    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_3j_2b', 'SL_res_4j_1b', 'SL_res_4j_2b'])
-    
-    # Figure out which selection datacards to combine into a model datacard
-    '''
-    if any(dc.selection == None for dc in sel_dcs):
-        # Use combined 1b and 2b datacards if they exist
-        era_dcs = [ sdc for sdc in sel_dcs if sdc.selection is None ]
-    elif all(dc.selection in ['SL_3j_resolved', 'SL_4j_resolved']  for dc in sel_dcs):
-        # Use resolved datacards if they are all we ran on
-        era_dcs = sel_dcs
-    else:
-        raise RuntimeError("Don't know which selection datacards to use to generate combined model datacards")
-    '''
-    era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_1b_SL_res_3j_2b_SL_res_4j_1b_SL_res_4j_2b']
-    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j4j_1b_SL_res_3j_2b_SL_res_4j_2b']
-    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_3j_resolved_SL_4j_resolved']
-    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_1b_SL_res_4j_1b']
-    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_2b_SL_res_4j_2b']
-    model_dcs: list[Datacard] = datacards.combine_datacards_over_eras(era_dcs)
-
-    print(f'{time.perf_counter()-start:.2f}s')
-    return sel_dcs, model_dcs
+from fitting_new import fitter
+from fitting_new.disc import get_discriminants, Discriminant
+from fitting_new.binning import run2_binning_strategy
+from utils.analysis_config import AnalysisConfig
 
 def run_fits_multiprocessed(datacards: list[Path]):
     start = time.perf_counter()
@@ -86,12 +38,10 @@ def run_fits_multiprocessed(datacards: list[Path]):
     
     return results_files
 
-
 def multifit(workspace_and_res_file: tuple[Path, Path], func: Callable[[Path,str],str], fit_type: str) -> str: 
     ''' Trick to make asymptotic and diagnostic fits be run in one `Pool.starmap` '''
     workspace, results_file = workspace_and_res_file
     return func(workspace, fit_type, results_file) 
-
 
 def write_summary(results_files, outdir):
     # Gather data for summary file
@@ -116,18 +66,30 @@ def write_summary(results_files, outdir):
         for model, limit in model_limits.items():
             f.write(f'{model:{field_size}s} : \u03BC = {limit}\n')
 
-def main() -> None:
+def main(workdir, config) -> None:
     ''' 
     Creates datacards given a directory of DNN results and runs blinded and unblinded asymptotic 
     and diagnostic fits. Uses multiprocessing to run fits in parallel.
     '''
-    args = parse_args()
-    sel_dcs, model_dcs = make_datacards(args.nndir, args.input)
-    datacards_for_fit: list[Path] = [ dc.path for dc in sel_dcs + model_dcs ]
-    results_files: list[Path] = run_fits_multiprocessed(datacards_for_fit)
-    write_summary(results_files, outdir = args.nndir / 'fits')
+    fitsdir: Path = workdir / 'fits_claude'
+    fitsdir.mkdir(exist_ok=True)
+    resultsdir = workdir / 'results'
+    config = AnalysisConfig(config)
+    discs: list[Discriminant] = get_discriminants(fitsdir, resultsdir, config)
+    dcs_for_fit: list[Path] = [p for disc in discs for p in disc.datacards.values()]
+
+    # # dcs_for_fit: list[Path] = [ dc.path for dc in sel_dcs + model_dcs ]
+    results_files: list[Path] = run_fits_multiprocessed(dcs_for_fit)
+    write_summary(results_files, outdir = fitsdir)
 
     
-
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workdir", type=Path, help="Neural Nets bamboo output directory to pull info from. Ex: Z_OUTPUT/<nndir>")
+    parser.add_argument("-c", "--config", help="Path to analysis config")
+    args = parser.parse_args()
+    main(args.workdir, args.config)
+
+    '''
+    python3 scripts/run_dc_and_fits.py $Z_OUTPUT_eos/Disc_Study_Rep/0806_NNInf_even -c bamboo_hh/config/analysis_DiscStudy.yml
+    '''

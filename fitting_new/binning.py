@@ -31,7 +31,8 @@ def run2_binning_strategy(histos: dict[str, ROOT.TH1D], stype: str) -> dict[str,
     Returns:
         rebinned_histos (dict[str, ROOT.TH1D]): dictionary of process names and rebinned histograms
     '''
-    lumi_sig_hist = histos['ggHH_kl_1_kt_1_bbww']
+    # lumi_sig_hist = histos['ggHH_kl_1_kt_1_bbww']
+    lumi_sig_hist = histos['HH_bbWW']
     sig_pdf = lumi_sig_hist.Clone()
     sig_pdf.Scale(1/lumi_sig_hist.Integral())
 

@@ -52,6 +52,8 @@ class Discriminant:
         for era, ref in product(self.eras, self.active_references):
             print(f"\t[{self.name}] era={era}  channel={ref.channel}  observable={ref.observable}")
             hists = histograms.get_process_hists(self.processes, era, ref, resultsdir, self.config)
+            if self.is_complex:
+                hists = run2_binning_strategy(hists, 'signal' if 'HH' in ref.observable_sub else 'background')
             dc_path = datacards.generate_dc(self.path, self.name, ref, era, hists)
             groups[(era, keyfn(ref))].append((ref, dc_path))
 
@@ -64,12 +66,10 @@ class Discriminant:
             self.datacards[(era, key)] = final_dc
                                                                 
 
-def get_discriminants(workdir: Path, config: AnalysisConfig) -> list[Discriminant]:
+def get_discriminants(fitsdir: Path, resultsdir:Path, config: AnalysisConfig) -> list[Discriminant]:
     """Enhanced discriminant creation using Reference objects."""
-    resultsdir = workdir / 'results'
-    fitsdir: Path = workdir / 'fits_claude'
-    fitsdir.mkdir(exist_ok=True)
-    
+
+    fitsdir.mkdir(exist_ok=True)    
     eras: list[str] = functions.get_eras(resultsdir)
     processes = functions.find_mc_processes(resultsdir)
     Discriminant.set_class_settings(fitsdir, eras, config, processes)
@@ -81,6 +81,8 @@ def get_discriminants(workdir: Path, config: AnalysisConfig) -> list[Discriminan
 
     for disc in discs:
         disc.generate_dcs(resultsdir)
+        for key, value in disc.datacards:
+            print(f"\t{key}, {value}")
         
     return discs
 
@@ -92,5 +94,8 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--config", help="Path to analysis config")
     args = parser.parse_args()
 
+    fitsdir: Path = args.workdir / 'fits_claude'
+    fitsdir.mkdir(exist_ok=True)
+    resultsdir = args.workdir / 'results'
     config = AnalysisConfig(args.config)
-    get_discriminants(args.workdir, config)
+    get_discriminants(fitsdir, resultsdir, config)
