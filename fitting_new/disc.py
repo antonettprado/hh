@@ -10,7 +10,8 @@ from fitting_new import datacards
 from utils import histograms
 from utils.analysis_config import AnalysisConfig
 import subprocess
-from itertools import groupby
+from itertools import groupby, product
+from collections import defaultdict
 
 
 class Discriminant:
@@ -43,28 +44,25 @@ class Discriminant:
             return [ref for ref in self.references if ref.channel_sub]
         else:
             return self.references
-        
-    def generate_dcs(self, resultsdir):
-        if self.is_complex:
-            partial_dcs = {}
-            for era in self.eras:
-                for ref in self.active_references:
-                    print(f"\t channel={ref.channel}, observable={ref.observable}")
-                    process_hists = histograms.get_process_hists(self.processes, era, ref, resultsdir, self.config)
-                    partial_dcs[ref] = datacards.generate_dc(self.path, self.name, ref, era, process_hists)
 
-                base_channels = set(ref.channel_base for ref in self.active_references)
-                for base_channel in base_channels:
-                    base_channel_dcs = list(filter(lambda item: item[0].channel_base == base_channel, partial_dcs.items()))
-                    self.datacards[base_channel] = datacards.generate_combined_dc(self.path, era, base_channel, base_channel_dcs)
+    def generate_dcs(self, resultsdir: Path):
+        keyfn = (lambda r: r.channel_base) if self.is_complex else (lambda r: r.channel)
+        groups = defaultdict(list)   # (era, group_key) -> [(ref, dc_path)]
 
-        else:
-            for era in self.eras:
-                for ref in self.active_references:
-                    print(f"\t channel={ref.channel}, observable={ref.observable}")
-                    process_hists = histograms.get_process_hists(self.processes, era, ref, resultsdir, self.config)
-                    self.datacards[ref.channel] = datacards.generate_dc(self.path, self.name, 
-                                                                        ref, era, process_hists)
+        for era, ref in product(self.eras, self.active_references):
+            print(f"\t[{self.name}] era={era}  channel={ref.channel}  observable={ref.observable}")
+            hists = histograms.get_process_hists(self.processes, era, ref, resultsdir, self.config)
+            dc_path = datacards.generate_dc(self.path, self.name, ref, era, hists)
+            groups[(era, keyfn(ref))].append((ref, dc_path))
+
+        # finalize groups (combine only when needed)
+        for (era, key), card_list in groups.items():
+            final_dc = (
+                card_list[0][1] if len(card_list) == 1
+                else datacards.generate_combined_dc(self.path, era, key, card_list)
+            )
+            self.datacards[(era, key)] = final_dc
+                                                                
 
 def get_discriminants(workdir: Path, config: AnalysisConfig) -> list[Discriminant]:
     """Enhanced discriminant creation using Reference objects."""
@@ -81,7 +79,6 @@ def get_discriminants(workdir: Path, config: AnalysisConfig) -> list[Discriminan
     refs.sort(key=lambda r: (r.observable_base, r.channel_base, r.channel_sub))
     discs = [Discriminant(parent, set(grp)) for parent, grp in groupby(refs, key=lambda r: r.observable_base)]
 
-    # Generate datacards
     for disc in discs:
         disc.generate_dcs(resultsdir)
         
