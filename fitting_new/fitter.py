@@ -61,7 +61,7 @@ def run_main_fits(workspace_file: Path) -> str:
 def create_workspace(dc: Path) -> tuple[Path, Path]:
     subprocess.run(f'combineTool.py -M T2W -m 125.38 -v 3 -i {dc}'.split(), check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     workspace_file: Path = dc.with_suffix('.root')
-    workspace_results_file: Path = dc.parent / (dc.stem.split('_',1)[-1] + '_fit')
+    workspace_results_file: Path = dc.parent / (dc.stem + '_fit')
     workspace_results_file.mkdir(exist_ok=True)
     return workspace_file, workspace_results_file
 

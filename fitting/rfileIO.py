@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Iterable
 from collections import defaultdict
 from references import references as refs
-from bamboo.analysisutils import YMLIncludeLoader
+from references.analysis_config import parseAnalysisConfig
 
 # Incomplete function to get the normalizations from the fitDiagnostics root file
 def get_fit_normalizations(file: Path) -> tuple[list,list,list]:
@@ -111,10 +111,9 @@ def combine_results(results_dir: Path, hist_names: list[str]=None) -> dict:
     files: list[Path] = refs.get_root_files(results_dir)
     eras: list[str] = refs.get_eras(results_dir)
 
-    with open('bamboo_hh/config/analysis.yml') as file:
-        config = yaml.load(file, Loader=YMLIncludeLoader)
-        lumis = { era: v['luminosity'] for era, v in config['eras'].items() if era in eras }
-        xs = { subprocess_era: v['cross-section'] for subprocess_era, v in config['samples'].items() }
+    config = parseAnalysisConfig('bamboo_hh/config/analysis.yml')
+    lumis = { era: v['luminosity'] for era, v in config['eras'].items() if era in eras }
+    xs = { subprocess_era: v['cross-section'] for subprocess_era, v in config['samples'].items() }
     
     process_map = { sub: process
                     for process, sub_processes in refs.PROCESSES_FILES.items()
