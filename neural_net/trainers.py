@@ -1,10 +1,8 @@
-from neural_net import utils as nn_utils
+from neural_net import nn_utils as nn_utils
 from neural_net.model_config import save_model_config, get_config, ModelConfig
 from neural_net.model_data import get_data, prune_ds, DatasetManager, SHUFFLE_BUFFER_SIZE
 from neural_net.model_design import train_model
 from neural_net.model_evaluator import evaluate_model
-from datetime import timedelta
-import time
 import tensorflow as tf
 import gc
 
@@ -104,15 +102,17 @@ def main(args):
     modeldir.mkdir(exist_ok=True, parents=True)
     save_model_config(model_config, modeldir / 'config.yml')
 
-    TRAINERS = {'simple': SimpleTrainer, 'kfold': KFoldTrainer}
-    TrainerClass = TRAINERS.get(args.trainer)
-
     if args.trainer == 'simple':
         trainer = SimpleTrainer(model_config, args.workdir, modeldir, args.log_level)
     elif args.trainer == 'kfold':
+        if args.pass_idx is None:
+            raise ValueError("pass_idx is required for kfold training")
         trainer = KFoldTrainer(model_config, args.workdir, modeldir, args.pass_idx, args.log_level)
+    else:
+        raise ValueError(f"Unknown trainer type: {args.trainer}")
+    
     trainer.run()
-
+    
 if __name__ == "__main__":
     from argparse import ArgumentParser
     from pathlib import Path

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import logging
 
-from neural_net.utils import log_training_stats, log_msg, convert_model_to_onnx, CustomStandardizer, ReplaceUndefinedValuesWithConstant
+from neural_net.nn_utils import log_training_stats, log_msg, convert_model_to_onnx, CustomStandardizer, ReplaceUndefinedValuesWithConstant
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)

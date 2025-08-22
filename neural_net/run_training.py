@@ -69,12 +69,12 @@ class RunDistributed:
             "+MaxRuntime": "172800",  # 2 days in seconds
             # "+MaxRuntime": "259200",  # 3 days in seconds
             # "+MaxRuntime": "432000",  # 5 days in seconds
-            "request_cpus": "4",
+            "request_cpus": "6",
             # "request_gpus": "1",
-            "request_memory": "20GB" if memory is None else memory,
+            "request_memory": "60GB" if memory is None else memory,
             "request_disk": "5GB",
             'MY.SendCredential': True,
-            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references"
+            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references, utils"
         })
         schedd = htcondor.Schedd()
         submit_result = schedd.submit(submit_description)
@@ -118,10 +118,20 @@ def main(args):
             elif args.trainer == 'kfold':
                 for pass_idx in range(5):
                     RunDistributed.submit_job(config.name, args.rostername, args.workdir, args.outdirname, args.trainer, args.log_level, pass_idx=pass_idx, memory=args.memory)
-        elif not args.distributed:
+        else:
             from neural_net.trainers import main as submit_locally
-            submit_locally(config.name, args.rostername, args.workdir, args.outdirname, args.trainer, log_level=args.log_level, pass_idx=args.pass_idx)
-
+            # Create a namespace object with the correct argument names for trainers.py
+            from argparse import Namespace
+            trainer_args = Namespace(
+                workdir=args.workdir,
+                roster=args.rostername,  # Changed from rostername to roster
+                outdirname=args.outdirname,
+                trainer=args.trainer,
+                pass_idx=args.pass_idx,
+                config_name=config.name,  # Added config_name
+                log_level=args.log_level
+            )
+            submit_locally(trainer_args)
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", type=Path, required=True, help='Full path of work directory')
@@ -133,7 +143,7 @@ if __name__ == "__main__":
     driver.add_argument("-m", "--memory", type=int, default=None, help='Memory allocation for job, e.g.: 40GB')
     trainer = parser.add_argument_group("Trainer arguments")
     parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='kfold', help='Training mode')
-    # parser.add_argument("-p", "--pass_idx", type=int, default=None, help='Pass index for kfold mode')
+    parser.add_argument("-p", "--pass_idx", type=int, default=None, help='Pass index for kfold mode')
 
     args = parser.parse_args()
     main(args)

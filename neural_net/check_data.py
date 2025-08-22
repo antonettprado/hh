@@ -1,7 +1,7 @@
 from neural_net.trainers import BaseTrainer
 from neural_net.model_data import DatasetManager, prune_ds
 from neural_net.model_config import get_config
-from neural_net import utils as nn_utils
+from neural_net import nn_utils as nn_utils
 from pathlib import Path
 
 class CheckDataTrainer(BaseTrainer):

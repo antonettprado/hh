@@ -22,14 +22,14 @@ models:
   - name: 'multi_HH_ttbar_tW_3j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "tW": ["tW"]}
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "tW": 4.0}
     batch_size: 1024
@@ -44,24 +44,24 @@ models:
     process_num_events: {
       "ttbar": 10_000, 
       "tW": 10_000,
-      "ggHH_kl_1_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_5_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_0_kt_1_hh_bbww": 2_500
+      "ggHH_kl_1_kt_1_bbww": 2_500, 
+      "ggHH_kl_2p45_kt_1_bbww": 2_500, 
+      "ggHH_kl_5_kt_1_bbww": 2_500, 
+      "ggHH_kl_0_kt_1_bbww": 2_500
     } 
     data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
 
   - name: 'multi_HH_ttbar_tW_4j'
     model_type: 'multi'
     classification: {
-      "HH": ["ggHH_kl_1_kt_1_hh_bbww", "ggHH_kl_2p45_kt_1_hh_bbww", "ggHH_kl_5_kt_1_hh_bbww", "ggHH_kl_0_kt_1_hh_bbww"], 
+      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
       "ttbar": ["ttbar"], 
       "tW": ["tW"]}
     process_sf: {
-      "ggHH_kl_1_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_hh_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_hh_bbww": 0.25, 
+      "ggHH_kl_1_kt_1_bbww": 0.25, 
+      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
+      "ggHH_kl_5_kt_1_bbww": 0.25, 
+      "ggHH_kl_0_kt_1_bbww": 0.25, 
       "ttbar": 8.0, 
       "tW": 4.0}
     batch_size: 1024
@@ -76,9 +76,9 @@ models:
     process_num_events: {
       "ttbar": 10_000, 
       "tW": 10_000,
-      "ggHH_kl_1_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_2p45_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_5_kt_1_hh_bbww": 2_500, 
-      "ggHH_kl_0_kt_1_hh_bbww": 2_500
+      "ggHH_kl_1_kt_1_bbww": 2_500, 
+      "ggHH_kl_2p45_kt_1_bbww": 2_500, 
+      "ggHH_kl_5_kt_1_bbww": 2_500, 
+      "ggHH_kl_0_kt_1_bbww": 2_500
     } 
     data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}

@@ -1,7 +1,3 @@
-# ===========================================================
-# neural_net/submitter.py
-# ===========================================================
-
 from argparse import ArgumentParser
 from pathlib import Path
 from neural_net.model_config import load_model_configs
@@ -41,24 +37,24 @@ def handle_submit(args):
 
     print(f"\n✅ All jobs tracked in: {manifest_path}")
 
-def handle_check(args):
-    manifest = Path(args.afs_outdir) / "manifest.yml"
+def check_manifest(afs_outdir):
+    manifest = Path(afs_outdir) / "manifest.yml"
     if not manifest.exists():
         raise FileNotFoundError(f"manifest.yml not found at {manifest}")
+    return manifest
+
+def handle_check(args):
+    manifest = check_manifest(args.afs_outdir)
     manager = JobManager(manifest)
     manager.check_statuses()
 
 def handle_resubmit(args):
-    manifest = Path(args.manifest) / "manifest.yml"
-    if not manifest.exists():
-        raise FileNotFoundError(f"manifest.yml not found at {manifest}")
+    manifest = check_manifest(args.manifest)
     manager = JobManager(manifest)
     manager.resubmit_held_jobs()
 
 def handle_remove(args):
-    manifest = Path(args.afs_outdir) / "manifest.yml"
-    if not manifest.exists():
-        raise FileNotFoundError(f"manifest.yml not found at {manifest}")
+    manifest = check_manifest(args.afs_outdir)
     manager = JobManager(manifest)
     manager.remove_jobs()
 
