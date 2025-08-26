@@ -145,7 +145,7 @@ class LRFactory:
             ]
             return [self._create_lr_from_multivar(var_names) for var_names in candidates]
 
-    def get_lrs_for_multivars_combos(self, min_vars: int = 2, max_vars: int = 4) -> list[LR]:
+    def get_lrs_for_multivars_combos(self, min_vars: int, max_vars: int) -> list[LR]:
 
         reserved = [
             'lep0_pt',                                      
@@ -174,6 +174,8 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         super(LikelihoodRatio, self).addArgs(parser)
         parser.add_argument("-lrf", "--lr_functions", type=Path, action='store', help='Path to the lr corrections json file')
         parser.add_argument("-log", "--apply_log", action='store_true', help='Calculate LLRs instead of LRs')
+        parser.add_argument("--min_comb", type=int, action='store')
+        parser.add_argument("--max_comb", type=int, action='store')
         
     def get_skim(self, sb: SelectionBundle):
         skim_data = {"event": None, "genWeight": None, "era": op.c_int(ERA_ENUM[self.era])}
@@ -205,12 +207,11 @@ class LikelihoodRatio(NanoBaseHHbbWW):
 
         for sb in sels:
             lr_factory = LRFactory(self.args.lr_functions, sb, apply_log=self.args.apply_log)
-            sb.lrs_for_vars1D = lr_factory.get_lrs_for_vars1D()
-            sb.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
-            sb.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
-            sb.lrs_for_multivars_select = lr_factory.get_lrs_for_multivars_select()
-            sb.lrs_for_multivars_combos = lr_factory.get_lrs_for_multivars_combos()
-
+            # sb.lrs_for_vars1D = lr_factory.get_lrs_for_vars1D()
+            # sb.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
+            # sb.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
+            # sb.lrs_for_multivars_select = lr_factory.get_lrs_for_multivars_select()
+            sb.lrs_for_multivars_combos = lr_factory.get_lrs_for_multivars_combos(self.args.min_comb, self.args.max_comb)
         
         # hists_lrs_for_vars1D = [Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for sb in sels for lr in sb.lrs_for_vars1D ]
         # plots.extend(hists_lrs_for_vars1D)
@@ -227,8 +228,8 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         hists_lrsmultivarcombos = [Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for sb in sels for lr in sb.lrs_for_multivars_combos ]
         plots.extend(hists_lrsmultivarcombos)
 
-        skims = [self.get_skim(sb) for sb in sels]
-        plots.extend(skims)
+        # skims = [self.get_skim(sb) for sb in sels]
+        # plots.extend(skims)
 
         # ===============================================================================
         # ================================== Yields =====================================

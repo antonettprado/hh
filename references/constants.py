@@ -3,7 +3,7 @@ SELECTIONS = ['_noSel', 'noSel', 'baseSel',
     'SL_resolved', 
     'SL_3j_resolved', 'SL_res_3j_1b', 'SL_res_3j_2b', 
     'SL_4j_resolved', 'SL_res_4j_1b', 'SL_res_4j_2b', 
-    'SL_res_3j4j_1b', 'SL_res_3j4j_2b'
+    'SL_res_1b', 'SL_res_2b',
     'SL_boosted', 
     'DL_res_1b', 'DL_res_2b', 'DL_boosted',
     'Total']
@@ -22,7 +22,7 @@ ERA_ENUM = {
 CHANNEL_DISCRIMINANT_DELIM = "___"
 WITHIN_GROUP_DELIM = "__"
 
-BKG_EXCLUDE_PATTERNS = ('data', 'ggHH', 'HH_bbWW')
+BKG_EXCLUDE_PATTERNS = ('data', 'ggHH', 'HH_bbWW', 'asimov')
 SM_SIGNAL_PATTERNS   = ('ggHH_kl_1_kt_1', 'HH_bbWW')
 
 PROCESSES_FILES = dict(

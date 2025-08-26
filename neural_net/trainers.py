@@ -4,7 +4,12 @@ from neural_net.model_data import get_data, prune_ds, DatasetManager, SHUFFLE_BU
 from neural_net.model_design import train_model
 from neural_net.model_evaluator import evaluate_model
 import tensorflow as tf
-import gc
+import gc, os
+
+num_cpus = int(os.environ.get("Cpus", os.cpu_count()))
+tf.config.threading.set_intra_op_parallelism_threads(num_cpus)
+tf.config.threading.set_inter_op_parallelism_threads(num_cpus)
+print(f"[INFO] Configured TensorFlow to use {num_cpus} CPU threads")
 
 KFOLD_NFOLDS = 5
 

@@ -1,8 +1,9 @@
 
 from bamboo_hh.variables import REG 
 from references.analysis_config import AnalysisConfig
-from utils.histograms import normalize_hist, get_hist_refs_from_file, get_total_hist_from_histograms
+from utils.histograms import normalize_hist, get_total_hist_from_histograms
 from references import constants
+from references.reference import Reference
 
 import argparse
 import uproot
@@ -129,6 +130,7 @@ def main(workdir: Path, config_path: Path, take_log: bool=False, outfilename: st
     signal_files = constants.get_files(resultsdir, signal_filenames)
     background_files = constants.get_files(resultsdir, background_filenames)
 
+    # Use Reference.get_refs_from_file()
     all_refs = get_hist_refs_from_file(signal_files[0])
     
     all_corrections = []

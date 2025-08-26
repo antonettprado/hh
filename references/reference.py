@@ -32,6 +32,7 @@ class Reference:
     # ------------------------------------------------------------------
     @classmethod
     def from_parts(cls, channel_parts: list[str], obs_parts: list[str]) -> "Reference":
+        assert all(isinstance(arg, list) for arg in [channel_parts, obs_parts])
         channel = WITHIN_GROUP_DELIM.join(channel_parts)
         disc = WITHIN_GROUP_DELIM.join(obs_parts)
         return cls(CHANNEL_DISCRIMINANT_DELIM.join([channel, disc]))

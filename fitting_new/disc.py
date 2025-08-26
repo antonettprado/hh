@@ -64,8 +64,9 @@ def get_discriminants(fitsdir: Path, resultsdir:Path, config: AnalysisConfig) ->
   
     Discriminant.set_class_settings(fitsdir, resultsdir, config)
     refs = Reference.get_refs_from_file(functions.get_root_files(resultsdir)[0])
-    refs.sort(key=lambda r: (r.observable_base, r.channel_base, r.channel_sub))
-    discs = [Discriminant(parent, set(grp)) for parent, grp in groupby(refs, key=lambda r: r.observable_base)]
+    refs1D = list(filter(lambda ref: ref.name.count("_vs_") == 0, refs))
+    refs1D.sort(key=lambda r: (r.observable_base, r.channel_base, r.channel_sub))
+    discs = [Discriminant(parent, set(grp)) for parent, grp in groupby(refs1D, key=lambda r: r.observable_base)]
 
     for disc in discs:
         disc.generate_dcs()

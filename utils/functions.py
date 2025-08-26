@@ -26,7 +26,7 @@ def get_root_files(resultsdir: Path) -> list[Path]:
 def get_eras(resultsdir: Path) -> list[str]:
     present_files = get_root_files(resultsdir)
     present_eras = sorted(list(set([get_file_era(f) for f in present_files])))
-    valid_eras = [era for era in ERAS if era in present_eras]
+    valid_eras = [era for era in ERA_ENUM.keys() if era in present_eras]
     return valid_eras
 
 def get_mc_files(resultsdir: Path) -> list[Path]:

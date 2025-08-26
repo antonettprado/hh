@@ -72,3 +72,10 @@ class VariableRegister:
             if meta["name"] == var_name:
                 return (meta['nbins'], meta['min'], meta['max'])
         raise KeyError(f"1D variable '{var_name}' not found")
+
+    def get_var1D_title(self, var_name: str) -> str:
+        """Returns the binning parameters for a given 1D variable name."""
+        for meta, _ in self._vars1D_meta:
+            if meta["name"] == var_name:
+                return meta['title']
+        raise KeyError(f"1D variable '{var_name}' not found")

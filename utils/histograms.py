@@ -97,6 +97,11 @@ def _get_hist_from_file(file: Path, config: AnalysisConfig, histname: str) -> RO
     """Helper: get histogram from file."""
     return get_scaled_hist_from_file(file, histname, config)
 
+# def get_branch_as_df(file: Path, tree_name: str, var: str)
+#     with uproot.open(file) as f:
+#         tree = f[tree_name]
+#         df = tree.arrays(['event', var], library="pd")
+
 def _get_hist_from_tree(file: Path, config: AnalysisConfig, tree_name: str, var: str) -> ROOT.TH1:
     """Helper: get histogram from tree data."""
     with uproot.open(file) as f:
@@ -108,26 +113,43 @@ def get_total_hist_from_histograms(ref: str, files: list[Path], config: Analysis
     """Get total histogram by combining scaled histograms from files."""
     return process_files_to_hists(files, config, _get_hist_from_file, ref)
 
-def get_total_hist_from_branches(files: list[Path], tree_name: str, var: str, config: AnalysisConfig) -> ROOT.TH1:
+def get_total_hist_from_branches(var: str, tree_name: str, files: list[Path], config: AnalysisConfig) -> ROOT.TH1:
     """Get total histogram by combining histograms created from tree data."""
     return process_files_to_hists(files, config, _get_hist_from_tree, tree_name, var)
 
-def get_process_hists(processes:list[str], era: str, reference: Reference, resultsdir: Path, config: AnalysisConfig) -> dict[str, ROOT.TH1]:
-    """Get process histograms for a specific reference."""
+def get_process_hists(reference: Reference, processes: list[str], era: str, resultsdir: Path, 
+                     config: AnalysisConfig, mode: str = "histogram") -> dict[str, ROOT.TH1]:
+    '''
+    Get process histograms for a specific reference, either from histograms or tree data.
+    
+    Usage:
+    1. For histograms: get_process_hists(processes, era, reference, resultsdir, config, mode="histogram")
+    2. For tree data: get_process_hists(processes, era, reference, resultsdir, config, mode="tree")
+    
+    Args:
+        processes: List of process names
+        era: Era string
+        reference: Reference object containing histogram/variable information
+        resultsdir: Path to results directory
+        config: Analysis configuration
+        mode: Either "histogram" or "tree"
+            - "histogram": Uses reference.name as histogram name
+            - "tree": Uses reference.observable_base as variable and reference.channel_base as tree name
+    '''
+    if mode not in ["histogram", "tree"]:
+        raise ValueError("Mode must be either 'histogram' or 'tree'")
+    
     process_hists = {}
     for process in processes:
         files = functions.filter_files_by_process_and_era(resultsdir, [process], [era])
-        process_hists[process] = get_total_hist_from_histograms(reference.name, files, config)
-
-    relevant_processes = [k for k in process_hists if (functions.process_is_sm_sig(k) or functions.process_is_bkg(k))]
-    if relevant_processes:
-        asimov_hist = process_hists[relevant_processes[0]].Clone('asimov')
-        for proc in relevant_processes[1:]:
-            asimov_hist.Add(process_hists[proc])
-        process_hists['asimov'] = asimov_hist
-
+        if mode == "histogram":
+            # Use reference.name as histogram name
+            process_hists[process] = get_total_hist_from_histograms(reference.name, files, config)
+        else:  # mode == "tree"
+            # Use reference.observable_base as variable and reference.channel_base as tree name
+            process_hists[process] = get_total_hist_from_branches(reference.observable_base, reference.channel_base, files, config)
+    
     return process_hists
-
 
 def write_hists_to_root(path: Path, histos: dict[str, ROOT.TH1D]) -> None:
     outfile = ROOT.TFile.Open(str(path), "RECREATE")

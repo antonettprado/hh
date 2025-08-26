@@ -42,42 +42,155 @@ def multifit(workspace_and_res_file: tuple[Path, Path], func: Callable[[Path,str
     workspace, results_file = workspace_and_res_file
     return func(workspace, fit_type, results_file) 
 
-def write_summary(results_files, outdir):
-    # Gather data for summary file
-    model_limits = {}
+# def write_summary(results_files, outdir):
+#     # Gather data for summary file
+#     model_limits = {}
+#     for res_file in results_files:
+#         model_name = res_file.parents[2].stem
+#         print(model_name)
+#         with open(res_file, 'r') as f:
+#             for i, line in enumerate(f):
+#                 if i > 11: break
+#                 if i < 11: continue
+
+#                 parts = line.split()
+#                 if not parts:  # empty line
+#                     model_limits[model_name] = None
+#                     continue
+
+#                 try:
+#                     limit: float = float(parts[-1])
+#                 except ValueError:
+#                     limit = None
+#                 model_limits[model_name] = limit
+
+#     # Write summary file
+#     field_size: int = max(len(k) for k in model_limits)
+#     # model_limits = dict(sorted(model_limits.items(), key=lambda item: item[1])) # Sort by upper limit
+#     # sort with None at the end
+#     model_limits = dict(sorted(
+#         model_limits.items(),
+#         key=lambda item: (item[1] is None, item[1] if item[1] is not None else float('inf'))
+#     ))
+#     summary_limits_file: Path = outdir / 'summary_results.txt'
+#     with open(summary_limits_file, 'w') as f:
+#         f.write(r'Summary of blinded, expected 50% asymptotic limits:')
+#         f.write('\n\n')
+#         for model, limit in model_limits.items():
+#             f.write(f'{model:{field_size}s} : \u03BC = {limit}\n')
+
+
+from pathlib import Path
+import re
+
+def write_summary(results_files, outdir: Path):
+    """
+    Parse Combine 'fit_results_datacard.txt' files and write a summary including:
+    - median expected limit (50%)
+    - 1σ band extrema (16%, 84%)
+    - 2σ band extrema (2.5%, 97.5%)
+
+    Preference order: use 'Asymptotic Limits for Blinded Fit' block if present;
+    otherwise fall back to the 'Unblinded Fit' expected block.
+    """
+    # regex to capture expected lines like: "Expected 50.0%: r < 860.7500"
+    exp_re = re.compile(r"^Expected\s+([0-9.]+)%:\s*r\s*<\s*([0-9.eE+-]+)")
+
+    def parse_block(lines):
+        """Return dict with keys {2.5, 16.0, 50.0, 84.0, 97.5} -> float if found."""
+        vals = {}
+        for ln in lines:
+            m = exp_re.match(ln.strip())
+            if m:
+                pct = float(m.group(1))
+                val = float(m.group(2))
+                vals[pct] = val
+        return vals
+
+    def extract_expected_percents(text: str):
+        """
+        Return tuple (vals, source) where vals is dict of expected percentiles,
+        source is 'blinded' or 'unblinded' (used).
+        """
+        # split into logical sections
+        sections = re.split(r"\n\s*\n", text)
+        blinded_idx = None
+        unblinded_idx = None
+        for i, chunk in enumerate(sections):
+            if "Asymptotic Limits for Blinded Fit" in chunk:
+                blinded_idx = i
+            if "Asymptotic Limits for Unblinded Fit" in chunk:
+                unblinded_idx = i
+
+        # prefer blinded
+        if blinded_idx is not None:
+            vals = parse_block(sections[blinded_idx].splitlines())
+            if vals:
+                return vals, "blinded"
+
+        # fallback to unblinded
+        if unblinded_idx is not None:
+            vals = parse_block(sections[unblinded_idx].splitlines())
+            if vals:
+                return vals, "unblinded"
+
+        # last resort: parse entire file for expected lines
+        vals = parse_block(text.splitlines())
+        return vals, "any"
+
+    # Gather data
+    models = {}
     for res_file in results_files:
         model_name = res_file.parents[2].stem
-        print(model_name)
-        with open(res_file, 'r') as f:
-            for i, line in enumerate(f):
-                if i > 11: break
-                if i < 11: continue
+        with open(res_file, "r") as f:
+            text = f.read()
 
-                parts = line.split()
-                if not parts:  # empty line
-                    model_limits[model_name] = None
-                    continue
+        vals, _source = extract_expected_percents(text)
 
-                try:
-                    limit: float = float(parts[-1])
-                except ValueError:
-                    limit = None
-                model_limits[model_name] = limit
+        # Normalize keys we care about
+        exp50   = vals.get(50.0)
+        exp16   = vals.get(16.0)
+        exp84   = vals.get(84.0)
+        exp2p5  = vals.get(2.5)
+        exp97p5 = vals.get(97.5)
 
-    # Write summary file
-    field_size: int = max(len(k) for k in model_limits)
-    # model_limits = dict(sorted(model_limits.items(), key=lambda item: item[1])) # Sort by upper limit
-    # sort with None at the end
-    model_limits = dict(sorted(
-        model_limits.items(),
-        key=lambda item: (item[1] is None, item[1] if item[1] is not None else float('inf'))
-    ))
-    summary_limits_file: Path = outdir / 'summary_results.txt'
-    with open(summary_limits_file, 'w') as f:
-        f.write(r'Summary of blinded, expected 50% asymptotic limits:')
-        f.write('\n\n')
-        for model, limit in model_limits.items():
-            f.write(f'{model:{field_size}s} : \u03BC = {limit}\n')
+        models[model_name] = {
+            "mu": exp50,
+            "lo1": exp16,
+            "hi1": exp84,
+            "lo2": exp2p5,
+            "hi2": exp97p5,
+        }
+
+    # Sort by mu (None at end)
+    def sort_key(item):
+        d = item[1]
+        return (d["mu"] is None, float("inf") if d["mu"] is None else d["mu"])
+
+    sorted_items = sorted(models.items(), key=sort_key)
+
+    # Column width for pretty alignment
+    field_size = max(len(name) for name in models) if models else 0
+
+    outdir.mkdir(parents=True, exist_ok=True)
+    summary_file = outdir / "summary_results.txt"
+    with open(summary_file, "w") as f:
+        f.write("Summary of blinded expected asymptotic limits (μ with 1σ and 2σ bands)\n")
+        f.write("\n")
+        for model, d in sorted_items:
+            mu  = d["mu"]
+            lo1 = d["lo1"]; hi1 = d["hi1"]
+            lo2 = d["lo2"]; hi2 = d["hi2"]
+
+            if mu is None:
+                f.write(f"{model:{field_size}s} : μ = N/A, 1σ = [N/A, N/A], 2σ = [N/A, N/A]\n")
+            else:
+                f.write(
+                    f"{model:{field_size}s} : "
+                    f"μ = {mu:.4g}, "
+                    f"1σ = [{(lo1 if lo1 is not None else float('nan')):.4g}, {(hi1 if hi1 is not None else float('nan')):.4g}], "
+                    f"2σ = [{(lo2 if lo2 is not None else float('nan')):.4g}, {(hi2 if hi2 is not None else float('nan')):.4g}]\n"
+                )
 
 def main(workdir, config) -> None:
     ''' 
