@@ -97,11 +97,6 @@ def _get_hist_from_file(file: Path, config: AnalysisConfig, histname: str) -> RO
     """Helper: get histogram from file."""
     return get_scaled_hist_from_file(file, histname, config)
 
-# def get_branch_as_df(file: Path, tree_name: str, var: str)
-#     with uproot.open(file) as f:
-#         tree = f[tree_name]
-#         df = tree.arrays(['event', var], library="pd")
-
 def _get_hist_from_tree(file: Path, config: AnalysisConfig, tree_name: str, var: str) -> ROOT.TH1:
     """Helper: get histogram from tree data."""
     with uproot.open(file) as f:

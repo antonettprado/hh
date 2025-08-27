@@ -57,9 +57,9 @@ class JetTopology(NanoBaseHHbbWW):
             sbc.SL_res_4j_1b,
             sbc.SL_res_4j_2b,
             sbc.SL_4j_resolved,
-            sbc.SL_res_1b,
-            sbc.SL_res_2b,
-            sbc.SL_resolved,
+            # sbc.SL_res_1b,
+            # sbc.SL_res_2b,
+            # sbc.SL_resolved,
         ]
         hists1D = [Plot.make1D(v.ref.name, v.data, hs.sel, v.eqbin, xTitle=v.full_title) for hs in plot_selections for v in hs.vars1D ]
         plots.extend(hists1D)
@@ -75,11 +75,11 @@ class JetTopology(NanoBaseHHbbWW):
         # # ===============================================================================
 
         skim_selections = [
-            sbc.SL_res_3j_1b,
-            sbc.SL_res_3j_2b,
-            sbc.SL_3j_resolved,
-            sbc.SL_res_4j_1b,
-            sbc.SL_res_4j_2b,
+            # sbc.SL_res_3j_1b,
+            # sbc.SL_res_3j_2b,
+            # sbc.SL_3j_resolved,
+            # sbc.SL_res_4j_1b,
+            # sbc.SL_res_4j_2b,
             sbc.SL_4j_resolved
         ]
         skims = [self.get_skim(hs) for hs in skim_selections]

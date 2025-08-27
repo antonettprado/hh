@@ -1,6 +1,6 @@
 from pathlib import Path
 from tabulate import tabulate
-from references.reference import Reference
+from references import Reference
 from utils import functions, histograms
 import subprocess
 import ROOT
@@ -12,7 +12,7 @@ def generate_dc(disc, ref: Reference, era: str) -> Path:
         dc_path = disc.path / era / ref.channel_base / ref.channel_sub / f"{ref.observable_sub}_score.txt"
     else:
         dc_path = disc.path / era / ref.channel_base / "datacard.txt"
-    process_hists = histograms.get_process_hists(disc.processes, era, ref.name, disc.resultsdir, disc.config)
+    process_hists = histograms.get_process_hists(ref, disc.processes, era, disc.resultsdir, disc.config)
     if disc.is_complex:
         process_hists = run2_binning_strategy(process_hists, 'signal' if 'HH' in ref.observable_sub else 'background')
     dc_path.parent.mkdir(exist_ok=True, parents=True)

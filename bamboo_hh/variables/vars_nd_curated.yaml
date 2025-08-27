@@ -1,0 +1,683 @@
+var2d:
+  - { name: bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb] }
+  - { name: bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR] }
+  - { name: bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb] }
+  - { name: bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, met_pt] }
+  - { name: blnu_mT_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_mT] }
+  - { name: all_sT_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, all_jets_HT] }
+  - { name: bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR] }
+  - { name: bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb] }
+  - { name: bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, met_pt] }
+  - { name: blnu_mT_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_mT] }
+  - { name: all_sT_vs_bjets_pt_bb, vars: [bjets_pt_bb, all_sT] }
+  - { name: all_jets_HT_vs_bjets_pt_bb, vars: [bjets_pt_bb, all_jets_HT] }
+  - { name: bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb] }
+  - { name: bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dR, vars: [bjets_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dR, vars: [bjets_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dR, vars: [bjets_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dR, vars: [bjets_dR, met_pt] }
+  - { name: blnu_mT_vs_bjets_dR, vars: [bjets_dR, blnu_mT] }
+  - { name: all_sT_vs_bjets_dR, vars: [bjets_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dR, vars: [bjets_dR, all_jets_HT] }
+  - { name: bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_mbb, vars: [bjets_mbb, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_mbb, vars: [bjets_mbb, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mbb, vars: [bjets_mbb, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mbb, vars: [bjets_mbb, met_pt] }
+  - { name: blnu_mT_vs_bjets_mbb, vars: [bjets_mbb, blnu_mT] }
+  - { name: all_sT_vs_bjets_mbb, vars: [bjets_mbb, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mbb, vars: [bjets_mbb, all_jets_HT] }
+  - { name: bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dPhi, vars: [bjets_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bjets_dPhi, vars: [bjets_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dPhi, vars: [bjets_dPhi, all_jets_HT] }
+  - { name: bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, all_jets_HT] }
+  - { name: bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, met_pt] }
+  - { name: blnu_mT_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_mT] }
+  - { name: all_sT_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR, vars: [bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR, vars: [bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt, vars: [blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt, vars: [blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt, vars: [blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt, vars: [blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt, vars: [blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt, vars: [blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt, vars: [blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt, vars: [bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt, vars: [bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt, vars: [bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt, vars: [bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta, vars: [bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta, vars: [bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta, vars: [bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta, vars: [bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta, vars: [bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt, vars: [met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt, vars: [met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt, vars: [met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT, vars: [blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT, vars: [blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT, vars: [all_sT, all_jets_HT] }
+
+var3d:
+  - { name: bjets_dR_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bjets_dR] }
+  - { name: bjets_mbb_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bjets_mbb] }
+  - { name: bjets_dPhi_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, met_pt] }
+  - { name: blnu_mT_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, blnu_mT] }
+  - { name: all_sT_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, all_sT] }
+  - { name: all_jets_HT_vs_bjets_pt_bb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_pt_bb, all_jets_HT] }
+  - { name: bjets_mbb_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, bjets_mbb] }
+  - { name: bjets_dPhi_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, met_pt] }
+  - { name: blnu_mT_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, blnu_mT] }
+  - { name: all_sT_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dR, all_jets_HT] }
+  - { name: bjets_dPhi_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, met_pt] }
+  - { name: blnu_mT_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, blnu_mT] }
+  - { name: all_sT_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mbb_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mbb, all_jets_HT] }
+  - { name: bb_lnu_dPhi_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dPhi, all_jets_HT] }
+  - { name: bjet_bijet_dR_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dPhi_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dPhi, all_jets_HT] }
+  - { name: bb_lnu_dR_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, met_pt] }
+  - { name: blnu_mT_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, blnu_mT] }
+  - { name: all_sT_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjet_bijet_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjet_bijet_dR, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_jj_lnu_dPhi, vars: [jj_lnu_dPhi, all_sT, all_jets_HT] }
+  - { name: bjets_mbb_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, bjets_mbb] }
+  - { name: bjets_dPhi_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, met_pt] }
+  - { name: blnu_mT_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, blnu_mT] }
+  - { name: all_sT_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dR, all_jets_HT] }
+  - { name: bjets_dPhi_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, met_pt] }
+  - { name: blnu_mT_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, blnu_mT] }
+  - { name: all_sT_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mbb_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mbb, all_jets_HT] }
+  - { name: bb_lnu_dPhi_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dPhi, all_jets_HT] }
+  - { name: bjet_bijet_dR_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dPhi_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dPhi, all_jets_HT] }
+  - { name: bb_lnu_dR_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, met_pt] }
+  - { name: blnu_mT_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, blnu_mT] }
+  - { name: all_sT_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjet_bijet_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjet_bijet_dR, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR_vs_bjets_pt_bb, vars: [bjets_pt_bb, bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bjets_pt_bb, vars: [bjets_pt_bb, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bjets_pt_bb, vars: [bjets_pt_bb, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bjets_pt_bb, vars: [bjets_pt_bb, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bjets_pt_bb, vars: [bjets_pt_bb, all_sT, all_jets_HT] }
+  - { name: bjets_dPhi_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, bjets_dPhi] }
+  - { name: bb_lnu_dPhi_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, met_pt] }
+  - { name: blnu_mT_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, blnu_mT] }
+  - { name: all_sT_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mbb_vs_bjets_dR, vars: [bjets_dR, bjets_mbb, all_jets_HT] }
+  - { name: bb_lnu_dPhi_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dPhi_vs_bjets_dR, vars: [bjets_dR, bjets_dPhi, all_jets_HT] }
+  - { name: bjet_bijet_dR_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dPhi_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dPhi, all_jets_HT] }
+  - { name: bb_lnu_dR_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, met_pt] }
+  - { name: blnu_mT_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, blnu_mT] }
+  - { name: all_sT_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjet_bijet_dR_vs_bjets_dR, vars: [bjets_dR, bjet_bijet_dR, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR_vs_bjets_dR, vars: [bjets_dR, bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_bjets_dR, vars: [bjets_dR, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_bjets_dR, vars: [bjets_dR, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_bjets_dR, vars: [bjets_dR, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_bjets_dR, vars: [bjets_dR, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_bjets_dR, vars: [bjets_dR, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_bjets_dR, vars: [bjets_dR, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_bjets_dR, vars: [bjets_dR, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bjets_dR, vars: [bjets_dR, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bjets_dR, vars: [bjets_dR, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bjets_dR, vars: [bjets_dR, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bjets_dR, vars: [bjets_dR, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bjets_dR, vars: [bjets_dR, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bjets_dR, vars: [bjets_dR, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bjets_dR, vars: [bjets_dR, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bjets_dR, vars: [bjets_dR, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bjets_dR, vars: [bjets_dR, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bjets_dR, vars: [bjets_dR, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bjets_dR, vars: [bjets_dR, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bjets_dR, vars: [bjets_dR, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bjets_dR, vars: [bjets_dR, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bjets_dR, vars: [bjets_dR, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bjets_dR, vars: [bjets_dR, all_sT, all_jets_HT] }
+  - { name: bb_lnu_dPhi_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, bb_lnu_dPhi] }
+  - { name: bjet_bijet_dR_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bjets_dPhi, all_jets_HT] }
+  - { name: bjet_bijet_dR_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dPhi_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dPhi, all_jets_HT] }
+  - { name: bb_lnu_dR_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, met_pt] }
+  - { name: blnu_mT_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, blnu_mT] }
+  - { name: all_sT_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjet_bijet_dR_vs_bjets_mbb, vars: [bjets_mbb, bjet_bijet_dR, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR_vs_bjets_mbb, vars: [bjets_mbb, bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_bjets_mbb, vars: [bjets_mbb, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_bjets_mbb, vars: [bjets_mbb, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_bjets_mbb, vars: [bjets_mbb, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_bjets_mbb, vars: [bjets_mbb, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_bjets_mbb, vars: [bjets_mbb, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_bjets_mbb, vars: [bjets_mbb, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_bjets_mbb, vars: [bjets_mbb, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bjets_mbb, vars: [bjets_mbb, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bjets_mbb, vars: [bjets_mbb, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bjets_mbb, vars: [bjets_mbb, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bjets_mbb, vars: [bjets_mbb, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bjets_mbb, vars: [bjets_mbb, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bjets_mbb, vars: [bjets_mbb, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bjets_mbb, vars: [bjets_mbb, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bjets_mbb, vars: [bjets_mbb, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bjets_mbb, vars: [bjets_mbb, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bjets_mbb, vars: [bjets_mbb, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bjets_mbb, vars: [bjets_mbb, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bjets_mbb, vars: [bjets_mbb, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bjets_mbb, vars: [bjets_mbb, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bjets_mbb, vars: [bjets_mbb, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bjets_mbb, vars: [bjets_mbb, all_sT, all_jets_HT] }
+  - { name: bjet_bijet_dR_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, bjet_bijet_dR] }
+  - { name: bb_lnu_dR_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dPhi_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dPhi, all_jets_HT] }
+  - { name: bb_lnu_dR_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, met_pt] }
+  - { name: blnu_mT_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, blnu_mT] }
+  - { name: all_sT_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjet_bijet_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bjet_bijet_dR, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR_vs_bjets_dPhi, vars: [bjets_dPhi, bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bjets_dPhi, vars: [bjets_dPhi, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bjets_dPhi, vars: [bjets_dPhi, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bjets_dPhi, vars: [bjets_dPhi, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bjets_dPhi, vars: [bjets_dPhi, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bjets_dPhi, vars: [bjets_dPhi, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bjets_dPhi, vars: [bjets_dPhi, all_sT, all_jets_HT] }
+  - { name: bb_lnu_dR_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, bb_lnu_dR] }
+  - { name: blnu_pt_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, met_pt] }
+  - { name: blnu_mT_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, blnu_mT] }
+  - { name: all_sT_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, all_sT] }
+  - { name: all_jets_HT_vs_bjet_bijet_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjet_bijet_dR, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bb_lnu_dPhi, vars: [bb_lnu_dPhi, all_sT, all_jets_HT] }
+  - { name: blnu_pt_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, blnu_pt] }
+  - { name: bjets_mean_pt_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, met_pt] }
+  - { name: blnu_mT_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, blnu_mT] }
+  - { name: all_sT_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, all_sT] }
+  - { name: all_jets_HT_vs_bb_lnu_dR_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bb_lnu_dR, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bjet_bijet_dR, vars: [bjet_bijet_dR, all_sT, all_jets_HT] }
+  - { name: bjets_mean_pt_vs_blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt, bjets_mean_pt] }
+  - { name: bjets_dEta_vs_blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt, met_pt] }
+  - { name: blnu_mT_vs_blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt, blnu_mT] }
+  - { name: all_sT_vs_blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt, all_sT] }
+  - { name: all_jets_HT_vs_blnu_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_pt, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bb_lnu_dR, vars: [bb_lnu_dR, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bb_lnu_dR, vars: [bb_lnu_dR, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bb_lnu_dR, vars: [bb_lnu_dR, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bb_lnu_dR, vars: [bb_lnu_dR, all_sT, all_jets_HT] }
+  - { name: bjets_dEta_vs_bjets_mean_pt_vs_blnu_pt, vars: [blnu_pt, bjets_mean_pt, bjets_dEta] }
+  - { name: trijet_bijet_dEta_vs_bjets_mean_pt_vs_blnu_pt, vars: [blnu_pt, bjets_mean_pt, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_mean_pt_vs_blnu_pt, vars: [blnu_pt, bjets_mean_pt, met_pt] }
+  - { name: blnu_mT_vs_bjets_mean_pt_vs_blnu_pt, vars: [blnu_pt, bjets_mean_pt, blnu_mT] }
+  - { name: all_sT_vs_bjets_mean_pt_vs_blnu_pt, vars: [blnu_pt, bjets_mean_pt, all_sT] }
+  - { name: all_jets_HT_vs_bjets_mean_pt_vs_blnu_pt, vars: [blnu_pt, bjets_mean_pt, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_blnu_pt, vars: [blnu_pt, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_blnu_pt, vars: [blnu_pt, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_blnu_pt, vars: [blnu_pt, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_blnu_pt, vars: [blnu_pt, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_blnu_pt, vars: [blnu_pt, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_blnu_pt, vars: [blnu_pt, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_blnu_pt, vars: [blnu_pt, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_blnu_pt, vars: [blnu_pt, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_blnu_pt, vars: [blnu_pt, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_blnu_pt, vars: [blnu_pt, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_blnu_pt, vars: [blnu_pt, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_blnu_pt, vars: [blnu_pt, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_blnu_pt, vars: [blnu_pt, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_blnu_pt, vars: [blnu_pt, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_blnu_pt, vars: [blnu_pt, all_sT, all_jets_HT] }
+  - { name: trijet_bijet_dEta_vs_bjets_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, bjets_dEta, trijet_bijet_dEta] }
+  - { name: met_pt_vs_bjets_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, bjets_dEta, met_pt] }
+  - { name: blnu_mT_vs_bjets_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, bjets_dEta, blnu_mT] }
+  - { name: all_sT_vs_bjets_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, bjets_dEta, all_sT] }
+  - { name: all_jets_HT_vs_bjets_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, bjets_dEta, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bjets_mean_pt, vars: [bjets_mean_pt, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bjets_mean_pt, vars: [bjets_mean_pt, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bjets_mean_pt, vars: [bjets_mean_pt, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bjets_mean_pt, vars: [bjets_mean_pt, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bjets_mean_pt, vars: [bjets_mean_pt, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bjets_mean_pt, vars: [bjets_mean_pt, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bjets_mean_pt, vars: [bjets_mean_pt, all_sT, all_jets_HT] }
+  - { name: met_pt_vs_trijet_bijet_dEta_vs_bjets_dEta, vars: [bjets_dEta, trijet_bijet_dEta, met_pt] }
+  - { name: blnu_mT_vs_trijet_bijet_dEta_vs_bjets_dEta, vars: [bjets_dEta, trijet_bijet_dEta, blnu_mT] }
+  - { name: all_sT_vs_trijet_bijet_dEta_vs_bjets_dEta, vars: [bjets_dEta, trijet_bijet_dEta, all_sT] }
+  - { name: all_jets_HT_vs_trijet_bijet_dEta_vs_bjets_dEta, vars: [bjets_dEta, trijet_bijet_dEta, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_bjets_dEta, vars: [bjets_dEta, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_bjets_dEta, vars: [bjets_dEta, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_bjets_dEta, vars: [bjets_dEta, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_bjets_dEta, vars: [bjets_dEta, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_bjets_dEta, vars: [bjets_dEta, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_bjets_dEta, vars: [bjets_dEta, all_sT, all_jets_HT] }
+  - { name: blnu_mT_vs_met_pt_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, met_pt, blnu_mT] }
+  - { name: all_sT_vs_met_pt_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, met_pt, all_sT] }
+  - { name: all_jets_HT_vs_met_pt_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, met_pt, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_trijet_bijet_dEta, vars: [trijet_bijet_dEta, all_sT, all_jets_HT] }
+  - { name: all_sT_vs_blnu_mT_vs_met_pt, vars: [met_pt, blnu_mT, all_sT] }
+  - { name: all_jets_HT_vs_blnu_mT_vs_met_pt, vars: [met_pt, blnu_mT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_met_pt, vars: [met_pt, all_sT, all_jets_HT] }
+  - { name: all_jets_HT_vs_all_sT_vs_blnu_mT, vars: [blnu_mT, all_sT, all_jets_HT] }

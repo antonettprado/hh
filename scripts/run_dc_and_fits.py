@@ -7,6 +7,7 @@ from multiprocessing import Pool
 from fitting_new import fitter
 from fitting_new.disc import get_discriminants, Discriminant
 from references.analysis_config import AnalysisConfig
+import re
 
 def run_fits_multiprocessed(datacards: list[Path]) -> list[Path]:
     start = time.perf_counter()
@@ -80,8 +81,6 @@ def multifit(workspace_and_res_file: tuple[Path, Path], func: Callable[[Path,str
 #             f.write(f'{model:{field_size}s} : \u03BC = {limit}\n')
 
 
-from pathlib import Path
-import re
 
 def write_summary(results_files, outdir: Path):
     """

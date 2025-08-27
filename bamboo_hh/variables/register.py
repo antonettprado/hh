@@ -39,33 +39,7 @@ class VariableRegister:
                 data_by_subcat = {subcat: data_by_subcat for subcat in selections.keys()}
             supervars.append(SuperVariable1D(**meta, data_by_subcat=data_by_subcat))
         return supervars
-    
-    def get_present_vars(self, var_dim, root_file: Path, sel_name: str=None, tree_name: str = None) -> list[str]:
-        """Return the list of variable names that are present in the specified ROOT tree or histograms."""
-        var_names = self.get_var_names(var_dim)
-        
-        import uproot
-        try:
-            with uproot.open(root_file) as f:
-                if tree_name:
-                    tree = f[tree_name]
-                    leaf_names = tree.keys()
-                    present_vars = [var for var in var_names if var in leaf_names]
-                else:
-                    all_keys = f.keys()
-                    # Strip the ;1 cycle numbers for comparison
-                    hist_names_clean = [key.split(';')[0] for key in all_keys]
-                    
-                    present_vars = []
-                    for var in var_names:
-                        expected_hist_name = f"{sel_name}_{var}"
-                        if expected_hist_name in hist_names_clean:
-                            present_vars.append(var)
-                
-                return present_vars
-        except Exception as e:
-            raise RuntimeError(f"Failed to read from {root_file}: {e}")
-        
+            
     def get_var1D_binning(self, var_name: str) -> tuple[int, int, int]:
         """Returns the binning parameters for a given 1D variable name."""
         for meta, _ in self._vars1D_meta:
