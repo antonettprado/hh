@@ -5,6 +5,7 @@ from references.analysis_config import AnalysisConfig
 from references.reference import Reference
 from utils import functions
 import numpy as np
+from typing import Union
 
 ROOT.gROOT.SetBatch(True)
 
@@ -112,7 +113,7 @@ def get_total_hist_from_branches(var: str, tree_name: str, files: list[Path], co
     """Get total histogram by combining histograms created from tree data."""
     return process_files_to_hists(files, config, _get_hist_from_tree, tree_name, var)
 
-def get_process_hists(reference: Reference, processes: list[str], era: str, resultsdir: Path, 
+def get_process_hists(reference: Reference, processes: list[str], eras: Union[str, list[str]], resultsdir: Path, 
                      config: AnalysisConfig, mode: str = "histogram") -> dict[str, ROOT.TH1]:
     '''
     Get process histograms for a specific reference, either from histograms or tree data.
@@ -133,10 +134,12 @@ def get_process_hists(reference: Reference, processes: list[str], era: str, resu
     '''
     if mode not in ["histogram", "tree"]:
         raise ValueError("Mode must be either 'histogram' or 'tree'")
+
+    if not isinstance(eras, list) and isinstance(eras, str): eras =[eras]
     
     process_hists = {}
     for process in processes:
-        files = functions.filter_files_by_process_and_era(resultsdir, [process], [era])
+        files = functions.filter_files_by_process_and_era(resultsdir, [process], eras)
         if mode == "histogram":
             # Use reference.name as histogram name
             process_hists[process] = get_total_hist_from_histograms(reference.name, files, config)

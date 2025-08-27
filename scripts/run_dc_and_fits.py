@@ -4,8 +4,8 @@ import itertools
 from pathlib import Path
 from typing import Callable
 from multiprocessing import Pool
-from fitting_new import fitter
-from fitting_new.disc import get_discriminants, Discriminant
+from fitting import fitter
+from fitting.disc import get_discriminants, Discriminant
 from references.analysis_config import AnalysisConfig
 import re
 
@@ -42,44 +42,6 @@ def multifit(workspace_and_res_file: tuple[Path, Path], func: Callable[[Path,str
     ''' Trick to make asymptotic and diagnostic fits be run in one `Pool.starmap` '''
     workspace, results_file = workspace_and_res_file
     return func(workspace, fit_type, results_file) 
-
-# def write_summary(results_files, outdir):
-#     # Gather data for summary file
-#     model_limits = {}
-#     for res_file in results_files:
-#         model_name = res_file.parents[2].stem
-#         print(model_name)
-#         with open(res_file, 'r') as f:
-#             for i, line in enumerate(f):
-#                 if i > 11: break
-#                 if i < 11: continue
-
-#                 parts = line.split()
-#                 if not parts:  # empty line
-#                     model_limits[model_name] = None
-#                     continue
-
-#                 try:
-#                     limit: float = float(parts[-1])
-#                 except ValueError:
-#                     limit = None
-#                 model_limits[model_name] = limit
-
-#     # Write summary file
-#     field_size: int = max(len(k) for k in model_limits)
-#     # model_limits = dict(sorted(model_limits.items(), key=lambda item: item[1])) # Sort by upper limit
-#     # sort with None at the end
-#     model_limits = dict(sorted(
-#         model_limits.items(),
-#         key=lambda item: (item[1] is None, item[1] if item[1] is not None else float('inf'))
-#     ))
-#     summary_limits_file: Path = outdir / 'summary_results.txt'
-#     with open(summary_limits_file, 'w') as f:
-#         f.write(r'Summary of blinded, expected 50% asymptotic limits:')
-#         f.write('\n\n')
-#         for model, limit in model_limits.items():
-#             f.write(f'{model:{field_size}s} : \u03BC = {limit}\n')
-
 
 
 def write_summary(results_files, outdir: Path):
@@ -227,5 +189,5 @@ if __name__ == "__main__":
         main(args.workdir, args.config)
 
     '''
-    python3 scripts/run_dc_and_fits.py $Z_OUTPUT_eos/Disc_Study_Rep/0806_NNInf_even -c bamboo_hh/config/analysis_DiscStudy.yml
+    python3 scripts/run_dc_and_fits.py $Z_OUTPUT_eos/Disc_Study_New/LLR_crtd_odd -c bamboo_hh/config/disc_study_new.yml
     '''
