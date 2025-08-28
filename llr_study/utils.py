@@ -275,12 +275,11 @@ def create_hierarchical_1D_plot(df: pd.DataFrame, output_dir):
     ax.set_yticklabels(names, fontsize=tick_fontsize)
     
     # Styling
-    ax.set_xlabel('μ value', fontsize=label_fontsize)
+    ax.set_xlabel('Median UL on μ', fontsize=label_fontsize)
     ax.set_ylabel('Univariate LLRs', fontsize=label_fontsize)
     ax.tick_params(axis='x', labelsize=tick_fontsize)
     ax.grid(True, alpha=0.3, axis='x', linestyle='-', linewidth=0.5)
-    ax.set_title(f'Univariate LLR Performance (n={len(subset_1d)})', 
-                 fontsize=label_fontsize, fontweight='bold', pad=20)
+    # ax.set_title(f'Univariate LLR Performance (n={len(subset_1d)})', fontsize=label_fontsize, fontweight='bold', pad=20)
     
     # Add value labels on bars
     for i, (bar, value) in enumerate(zip(bars, subset_1d['mu'])):
@@ -416,3 +415,81 @@ def plot_greedy_chain(df: pd.DataFrame, output_dir: Path, max_k=10):
     out = output_dir / "llr_greedy_chain.pdf"
     fig.tight_layout(); fig.savefig(out, dpi=300, bbox_inches="tight")
     print(f"Saved {out}")
+
+# ============================================
+def format_label_for_matplotlib(label):
+    """
+    Convert ROOT-style labels to matplotlib-compatible LaTeX
+    """
+    # Dictionary of ROOT-style to LaTeX conversions
+    root_to_latex = {
+        # Compound symbols (order matters - do these first)
+        '#DeltaR': r'\Delta R',
+        '#DeltaPhi': r'\Delta\phi',
+        '#DeltaEta': r'\Delta\eta',
+        
+        # Single Greek letters
+        '#Delta': r'\Delta',
+        '#delta': r'\delta',
+        '#phi': r'\phi',
+        '#Phi': r'\Phi',
+        '#eta': r'\eta',
+        '#theta': r'\theta',
+        '#mu': r'\mu',
+        '#nu': r'\nu',
+        '#pi': r'\pi',
+        '#Pi': r'\Pi',
+        '#sigma': r'\sigma',
+        '#Sigma': r'\Sigma',
+        '#tau': r'\tau',
+        '#chi': r'\chi',
+        '#alpha': r'\alpha',
+        '#beta': r'\beta',
+        '#gamma': r'\gamma',
+        '#Gamma': r'\Gamma',
+        '#lambda': r'\lambda',
+        '#Lambda': r'\Lambda',
+        '#omega': r'\omega',
+        '#Omega': r'\Omega',
+        '#rho': r'\rho',
+        '#kappa': r'\kappa',
+        '#epsilon': r'\epsilon',
+        '#zeta': r'\zeta',
+        '#xi': r'\xi',
+        '#Xi': r'\Xi',
+        '#psi': r'\psi',
+        '#Psi': r'\Psi',
+        '#upsilon': r'\upsilon',
+        '#Upsilon': r'\Upsilon',
+    }
+    
+    # Convert ROOT-style to LaTeX (order matters for compound symbols)
+    converted_label = label
+    for root_symbol, latex_symbol in root_to_latex.items():
+        converted_label = converted_label.replace(root_symbol, latex_symbol)
+    
+    # Handle any remaining compound symbols that might not be in our dict
+    import re
+    converted_label = re.sub(r'\\Delta([A-Z][a-z]*)', r'\\Delta \1', converted_label)
+    
+    # Check if we have LaTeX math symbols (not just underscores)
+    has_latex_symbols = any(symbol in converted_label for symbol in ['\\', '{', '}', '^'])
+    has_root_symbols = '#' in converted_label
+    
+    # Check for math-like subscripts (like m_{T}, p_{T}, etc.)
+    # These are typically single letter followed by _{something}
+    has_math_subscripts = bool(re.search(r'\b[a-zA-Z]_\{[^}]+\}', converted_label))
+    
+    needs_math_mode = has_latex_symbols or has_root_symbols or has_math_subscripts
+    
+    if needs_math_mode:
+        # Replace spaces with explicit spacing in math mode
+        converted_label = converted_label.replace(' ', r'\ ')
+        return rf"${converted_label}$"
+    else:
+        # For things like "all_sT", just return as-is (no math mode)
+        # Matplotlib will render underscores literally in regular text
+        return converted_label
+
+# Usage example:
+# xlabel_formatted = format_label_for_matplotlib(xlabel)

@@ -5,37 +5,62 @@ from pathlib import Path
 from typing import Callable
 from multiprocessing import Pool
 from fitting import fitter
-from fitting.disc import get_discriminants, Discriminant
-from references.analysis_config import AnalysisConfig
+from fitting.disc_new import Discriminant
+from references import AnalysisConfig, Reference
+from itertools import groupby
+from utils import functions
 import re
 
 def run_fits_multiprocessed(datacards: list[Path]) -> list[Path]:
     start = time.perf_counter()
     with Pool() as p:
         print(f"{'Creating Workspaces':.<22}", end=' ', flush=True)
-        workspaces_and_results_files: list[tuple[Path,Path]] = p.map(fitter.create_workspace, datacards)
+        workspaces_and_results_files: list[tuple[Path, Path]] = p.map(fitter.create_workspace, datacards)
         print(f'{-start+(start := time.perf_counter()):.2f}s')
 
-        fit_funcs: list[Callable] = [
-            fitter.run_asymptotic_limits, 
-            # fitter.run_fit_diagnostics
-        ]
+        # filter bad workspaces (e.g., empty data_obs)
+        good: list[tuple[Path, Path]] = []
+        skipped: list[tuple[Path, Path]] = []
+        for wksp, res in workspaces_and_results_files:
+            if fitter.workspace_has_observed_events(wksp):
+                good.append((wksp, res))
+            else:
+                skipped.append((wksp, res))
+        if skipped:
+            print(f"\nSkipping {len(skipped)} empty workspaces (no data_obs entries).")
+            # optional: write a note file so summary can ignore but you can grep later
+            for wksp, res in skipped:
+                note = res.parent / f"fit_results_{wksp.stem}.txt"
+                note.parent.mkdir(parents=True, exist_ok=True)
+                note.write_text(
+                    f"Asymptotic Limits (SKIPPED)\nReason: no observed events in {wksp}\n\n"
+                )
+
+        fit_funcs: list[Callable] = [fitter.run_asymptotic_limits]
         fit_types: list[str] = ['blinded', 'unblinded']
-        fit_args = itertools.product(workspaces_and_results_files, fit_funcs, fit_types)
+        fit_args = itertools.product(good, fit_funcs, fit_types)
 
         print(f"{'Running Fits':.<22}", end=' ', flush=True)
         fit_results: list[str] = p.starmap(multifit, fit_args)
         print(f'{time.perf_counter()-start:.2f}s')
 
+    # --- Aggregate results per datacard and write files ---
     results_files: list[Path] = []
     dc_result_length = len(fit_funcs) * len(fit_types)
-    for i, (wksp, _) in enumerate(workspaces_and_results_files):
-        dc_slice: slice = slice(i_start := i*dc_result_length, i_start + dc_result_length)
-        dc_fit_results: str = ''.join(fit_results[dc_slice])
-        dc_res_file: Path = wksp.parent / ('fit_results_' + wksp.stem + '.txt')
+
+    # write the good ones
+    for i, (wksp, _) in enumerate(good):
+        dc_slice = slice(i * dc_result_length, (i + 1) * dc_result_length)
+        dc_fit_results = ''.join(fit_results[dc_slice])
+        dc_res_file = wksp.parent / ('fit_results_' + wksp.stem + '.txt')
         dc_res_file.write_text(dc_fit_results)
         results_files.append(dc_res_file)
-    
+
+    # include the skipped notes too (so caller can glob one list)
+    for wksp, res in skipped:
+        note = res.parent / f"fit_results_{wksp.stem}.txt"
+        results_files.append(note)
+
     return results_files
 
 def multifit(workspace_and_res_file: tuple[Path, Path], func: Callable[[Path,str],str], fit_type: str) -> str: 
@@ -153,7 +178,7 @@ def write_summary(results_files, outdir: Path):
                     f"2σ = [{(lo2 if lo2 is not None else float('nan')):.4g}, {(hi2 if hi2 is not None else float('nan')):.4g}]\n"
                 )
 
-def main(workdir, config) -> None:
+def main(workdir, config, fit_only: bool) -> None:
     ''' 
     Creates datacards given a directory of DNN results and runs blinded and unblinded asymptotic 
     and diagnostic fits. Uses multiprocessing to run fits in parallel.
@@ -162,12 +187,17 @@ def main(workdir, config) -> None:
     fitsdir.mkdir(exist_ok=True)
     resultsdir = workdir / 'results'
     config = AnalysisConfig(config)
-    discs: list[Discriminant] = get_discriminants(fitsdir, resultsdir, config)
+    
+    Discriminant.set_class_settings(fitsdir, resultsdir, config)
+    refs = Reference.get_refs_from_file(functions.get_root_files(resultsdir)[0])
+    refs.sort(key=lambda r: (r.observable_base, r.channel_base, r.channel_sub))
+    discs = [Discriminant(disc_name, set(refs)) for disc_name, refs in groupby(refs, key=lambda r: r.observable_base)]
+
+    for disc in discs:
+        disc.generate_dcs()  # Uses pre-computed paths
+
     dcs_for_fit: list[Path] = [p for disc in discs for p in disc.datacards.values()]
-    # # dcs_for_fit: list[Path] = [ dc.path for dc in sel_dcs + model_dcs ]
     results_files: list[Path] = run_fits_multiprocessed(dcs_for_fit)
-    for result in results_files:
-        print(str(result))
     write_summary(results_files, outdir = fitsdir)
 
     
@@ -175,6 +205,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("workdir", type=Path, help="Neural Nets bamboo output directory to pull info from. Ex: Z_OUTPUT/<nndir>")
     parser.add_argument("-c", "--config", help="Path to analysis config")
+    parser.add_argument("-f", "--fit_only", action="store_true")
     parser.add_argument("-s", "--summary_only", action="store_true")
     args = parser.parse_args()
     if args.summary_only:
@@ -186,7 +217,7 @@ if __name__ == "__main__":
         print("Matches:", results_files)
         write_summary(results_files, outdir = fitsdir)
     else:
-        main(args.workdir, args.config)
+        main(args.workdir, args.config, args.fit_only)
 
     '''
     python3 scripts/run_dc_and_fits.py $Z_OUTPUT_eos/Disc_Study_New/LLR_crtd_odd -c bamboo_hh/config/disc_study_new.yml

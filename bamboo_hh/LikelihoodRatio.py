@@ -14,19 +14,22 @@ from pathlib import Path
 
 class LR:
     llr_binning = { 
-                1: { 'nbins':100, 'min':-3, 'max':3 },
-                2: { 'nbins':100, 'min':-3, 'max':3 },
-                3: { 'nbins':100, 'min':-4, 'max':4 },
-                4: { 'nbins':100, 'min':-5, 'max':5 },
-                5: { 'nbins':100, 'min':-6, 'max':6 },
-                6: { 'nbins':100, 'min':-6, 'max':6 },
-                7: { 'nbins':75, 'min':-15, 'max':15 },
-                8: { 'nbins':75, 'min':-15, 'max':15 },
-                9: { 'nbins':75, 'min':-15, 'max':15 },
-                10:{ 'nbins':75, 'min':-15, 'max':15 },
-                11:{ 'nbins':75, 'min':-15, 'max':20 },
-                11:{ 'nbins':75, 'min':-15, 'max':20 },
-                12:{ 'nbins':100, 'min':-20, 'max':20 },
+                1: { 'nbins':100, 'min':-4, 'max':4 },
+                2: { 'nbins':100, 'min':-5, 'max':5 },
+                3: { 'nbins':100, 'min':-6, 'max':6 },
+                4: { 'nbins':100, 'min':-7, 'max':7 },
+                5: { 'nbins':100, 'min':-8, 'max':8 },
+                6: { 'nbins':100, 'min':-10, 'max':10 },
+                7: { 'nbins':100, 'min':-15, 'max':15 },
+                8: { 'nbins':100, 'min':-15, 'max':15 },
+                9: { 'nbins':100, 'min':-15, 'max':20 },
+                10:{ 'nbins':100, 'min':-15, 'max':20 },
+                11:{ 'nbins':100, 'min':-15, 'max':25 },
+                12:{ 'nbins':100, 'min':-20, 'max':25 },
+                13:{ 'nbins':100, 'min':-20, 'max':30 },
+                14:{ 'nbins':100, 'min':-20, 'max':30 },
+                15:{ 'nbins':100, 'min':-20, 'max':35 },
+                16:{ 'nbins':100, 'min':-20, 'max':35 }
                 }
 
     lr_binning = { 
@@ -120,51 +123,89 @@ class LRFactory:
             return lr
         return [_get_LR_from_var3D(var.name) for var in self.sb.vars3D]
 
-    def _create_lr_from_multivar(self, var_names) -> LR:
+    def create_lr_from_multivar(self, var_names) -> LR:
         multivar_lr = LR(var_names, self.sb.name, apply_log=self.apply_log)
         relevant_lrs1D = [lr for lr in self.get_lrs_for_vars1D() if lr.base_name in var_names]
         inter_op = op.sum if self.apply_log else op.product
         multivar_lr.data = inter_op(*[lr.data for lr in relevant_lrs1D])
         return multivar_lr
     
-    def get_lrs_for_multivars_select(self) -> list[LR]:
-            """Create LRs for predefined multivariate combinations."""
-            candidates = [
-                ['bjets_mbb', 'bjets_dR'],
-                ['bjets_pt_bb', 'bjets_dR'],
-                ['bjets_mbb', 'trijet_mInv'],
-                ['bjets_dR', 'bjets_mbb', 'trijet_mInv'],
-                ['bjet0_pt', 'bjets_dR', 'bjets_mbb', 'trijet_mInv'],
-                ['bjet0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_mbb', 'trijet_mInv'],
-                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat'],
-                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat', 'bjets_pt_bb'],
-                ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
-                ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
-                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
-                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
-            ]
-            return [self._create_lr_from_multivar(var_names) for var_names in candidates]
+    # def get_lrs_for_multivars_select(self) -> list[LR]:
+    #         """Create LRs for predefined multivariate combinations."""
+    #         candidates = [
+    #             ['bjets_mbb', 'bjets_dR'],
+    #             ['bjets_pt_bb', 'bjets_dR'],
+    #             ['bjets_mbb', 'trijet_mInv'],
+    #             ['bjets_dR', 'bjets_mbb', 'trijet_mInv'],
+    #             ['bjet0_pt', 'bjets_dR', 'bjets_mbb', 'trijet_mInv'],
+    #             ['bjet0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_mbb', 'trijet_mInv'],
+    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat'],
+    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat', 'bjets_pt_bb'],
+    #             ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
+    #             ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
+    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
+    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
+    #         ]
+    #         return [self.create_lr_from_multivar(var_names) for var_names in candidates]
 
-    def get_lrs_for_multivars_combos(self, min_vars: int, max_vars: int) -> list[LR]:
+    # def get_lrs_for_multivars_combos(self, min_vars: int, max_vars: int) -> list[LR]:
 
-        reserved = [
-            'lep0_pt',                                      
-            'bjets_mbb', 'bjets_dR', 'bjets_pt_bb', 'bjet0_pt', 'bjet1_pt',         # bjet-vars
-            'blnu_mT', 'blnu_pt',                                                   # leptonic-top 
-            'trijet_mInv', 'trijet_pt', 'trijet_pt_rat', 'trijet_bijet_dR'          # hadronic-top 
-        ]
+    #     reserved = [
+    #         'lep0_pt',                                      
+    #         'bjets_mbb', 'bjets_dR', 'bjets_pt_bb', 'bjet0_pt', 'bjet1_pt',         # bjet-vars
+    #         'blnu_mT', 'blnu_pt',                                                   # leptonic-top 
+    #         'trijet_mInv', 'trijet_pt', 'trijet_pt_rat', 'trijet_bijet_dR'          # hadronic-top 
+    #     ]
 
-        # Filter to only include variables that actually exist in the selection bundle
+    #     # Filter to only include variables that actually exist in the selection bundle
+    #     available_vars = [var.name for var in self.sb.vars1D]
+    #     var_names = [var for var in reserved if var in available_vars]
+    #     print(f"Using {len(var_names)} variables for combinations:")
+        
+    #     lrs_for_combinations = []
+    #     for n_vars in range(min_vars, max_vars + 1):
+    #         print(f"Generating {n_vars}-variable combinations...")
+    #         var_combinations = list(combinations(var_names, n_vars))
+    #         print(f"  Found {len(var_combinations)} combinations of {n_vars} variables")
+    #         lrs_for_combinations.extend(self.create_lr_from_multivar(list(var_combo)) for var_combo in var_combinations)
+        
+    #     return lrs_for_combinations
+
+    def get_lrs_for_curated_vars(self, min_comb: int, max_comb: int, batch_size: int = None, batch_index: int = None) -> list[LR]:
+        from itertools import combinations
+        
+        curated_list = ['jj_lnu_dPhi', 'bjets_pt_bb', 'bjets_dR', 'bjets_mbb', 'bjets_dPhi',
+                    'bb_lnu_dPhi', 'bjet_bijet_dR', 'bb_lnu_dR', 'blnu_pt', 'bjets_mean_pt',
+                    'bjets_dEta', 'trijet_bijet_dEta', 'met_pt', 'blnu_mT', 'all_sT', 'all_jets_HT']
+        
+        # Filter to only include variables that actually exist
         available_vars = [var.name for var in self.sb.vars1D]
-        var_names = [var for var in reserved if var in available_vars]
-        print(f"Using {len(var_names)} variables for combinations:")
+        var_names = [var for var in curated_list if var in available_vars]
+        print(f"Using {len(var_names)} variables for combinations")
         
         lrs_for_combinations = []
-        for n_vars in range(min_vars, max_vars + 1):
-            print(f"Generating {n_vars}-variable combinations...")
-            var_combinations = list(combinations(var_names, n_vars))
-            print(f"  Found {len(var_combinations)} combinations of {n_vars} variables")
-            lrs_for_combinations.extend(self._create_lr_from_multivar(list(var_combo)) for var_combo in var_combinations)
+        
+        for n_vars in range(min_comb, max_comb + 1):
+            all_combinations = list(combinations(var_names, n_vars))
+            total_combos = len(all_combinations)
+            
+            if batch_size and total_combos > batch_size:
+                if batch_index is None:
+                    # Return all batches combined
+                    print(f"Generating all {n_vars}-variable combinations: {total_combos} total")
+                    combinations_to_process = all_combinations
+                else:
+                    # Return specific batch
+                    start_idx = batch_index * batch_size
+                    end_idx = min(start_idx + batch_size, total_combos)
+                    combinations_to_process = all_combinations[start_idx:end_idx]
+                    num_batches = (total_combos + batch_size - 1) // batch_size
+                    print(f"Generating {n_vars}-variable combinations (batch {batch_index + 1}/{num_batches}): {len(combinations_to_process)} combinations")
+            else:
+                # No batching needed
+                print(f"Generating {n_vars}-variable combinations: {total_combos} total")
+                combinations_to_process = all_combinations
+            lrs_for_combinations.extend(self.create_lr_from_multivar(list(combo)) for combo in combinations_to_process)
         
         return lrs_for_combinations
 
@@ -176,6 +217,8 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         parser.add_argument("-log", "--apply_log", action='store_true', help='Calculate LLRs instead of LRs')
         parser.add_argument("--min_comb", type=int, action='store')
         parser.add_argument("--max_comb", type=int, action='store')
+        parser.add_argument("--batch_size", type=int, default=700, action='store')
+        parser.add_argument("--batch_idx", type=int, default=None, action='store')
         
     def get_skim(self, sb: SelectionBundle):
         skim_data = {"event": None, "genWeight": None, "era": op.c_int(ERA_ENUM[self.era])}
@@ -199,34 +242,22 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         # ============================= Plots & Skims ===================================
         # ===============================================================================
 
-        sels = [
-            # sbc.SL_3j_resolved,
-            sbc.SL_4j_resolved,
-            # sbc.SL_resolved
-        ]
+        sb = sbc.SL_4j_resolved
 
-        for sb in sels:
-            lr_factory = LRFactory(self.args.lr_functions, sb, apply_log=self.args.apply_log)
-            # sb.lrs_for_vars1D = lr_factory.get_lrs_for_vars1D()
-            # sb.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
-            # sb.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
-            # sb.lrs_for_multivars_select = lr_factory.get_lrs_for_multivars_select()
-            sb.lrs_for_multivars_combos = lr_factory.get_lrs_for_multivars_combos(self.args.min_comb, self.args.max_comb)
-        
-        # hists_lrs_for_vars1D = [Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for sb in sels for lr in sb.lrs_for_vars1D ]
-        # plots.extend(hists_lrs_for_vars1D)
+        lr_factory = LRFactory(self.args.lr_functions, sb, apply_log=self.args.apply_log)
 
-        # hists_lrs_for_vars2D = [Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for sb in sels for lr in sb.lrs_for_vars2D ]
-        # plots.extend(hists_lrs_for_vars2D)
+        if self.args.min_comb and self.args.max_comb:
+            sb.lrs_for_curated_vars = lr_factory.get_lrs_for_curated_vars(self.args.min_comb, self.args.max_comb, self.args.batch_size, self.args.batch_idx)
+            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_curated_vars ])
+        else:
+            sb.lrs_for_vars1D = lr_factory.get_lrs_for_vars1D()
+            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars1D ])
 
-        # hists_lrs_for_vars3D = [Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for sb in sels for lr in sb.lrs_for_vars3D ]
-        # plots.extend(hists_lrs_for_vars3D)
+            sb.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
+            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars2D ])
 
-        # hists_lrsmultivarselect = [Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for sb in sels for lr in sb.lrs_for_multivars_select ]
-        # plots.extend(hists_lrsmultivarselect)
-
-        hists_lrsmultivarcombos = [Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for sb in sels for lr in sb.lrs_for_multivars_combos ]
-        plots.extend(hists_lrsmultivarcombos)
+            sb.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
+            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars3D ])
 
         # skims = [self.get_skim(sb) for sb in sels]
         # plots.extend(skims)
@@ -235,8 +266,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         # ================================== Yields =====================================
         # ===============================================================================
 
-        for sb in sels:
-            self.yields.add(sb.sel, sb.name)
+        self.yields.add(sb.sel, sb.name)
 
         return plots
 

@@ -7,11 +7,7 @@ import ROOT
 import numpy as np
 from numpy.typing import NDArray
 
-def generate_dc(disc, ref: Reference, era: str) -> Path:
-    if ref.observable_sub:
-        dc_path = disc.path / era / ref.channel_base / ref.channel_sub / f"{ref.observable_sub}_score.txt"
-    else:
-        dc_path = disc.path / era / ref.channel_base / "datacard.txt"
+def generate_dc(disc, dc_path: Path, ref: Reference, era: str) -> Path:
     process_hists = histograms.get_process_hists(ref, disc.processes, era, disc.resultsdir, disc.config)
     if disc.is_complex:
         process_hists = run2_binning_strategy(process_hists, 'signal' if 'HH' in ref.observable_sub else 'background')
@@ -21,7 +17,7 @@ def generate_dc(disc, ref: Reference, era: str) -> Path:
     dc_text = generate_datacard_text(dc_path.with_suffix('.root'), process_rates, 'asimov', disc.name, ref.channel, era)
     dc_path.write_text(dc_text)
     histograms.write_hists_to_root(dc_path.with_suffix('.root'), process_hists)
-    return dc_path
+    return
 
 def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, disc_name: str, channel:str, era: str, signal: str='ggHH_kl_1_kt_1_bbww') -> str:
     ''' Updates to datacards (e.g. systematics) go here '''
@@ -83,14 +79,13 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
 
     return comment + preamble + shapes + observation + rates_and_systematics + stats
 
-def generate_combined_dc(disc_path, era: str, channel: str, channel_dcs: tuple[str, Path]) -> Path:
+def generate_combined_dc(dc_path, channel_dcs: tuple[str, Path]) -> Path:
     """Generate combined datacards for hierarchical discriminants."""
     command = ['combineCards.py'] + [f'{ref.channel}={str(dc_path)}' for ref, dc_path in channel_dcs]
-    combined_path = disc_path / era / channel / 'combined_datacard.txt'
-    combined_path.parent.mkdir(exist_ok=True, parents=True)
-    dc_text = subprocess.check_output(command, cwd=combined_path.parent)
-    combined_path.write_bytes(dc_text)
-    return combined_path
+    dc_path.parent.mkdir(exist_ok=True, parents=True)
+    dc_text = subprocess.check_output(command, cwd=dc_path.parent)
+    dc_path.write_bytes(dc_text)
+    return dc_path
 
 # ================================================================
 # =================== Helper functions ===========================
