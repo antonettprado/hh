@@ -17,7 +17,9 @@ def run_single_job(arg_path):
     print(f"Starting: {arg_path}")
     
     # Create log file name based on the argument
-    log_name = f"log_{Path(arg_path).name}.txt"
+    log_dir = Path('logs')
+    log_dir.mkdir(exist_ok=True, parents=True)
+    log_name = log_dir / f"log_{Path(arg_path).name}.txt"
     
     try:
         with open(log_name, 'w') as log_file:
@@ -49,7 +51,18 @@ def run_single_job(arg_path):
 
 def main():
     projectdir = Path('/eos/user/a/anunezde/Z_OUTPUT_eos/Disc_Study_New')
-    arguments = [d for d in projectdir.iterdir() if d.is_dir() and 'LLR_crtd_odd_' in d.name and '2to3' not in d.name]
+    crtd_dirs = [d for d in projectdir.iterdir() if d.is_dir and '_crtd_odd_' in d.name]
+    dirs_w_no_results = []
+    for d in crtd_dirs:
+        results_file = d / 'fits_new' / 'summary_results.txt'
+        if not results_file.exists():
+            dirs_w_no_results.append(d)
+
+    if len(dirs_w_no_results) > 0: 
+        print(f'There are {len(dirs_w_no_results)} dirs without final results')
+        for d in dirs_w_no_results: print(str(d)) 
+    
+    arguments = dirs_w_no_results
     
     # Number of parallel processes (adjust based on your system)
     max_workers = 4

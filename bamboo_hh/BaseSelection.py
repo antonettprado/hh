@@ -1,6 +1,5 @@
 from bamboo.analysismodules import NanoAODHistoModule
-from bamboo.analysisutils import configureJets, configureType1MET
-from bamboo.treedecorators import NanoAODDescription, CalcCollectionsGroups, nanoJetMETCalc, nanoFatJetCalc
+from bamboo.treedecorators import NanoAODDescription, CalcCollectionsGroups, nanoFatJetCalc
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, CutFlowReport
 from bamboo.plots import EquidistantBinning as EqBin

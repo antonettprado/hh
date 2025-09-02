@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from neural_net.model_config import load_model_configs, get_config
-from typing import Callable
+from neural_net.model_config import load_model_configs
 import yaml
 
 class RunDistributed:

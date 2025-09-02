@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Union, Optional
 import yaml
 from pathlib import Path
 from typing import Set
-from references import constants
+from core import constants
 from collections import OrderedDict
 import numpy as np
 

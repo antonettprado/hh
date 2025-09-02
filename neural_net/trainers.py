@@ -1,5 +1,5 @@
 from neural_net import nn_utils as nn_utils
-from neural_net.model_config import save_model_config, get_config, ModelConfig
+from neural_net.model_config import save_model_config, get_config
 from neural_net.model_data import get_data, prune_ds, DatasetManager, SHUFFLE_BUFFER_SIZE
 from neural_net.model_design import train_model
 from neural_net.model_evaluator import evaluate_model

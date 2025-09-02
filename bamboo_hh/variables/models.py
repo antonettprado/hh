@@ -2,7 +2,7 @@ from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.treeproxies import FloatProxy, IntProxy
 from dataclasses import dataclass
 from typing import Optional, Union
-from references.reference import Reference
+from core import Reference
 
 @dataclass
 class SuperVarData:

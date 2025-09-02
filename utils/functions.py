@@ -1,5 +1,5 @@
 from pathlib import Path
-from references.constants import *
+from core.constants import *
 
 def process_is_bkg(proc: str) -> bool:
     """True if proc is background (i.e. not in signal/data patterns)."""

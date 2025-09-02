@@ -4,7 +4,7 @@ from bamboo.plots import Plot, Skim
 from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
-from references.constants import ERA_ENUM
+from core.constants import ERA_ENUM
 
 class JetTopology(NanoBaseHHbbWW):
 

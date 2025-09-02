@@ -1,5 +1,4 @@
 from bamboo_hh.variables.models import SuperVariable1D
-from pathlib import Path
 
 class VariableRegister:
     def __init__(self):

@@ -1,7 +1,7 @@
 from fitting import datacards
 from references.analysis_config import AnalysisConfig
 from references.reference import Reference 
-from utils import histograms, functions
+from utils import histogram, functions
 
 from pathlib import Path
 from typing import ClassVar

@@ -1,15 +1,14 @@
 import ROOT
 import uproot
 from pathlib import Path
-from references.analysis_config import AnalysisConfig
-from references.reference import Reference
+from core import AnalysisConfig, Reference
 from utils import functions
 import numpy as np
-from typing import Union
+from typing import Union, Any
 
 ROOT.gROOT.SetBatch(True)
 
-def normalize_hist(hist: ROOT.TH1) -> ROOT.TH1:
+def normalize(hist: ROOT.TH1) -> ROOT.TH1:
     """Normalize histogram to unit integral."""
     integral = hist.Integral()
     if integral > 0:
@@ -114,7 +113,7 @@ def get_total_hist_from_branches(var: str, tree_name: str, files: list[Path], co
     return process_files_to_hists(files, config, _get_hist_from_tree, tree_name, var)
 
 def get_process_hists(reference: Reference, processes: list[str], eras: Union[str, list[str]], resultsdir: Path, 
-                     config: AnalysisConfig, mode: str = "histogram") -> dict[str, ROOT.TH1]:
+                     config: AnalysisConfig = AnalysisConfig('bamboo_hh/config/analysis.yml'), mode: str = "histogram") -> dict[str, ROOT.TH1]:
     '''
     Get process histograms for a specific reference, either from histograms or tree data.
     
@@ -158,3 +157,21 @@ def write_hists_to_root(path: Path, histos: dict[str, ROOT.TH1D]) -> None:
         hist.Write()
     outfile.Close()
 
+def extract_signal_background(process_hists: dict[str, Any], signal_process: str = 'ggHH_kl_1_kt_1_bbww') -> tuple[Any, Any]:
+    """Extract and combine signal/background histograms."""
+    signal_hist = process_hists.pop(signal_process)
+    
+    background_hists = [
+        hist for proc, hist in process_hists.items() 
+        if functions.process_is_bkg(proc)
+    ]
+    background_hist = add_hists(background_hists)
+    
+    return signal_hist, background_hist
+
+def compute_likelihood_ratio(signal_hist, background_hist):
+    signal_norm = normalize(signal_hist)
+    background_norm = normalize(background_hist)        
+    ratio_hist = signal_norm.Clone()
+    ratio_hist.Divide(background_norm)
+    return ratio_hist

@@ -1,7 +1,8 @@
 import uproot
 from dataclasses import dataclass, field
 from pathlib import Path
-from references.constants import *
+from utils import functions
+from core.constants import *
 
 @dataclass(frozen=True, eq=True)
 class Reference:
@@ -48,7 +49,11 @@ class Reference:
     # ROOT file integration
     # ------------------------------------------------------------------
     @staticmethod
-    def get_refs_from_file(file: Path, hist_dim: str = "All") -> list["Reference"]:
+    def get_refs_from(resultsdir: Path = None, file: Path = None, hist_dim: str = "All") -> list["Reference"]:
+        if resultsdir:
+            file = functions.get_root_files(resultsdir)[0]
+        else:
+            assert file is not None; ValueError('If resultsdir is not provided, you must provide a file')
         valid_dims = {"TH1", "TH2", "TH3"}
         if hist_dim != "All" and hist_dim not in valid_dims:
             raise ValueError(f"Invalid dim '{hist_dim}'. Choose from 'TH1', 'TH2', 'TH3', or 'All'.")

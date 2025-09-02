@@ -6,7 +6,9 @@ from .models import SuperVariable1D, Variable1D, VariableND
 from .register import VariableRegister
 from .definitions import REG  # 1D only; REG is augmented below
 
-__all__ = ["SuperVariable1D", "Variable1D", "VariableND", "VariableRegister", "REG"]
+__all__ = [
+            "SuperVariable1D", "Variable1D", "VariableND", "VariableRegister", 
+           "REG"]
 
 def _registers_vars_nd(path: Path) -> None:
     if not path.exists():

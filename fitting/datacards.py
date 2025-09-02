@@ -1,14 +1,14 @@
 from pathlib import Path
 from tabulate import tabulate
 from references import Reference
-from utils import functions, histograms
+from utils import functions, histogram
 import subprocess
 import ROOT
 import numpy as np
 from numpy.typing import NDArray
 
 def generate_dc(disc, dc_path: Path, ref: Reference, era: str) -> Path:
-    process_hists = histograms.get_process_hists(ref, disc.processes, era, disc.resultsdir, disc.config)
+    process_hists = histogram.get_process_hists(ref, disc.processes, era, disc.resultsdir, disc.config)
     if disc.is_complex:
         process_hists = run2_binning_strategy(process_hists, 'signal' if 'HH' in ref.observable_sub else 'background')
     dc_path.parent.mkdir(exist_ok=True, parents=True)
@@ -16,7 +16,7 @@ def generate_dc(disc, dc_path: Path, ref: Reference, era: str) -> Path:
     process_rates = {proc: hist.Integral() for proc, hist in process_hists.items()}
     dc_text = generate_datacard_text(dc_path.with_suffix('.root'), process_rates, 'asimov', disc.name, ref.channel, era)
     dc_path.write_text(dc_text)
-    histograms.write_hists_to_root(dc_path.with_suffix('.root'), process_hists)
+    histogram.write_hists_to_root(dc_path.with_suffix('.root'), process_hists)
     return
 
 def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, disc_name: str, channel:str, era: str, signal: str='ggHH_kl_1_kt_1_bbww') -> str:

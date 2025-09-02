@@ -6,32 +6,53 @@ import matplotlib.pyplot as plt
 import mplhep as hep
 hep.style.use("CMS")
 
+def categorize_obs_type(obs_name: str) -> tuple[str, int]:
+    vs_count, x_count = obs_name.count('_vs_'), obs_name.count('_x_')
+    is_llr = obs_name.endswith('_llr')
+    prefix = 'llr_from_' if is_llr else 'var_'
+    
+    if vs_count:
+        dim = vs_count + 1
+        return f'{prefix}{dim}D', dim
+    elif x_count and is_llr:
+        return 'llr_from_multivar', x_count + 1
+    else:
+        return f'{prefix}1D', 1
+
 def parse_UL_results_files(file_paths: list[Path]) -> pd.DataFrame:
 
     def _parse_UL_results_file(file: Path) -> pd.DataFrame:
-        return pd.read_csv(str(file), sep=r'\s*:\s*μ\s*=\s*|,\s*1σ\s*=\s*\[|,\s*|\],\s*2σ\s*=\s*\[|\]', 
-                    engine='python', header=None, skiprows=2,
-                    names=['obs_name', 'mu', 'sigma1_min', 'sigma1_max', 'sigma2_min', 'sigma2_max'],
-                    usecols=[0,1,2,3,4,5]).dropna()
-
-    def _categorize_obs_type(obs_name: str) -> tuple[str, int]:
-        vs_count, x_count = obs_name.count('_vs_'), obs_name.count('_x_')
-        is_llr = obs_name.endswith('_llr')
-        prefix = 'llr_from_' if is_llr else 'var_'
+        import re
+        data = []
+        with open(file, 'r') as f:
+            lines = f.readlines()[2:]  # Skip first 2 lines
+            
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Use regex to extract components
+            match = re.match(r'(.+?)\s*:\s*μ\s*=\s*([\d.]+),\s*1σ\s*=\s*\[([\d.]+),\s*([\d.]+)\],\s*2σ\s*=\s*\[([\d.]+),\s*([\d.]+)\]', line)
+            if match:
+                obs_name, mu, sigma1_min, sigma1_max, sigma2_min, sigma2_max = match.groups()
+                data.append({
+                    'obs_name': obs_name,
+                    'mu': float(mu),
+                    'sigma1_min': float(sigma1_min),
+                    'sigma1_max': float(sigma1_max),
+                    'sigma2_min': float(sigma2_min),
+                    'sigma2_max': float(sigma2_max)
+                })
         
-        if vs_count:
-            dim = vs_count + 1
-            return f'{prefix}{dim}D', dim
-        elif x_count and is_llr:
-            return 'llr_from_multivar', x_count + 1
-        else:
-            return f'{prefix}1D', 1
+        return pd.DataFrame(data)
     
+    # Use the alternative approach which is more reliable
     dfs = [_parse_UL_results_file(file) for file in file_paths]
     df = pd.concat(dfs, ignore_index=True)
 
     # Add categorization columns
-    categories_and_nvars = df['obs_name'].apply(_categorize_obs_type)
+    categories_and_nvars = df['obs_name'].apply(categorize_obs_type)
     df['obs_type'] = [cat for cat, nvars in categories_and_nvars]
     df['n_variables'] = [nvars for cat, nvars in categories_and_nvars]
     
@@ -52,45 +73,98 @@ def get_branch_as_df(files: list[Path], tree_name: str, vars: list[str]) -> pd.D
             dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
 
-def create_UL_scatter_plot_by_type(df: pd.DataFrame, output_dir):
-
-    label_fontsize = 24
-    tick_fontsize = 20
+def create_UL_scatter_plot_by_type(df: pd.DataFrame, outfile):
+    import mplhep
+    import matplotlib.patches as patches
+    from matplotlib.collections import LineCollection
+    import numpy as np
     
-    fig, ax = plt.subplots(figsize=(18, 10))
+    mplhep.style.use("CMS")
+    
+    label_fontsize = 26
+    tick_fontsize = 26
+    cms_fontsize = 26
+    
+    # Create figure with CMS-like styling
+    fig, ax = plt.subplots(figsize=(12, 9))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
     
     x_positions = []
     y_values = []
     colors = []
     labels = []
+    categories = []
     
     current_x = 1
     
-    # Add non-multivariate types
+    # Enhanced color palette
     type_mapping = {
-        'llr_from_1D': ('Univariate', 'red'),
-        'llr_from_2D': ('Bivariate', 'blue'), 
-        'llr_from_3D': ('Trivariate', 'green')
+        'llr_from_1D': ('Univariate LLR', '#e74c3c', '#c0392b'),
+        'llr_from_2D': ('Bivariate LLR', '#3498db', '#2980b9'), 
+        'llr_from_3D': ('Trivariate LLR', '#2ecc71', '#27ae60')
     }
     
-    for obs_type, (label, color) in type_mapping.items():
+    # Add continuous background regions - all exactly 1.0 unit wide, no gaps
+    region_colors = ['#ffeaea', '#eaf4ff', '#eafff0']
+    region_index = 0
+    region_boundaries = []
+    
+    for obs_type, (label, color_main, color_dark) in type_mapping.items():
         subset = df[df['obs_type'] == obs_type]
         if not subset.empty:
-            # Add jitter to x-positions to avoid overlap
-            x_jitter = np.random.normal(current_x, 0.1, len(subset))
+            # All regions exactly 1.0 unit wide: center ± 0.5
+            start_x = current_x - 0.5
+            end_x = current_x + 0.5
+            
+            # Add subtle background coloring
+            ax.axvspan(start_x, end_x, 
+                      facecolor=region_colors[region_index], alpha=0.3, zorder=0)
+            
+            # Store boundary for dividing lines (except for first region)
+            if current_x > 1:
+                region_boundaries.append(start_x)
+            
+            region_index += 1
+            
+            # Create gradient effect with multiple layers
+            x_jitter = np.random.normal(current_x, 0.08, len(subset))
+            
+            # Add glow effect (larger, more transparent points behind)
+            ax.scatter(x_jitter, subset['mu'], c=color_main, s=120, alpha=0.3, 
+                      edgecolors='none', zorder=1)
+            
+            # Main points with gradient coloring based on y-value
+            scatter = ax.scatter(x_jitter, subset['mu'], c=subset['mu'], 
+                               cmap='viridis', s=80, alpha=0.8,
+                               edgecolors=color_dark, linewidth=1.2, zorder=3)
+            
             x_positions.extend(x_jitter)
             y_values.extend(subset['mu'])
-            colors.extend([color] * len(subset))
-            labels.append(f'{label}\n(n={len(subset)})')
+            colors.extend([color_main] * len(subset))
+            labels.append(label)
+            categories.extend([label] * len(subset))
             current_x += 1
     
-    # Add multivariate with more descriptive names
+    # Enhanced multivariate section
     multivar_df = df[df['obs_type'] == 'from_multivar']
     if not multivar_df.empty:
         n_var_values = sorted(multivar_df['n_variables'].unique())
-        viridis_colors = plt.cm.viridis(np.linspace(0, 1, len(n_var_values)))
         
-        # More descriptive names for multivariate combinations
+        # Custom gradient colors for multivariate
+        plasma_colors = plt.cm.plasma(np.linspace(0.2, 0.9, len(n_var_values)))
+        
+        # Light background for entire multivariate section
+        if n_var_values:
+            start_multivar = current_x - 0.5
+            end_multivar = current_x + len(n_var_values) - 0.5
+            ax.axvspan(start_multivar, end_multivar, 
+                      facecolor='#f8f0ff', alpha=0.3, zorder=0)
+            
+            # Add boundary for dividing line before multivariate section (only if there were previous categories)
+            if current_x > 1:
+                region_boundaries.append(start_multivar)
+        
         multivar_names = {
             2: 'Multi-2', 3: 'Multi-3', 4: 'Multi-4', 5: 'Multi-5',
             6: 'Multi-6', 7: 'Multi-7', 8: 'Multi-8', 9: 'Multi-9',
@@ -99,34 +173,90 @@ def create_UL_scatter_plot_by_type(df: pd.DataFrame, output_dir):
         
         for i, n_vars in enumerate(n_var_values):
             subset = multivar_df[multivar_df['n_variables'] == n_vars]
-            # Add jitter to x-positions
-            x_jitter = np.random.normal(current_x, 0.1, len(subset))
+            
+            # Smaller jitter for cleaner look
+            x_jitter = np.random.normal(current_x, 0.06, len(subset))
+            
+            # Glow effect
+            ax.scatter(x_jitter, subset['mu'], c=plasma_colors[i], s=100, alpha=0.25,
+                      edgecolors='none', zorder=1)
+            
+            # Main scatter
+            scatter = ax.scatter(x_jitter, subset['mu'], c=plasma_colors[i], s=70,
+                               alpha=0.85, edgecolors='white', linewidth=1, zorder=3)
+            
             x_positions.extend(x_jitter)
             y_values.extend(subset['mu'])
-            colors.extend([viridis_colors[i]] * len(subset))
-            labels.append(f'{multivar_names.get(n_vars, f"Multi-{n_vars}")}\n(n={len(subset)})')
+            colors.extend([plasma_colors[i]] * len(subset))
+            labels.append(multivar_names.get(n_vars, f"Multi-{n_vars}"))
+            categories.extend([f"Multi-{n_vars}"] * len(subset))
             current_x += 1
     
-    # Create scatter plot
-    ax.scatter(x_positions, y_values, c=colors, s=60, alpha=0.7, 
-               edgecolors='black', linewidth=0.5)
+    # Check if we have any data to plot
+    if not y_values:
+        print("No data to plot!")
+        return
     
-    # Set up axes exactly like the box plot
+    # Add subtle vertical dividing lines between all regions
+    for boundary_x in region_boundaries:
+        ax.axvline(boundary_x, color='#cccccc', alpha=0.6, linestyle='-', linewidth=1.5, zorder=2)
+    
+    # Rest of your plotting code remains the same...
+    
+    # CMS-style grid (only horizontal, more subtle)
+    ax.grid(True, alpha=0.3, axis='y', linestyle='-', linewidth=0.8, color='#cccccc')
+    ax.grid(False, axis='x')
+    
+    # CMS-style spines - thick black borders
+    for spine in ax.spines.values():
+        spine.set_linewidth(2)
+        spine.set_color('black')
+    
+    # CMS-style tick parameters
+    ax.tick_params(axis='x', which='major', direction='in', length=0, width=0,
+                   labelsize=tick_fontsize, top=False, right=False, 
+                   bottom=True, left=False, color='black')
+    ax.tick_params(axis='y', which='major', direction='in', length=6, width=2,
+                   labelsize=tick_fontsize, top=True, right=True, 
+                   bottom=True, left=True, color='black')
+    ax.tick_params(axis='y', which='minor', direction='in', length=3, width=1,
+                   top=True, right=True, bottom=True, left=True, color='black')
+    
     ax.tick_params(axis='x', which='minor', bottom=False, top=False)
-    ax.tick_params(axis='y', which='minor', left=True, right=True)
+    
     ax.set_xticks(range(1, len(labels) + 1))
     ax.set_xticklabels(labels, fontsize=tick_fontsize)
     
-    # Clean styling - same as box plot
-    ax.set_ylabel('μ value', fontsize=label_fontsize)
-    ax.grid(True, alpha=0.7, axis='y', linestyle='-', linewidth=0.8)
-    ax.grid(False, axis='x')
+    # CMS-style labels
+    ax.set_ylabel('Median UL on μ', fontsize=label_fontsize)
+    
+    # Add CMS text
+    mplhep.cms.text("Simulation Preliminary", ax=ax, fontsize=cms_fontsize, loc=0)
+    ax.text(1.0, 1.0, "13.6 TeV", transform=ax.transAxes, fontsize=cms_fontsize,
+            horizontalalignment='right', verticalalignment='bottom')
     
     plt.tight_layout()
     
-    save_path = output_dir / "llr_scatterplot_by_type.pdf"
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"Scatter plot saved to {save_path}")
+    # Set limits
+    ax.set_xlim(0.5, len(labels) + 0.5)
+    
+    # Y-axis setup
+    from matplotlib.ticker import MaxNLocator
+    
+    y_range = max(y_values) - min(y_values) 
+    y_min = 150
+    y_max = max(y_values) + 0.08 * y_range
+    ax.set_ylim(y_min, y_max)
+    
+    # Tick setup
+    tick_list = [200]
+    tick_candidates = np.arange(200, 4300, 400)
+    tick_list.extend(tick_candidates[tick_candidates <= y_max])
+    tick_list = sorted(list(set(tick_list)))
+    ax.set_yticks(tick_list)
+    
+    plt.savefig(outfile, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"CMS-style enhanced scatter plot saved to {outfile}")
     
     plt.show()
 
@@ -136,7 +266,7 @@ def create_UL_box_plot_by_type(df: pd.DataFrame, output_dir):
     label_fontsize = 24
     tick_fontsize = 20
     
-    fig, ax = plt.subplots(figsize=(18, 10))
+    fig, ax = plt.subplots(figsize=(12, 10))
     
     plot_data = []
     labels = []
@@ -198,14 +328,8 @@ def create_UL_box_plot_by_type(df: pd.DataFrame, output_dir):
     
     # Clean styling
     ax.set_ylabel('μ value', fontsize=label_fontsize)
-    # ax.tick_params(axis='y', labelsize=tick_fontsize)
-    # ax.minorticks_on()
-    # ax.tick_params(axis='y', which='minor', left=True)
     ax.grid(True, alpha=0.7, axis='y', linestyle='-', linewidth=0.8)
     ax.grid(False, axis='x')
-    # ax.spines['top'].set_visible(False)
-    # ax.spines['right'].set_visible(False)
-    
     plt.tight_layout()
     
     save_path = output_dir / "llr_boxplot_by_type.pdf"
@@ -415,81 +539,3 @@ def plot_greedy_chain(df: pd.DataFrame, output_dir: Path, max_k=10):
     out = output_dir / "llr_greedy_chain.pdf"
     fig.tight_layout(); fig.savefig(out, dpi=300, bbox_inches="tight")
     print(f"Saved {out}")
-
-# ============================================
-def format_label_for_matplotlib(label):
-    """
-    Convert ROOT-style labels to matplotlib-compatible LaTeX
-    """
-    # Dictionary of ROOT-style to LaTeX conversions
-    root_to_latex = {
-        # Compound symbols (order matters - do these first)
-        '#DeltaR': r'\Delta R',
-        '#DeltaPhi': r'\Delta\phi',
-        '#DeltaEta': r'\Delta\eta',
-        
-        # Single Greek letters
-        '#Delta': r'\Delta',
-        '#delta': r'\delta',
-        '#phi': r'\phi',
-        '#Phi': r'\Phi',
-        '#eta': r'\eta',
-        '#theta': r'\theta',
-        '#mu': r'\mu',
-        '#nu': r'\nu',
-        '#pi': r'\pi',
-        '#Pi': r'\Pi',
-        '#sigma': r'\sigma',
-        '#Sigma': r'\Sigma',
-        '#tau': r'\tau',
-        '#chi': r'\chi',
-        '#alpha': r'\alpha',
-        '#beta': r'\beta',
-        '#gamma': r'\gamma',
-        '#Gamma': r'\Gamma',
-        '#lambda': r'\lambda',
-        '#Lambda': r'\Lambda',
-        '#omega': r'\omega',
-        '#Omega': r'\Omega',
-        '#rho': r'\rho',
-        '#kappa': r'\kappa',
-        '#epsilon': r'\epsilon',
-        '#zeta': r'\zeta',
-        '#xi': r'\xi',
-        '#Xi': r'\Xi',
-        '#psi': r'\psi',
-        '#Psi': r'\Psi',
-        '#upsilon': r'\upsilon',
-        '#Upsilon': r'\Upsilon',
-    }
-    
-    # Convert ROOT-style to LaTeX (order matters for compound symbols)
-    converted_label = label
-    for root_symbol, latex_symbol in root_to_latex.items():
-        converted_label = converted_label.replace(root_symbol, latex_symbol)
-    
-    # Handle any remaining compound symbols that might not be in our dict
-    import re
-    converted_label = re.sub(r'\\Delta([A-Z][a-z]*)', r'\\Delta \1', converted_label)
-    
-    # Check if we have LaTeX math symbols (not just underscores)
-    has_latex_symbols = any(symbol in converted_label for symbol in ['\\', '{', '}', '^'])
-    has_root_symbols = '#' in converted_label
-    
-    # Check for math-like subscripts (like m_{T}, p_{T}, etc.)
-    # These are typically single letter followed by _{something}
-    has_math_subscripts = bool(re.search(r'\b[a-zA-Z]_\{[^}]+\}', converted_label))
-    
-    needs_math_mode = has_latex_symbols or has_root_symbols or has_math_subscripts
-    
-    if needs_math_mode:
-        # Replace spaces with explicit spacing in math mode
-        converted_label = converted_label.replace(' ', r'\ ')
-        return rf"${converted_label}$"
-    else:
-        # For things like "all_sT", just return as-is (no math mode)
-        # Matplotlib will render underscores literally in regular text
-        return converted_label
-
-# Usage example:
-# xlabel_formatted = format_label_for_matplotlib(xlabel)

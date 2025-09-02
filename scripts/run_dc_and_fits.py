@@ -6,9 +6,8 @@ from typing import Callable
 from multiprocessing import Pool
 from fitting import fitter
 from fitting.disc_new import Discriminant
-from references import AnalysisConfig, Reference
+from core import AnalysisConfig, Reference
 from itertools import groupby
-from utils import functions
 import re
 
 def run_fits_multiprocessed(datacards: list[Path]) -> list[Path]:
@@ -189,7 +188,7 @@ def main(workdir, config, fit_only: bool) -> None:
     config = AnalysisConfig(config)
     
     Discriminant.set_class_settings(fitsdir, resultsdir, config)
-    refs = Reference.get_refs_from_file(functions.get_root_files(resultsdir)[0])
+    refs = Reference.get_refs_from(resultsdir)
     refs.sort(key=lambda r: (r.observable_base, r.channel_base, r.channel_sub))
     discs = [Discriminant(disc_name, set(refs)) for disc_name, refs in groupby(refs, key=lambda r: r.observable_base)]
 
