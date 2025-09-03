@@ -1,7 +1,6 @@
 import uproot
 from dataclasses import dataclass, field
 from pathlib import Path
-from utils import functions
 from core.constants import *
 
 @dataclass(frozen=True, eq=True)
@@ -44,25 +43,3 @@ class Reference:
     @property
     def is_simple(self) -> bool:
         return self.observable_sub is None
-
-    # ------------------------------------------------------------------
-    # ROOT file integration
-    # ------------------------------------------------------------------
-    @staticmethod
-    def get_refs_from(resultsdir: Path = None, file: Path = None, hist_dim: str = "All") -> list["Reference"]:
-        if resultsdir:
-            file = functions.get_root_files(resultsdir)[0]
-        else:
-            assert file is not None; ValueError('If resultsdir is not provided, you must provide a file')
-        valid_dims = {"TH1", "TH2", "TH3"}
-        if hist_dim != "All" and hist_dim not in valid_dims:
-            raise ValueError(f"Invalid dim '{hist_dim}'. Choose from 'TH1', 'TH2', 'TH3', or 'All'.")
-
-        with uproot.open(file) as upfile:
-            keys = [
-                key for key, obj in upfile.items(cycle=False)
-                if (obj.classname.startswith(hist_dim if hist_dim != "All" else tuple(valid_dims))
-                    and not key.startswith("yields_")
-                    and key != "generated_sum_corrected")
-            ]
-        return [Reference(k) for k in keys]

@@ -1,10 +1,6 @@
-
-from bamboo_hh.variables import REG 
-from utils.histogram import normalize, get_process_hists, add_hists
-from utils import functions
-from utils.analyzer import Analyzer
+from utils import Analyzer, WorkDirectory
 from utils import histogram as hist_utils
-from core import AnalysisConfig, Reference, WorkDirectory, ObsType
+from core import AnalysisConfig, Reference, ObsType
 
 import argparse
 import numpy as np
@@ -84,7 +80,7 @@ def interpolate_3d_root_histogram(root_hist, take_log: bool=False):
 
     return [x_interp_bin_edges, y_interp_bin_edges, z_interp_bin_edges], interp_bin_contents
 
-def get_correction_data(ref, ratio_hist, take_log):
+def get_correction_data(ref: Reference, ratio_hist, take_log):
     if ObsType.is_var_1d(ref):
         bin_edges, bin_contents = interpolate_1d_root_histogram(ratio_hist, take_log)
         inputs = [cs.Variable(name="xaxis", type="real", description="")]
@@ -126,6 +122,7 @@ def get_correction_data(ref, ratio_hist, take_log):
         data=data)
 
     return corr
+
 def custom_pretty_print_json(input_file, output_file, indent=4):
     print(f"Prettifying {input_file} ...", flush=True)
     def format_list(obj, level=0):
@@ -153,15 +150,16 @@ def main(workdir: Path, config_path: Path, take_log: bool=False, outfilename: st
 
     config = AnalysisConfig(config_path)
     wd = WorkDirectory(workdir)
-    analyzer = Analyzer(wd, config, output_dir=args.outdir)
+    analyzer = Analyzer(wd, config)
 
-    refs = wd.get_references(channels=['SL_4j_resolved'])
+    refs: list[Reference] = wd.get_references(channels=['SL_4j_resolved'])
+    refs = list(filter(lambda ref: ObsType.is_var_1d(ref), refs))  # Only 1D variables for now
     refs.sort(key=lambda r: (r.channel_base, r.observable_base))
 
     all_corrections = []
     for ref in refs:
         print(f'Processing {ref.name}')
-        signal_hist, background_hist = analyzer._get_signal_background(ref)
+        signal_hist, background_hist = analyzer.get_signal_background(ref)
         ratio_hist = hist_utils.compute_likelihood_ratio(signal_hist, background_hist)
         corr = get_correction_data(ref, ratio_hist, take_log)
         all_corrections.append(corr)
@@ -176,7 +174,7 @@ def main(workdir: Path, config_path: Path, take_log: bool=False, outfilename: st
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Compute LRs for a given work directory')
-    parser.add_argument("-w", "--workdir", action="store", type=Path, help="work directory. Ex: Z_OUTPUT/VarsReco")
+    parser.add_argument("workdir", action="store", type=Path, help="work directory. Ex: Z_OUTPUT/VarsReco")
     parser.add_argument("-l", "--take_log", action='store_true', help="Compute LLRs instead of LRs")
     parser.add_argument("-o", "--outfilename", action="store",  help="Compute LLRs instead of LRs")
     parser.add_argument("-c", "--config", action="store",  type=Path, help="Analysis Config path")

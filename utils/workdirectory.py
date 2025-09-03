@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 from core import AnalysisConfig, Reference
-from utils import functions, histogram as hist_utils
+from utils.functions import get_eras, find_mc_processes, get_refs_from
 
 class WorkDirectory:
     """Manages analysis workspace and data access."""
@@ -17,18 +17,18 @@ class WorkDirectory:
     @property
     def processes(self):
         if self._processes is None:
-            self._processes = functions.find_mc_processes(self.resultsdir)
+            self._processes = find_mc_processes(self.resultsdir)
         return self._processes
     
     @property 
     def eras(self):
         if self._eras is None:
-            self._eras = functions.get_eras(self.resultsdir)
+            self._eras = get_eras(self.resultsdir)
         return self._eras
     
-    def get_references(self, channels: Optional[List[str]] = None) -> List[Reference]:
+    def get_references(self, channels: Optional[list[str]] = None) -> list[Reference]:
         """Get filtered and sorted references."""
-        refs = Reference.get_refs_from(self.resultsdir)
+        refs: list[Reference] = get_refs_from(self.resultsdir)
         refs.sort(key=lambda r: (r.channel_base, r.observable_base))
         if channels:
             refs = [ref for ref in refs if ref.channel_base in channels]

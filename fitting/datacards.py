@@ -1,6 +1,6 @@
 from pathlib import Path
 from tabulate import tabulate
-from references import Reference
+from core import Reference
 from utils import functions, histogram
 import subprocess
 import ROOT

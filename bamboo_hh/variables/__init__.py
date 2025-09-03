@@ -6,8 +6,9 @@ from .models import SuperVariable1D, Variable1D, VariableND
 from .register import VariableRegister
 from .definitions import REG  # 1D only; REG is augmented below
 
-__all__ = [
-            "SuperVariable1D", "Variable1D", "VariableND", "VariableRegister", 
+VARS_ND_FILE = Path(__file__).with_name("vars_nd_curated_final.yaml")
+
+__all__ = ["SuperVariable1D", "Variable1D", "VariableND", "VariableRegister", 
            "REG"]
 
 def _registers_vars_nd(path: Path) -> None:
@@ -44,5 +45,5 @@ def _registers_vars_nd(path: Path) -> None:
     for m in v3: REG.reg_var3D(**m)
 
 # Resolve path (env override → file next to this module)
-vars_nd_path = Path(os.getenv("BHH_CURATED_VARS", Path(__file__).with_name("vars_nd_curated.yaml")))
+vars_nd_path = Path(os.getenv("BHH_CURATED_VARS", VARS_ND_FILE))
 _registers_vars_nd(vars_nd_path)

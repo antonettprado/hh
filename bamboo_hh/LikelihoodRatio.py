@@ -148,35 +148,24 @@ class LRFactory:
     #         ]
     #         return [self.create_lr_from_multivar(var_names) for var_names in candidates]
 
-    # def get_lrs_for_multivars_combos(self, min_vars: int, max_vars: int) -> list[LR]:
-
-    #     reserved = [
-    #         'lep0_pt',                                      
-    #         'bjets_mbb', 'bjets_dR', 'bjets_pt_bb', 'bjet0_pt', 'bjet1_pt',         # bjet-vars
-    #         'blnu_mT', 'blnu_pt',                                                   # leptonic-top 
-    #         'trijet_mInv', 'trijet_pt', 'trijet_pt_rat', 'trijet_bijet_dR'          # hadronic-top 
-    #     ]
-
-    #     # Filter to only include variables that actually exist in the selection bundle
-    #     available_vars = [var.name for var in self.sb.vars1D]
-    #     var_names = [var for var in reserved if var in available_vars]
-    #     print(f"Using {len(var_names)} variables for combinations:")
-        
-    #     lrs_for_combinations = []
-    #     for n_vars in range(min_vars, max_vars + 1):
-    #         print(f"Generating {n_vars}-variable combinations...")
-    #         var_combinations = list(combinations(var_names, n_vars))
-    #         print(f"  Found {len(var_combinations)} combinations of {n_vars} variables")
-    #         lrs_for_combinations.extend(self.create_lr_from_multivar(list(var_combo)) for var_combo in var_combinations)
-        
-    #     return lrs_for_combinations
-
     def get_lrs_for_curated_vars(self, min_comb: int, max_comb: int, batch_size: int = None, batch_index: int = None) -> list[LR]:
         from itertools import combinations
         
-        curated_list = ['jj_lnu_dPhi', 'bjets_pt_bb', 'bjets_dR', 'bjets_mbb', 'bjets_dPhi',
-                    'bb_lnu_dPhi', 'bjet_bijet_dR', 'bb_lnu_dR', 'blnu_pt', 'bjets_mean_pt',
-                    'bjets_dEta', 'trijet_bijet_dEta', 'met_pt', 'blnu_mT', 'all_sT', 'all_jets_HT']
+        curated_list = ['jj_l_dR',
+            'jj_lnu_dR',
+            'WW_mInv',
+            'jj_lnu_dPhi',
+            'bjets_pt_bb',
+            'jj_l_dPhi',
+            'bjets_dR',
+            'min_b_l_dR',
+            'trijet_bijet_dPhi',
+            'trijet_pt_rat',
+            'blnu_bl_mInv',
+            'WW_pt',
+            'trijet_bijet_dR',
+            'bjets_mbb',
+            'bjets_dPhi']
         
         # Filter to only include variables that actually exist
         available_vars = [var.name for var in self.sb.vars1D]
@@ -191,11 +180,9 @@ class LRFactory:
             
             if batch_size and total_combos > batch_size:
                 if batch_index is None:
-                    # Return all batches combined
                     print(f"Generating all {n_vars}-variable combinations: {total_combos} total")
                     combinations_to_process = all_combinations
                 else:
-                    # Return specific batch
                     start_idx = batch_index * batch_size
                     end_idx = min(start_idx + batch_size, total_combos)
                     combinations_to_process = all_combinations[start_idx:end_idx]
@@ -217,7 +204,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         parser.add_argument("-log", "--apply_log", action='store_true', help='Calculate LLRs instead of LRs')
         parser.add_argument("--min_comb", type=int, action='store')
         parser.add_argument("--max_comb", type=int, action='store')
-        parser.add_argument("--batch_size", type=int, default=700, action='store')
+        parser.add_argument("--batch_size", type=int, default=1400, action='store')
         parser.add_argument("--batch_idx", type=int, default=None, action='store')
         
     def get_skim(self, sb: SelectionBundle):

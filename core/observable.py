@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 from core import Reference
 
 @dataclass(frozen=True)
@@ -7,7 +6,7 @@ class ObsInfo:
     """Observable classification information."""
     category: str
     dim: int
-    vars: List[str]
+    vars: list[str]
     
     # Type constants
     VAR_1D = "var_1D"
@@ -18,9 +17,12 @@ class ObsInfo:
     LLR_FROM_3D = "llr_from_3D"
     LLR_FACTORIZED = "llr_factorized"
 
-def _classify_observable(ref: Reference) -> ObsInfo:
+def classify_observable(ref: Reference, obs_name = None) -> ObsInfo:
     """Internal classification function."""
-    obs = ref.observable_base
+    if ref:
+        obs = ref.observable_base
+    elif obs_name:
+        obs = obs_name
     vs_count = obs.count('_vs_')
     x_count = obs.count('_x_')
     is_llr = obs.endswith('_llr')
@@ -60,7 +62,7 @@ _obs_cache = {}
 def get_obs_info(ref: Reference) -> ObsInfo:
     """Get observable info with caching."""
     if ref.name not in _obs_cache:
-        _obs_cache[ref.name] = _classify_observable(ref)
+        _obs_cache[ref.name] = classify_observable(ref)
     return _obs_cache[ref.name]
 
 class ObsType:
@@ -116,6 +118,6 @@ class ObsType:
         return get_obs_info(ref).dim
 
     @staticmethod
-    def get_variable_names(ref: Reference) -> List[str]:
+    def get_variable_names(ref: Reference) -> list[str]:
         """Get variable names from observable."""
         return get_obs_info(ref).vars

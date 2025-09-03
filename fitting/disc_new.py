@@ -1,6 +1,5 @@
 from fitting import datacards
-from references.analysis_config import AnalysisConfig
-from references.reference import Reference 
+from core import AnalysisConfig, Reference 
 from utils import histogram, functions
 
 from pathlib import Path

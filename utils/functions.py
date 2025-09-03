@@ -1,5 +1,7 @@
 from pathlib import Path
 from core.constants import *
+from core import Reference
+import uproot
 
 def process_is_bkg(proc: str) -> bool:
     """True if proc is background (i.e. not in signal/data patterns)."""
@@ -56,10 +58,8 @@ def filter_files_by_process_and_era(resultsdir: Path, processes: list[str] = Non
     """
     root_files = get_root_files(resultsdir)
     matched_files = []
-
-    all_processes = set(SUBPROCESS_TO_PROCESS.values())
-    processes = set(processes) if processes is not None else all_processes
-
+    available_processes = find_mc_processes(resultsdir)
+    processes = set(processes) if processes is not None else available_processes
     available_eras = set(get_eras(resultsdir))
     eras = set(eras) if eras is not None else available_eras
     for f in root_files:
@@ -71,7 +71,6 @@ def filter_files_by_process_and_era(resultsdir: Path, processes: list[str] = Non
         except KeyError:
             print(f"Warning: Unknown process or malformed filename: {f.name}")
             continue
-
     return matched_files
 
 def get_files(resultsdir: Path, filenames: list[str]) -> list[Path]:
@@ -82,12 +81,25 @@ def get_files(resultsdir: Path, filenames: list[str]) -> list[Path]:
     """
     all_files = get_root_files(resultsdir)
     filename_set = set(filenames)
-
     matched_files = [f for f in all_files if f.stem in filename_set]
-
-    # Warn or raise if some requested files aren't found
     missing = filename_set - {f.stem for f in matched_files}
     if missing:
         raise FileNotFoundError(f"Missing files in {resultsdir}: {missing}")
-
     return matched_files
+
+def get_refs_from(resultsdir: Path = None, file: Path = None, hist_dim: str = "All") -> list["Reference"]:
+    if resultsdir:
+        file = get_root_files(resultsdir)[0]
+    else:
+        assert file is not None; ValueError('If resultsdir is not provided, you must provide a file')
+    valid_dims = {"TH1", "TH2", "TH3"}
+    if hist_dim != "All" and hist_dim not in valid_dims:
+        raise ValueError(f"Invalid dim '{hist_dim}'. Choose from 'TH1', 'TH2', 'TH3', or 'All'.")
+    with uproot.open(file) as upfile:
+        keys = [
+            key for key, obj in upfile.items(cycle=False)
+            if (obj.classname.startswith(hist_dim if hist_dim != "All" else tuple(valid_dims))
+                and not key.startswith("yields_")
+                and key != "generated_sum_corrected")
+        ]
+    return [Reference(k) for k in keys]
