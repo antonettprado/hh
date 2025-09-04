@@ -1,5 +1,4 @@
 # File: analysis/analyzers/discriminant_analyzer.py
-from bamboo_hh.variables import REG
 from core import AnalysisConfig, Reference, ObsType
 from core.observable import get_obs_info
 from utils.workdirectory import WorkDirectory
@@ -29,6 +28,7 @@ class Analyzer:
         return extract_signal_background(process_hists)
 
     def _build_ax_labels_limits(self, ref: Reference, user_limits = None) -> tuple[PlotLimits, tuple[str, ...]]:
+        from bamboo_hh.variables import REG
         info = get_obs_info(ref)
         limits = user_limits or PlotLimits()
         if ObsType.is_llr(ref):

@@ -7,7 +7,7 @@ from multiprocessing import Pool
 from fitting import fitter
 from fitting.disc_new import Discriminant
 from core import AnalysisConfig, Reference, ObsType
-from utils.results_manager import ResultsManager
+from utils import ResultsManager, functions
 from itertools import groupby
 import re
 
@@ -79,9 +79,9 @@ def main(workdir, config, fit_only: bool) -> None:
     config = AnalysisConfig(config)
     
     Discriminant.set_class_settings(fitsdir, resultsdir, config)
-    refs = Reference.get_refs_from(resultsdir)
+    refs = functions.get_refs_from(resultsdir)
 
-    refs = list(filter(lambda r: ObsType.is_var_1d(r) and r.channel_base == 'SL_4j_resolved', refs))
+    # refs = list(filter(lambda r: ObsType.is_var_1d(r) and r.channel_base == 'SL_4j_resolved', refs))
 
     refs.sort(key=lambda r: (r.observable_base, r.channel_base, r.channel_sub))
     discs = [Discriminant(disc_name, set(refs)) for disc_name, refs in groupby(refs, key=lambda r: r.observable_base)]

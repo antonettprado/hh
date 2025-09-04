@@ -153,7 +153,7 @@ def main(workdir: Path, config_path: Path, take_log: bool=False, outfilename: st
     analyzer = Analyzer(wd, config)
 
     refs: list[Reference] = wd.get_references(channels=['SL_4j_resolved'])
-    refs = list(filter(lambda ref: ObsType.is_var_1d(ref), refs))  # Only 1D variables for now
+    # refs = list(filter(lambda ref: ObsType.is_var_1d(ref), refs))  # Only 1D variables for now
     refs.sort(key=lambda r: (r.channel_base, r.observable_base))
 
     all_corrections = []

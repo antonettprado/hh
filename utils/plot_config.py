@@ -1,6 +1,6 @@
 # File: analysis/plotting/plot_config.py
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional
 
 @dataclass
 class PlotStyle:

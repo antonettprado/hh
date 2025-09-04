@@ -50,10 +50,19 @@ def run_single_job(arg_path):
         }
 
 def main():
-    projectdir = Path('/eos/user/a/anunezde/Z_OUTPUT_eos/Disc_Study_New')
-    crtd_dirs = [d for d in projectdir.iterdir() if d.is_dir and '_crtd_odd_' in d.name]
-    dirs_w_no_results = []
+    projectdir = Path('/eos/user/a/anunezde/Z_OUTPUT_eos/Disc_Study_New/crtd_final')
+    crtd_dirs = [d for d in projectdir.iterdir() if d.is_dir and 'LLR_cmb' in d.name]
+
+    avail_dirs = []
+    print('Available directories:')
     for d in crtd_dirs:
+        yield_file = d / 'yields_2022.tex'
+        if yield_file.exists():
+            avail_dirs.append(d)
+            print(f'\t{d.name}')
+
+    dirs_w_no_results = []
+    for d in avail_dirs:
         results_file = d / 'fits_new' / 'summary_results.txt'
         if not results_file.exists():
             dirs_w_no_results.append(d)
