@@ -7,8 +7,10 @@ from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
 from core import Reference
+from core.observable import classify_observable
 from core.constants import ERA_ENUM
 from itertools import combinations
+from typing import Union
 
 from pathlib import Path
 
@@ -34,29 +36,31 @@ class LR:
 
     lr_binning = { 
                 1: { 'nbins':100, 'min':0, 'max':15 },
-                2: { 'nbins':100, 'min':0, 'max':20 },
-                3: { 'nbins':100, 'min':0, 'max':20 },
-                4: { 'nbins':100, 'min':0, 'max':30 },
-                5: { 'nbins':100, 'min':0, 'max':40 },
-                6: { 'nbins':100, 'min':0, 'max':50 },
-                7: { 'nbins':100, 'min':0, 'max':60 },
-                8: { 'nbins':100, 'min':0, 'max':70 },
+                2: { 'nbins':100, 'min':0, 'max':25 },
+                3: { 'nbins':100, 'min':0, 'max':35 },
+                4: { 'nbins':100, 'min':0, 'max':45 },
+                5: { 'nbins':100, 'min':0, 'max':55 },
+                6: { 'nbins':100, 'min':0, 'max':65 },
+                7: { 'nbins':100, 'min':0, 'max':70 },
+                8: { 'nbins':100, 'min':0, 'max':75 },
                 9: { 'nbins':100, 'min':0, 'max':80 },
-                10:{ 'nbins':100, 'min':0, 'max':100 },
+                10:{ 'nbins':100, 'min':0, 'max':90 },
                 11:{ 'nbins':100, 'min':0, 'max':100 },
-                12:{ 'nbins':100, 'min':0, 'max':100 },
+                13:{ 'nbins':100, 'min':0, 'max':120 },
+                14:{ 'nbins':100, 'min':0, 'max':120 },
+                15:{ 'nbins':100, 'min':0, 'max':140 }
                 }
 
-    def __init__(self, var_names, sel_name, apply_log: bool):
+    def __init__(self, var_names: Union[str, list[str]], sel_name, apply_log: bool):
         self.var_names = var_names if isinstance(var_names, list) else [var_names]
         self.sel_name = sel_name
-        self.base_name = "_x_".join(self.var_names) if len(self.var_names) > 1 else self.var_names[0]
+        self.base_name = "_x_".join(self.var_names)
+        n_vars = len(classify_observable(obs_name=self.base_name).vars)
         self.name = self.base_name + ('_llr' if apply_log else '_lr')
-        # self.ref = build_ref([self.sel_name], [self.name])
         self.ref = Reference.from_parts([self.sel_name], [self.name])
         self.full_title = self.base_name + (' LLR' if apply_log else ' LR')
         binning_type = self.llr_binning if apply_log else self.lr_binning
-        self.__dict__.update(**binning_type.get(len(self.var_names)))
+        self.__dict__.update(**binning_type.get(n_vars))
         self.eqbin = EqBin(self.nbins, self.min, self.max)
         self.data = None  # filled later
 
@@ -123,7 +127,7 @@ class LRFactory:
             return lr
         return [_get_LR_from_var3D(var.name) for var in self.sb.vars3D]
 
-    def create_lr_from_multivar(self, var_names) -> LR:
+    def create_lr_from_multivar(self, var_names: list[str]) -> LR:
         multivar_lr = LR(var_names, self.sb.name, apply_log=self.apply_log)
         relevant_lrs1D = [lr for lr in self.get_lrs_for_vars1D() if lr.base_name in var_names]
         inter_op = op.sum if self.apply_log else op.product
@@ -211,10 +215,10 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         skim_data = {"event": None, "genWeight": None, "era": op.c_int(ERA_ENUM[self.era])}
         skim_data.update({var.name: var.data for var in sb.vars1D})
         skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars1D})
-        skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars2D})
-        skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars3D})
-        skim_data.update({lr.name: lr.data for lr in sb.lrs_for_multivars_select})
-        skim_data.update({lr.name: lr.data for lr in sb.lrs_for_multivars_combos})
+        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars2D})
+        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars3D})
+        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_multivars_select})
+        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_multivars_combos})
         return Skim(sb.name, skim_data, sb.sel)
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
@@ -246,8 +250,8 @@ class LikelihoodRatio(NanoBaseHHbbWW):
             sb.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
             plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars3D ])
 
-        # skims = [self.get_skim(sb) for sb in sels]
-        # plots.extend(skims)
+        skims = [self.get_skim(sb)]
+        plots.extend(skims)
 
         # ===============================================================================
         # ================================== Yields =====================================

@@ -17,7 +17,7 @@ class ObsInfo:
     LLR_FROM_3D = "llr_from_3D"
     LLR_FACTORIZED = "llr_factorized"
 
-def classify_observable(ref: Reference, obs_name = None) -> ObsInfo:
+def classify_observable(ref: Reference = None, obs_name = None) -> ObsInfo:
     """Internal classification function."""
     if ref:
         obs = ref.observable_base
@@ -97,7 +97,7 @@ class ObsType:
         return get_obs_info(ref).category == ObsInfo.LLR_FROM_3D
 
     @staticmethod
-    def is_llr_from_multivar(ref: Reference) -> bool:
+    def is_llr_factorized(ref: Reference) -> bool:
         """Check if observable is LLR from multivar."""
         return get_obs_info(ref).category == ObsInfo.LLR_FACTORIZED
 
@@ -110,7 +110,7 @@ class ObsType:
     @staticmethod
     def is_llr(ref: Reference) -> bool:
         """Check if observable is any LLR type."""
-        return get_obs_info(ref).category.startswith('llr_from_')
+        return get_obs_info(ref).category.startswith('llr')
 
     @staticmethod
     def get_dimensionality(ref: Reference) -> int:

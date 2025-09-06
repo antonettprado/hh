@@ -1,0 +1,129 @@
+tree_sel_names: &tree_sel_names ['SL_4j_resolved']
+
+crtd_vars: &crtd_vars ['jj_l_dR',
+  'jj_lnu_dR',
+  'WW_mInv',
+  'jj_lnu_dPhi',
+  'bjets_pt_bb',
+  'jj_l_dPhi',
+  'bjets_dR',
+  'min_b_l_dR',
+  'trijet_bijet_dPhi',
+  'trijet_pt_rat',
+  'blnu_bl_mInv',
+  'WW_pt',
+  'trijet_bijet_dR',
+  'bjets_mbb',
+  'bjets_dPhi']
+
+crtd_lrs: &crtd_vars ['jj_l_dR_lr',
+  'jj_lnu_dR_lr',
+  'WW_mInv_lr',
+  'jj_lnu_dPhi_lr',
+  'bjets_pt_bb_lr',
+  'jj_l_dPhi_lr',
+  'bjets_dR_lr',
+  'min_b_l_dR_lr',
+  'trijet_bijet_dPhi_lr',
+  'trijet_pt_rat_lr',
+  'blnu_bl_mInv_lr',
+  'WW_pt_lr',
+  'trijet_bijet_dR_lr',
+  'bjets_mbb_lr',
+  'bjets_dPhi_lr']
+
+crtd_both: &crtd_both ['jj_l_dR',
+  'jj_lnu_dR',
+  'WW_mInv',
+  'jj_lnu_dPhi',
+  'bjets_pt_bb',
+  'jj_l_dPhi',
+  'bjets_dR',
+  'min_b_l_dR',
+  'trijet_bijet_dPhi',
+  'trijet_pt_rat',
+  'blnu_bl_mInv',
+  'WW_pt',
+  'trijet_bijet_dR',
+  'bjets_mbb',
+  'bjets_dPhi',
+  'jj_l_dR_lr',
+  'jj_lnu_dR_lr',
+  'WW_mInv_lr',
+  'jj_lnu_dPhi_lr',
+  'bjets_pt_bb_lr',
+  'jj_l_dPhi_lr',
+  'bjets_dR_lr',
+  'min_b_l_dR_lr',
+  'trijet_bijet_dPhi_lr',
+  'trijet_pt_rat_lr',
+  'blnu_bl_mInv_lr',
+  'WW_pt_lr',
+  'trijet_bijet_dR_lr',
+  'bjets_mbb_lr',
+  'bjets_dPhi_lr'
+  ]
+
+models:
+  - name: 'multi_HH_ttbar_tW_crtd_vars'
+    model_type: 'multi'
+    classification:
+      HH: ["ggHH_kl_1_kt_1_bbww"]
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf: 
+      HH_bbWW: 1.0
+      ttbar: 8.0
+      tW: 4.0
+    batch_size: 1024
+    tree_names: *tree_sel_names
+    features: *crtd_vars
+    network:
+      units: 256
+      resnet: True
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: 'adam', lr: 0.001}
+    epochs: 1000
+    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
+
+  - name: 'multi_HH_ttbar_tW_crtd_lrs'
+    model_type: 'multi'
+    classification:
+      HH: ["ggHH_kl_1_kt_1_bbww"]
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf: 
+      HH_bbWW: 1.0
+      ttbar: 8.0
+      tW: 4.0
+    batch_size: 1024
+    tree_names: *tree_sel_names
+    features: *crtd_lrs
+    network:
+      units: 256
+      resnet: True
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: 'adam', lr: 0.001}
+    epochs: 1000
+    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
+
+  - name: 'multi_HH_ttbar_tW_crtd_both'
+    model_type: 'multi'
+    classification:
+      HH: ["ggHH_kl_1_kt_1_bbww"]
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf: 
+      HH_bbWW: 1.0
+      ttbar: 8.0
+      tW: 4.0
+    batch_size: 1024
+    tree_names: *tree_sel_names
+    features: *crtd_both
+    network:
+      units: 256
+      resnet: True
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: 'adam', lr: 0.001}
+    epochs: 1000
+    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}

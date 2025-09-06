@@ -93,7 +93,7 @@ def main(workdir, config, fit_only: bool) -> None:
     fit_results_files: list[Path] = run_fits_multiprocessed(dcs_for_fit)
 
     df = ResultsManager.process_fit_results(fit_results_files)
-    df.sort_values('mu', ascending=True).reset_index(drop=True)
+    df = df.sort_values('mu', ascending=True).reset_index(drop=True)
     ResultsManager.write_summary_file(df, fitsdir / 'summary_results.txt')
     
 if __name__ == "__main__":

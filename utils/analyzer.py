@@ -33,7 +33,7 @@ class Analyzer:
         limits = user_limits or PlotLimits()
         if ObsType.is_llr(ref):
             if info.category == "llr_factorized":
-                labels = ('LLR_{fact}',)
+                labels = (r'LLR_{fact}',)
             else:
                 var_titles = [REG.get_var1D_title(var) for var in info.vars]
                 labels = (f'LLR({",".join(var_titles)})',)
@@ -51,6 +51,7 @@ class Analyzer:
                 if limits.ymin is None: limits.ymin = ymin
                 if limits.ymax is None: limits.ymax = ymax
                 labels = (labels[1], labels[0])  # swap for x,y order
+            print(labels)
         return limits, labels
 
     def _load_interp_lr(self, corr_name: str):
