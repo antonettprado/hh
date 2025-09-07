@@ -1,8 +1,36 @@
+from utils.plot_config import PlotLimits, CMSPlotStyle
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import mplhep
 plt.style.use(mplhep.style.CMS)
+
+def plot_1d_new(values: list, edges: list, legend: list[str], colors: list[str], fill: bool,
+            ax_limits: PlotLimits, plot_style: CMSPlotStyle, save_to=None):
+
+    fig, ax = plot_style.setup_figure()
+    for i in range(len(values)):
+        values_i = values[i]
+        color_i = colors[i]
+        legend_i = legend[i]
+        edges_i = edges[i]
+        ax.step(edges_i[:-1], values_i, where='post', color=color_i, linewidth=2.0, label=legend_i)
+        if fill:
+            ax.fill_between(edges_i[:-1], values_i, step='post', color=color_i, alpha=0.2)
+    xlabel = format_label_for_plt(plot_style.xlabel)
+    ylabel = format_label_for_plt(plot_style.ylabel)
+    ax.set_xlabel(xlabel, fontsize=plot_style.label_fs)
+    ax.set_ylabel(ylabel, fontsize=plot_style.label_fs)
+    ax.tick_params(axis='both', which='major', labelsize=plot_style.tick_fs)
+    ax.set_xlim(ax_limits.xmin, ax_limits.xmax)
+    ax.set_ylim(ax_limits.ymin, ax_limits.ymax)
+    ax.grid(True)
+    ax.legend(fontsize=plot_style.legend_fs, loc="upper right", frameon=True)
+
+    plot_style.add_cms_text(ax)
+    fig.tight_layout()
+    save_fig(plt, save_to)
+    plt.show()
 
 def plot_1d(values: list, edges: list, legend: list[str], colors: list[str], fill: bool,
             xlabel = None, ylabel = None,
@@ -38,6 +66,40 @@ def plot_1d(values: list, edges: list, legend: list[str], colors: list[str], fil
     fig.tight_layout()
     save_fig(plt, save_to)
     plt.show()
+
+def plot_2d_new(values: list, x_edges: list, y_edges: list, color: str, 
+                ax_limits: PlotLimits, plot_style: CMSPlotStyle, save_to=None):
+
+    # Create meshgrid for plotting
+    X, Y = np.meshgrid(x_edges, y_edges)
+    
+    # Set type-specific parameters
+    cmap_lookup = {
+        'blue': 'Blues',
+        'red': 'Reds',
+        'rdy': 'RdYlBu_r'
+    }
+    cmap = cmap_lookup[color]    
+    # cbar_label = f'Normalized {label} Density'
+    
+    # Create plot
+    fig, ax = plot_style.setup_figure()
+    im = ax.pcolormesh(X, Y, values, cmap=cmap, shading='flat')
+    cbar = plt.colorbar(im, ax=ax)
+    # cbar.set_label(cbar_label, fontsize=label_fontsize)
+    xlabel = format_label_for_plt(plot_style.xlabel)
+    ylabel = format_label_for_plt(plot_style.ylabel)
+    ax.set_xlabel(xlabel, fontsize=plot_style.label_fs)
+    ax.set_ylabel(ylabel, fontsize=plot_style.label_fs)
+    ax.tick_params(axis='both', which='major', labelsize=plot_style.tick_fs)
+    ax.set_xlim(ax_limits.xmin, ax_limits.xmax)
+    ax.set_ylim(ax_limits.ymin, ax_limits.ymax)
+    
+    plot_style.add_cms_text(ax)
+    fig.tight_layout()
+    save_fig(plt, save_to)
+    plt.show()
+
 
 def plot_2d(values: list, x_edges: list, y_edges: list, color: str, 
                 xlabel, ylabel, legend: str = None, 
