@@ -18,7 +18,7 @@ def _get_bjets_data(objs):
     boost_bjet0, boost_bjet1 = fat_subjets[0], fat_subjets[1]
     return res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags
 
-@REG.reg_var1D(name="bjets_mbb", nbins=50, min=0, max=300, unit="GeV", title="m_{bb}")
+@REG.reg_var1D(name="bjets_mbb", nbins=50, min=0, max=300, unit="GeV", title="m^{bb}")
 def data_bjets_mbb(objs):
     res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_data(objs)
     res_data = op.invariant_mass(res_bjet0.p4, res_bjet1.p4)
@@ -78,7 +78,7 @@ def data_bjets_pt_bb(objs):
             'DL_res_2b': res_data, 'DL_boosted': boost_data
             }
 
-@REG.reg_var1D(name="bjet0_pt", nbins=50, min=0, max=500, unit="GeV", title="leading b-jet p_{T}")
+@REG.reg_var1D(name="bjet0_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{bjet_0}")
 def data_bjet0_pt(objs):
     res_bjet0, _, boost_bjet0, _, _ = _get_bjets_data(objs)
     res_data = res_bjet0.pt
@@ -91,7 +91,7 @@ def data_bjet0_pt(objs):
             'DL_res_2b': res_data, 'DL_boosted': boost_data
             }
 
-@REG.reg_var1D(name="bjet1_pt", nbins=20, min=0, max=200, unit="GeV", title="sub-leading b-jet p_{T}")
+@REG.reg_var1D(name="bjet1_pt", nbins=20, min=0, max=200, unit="GeV", title="p_{T}^{bjet_1}")
 def data_bjet1_pt(objs):
     _, res_bjet1, _, boost_bjet1, two_btags = _get_bjets_data(objs)
     res_data = res_bjet1.pt
@@ -103,7 +103,7 @@ def data_bjet1_pt(objs):
             'DL_res_2b': res_data, 'DL_boosted': boost_data
             }
 
-@REG.reg_var1D(name="bjets_mean_pt", nbins=30, min=0, max=300, unit="GeV", title="mean b-jet p_{T}")
+@REG.reg_var1D(name="bjets_mean_pt", nbins=30, min=0, max=300, unit="GeV", title="p_{T, avg}^{bjets}")
 def data_bjets_mean_pt(objs):
     res_bjet0, res_bjet1, boost_bjet0, boost_bjet1, two_btags = _get_bjets_data(objs)
     res_data = (res_bjet0.pt + res_bjet1.pt)/2
@@ -165,26 +165,26 @@ def _get_blnu_data(objs):
     blnu_bjet = non_hadronic_top_bjets[op.rng_max_element_index(potential_blnu_pts)]
     return lep_p4, MET, blnu_bjet, blnu_defined
 
-@REG.reg_var1D(name="trijet_mInv", nbins=50, min=0, max=1000, unit="GeV", title="hadronic top mass")
+@REG.reg_var1D(name="trijet_mInv", nbins=50, min=0, max=1000, unit="GeV", title="m^{t_{had}}")
 def data_trijet_mInv(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)   #trijet_defined = True for 4j selections
     data = op.invariant_mass(j0.p4, j1.p4, bjet.p4)
     return {"SL_res_4j_1b": data, "SL_res_4j_2b": data, "SL_4j_resolved": data}
 
-@REG.reg_var1D(name="trijet_pt", nbins=50, min=0, max=500, unit="GeV", title="hadronic top p_{T}")
+@REG.reg_var1D(name="trijet_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{t_{had}}")
 def data_trijet_pt(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)   #trijet_defined = True for 4j selections
     data = (j0.p4 + j1.p4 + bjet.p4).Pt()                   
     return {"SL_res_4j_1b": data, "SL_res_4j_2b": data, "SL_4j_resolved": data}
 
-@REG.reg_var1D(name="trijet_pt_rat", nbins=55, min=0, max=1.1, unit="", title="trijet_pt_rat")
+@REG.reg_var1D(name="trijet_pt_rat", nbins=55, min=0, max=1.1, unit="", title="p_{T, rat}^{t_{had}}")
 def data_trijet_pt_rat(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)   #trijet_defined = True for 4j selections
     trijet = j0.p4 + j1.p4 + bjet.p4
     data = trijet.Pt() / (j0.pt + j1.pt + bjet.pt)
     return {"SL_res_4j_1b": data, "SL_res_4j_2b": data, "SL_4j_resolved": data}
 
-@REG.reg_var1D(name="trijet_bijet_dR", nbins=60, min=0, max=6, unit="", title="#DeltaR(bjj, jj)")
+@REG.reg_var1D(name="trijet_bijet_dR", nbins=60, min=0, max=6, unit="", title="#DeltaR(bjj,jj)")
 def data_trijet_bijet_dR(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)
     bijet = j0.p4 + j1.p4
@@ -192,7 +192,7 @@ def data_trijet_bijet_dR(objs):
     data = op.deltaR(bijet, trijet)
     return {"SL_res_4j_1b": data, "SL_res_4j_2b": data, "SL_4j_resolved": data}
 
-@REG.reg_var1D(name="trijet_bijet_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(bjj, jj)")
+@REG.reg_var1D(name="trijet_bijet_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(bjj,jj)")
 def data_trijet_bijet_dPhi(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)
     bijet = j0.p4 + j1.p4
@@ -200,7 +200,7 @@ def data_trijet_bijet_dPhi(objs):
     data = op.deltaPhi(trijet, bijet)
     return {"SL_res_4j_1b": data, "SL_res_4j_2b": data, "SL_4j_resolved": data}
 
-@REG.reg_var1D(name="trijet_bijet_dEta", nbins=50, min=-7, max=7, unit="", title="#Delta#eta(bjj, jj)")
+@REG.reg_var1D(name="trijet_bijet_dEta", nbins=50, min=-7, max=7, unit="", title="#Delta#eta(bjj,jj)")
 def data_trijet_bijet_dEta(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)
     bijet = j0.p4 + j1.p4
@@ -208,28 +208,28 @@ def data_trijet_bijet_dEta(objs):
     data = trijet.Eta() - bijet.Eta()
     return {"SL_res_4j_1b": data, "SL_res_4j_2b": data, "SL_4j_resolved": data}
 
-@REG.reg_var1D(name="bjet_bijet_dR", nbins=50, min=0, max=5.5, unit="", title="#DeltaR(b, jj)")
+@REG.reg_var1D(name="bjet_bijet_dR", nbins=50, min=0, max=5.5, unit="", title="#DeltaR(b,jj)")
 def data_bjet_bijet_dR(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)
     bijet = j0.p4 + j1.p4
     data = op.deltaR(bjet.p4, bijet)
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="bjet_bijet_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(b, jj)")
+@REG.reg_var1D(name="bjet_bijet_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(b,jj)")
 def data_bjet_bijet_dPhi(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)
     bijet = j0.p4 + j1.p4
     data = op.deltaPhi(bjet.p4, bijet)
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="bjet_bijet_dEta", nbins=50, min=-7, max=7, unit="", title="#Delta#eta(b, jj)")
+@REG.reg_var1D(name="bjet_bijet_dEta", nbins=50, min=-7, max=7, unit="", title="#Delta#eta(b,jj)")
 def data_bjet_bijet_dEta(objs):
     j0, j1, bjet, trijet_defined = _get_trijet_data(objs)
     bijet = j0.p4 + j1.p4
     data = bjet.p4.Eta() - bijet.Eta()
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="blnu_mT", nbins=50, min=0, max=1000, unit="GeV", title="leptonic top m_{T}")
+@REG.reg_var1D(name="blnu_mT", nbins=50, min=0, max=1000, unit="GeV", title="m_{T}^{t_{lep}}")
 def data_blnu_mT(objs):
     l_p4, nu, bjet, blnu_defined = _get_blnu_data(objs)
     data = (l_p4 + nu.p4 + bjet.p4).Mt()
@@ -238,7 +238,7 @@ def data_blnu_mT(objs):
             "SL_resolved": data
             }
 
-@REG.reg_var1D(name="blnu_pt", nbins=40, min=0, max=400, unit="GeV", title="leptonic top p_{T}")
+@REG.reg_var1D(name="blnu_pt", nbins=40, min=0, max=400, unit="GeV", title="p_{T}^{t_{lep}}")
 def data_blnu_pt(objs):
     l_p4, nu, bjet, blnu_defined = _get_blnu_data(objs)
     data =  (l_p4 + nu.p4 + bjet.p4).Pt()
@@ -247,7 +247,7 @@ def data_blnu_pt(objs):
             "SL_resolved": data
             }
 
-@REG.reg_var1D(name="blnu_bl_mInv", nbins=50, min=0, max=1000, unit="GeV", title="leptonic top m_{bl}")
+@REG.reg_var1D(name="blnu_bl_mInv", nbins=50, min=0, max=1000, unit="GeV", title="m_{bl}^{t_{lep}}")
 def data_blnu_bl_mInv(objs):
     l_p4, _, bjet, blnu_defined = _get_blnu_data(objs)
     data = (l_p4 + bjet.p4).M()
@@ -256,7 +256,7 @@ def data_blnu_bl_mInv(objs):
             "SL_resolved": data
             }
 
-@REG.reg_var1D(name="blnu_lnu_mT", nbins=50, min=0, max=1000, unit="GeV", title="leptonic top m_{l#nu}")
+@REG.reg_var1D(name="blnu_lnu_mT", nbins=50, min=0, max=1000, unit="GeV", title="m_{#ell#nu}^^{t_{lep}}")
 def data_blnu_lnu_mT(objs):
     l_p4, nu, _, blnu_defined = _get_blnu_data(objs)
     data = (l_p4 + nu.p4).Mt()
@@ -283,7 +283,7 @@ def _get_total_4vec(objs):
     total_jet_p4 = op.rng_sum(jets, lambda jet:jet.p4, start=zero_p4)
     return total_el_p4 + total_mu_p4 + total_jet_p4 + met.p4
 
-@REG.reg_var1D(name="all_sT", nbins=50, min=0, max=1000, unit="GeV", title="all_sT")
+@REG.reg_var1D(name="all_sT", nbins=50, min=0, max=1000, unit="GeV", title="s_{T}^{all}")
 def data_all_sT(objs):
     electrons, muons, met, jets = _get_total_vars_data(objs)
     total_e_pt = op.rng_sum(electrons, lambda el: el.pt)
@@ -291,23 +291,23 @@ def data_all_sT(objs):
     total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
     return op.sum(total_e_pt, total_mu_pt, total_jet_pt, met.pt)
 
-@REG.reg_var1D(name="all_mInv", nbins=90, min=200, max=2000, unit="GeV", title="all_mInv")
+@REG.reg_var1D(name="all_mInv", nbins=90, min=200, max=2000, unit="GeV", title="m^{all}")
 def data_all_mInv(objs):
     total_4vec = _get_total_4vec(objs)
     return total_4vec.M()
 
-@REG.reg_var1D(name="all_mT", nbins=90, min=200, max=2000, unit="GeV", title="all_mT")
+@REG.reg_var1D(name="all_mT", nbins=90, min=200, max=2000, unit="GeV", title="m_{T}^{all}")
 def data_all_mT(objs):
     total_4vec = _get_total_4vec(objs)
     return total_4vec.Mt()
     
-@REG.reg_var1D(name="all_jets_HT", nbins=75, min=0, max=1500, unit="GeV", title="all_jet_HT")
+@REG.reg_var1D(name="all_jets_HT", nbins=75, min=0, max=1500, unit="GeV", title="H_{T}^{jets}")
 def data_all_jets_HT(objs):
     electrons, muons, met, jets = _get_total_vars_data(objs)
     total_jet_pt = op.rng_sum(jets, lambda jet: jet.pt)
     return total_jet_pt
 
-@REG.reg_var1D(name="all_pt", nbins=50, min=0, max=500, unit="GeV", title="all_pt")
+@REG.reg_var1D(name="all_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{all}")
 def data_all_pt(objs):
     total_4vec = _get_total_4vec(objs)
     return total_4vec.Pt()
@@ -315,13 +315,13 @@ def data_all_pt(objs):
 # ====================
 # misc vars
 # ====================    
-@REG.reg_var1D(name="mjj", nbins=30, min=0, max=300, unit="GeV", title="mjj")
+@REG.reg_var1D(name="mjj", nbins=30, min=0, max=300, unit="GeV", title="m^{jj}")
 def data_mjj(objs):
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for all 4j selections
     data = op.invariant_mass(jj_W[0].p4, jj_W[1].p4)
     return {'SL_res_4j_1b': data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="WW_mInv", nbins=100, min=0, max=1000, unit="GeV", title="m_{WW}")
+@REG.reg_var1D(name="WW_mInv", nbins=100, min=0, max=1000, unit="GeV", title="m^{WW}")
 def data_WW_mInv(objs):
     met = objs['met']
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
@@ -332,7 +332,7 @@ def data_WW_mInv(objs):
     return { 'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_4j_resolved': sl_data, 
             'DL_res_1b': dl_data, 'DL_res_2b': dl_data }
 
-@REG.reg_var1D(name="WW_mT", nbins=100, min=0, max=1000, unit="GeV", title="WW m_{T}")
+@REG.reg_var1D(name="WW_mT", nbins=100, min=0, max=1000, unit="GeV", title="m_{T}^{WW}")
 def data_WW_mT(objs):
     met = objs['met']
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
@@ -343,7 +343,7 @@ def data_WW_mT(objs):
     return {'SL_res_4j_1b': sl_data, 'SL_res_4j_2b': sl_data, 'SL_4j_resolved': sl_data, 
             'DL_res_1b': dl_data, 'DL_res_2b': dl_data }
 
-@REG.reg_var1D(name="WW_pt", nbins=150, min=0, max=600, unit="GeV", title="WW p_T")
+@REG.reg_var1D(name="WW_pt", nbins=150, min=0, max=600, unit="GeV", title="p_{T}^{WW}")
 def data_WW_pt(objs):
     met = objs['met']
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
@@ -357,28 +357,28 @@ def data_WW_pt(objs):
 # ====================
 # lj vars
 # ====================
-@REG.reg_var1D(name="jj_l_dEta", nbins=50, min=-4, max=4, unit="", title="#Delta#eta(jj, l)")
+@REG.reg_var1D(name="jj_l_dEta", nbins=50, min=-4, max=4, unit="", title="#Delta#eta(jj,#ell)")
 def data_jj_l_dEta(objs):
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
     lep0_p4, _ = _get_leptons_p4(objs)
     data = lep0_p4.Eta() - (jj_W[0].p4 + jj_W[1].p4).Eta()
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="jj_l_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(jj, l)")
+@REG.reg_var1D(name="jj_l_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(jj,#ell)")
 def data_jj_l_dPhi(objs):
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
     lep0_p4, _ = _get_leptons_p4(objs)
     data = op.deltaPhi(lep0_p4, jj_W[0].p4 + jj_W[1].p4)
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="jj_l_dR", nbins=50, min=0, max=5.5, unit="", title="#DeltaR(jj, l)")
+@REG.reg_var1D(name="jj_l_dR", nbins=50, min=0, max=5.5, unit="", title="#DeltaR(jj,#ell)")
 def data_jj_l_dR(objs):
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
     lep0_p4, _ = _get_leptons_p4(objs)
     data = op.deltaR(lep0_p4, jj_W[0].p4 + jj_W[1].p4)
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="jj_lnu_dEta", nbins=50, min=-4, max=4, unit="", title="#Delta#eta(jj, l#nu)")
+@REG.reg_var1D(name="jj_lnu_dEta", nbins=50, min=-4, max=4, unit="", title="#Delta#eta(jj,#ell#nu)")
 def data_jj_lnu_dEta(objs):
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -386,7 +386,7 @@ def data_jj_lnu_dEta(objs):
     data = (lep0_p4 + met.p4).Eta() - (jj_W[0].p4 + jj_W[1].p4).Eta()
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="jj_lnu_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(jj, l#nu)")
+@REG.reg_var1D(name="jj_lnu_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(jj,#ell#nu)")
 def data_jj_lnu_dPhi(objs):
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -394,7 +394,7 @@ def data_jj_lnu_dPhi(objs):
     data = op.deltaPhi(lep0_p4 + met.p4, jj_W[0].p4 + jj_W[1].p4)
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="jj_lnu_dR", nbins=50, min=-4, max=4, unit="", title="#DeltaR(jj, l#nu)")
+@REG.reg_var1D(name="jj_lnu_dR", nbins=50, min=-4, max=4, unit="", title="#DeltaR(jj,#ell#nu)")
 def data_jj_lnu_dR(objs):
     jj_W, two_nonbtags = _get_jj_W(objs)    # two_nonbtags = True for 4j selections only
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -402,7 +402,7 @@ def data_jj_lnu_dR(objs):
     data = op.deltaR(lep0_p4 + met.p4, jj_W[0].p4 + jj_W[1].p4)
     return {'SL_res_4j_1b':data, 'SL_res_4j_2b':data, 'SL_4j_resolved':data}
 
-@REG.reg_var1D(name="bb_lnu_dEta", nbins=50, min=-4, max=4, unit="", title="#Delta#eta(bb, l#nu)")
+@REG.reg_var1D(name="bb_lnu_dEta", nbins=50, min=-4, max=4, unit="", title="#Delta#eta(bb,#ell#nu)")
 def data_bb_lnu_dEta(objs):
     bjet0, bjet1, _, _, two_btags = _get_bjets_data(objs)
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -412,7 +412,7 @@ def data_bb_lnu_dEta(objs):
             'SL_res_4j_1b': data, 'SL_res_4j_2b': data, 'SL_4j_resolved': data,
             'SL_resolved': data}
 
-@REG.reg_var1D(name="bb_lnu_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(bb, l#nu)")
+@REG.reg_var1D(name="bb_lnu_dPhi", nbins=50, min=-4, max=4, unit="", title="#Delta#phi(bb,#ell#nu)")
 def data_bb_lnu_dPhi(objs):
     bjet0, bjet1, _, _, two_btags = _get_bjets_data(objs)
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -422,7 +422,7 @@ def data_bb_lnu_dPhi(objs):
             'SL_res_4j_1b': data, 'SL_res_4j_2b': data, 'SL_4j_resolved': data,
             'SL_resolved': data}
 
-@REG.reg_var1D(name="bb_lnu_dR", nbins=50, min=-4, max=4, unit="", title="#DeltaR(bb, l#nu)")
+@REG.reg_var1D(name="bb_lnu_dR", nbins=50, min=-4, max=4, unit="", title="#DeltaR(bb,#ell#nu)")
 def data_bb_lnu_dR(objs):
     bjet0, bjet1, _, _, two_btags = _get_bjets_data(objs)
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -432,7 +432,7 @@ def data_bb_lnu_dR(objs):
             'SL_res_4j_1b': data, 'SL_res_4j_2b': data, 'SL_4j_resolved': data,
             'SL_resolved': data}
 
-@REG.reg_var1D(name="min_b_l_dPhi", nbins=50, min=-4, max=4, unit="", title="min_{b}(#Delta#phi(b, l))")
+@REG.reg_var1D(name="min_b_l_dPhi", nbins=50, min=-4, max=4, unit="", title="min_{b}(#Delta#phi(b,#ell))")
 def data_min_b_l_dPhi(objs):
     bjet0, bjet1, _, _, two_btags = _get_bjets_data(objs)
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -442,7 +442,7 @@ def data_min_b_l_dPhi(objs):
             "SL_resolved": data
             }
 
-@REG.reg_var1D(name="min_b_l_dR", nbins=50, min=0, max=5.5, unit="", title="min_{b}(#DeltaR(b, l))")
+@REG.reg_var1D(name="min_b_l_dR", nbins=50, min=0, max=5.5, unit="", title="min_{b}(#DeltaR(b,#ell))")
 def data_min_b_l_dR(objs):
     bjet0, bjet1, _, _, two_btags = _get_bjets_data(objs)
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -452,7 +452,7 @@ def data_min_b_l_dR(objs):
             "SL_resolved": data
             }
     
-@REG.reg_var1D(name="min_b_lnu_dPhi", nbins=50, min=-4, max=4, unit="", title="min_{b}(#Delta#phi(b, l#nu))")
+@REG.reg_var1D(name="min_b_lnu_dPhi", nbins=50, min=-4, max=4, unit="", title="min_{b}(#Delta#phi(b,#ell#nu))")
 def data_min_b_lnu_dPhi(objs):
     bjet0, bjet1, _, _, two_btags = _get_bjets_data(objs)
     lep0_p4, _ = _get_leptons_p4(objs)
@@ -508,51 +508,51 @@ def _get_jet_objects(objs):
     ak8_btags = objs["ak8_btags"]
     return ak4_jets, ak4_btags, ak8_btags
 
-@REG.reg_var1D(name="lep0_pt", nbins=50, min=0, max=500, unit="GeV", title="Lepton0 pt")
+@REG.reg_var1D(name="lep0_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{#ell_0}")
 def data_lep0_pt(objs):
     lep0_p4, _ = _get_leptons_p4(objs)
     return lep0_p4.Pt()
 
-@REG.reg_var1D(name="lep0_eta", nbins=50, min=-2.5, max=2.5, unit="GeV", title="Lepton0 #eta")
+@REG.reg_var1D(name="lep0_eta", nbins=50, min=-2.5, max=2.5, unit="GeV", title="#eta^{#ell_0}")
 def data_lep0_eta(objs):
     lep0_p4, _ = _get_leptons_p4(objs)
     return lep0_p4.Eta()
 
-@REG.reg_var1D(name="lep0_phi", nbins=50, min=-2.5, max=2.5, unit="GeV", title="Lepton0 #phi")
+@REG.reg_var1D(name="lep0_phi", nbins=50, min=-2.5, max=2.5, unit="GeV", title="#phi^{#ell_0}")
 def data_lep0_phi(objs):
     lep0_p4, _ = _get_leptons_p4(objs)
     return lep0_p4.Phi()
 
-@REG.reg_var1D(name="lep0_iso", nbins=50, min=0, max=1, unit="", title="Lepton0 isolation")
+@REG.reg_var1D(name="lep0_iso", nbins=50, min=0, max=1, unit="", title="#it{I}^{#ell_0}")
 def data_lep0_iso(objs):
     lep0_iso, _ = _get_leptons_iso(objs)
     return lep0_iso
 
-@REG.reg_var1D(name="lep1_pt", nbins=50, min=0, max=500, unit="GeV", title="Lepton1 pt")
+@REG.reg_var1D(name="lep1_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{#ell_1}")
 def data_lep1_pt(objs):
     _, lep1_p4 = _get_leptons_p4(objs)
     data = lep1_p4.Pt()
     return {"DL_res_1b": data, "DL_res_2b": data, "DL_boosted": data}
 
-@REG.reg_var1D(name="lep1_eta", nbins=50, min=-2.5, max=2.5, unit="GeV", title="Lepton1 #eta")
+@REG.reg_var1D(name="lep1_eta", nbins=50, min=-2.5, max=2.5, unit="GeV", title="#eta^{#ell_1}")
 def data_lep1_eta(objs):
     _, lep1_p4 = _get_leptons_p4(objs)
     data = lep1_p4.Eta()
     return {"DL_res_1b": data, "DL_res_2b": data, "DL_boosted": data}
 
-@REG.reg_var1D(name="lep1_phi", nbins=50, min=-2.5, max=2.5, unit="GeV", title="Lepton1 #phi")
+@REG.reg_var1D(name="lep1_phi", nbins=50, min=-2.5, max=2.5, unit="GeV", title="#phi^{#ell_1}")
 def data_lep1_phi(objs):
     _, lep1_p4 = _get_leptons_p4(objs)
     data = lep1_p4.Phi()
     return {"DL_res_1b": data, "DL_res_2b": data, "DL_boosted": data}
 
-@REG.reg_var1D(name="lep1_iso", nbins=50, min=0, max=1, unit="", title="Lepton1 isolation")
+@REG.reg_var1D(name="lep1_iso", nbins=50, min=0, max=1, unit="", title="#it{I}^{#ell_1}")
 def data_lep1_iso(objs):
     _, lep1_iso = _get_leptons_iso(objs)
     data = lep1_iso
     return {"DL_res_1b": data, "DL_res_2b": data, "DL_boosted": data}
 
-@REG.reg_var1D(name="ak4_jet0_pt", nbins=50, min=0, max=500, unit="GeV", title="AK4_0 pt")
+@REG.reg_var1D(name="ak4_jet0_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{j_0}")
 def data_ak4_jet0_pt(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[0].pt
@@ -563,7 +563,7 @@ def data_ak4_jet0_pt(objs):
             'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet0_eta", nbins=50, min=-4, max=4, unit="", title="AK4_0 #eta")
+@REG.reg_var1D(name="ak4_jet0_eta", nbins=50, min=-4, max=4, unit="", title="#eta^{j_0}")
 def data_ak4_jet0_eta(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[0].eta
@@ -574,7 +574,7 @@ def data_ak4_jet0_eta(objs):
             'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet0_phi", nbins=50, min=-4, max=4, unit="", title="AK4_0 #phi")
+@REG.reg_var1D(name="ak4_jet0_phi", nbins=50, min=-4, max=4, unit="", title="#phi^{j_0}")
 def data_ak4_jet0_phi(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data =  ak4_jets[0].phi
@@ -585,7 +585,7 @@ def data_ak4_jet0_phi(objs):
             'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet0_bscore", nbins=50, min=0, max=1, unit="", title="AK4_0 btag score")
+@REG.reg_var1D(name="ak4_jet0_bscore", nbins=50, min=0, max=1, unit="", title="D_{btag}^{j_0}")
 def data_ak4_jet0_bscore(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[0].btagPNetB
@@ -596,7 +596,7 @@ def data_ak4_jet0_bscore(objs):
             'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet1_pt", nbins=50, min=0, max=500, unit="GeV", title="AK4_1 pt")
+@REG.reg_var1D(name="ak4_jet1_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{j_1}")
 def data_ak4_jet1_pt(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[1].pt
@@ -608,7 +608,7 @@ def data_ak4_jet1_pt(objs):
             'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet1_eta", nbins=50, min=-4, max=4, unit="", title="AK4_1 #eta")
+@REG.reg_var1D(name="ak4_jet1_eta", nbins=50, min=-4, max=4, unit="", title="#eta^{j_1}")
 def data_ak4_jet1_eta(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[1].eta
@@ -620,7 +620,7 @@ def data_ak4_jet1_eta(objs):
             'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet1_phi", nbins=50, min=-4, max=4, unit="", title="AK4_1 #phi")
+@REG.reg_var1D(name="ak4_jet1_phi", nbins=50, min=-4, max=4, unit="", title="#phi^{j_1}")
 def data_ak4_jet1_phi(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[1].phi
@@ -632,7 +632,7 @@ def data_ak4_jet1_phi(objs):
             'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet1_bscore", nbins=50, min=0, max=1, unit="", title="AK4_1 btag score")
+@REG.reg_var1D(name="ak4_jet1_bscore", nbins=50, min=0, max=1, unit="", title="D_{btag}^{j_1}")
 def data_ak4_jet1_bscore(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[1].btagPNetB
@@ -645,7 +645,7 @@ def data_ak4_jet1_bscore(objs):
             }
 
 # ===================================================
-@REG.reg_var1D(name="ak4_jet2_pt", nbins=50, min=0, max=500, unit="GeV", title="AK4_2 pt")
+@REG.reg_var1D(name="ak4_jet2_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{j_2}")
 def data_ak4_jet2_pt(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[2].pt
@@ -656,7 +656,7 @@ def data_ak4_jet2_pt(objs):
             # 'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet2_eta", nbins=50, min=-4, max=4, unit="", title="AK4_2 #eta")
+@REG.reg_var1D(name="ak4_jet2_eta", nbins=50, min=-4, max=4, unit="", title="#eta^{j_2}")
 def data_ak4_jet2_eta(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[2].eta
@@ -667,7 +667,7 @@ def data_ak4_jet2_eta(objs):
             # 'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet2_phi", nbins=50, min=-4, max=4, unit="", title="AK4_2 #phi")
+@REG.reg_var1D(name="ak4_jet2_phi", nbins=50, min=-4, max=4, unit="", title="#phi^{j_2}")
 def data_ak4_jet2_phi(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[2].phi
@@ -678,7 +678,7 @@ def data_ak4_jet2_phi(objs):
             # 'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet2_bscore", nbins=50, min=0, max=1, unit="", title="AK4_2 btag score")
+@REG.reg_var1D(name="ak4_jet2_bscore", nbins=50, min=0, max=1, unit="", title="D_{btag}^{j_2}")
 def data_ak4_jet2_bscore(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[2].btagPNetB
@@ -690,7 +690,7 @@ def data_ak4_jet2_bscore(objs):
             }
 
 # ===================================================
-@REG.reg_var1D(name="ak4_jet3_pt", nbins=50, min=0, max=500, unit="GeV", title="AK4_3 pt")
+@REG.reg_var1D(name="ak4_jet3_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{j_3}")
 def data_ak4_jet3_pt(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[3].pt
@@ -698,7 +698,7 @@ def data_ak4_jet3_pt(objs):
             # 'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet3_eta", nbins=50, min=-4, max=4, unit="", title="AK4_3 #eta")
+@REG.reg_var1D(name="ak4_jet3_eta", nbins=50, min=-4, max=4, unit="", title="#eta^{j_3}")
 def data_ak4_jet3_eta(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[3].eta
@@ -706,7 +706,7 @@ def data_ak4_jet3_eta(objs):
             # 'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet3_phi", nbins=50, min=-4, max=4, unit="", title="AK4_3 #phi")
+@REG.reg_var1D(name="ak4_jet3_phi", nbins=50, min=-4, max=4, unit="", title="#phi^{j_3}")
 def data_ak4_jet3_phi(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[3].phi
@@ -714,7 +714,7 @@ def data_ak4_jet3_phi(objs):
             # 'DL_res_1b': data, 'DL_res_2b': data
             }
 
-@REG.reg_var1D(name="ak4_jet3_bscore", nbins=50, min=0, max=1, unit="", title="AK4_3 btag score")
+@REG.reg_var1D(name="ak4_jet3_bscore", nbins=50, min=0, max=1, unit="", title="D_{btag}^{j_3}")
 def data_ak4_jet3_bscore(objs):
     ak4_jets = objs['sorted_ak4_jets']
     data = ak4_jets[3].btagPNetB
@@ -723,78 +723,78 @@ def data_ak4_jet3_bscore(objs):
             }
 
 
-@REG.reg_var1D(name="ak8_btag0_pt", nbins=100, min=0, max=1000, unit="GeV", title="AK8_0 pt")
+@REG.reg_var1D(name="ak8_btag0_pt", nbins=100, min=0, max=1000, unit="GeV", title="p_{T}^{btag_0^{AK8}}")
 def data_ak8_btag0_pt(objs):
     ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objs)
     data = ak8_btags[0].pt
     return {'SL_boosted': data, 'DL_boosted': data}
 
-@REG.reg_var1D(name="ak8_btag0_eta", nbins=50, min=-4, max=4, unit="", title="AK8_0 #eta")
+@REG.reg_var1D(name="ak8_btag0_eta", nbins=50, min=-4, max=4, unit="", title="#eta^{btag_0^{AK8}}")
 def data_ak8_btag0_eta(objs):
     ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objs)
     data = ak8_btags[0].eta
     return {'SL_boosted': data, 'DL_boosted': data}
 
-@REG.reg_var1D(name="ak8_btag0_phi", nbins=50, min=-4, max=4, unit="", title="AK8_0 #phi")
+@REG.reg_var1D(name="ak8_btag0_phi", nbins=50, min=-4, max=4, unit="", title="#phi^{btag_0^{AK8}}")
 def data_ak8_btag0_phi(objs):
     ak4_jets, ak4_btags, ak8_btags = _get_jet_objects(objs)
     data = ak8_btags[0].phi
     return {'SL_boosted': data, 'DL_boosted': data}
 
-@REG.reg_var1D(name="met_pt", nbins=50, min=0, max=500, unit="GeV", title="MET pt")
+@REG.reg_var1D(name="met_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{MET}")
 def data_met_pt(objs):
     met = objs['met']
     return met.pt
 
-@REG.reg_var1D(name="met_phi", nbins=50, min=-4, max=4, unit="GeV", title="MET #phi")
+@REG.reg_var1D(name="met_phi", nbins=50, min=-4, max=4, unit="GeV", title="#phi^{MET}")
 def data_met_phi(objs):
     met = objs['met']
     return met.phi
 
-@REG.reg_var1D(name="nAK4", nbins=30, min=0, max=30, unit="", title="nAK4")
+@REG.reg_var1D(name="nAK4", nbins=30, min=0, max=30, unit="", title="n^{jets}")
 def data_nAK4(objs):
     return op.static_cast("Float_t", op.rng_len(objs["ak4_jets"]))
 
-@REG.reg_var1D(name="nAK4_btag", nbins=30, min=0, max=30, unit="", title="nAK4_btag")
+@REG.reg_var1D(name="nAK4_btag", nbins=30, min=0, max=30, unit="", title="n^{btags}")
 def data_nAK4_btag(objs):
     return op.static_cast("Float_t",op.rng_len(objs["ak4_btags"]))
 
-@REG.reg_var1D(name="nAK4_nonbtag", nbins=30, min=0, max=30, unit="", title="nAK4_nonbtag")
+@REG.reg_var1D(name="nAK4_nonbtag", nbins=30, min=0, max=30, unit="", title="n^{nonbtags}")
 def data_nAK4_nonbtag(objs):
     return op.static_cast("Float_t", op.rng_len(objs["ak4_jets"]) - op.rng_len(objs["ak4_btags"]))
 
-@REG.reg_var1D(name="nAK8_btag", nbins=30, min=0, max=30, unit="", title="nAK8_btag")
+@REG.reg_var1D(name="nAK8_btag", nbins=30, min=0, max=30, unit="", title="n^{btag^{AK8}}")
 def data_nAK8_btag(objs):
     return op.static_cast("Float_t", op.rng_len(objs["ak8_btags"]))
 
 # ====================
 # ll vars
 # ====================
-@REG.reg_var1D(name="mll", nbins=100, min=0, max=400, unit="GeV", title="m_{ll}")
+@REG.reg_var1D(name="mll", nbins=100, min=0, max=400, unit="GeV", title="m^{#ell#ell}")
 def data_mll(objs):
     lep0_p4, lep1_p4 = _get_leptons_p4(objs)
     data = op.invariant_mass(lep0_p4, lep1_p4)
     return {'DL_res_1b':data, 'DL_res_2b':data}
 
-@REG.reg_var1D(name="ll_dR", nbins=100, min=0, max=7, unit="", title="#DeltaR(l,l)")
+@REG.reg_var1D(name="ll_dR", nbins=100, min=0, max=7, unit="", title="#DeltaR(#ell,#ell)")
 def data_ll_dR(objs):
     lep0_p4, lep1_p4 = _get_leptons_p4(objs)
     data = op.deltaR(lep0_p4, lep1_p4)
     return {'DL_res_1b':data, 'DL_res_2b':data}
 
-@REG.reg_var1D(name="ll_dPhi", nbins=100, min=0, max=7, unit="", title="#Delta#Phi(l,l)")
+@REG.reg_var1D(name="ll_dPhi", nbins=100, min=0, max=7, unit="", title="#Delta#Phi(#ell,#ell)")
 def data_ll_dPhi(objs):
     lep0_p4, lep1_p4 = _get_leptons_p4(objs)
     data = op.deltaPhi(lep0_p4, lep1_p4)
     return {'DL_res_1b':data, 'DL_res_2b':data}
 
-@REG.reg_var1D(name="ll_dEta", nbins=100, min=0, max=7, unit="", title="#Delta#Eta(l,l)")
+@REG.reg_var1D(name="ll_dEta", nbins=100, min=0, max=7, unit="", title="#Delta#Eta(#ell,#ell)")
 def data_ll_dEta(objs):
     lep0_p4, lep1_p4 = _get_leptons_p4(objs)
     data = lep0_p4.Eta()-lep1_p4.Eta()
     return {'DL_res_1b':data, 'DL_res_2b':data}
 
-@REG.reg_var1D(name="ll_pt", nbins=100, min=0, max=400, unit="", title="ll p_T")
+@REG.reg_var1D(name="ll_pt", nbins=100, min=0, max=400, unit="", title="p_T^{#ell#ell}")
 def data_ll_pt(objs):
     lep0_p4, lep1_p4 = _get_leptons_p4(objs)
     data = (lep0_p4 + lep1_p4).Pt()

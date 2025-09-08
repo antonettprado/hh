@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import mplhep
 plt.style.use(mplhep.style.CMS)
 
-def plot_1d_new(values: list, edges: list, legend: list[str], colors: list[str], fill: bool,
-            ax_limits: PlotLimits, plot_style: CMSPlotStyle, save_to=None):
+def plot_1d(values: list, edges: list, legend: list[str], colors: list[str], fill: bool,
+            plot_limits: PlotLimits, plot_style: CMSPlotStyle, save_to=None):
 
     fig, ax = plot_style.setup_figure()
     for i in range(len(values)):
@@ -19,11 +19,12 @@ def plot_1d_new(values: list, edges: list, legend: list[str], colors: list[str],
             ax.fill_between(edges_i[:-1], values_i, step='post', color=color_i, alpha=0.2)
     xlabel = format_label_for_plt(plot_style.xlabel)
     ylabel = format_label_for_plt(plot_style.ylabel)
+    print(xlabel)
     ax.set_xlabel(xlabel, fontsize=plot_style.label_fs)
     ax.set_ylabel(ylabel, fontsize=plot_style.label_fs)
     ax.tick_params(axis='both', which='major', labelsize=plot_style.tick_fs)
-    ax.set_xlim(ax_limits.xmin, ax_limits.xmax)
-    ax.set_ylim(ax_limits.ymin, ax_limits.ymax)
+    ax.set_xlim(plot_limits.xmin, plot_limits.xmax)
+    ax.set_ylim(plot_limits.ymin, plot_limits.ymax)
     ax.grid(True)
     ax.legend(fontsize=plot_style.legend_fs, loc="upper right", frameon=True)
 
@@ -32,46 +33,16 @@ def plot_1d_new(values: list, edges: list, legend: list[str], colors: list[str],
     save_fig(plt, save_to)
     plt.show()
 
-def plot_1d(values: list, edges: list, legend: list[str], colors: list[str], fill: bool,
-            xlabel = None, ylabel = None,
-            xmin = None, xmax = None,
-            ymin = None, ymax = None,
-            label_fontsize=18, tick_fontsize=18, legend_fontsize=18, cms_fontsize=18,
-            rlabel = "13.6 TeV", figsize=(8, 6), save_to=None):
-
-    fig, ax = plt.subplots(figsize=figsize)
-    for i in range(len(values)):
-        values_i = values[i]
-        color_i = colors[i]
-        legend_i = legend[i]
-        edges_i = edges[i]
-        ax.step(edges_i[:-1], values_i, where='post', color=color_i, linewidth=2.0, label=legend_i)
-        if fill:
-            ax.fill_between(edges_i[:-1], values_i, step='post', color=color_i, alpha=0.2)
-    xlabel = format_label_for_plt(xlabel)
-    ylabel = format_label_for_plt(ylabel)
-    ax.set_xlabel(xlabel, fontsize=label_fontsize)
-    ax.set_ylabel(ylabel, fontsize=label_fontsize)
-    ax.tick_params(axis='both', which='major', labelsize=tick_fontsize)
-    ax.set_xlim(xmin, xmax)
-    # ax.set_ylim(0, max(*[vals.max() for vals in values]) * 1.2)
-    ax.set_ylim(ymin, ymax)
-    ax.grid(True)
-    ax.legend(fontsize=legend_fontsize, loc="upper right", frameon=True)
-
-    mplhep.cms.text("Simulation Preliminary", ax=ax, fontsize=cms_fontsize, loc=0)
-    ax.text(1.0, 1.0, rlabel, transform=ax.transAxes, fontsize=cms_fontsize,
-        horizontalalignment='right', verticalalignment='bottom')
-
-    fig.tight_layout()
-    save_fig(plt, save_to)
-    plt.show()
-
-def plot_2d_new(values: list, x_edges: list, y_edges: list, color: str, 
-                ax_limits: PlotLimits, plot_style: CMSPlotStyle, save_to=None):
+def plot_2d(values: list, x_edges: list, y_edges: list, color: str, 
+                plot_limits: PlotLimits, plot_style: CMSPlotStyle, save_to=None):
 
     # Create meshgrid for plotting
     X, Y = np.meshgrid(x_edges, y_edges)
+
+    # Debug: check the actual data range
+    print(f"X range: {x_edges[0]} to {x_edges[-1]}")
+    print(f"Y range: {y_edges[0]} to {y_edges[-1]}")
+    print(f"Axis limits: x({plot_limits.xmin}, {plot_limits.xmax}), y({plot_limits.ymin}, {plot_limits.ymax})")
     
     # Set type-specific parameters
     cmap_lookup = {
@@ -92,50 +63,10 @@ def plot_2d_new(values: list, x_edges: list, y_edges: list, color: str,
     ax.set_xlabel(xlabel, fontsize=plot_style.label_fs)
     ax.set_ylabel(ylabel, fontsize=plot_style.label_fs)
     ax.tick_params(axis='both', which='major', labelsize=plot_style.tick_fs)
-    ax.set_xlim(ax_limits.xmin, ax_limits.xmax)
-    ax.set_ylim(ax_limits.ymin, ax_limits.ymax)
+    ax.set_xlim(plot_limits.xmin, plot_limits.xmax)
+    ax.set_ylim(plot_limits.ymin, plot_limits.ymax)
     
     plot_style.add_cms_text(ax)
-    fig.tight_layout()
-    save_fig(plt, save_to)
-    plt.show()
-
-
-def plot_2d(values: list, x_edges: list, y_edges: list, color: str, 
-                xlabel, ylabel, legend: str = None, 
-                xmin=None, xmax=None, ymin=None, ymax=None,
-                label_fontsize=18, tick_fontsize=18, legend_fontsize=18, cms_fontsize=18,
-                rlabel = "13.6 TeV", figsize=(8, 6), save_to=None):
-
-    # Create meshgrid for plotting
-    X, Y = np.meshgrid(x_edges, y_edges)
-    
-    # Set type-specific parameters
-    cmap_lookup = {
-        'blue': 'Blues',
-        'red': 'Reds',
-        'rdy': 'RdYlBu_r'
-    }
-    cmap = cmap_lookup[color]    
-    # cbar_label = f'Normalized {label} Density'
-    
-    # Create plot
-    fig, ax = plt.subplots(figsize=figsize)
-    im = ax.pcolormesh(X, Y, values, cmap=cmap, shading='flat')
-    cbar = plt.colorbar(im, ax=ax)
-    # cbar.set_label(cbar_label, fontsize=label_fontsize)
-    xlabel = format_label_for_plt(xlabel)
-    ylabel = format_label_for_plt(ylabel)
-    ax.set_xlabel(xlabel, fontsize=label_fontsize)
-    ax.set_ylabel(ylabel, fontsize=label_fontsize)
-    ax.tick_params(axis='both', which='major', labelsize=tick_fontsize)
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
-    
-    mplhep.cms.text("Simulation Preliminary", ax=ax, fontsize=cms_fontsize, loc=0)
-    ax.text(1.0, 1.0, rlabel, transform=ax.transAxes, fontsize=cms_fontsize,
-            horizontalalignment='right', verticalalignment='bottom')
-    
     fig.tight_layout()
     save_fig(plt, save_to)
     plt.show()
@@ -240,13 +171,15 @@ def format_label_for_plt(label):
     # Dictionary of ROOT-style to LaTeX conversions
     root_to_latex = {
         # Compound symbols (order matters - do these first)
-        '#DeltaR': r'\Delta R',
+        '#DeltaR': r'\Delta\!R',
         '#DeltaPhi': r'\Delta\phi',
         '#DeltaEta': r'\Delta\eta',
         
         # Single Greek letters
         '#Delta': r'\Delta',
         '#delta': r'\delta',
+        '#ell': r'\ell',
+        '#it{I}': r'\mathcal{I}',
         '#phi': r'\phi',
         '#Phi': r'\Phi',
         '#eta': r'\eta',

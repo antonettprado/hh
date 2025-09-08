@@ -5,16 +5,6 @@ import matplotlib.pyplot as plt
 import mplhep
 mplhep.style.use("CMS")
 
-@dataclass
-class PlotStyle:
-    """Configuration for plot styling."""
-    figsize: tuple[int, int] = (8, 6)
-    label_fontsize: int = 18
-    tick_fontsize: int = 18
-    legend_fontsize: int = 18
-    cms_fontsize: int = 18
-    rlabel: str = "13.6 TeV"
-
 @dataclass 
 class PlotLimits:
     """Plot axis limits."""

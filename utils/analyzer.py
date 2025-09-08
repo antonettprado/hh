@@ -3,10 +3,10 @@ from core import AnalysisConfig, Reference, ObsType
 from core.observable import get_obs_info
 from utils.workdirectory import WorkDirectory
 from utils.histogram import extract_signal_background, get_process_hists
-from utils.plot_config import PlotLimits, PlotStyle, CMSPlotStyle
+from utils.plot_config import PlotLimits, CMSPlotStyle
 
 from utils import histogram as hist_utils
-from utils.plots import (plot_1d, plot_2d, hist_to_numpy, plot_1d_new, plot_2d_new)
+from utils.plots import (plot_1d, plot_2d, hist_to_numpy)
 
 from typing import Optional
 from itertools import product
@@ -27,10 +27,10 @@ class Analyzer:
         process_hists = get_process_hists(ref, processes, eras, self.wd.resultsdir, self.config)
         return extract_signal_background(process_hists)
 
-    def _build_ax_labels_limits(self, ref: Reference, plot_style: CMSPlotStyle, user_limits = None) -> tuple[CMSPlotStyle, PlotLimits]:
+    def _build_ax_labels_limits(self, ref: Reference, plot_style: CMSPlotStyle, plot_limits = None) -> tuple[CMSPlotStyle, PlotLimits]:
         from bamboo_hh.variables import REG
         info = get_obs_info(ref)
-        limits = user_limits or PlotLimits()
+        plot_limits = plot_limits or PlotLimits()
         if ObsType.is_llr(ref):
             var_titles = [REG.get_var1D_title(var) for var in info.vars]
             if info.category == "llr_factorized":
@@ -41,19 +41,23 @@ class Analyzer:
             labels = tuple(REG.get_var1D_title(var) for var in info.vars)
             if len(info.vars) == 1:
                 _, xmin, xmax = REG.get_var1D_binning(info.vars[0])
-                if limits.xmin is None: limits.xmin = xmin
-                if limits.xmax is None: limits.xmax = xmax
+                if plot_limits.xmin is None: plot_limits.xmin = xmin
+                if plot_limits.xmax is None: plot_limits.xmax = xmax
                 plot_style.xlabel = labels[0]
             elif len(info.vars) == 2:
                 _, xmin, xmax = REG.get_var1D_binning(info.vars[1])  # x = second var
                 _, ymin, ymax = REG.get_var1D_binning(info.vars[0])  # y = first var  
-                if limits.xmin is None: limits.xmin = xmin
-                if limits.xmax is None: limits.xmax = xmax
-                if limits.ymin is None: limits.ymin = ymin
-                if limits.ymax is None: limits.ymax = ymax
+                if plot_limits.xmin is None: plot_limits.xmin = xmin
+                if plot_limits.xmax is None: plot_limits.xmax = xmax
+                if plot_limits.ymin is None: plot_limits.ymin = ymin
+                if plot_limits.ymax is None: plot_limits.ymax = ymax
                 plot_style.xlabel = labels[1]
                 plot_style.ylabel = labels[0]
-        return plot_style, limits
+
+        print(f"Setting limits: xmin={xmin}, xmax={xmax}, ymin={ymin}, ymax={ymax}")
+        print(f"From vars: vars[0]={info.vars[0]}, vars[1]={info.vars[1]}")
+
+        return plot_style, plot_limits
 
     def _load_interp_lr(self, corr_name: str):
         assert self.mapping_path is not None, "Mapping path is not set"
@@ -65,10 +69,9 @@ class Analyzer:
         )
         return np.array(mapping_data["content"]), np.array(mapping_data["edges"])
 
-    def plot_sig_bkg_new(self, ref, plot_style = CMSPlotStyle(), limits: PlotLimits = None, eras=None):
+    def plot_sig_bkg(self, ref, plot_style = CMSPlotStyle(), plot_limits: PlotLimits = None, eras=None):
         signal_hist, background_hist = self.get_signal_background(ref, eras=eras)
-        plot_style, ax_limits = self._build_ax_labels_limits(ref, plot_style, user_limits=limits)
-        plot_style.ylabel = 'Normalized Events'
+        plot_style, plot_limits = self._build_ax_labels_limits(ref, plot_style, plot_limits=plot_limits)
         save_path = self.outdir / f"{ref.name}.pdf"
 
         signal_norm = hist_utils.normalize(signal_hist)
@@ -85,66 +88,27 @@ class Analyzer:
                 hist_values.append(vals)
                 hist_edges.append(edges[0])
             
+            plot_style.ylabel = 'Normalized Events'
             # Auto-scale y if not specified
-            ax_limits.ymin = ax_limits.ymin or 0
-            ax_limits.ymax = ax_limits.ymax or max(vals.max() for vals in hist_values) * 1.2
+            plot_limits.ymin = plot_limits.ymin or 0
+            plot_limits.ymax = plot_limits.ymax or max(vals.max() for vals in hist_values) * 1.2
             
-            plot_1d_new(values=hist_values, edges=hist_edges, legend=legend, colors=colors, fill=True, 
-                ax_limits=ax_limits, plot_style=plot_style, save_to=save_path)
+            plot_1d(values=hist_values, edges=hist_edges, legend=legend, colors=colors, fill=True, 
+                plot_limits=plot_limits, plot_style=plot_style, save_to=save_path)
             
         else:
             for hist, label, color in zip(hists, legend, colors):
                 suffix = "signal" if label == "Signal" else "bkg"
                 current_path = save_path.with_name(f"{save_path.stem}__{suffix}{save_path.suffix}")
-
                 values, edges = hist_to_numpy(hist)
-                
-                plot_2d_new(values=values, x_edges=edges[0], y_edges=edges[1], color=color,
-                    ax_limits=ax_limits, plot_style=plot_style, save_to=current_path)
+                plot_2d(values=values, x_edges=edges[0], y_edges=edges[1], color=color,
+                    plot_limits=plot_limits, plot_style=plot_style, save_to=current_path)
 
-    def plot_sig_bkg(self, ref, plot_style = CMSPlotStyle(), limits: PlotLimits = None, eras=None):
-        signal_hist, background_hist = self.get_signal_background(ref, eras=eras)
-        ax_limits, ax_labels = self._build_ax_labels_limits(ref, user_limits=limits)
-        save_path = self.outdir / f"{ref.name}.pdf"
-
-        signal_norm = hist_utils.normalize(signal_hist)
-        background_norm = hist_utils.normalize(background_hist) 
-        
-        hists = [signal_norm, background_norm]
-        legend = ['Signal', 'Background']
-        colors = ['blue', 'red']
-        
-        if ObsType.get_dimensionality(ref) == 1:
-            hist_values, hist_edges = [], []
-            for hist in hists:
-                vals, edges = hist_to_numpy(hist)
-                hist_values.append(vals)
-                hist_edges.append(edges[0])
-            
-            # Auto-scale y if not specified
-            ax_limits.ymin = ax_limits.ymin or 0
-            ax_limits.ymax = ax_limits.ymax or max(vals.max() for vals in hist_values) * 1.2
-            
-            plot_1d(values=hist_values, edges=hist_edges, legend=legend, colors=colors,
-                fill=True, xlabel=ax_labels[0], ylabel='Normalized Events',
-                **ax_limits.__dict__, **plot_style.__dict__, save_to=save_path)
-            
-        else:
-            for hist, label, color in zip(hists, legend, colors):
-                suffix = "signal" if label == "Signal" else "bkg"
-                current_path = save_path.with_name(f"{save_path.stem}__{suffix}{save_path.suffix}")
-
-                values, edges = hist_to_numpy(hist)
-                
-                plot_2d(values=values, x_edges=edges[0], y_edges=edges[1],
-                    color=color, xlabel=ax_labels[0], ylabel=ax_labels[1], legend=legend,
-                    **ax_limits.__dict__, **plot_style.__dict__, save_to=current_path)
-            
-    def plot_ratio_new(self, ref, take_log:bool=True, plot_style = CMSPlotStyle(), limits: PlotLimits = None, eras = None):
+    def plot_ratio(self, ref, take_log:bool=True, plot_style = CMSPlotStyle(), plot_limits: PlotLimits = None, eras = None):
 
         signal_hist, background_hist = self.get_signal_background(ref, eras=eras)
         ratio_hist = hist_utils.compute_likelihood_ratio(signal_hist, background_hist)
-        plot_style, ax_limits = self._build_ax_labels_limits(ref, plot_style, user_limits=limits)
+        plot_style, plot_limits = self._build_ax_labels_limits(ref, plot_style, plot_limits=plot_limits)
         save_path = self.outdir / f"{ref.name}_ratio.pdf"
 
         values, edges = hist_to_numpy(ratio_hist)
@@ -166,48 +130,13 @@ class Analyzer:
                     pass
 
             plot_style.ylabel = 'LLR('+plot_style.xlabel+')'
-            plot_1d_new(values=values, edges=edges, legend=legend, colors=colors, fill=False,
-                ax_limits=ax_limits, plot_style=plot_style, save_to=save_path)
-        elif ObsType.get_dimensionality(ref) == 2:
-            color = 'rdy' # For cmap = 'RdYlBu_r'
-            plot_2d_new(values=values, x_edges=edges[0], y_edges=edges[1], color=color, 
-                ax_limits=ax_limits, plot_style=plot_style, save_to=save_path)
-            
-    def plot_ratio(self, ref: Reference, take_log:bool=True, plot_style = CMSPlotStyle(), eras = None):
-
-        signal_hist, background_hist = self.get_signal_background(ref, eras=eras)
-        ratio_hist = hist_utils.compute_likelihood_ratio(signal_hist, background_hist)
-        ax_limits, ax_labels = self._build_ax_labels_limits(ref)
-        save_path = self.outdir / f"{ref.name}_ratio.pdf"
-
-        values, edges = hist_to_numpy(ratio_hist)
-        values = np.log(values) if take_log else values
-        if ObsType.get_dimensionality(ref) == 1:
-            values, edges, legend, colors = [values], [edges[0]], ['Binned LLR'], ['green']
-            
-            # Add interpolated data if available
-            if self.mapping_path:
-                try:
-                    with open(self.mapping_path, "r") as f:
-                        data = json.load(f)
-                    correction_data = next(corr["data"] for corr in data["corrections"] if corr["name"] == f"{ref.name}_llr")
-                    values.append(np.array(correction_data["content"]))
-                    edges.append(np.array(correction_data["edges"]))
-                    legend.extend(['Interpolated LLR'])
-                    colors.append('purple')
-                except (FileNotFoundError, StopIteration):
-                    pass
-
-            ylabel = 'LLR('+ax_labels[0]+')'
             plot_1d(values=values, edges=edges, legend=legend, colors=colors, fill=False,
-                xlabel=ax_labels[0], ylabel=ylabel,
-                **ax_limits.__dict__, **plot_style.__dict__, save_to=save_path)
+                plot_limits=plot_limits, plot_style=plot_style, save_to=save_path)
         elif ObsType.get_dimensionality(ref) == 2:
             color = 'rdy' # For cmap = 'RdYlBu_r'
-            plot_2d(values=values, x_edges=edges[0], y_edges=edges[1],
-                color=color, xlabel=ax_labels[0], ylabel=ax_labels[1], 
-                **ax_limits.__dict__, **plot_style.__dict__, save_to=save_path)
-
+            plot_2d(values=values, x_edges=edges[0], y_edges=edges[1], color=color, 
+                plot_limits=plot_limits, plot_style=plot_style, save_to=save_path)
+            
 if __name__ == "__main__":
     from argparse import ArgumentParser
     parser = ArgumentParser()
