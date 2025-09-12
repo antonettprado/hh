@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
-from core import AnalysisConfig, Reference
+from core.analysis_config import AnalysisConfig
+from core.reference import Reference
 from utils.functions import get_eras, find_mc_processes, get_refs_from
 
 class WorkDirectory:
@@ -11,8 +12,9 @@ class WorkDirectory:
         else:   assert isinstance(path, Path), ValueError("path must be a str or Path")
         self.path = path
         self.resultsdir = self.path / 'results'
-        self._processes = None
-        self._eras = None
+        self._processes: list[str] = None
+        self._eras: list[str] = None
+        self._refs: list[Reference] = None
     
     @property
     def processes(self):
@@ -26,10 +28,15 @@ class WorkDirectory:
             self._eras = get_eras(self.resultsdir)
         return self._eras
     
-    def get_references(self, channels: Optional[list[str]] = None) -> list[Reference]:
+    @property
+    def refs(self) -> list[Reference]:
+        if self._refs is None:
+            self._refs = get_refs_from(self.resultsdir)
+            self._refs.sort(key=lambda r: (r.channel_base, r.observable_base))
+        return self._refs
+
+    def get_refs_for(self, channels: list[str]) -> list[Reference]:
         """Get filtered and sorted references."""
-        refs: list[Reference] = get_refs_from(self.resultsdir)
-        refs.sort(key=lambda r: (r.channel_base, r.observable_base))
-        if channels:
-            refs = [ref for ref in refs if ref.channel_base in channels]
+        refs = self.refs
+        refs = [ref for ref in refs if ref.channel_base in channels]
         return refs

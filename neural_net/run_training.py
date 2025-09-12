@@ -65,6 +65,8 @@ class RunDistributed:
             "output": f"{str(rd.afs_modeldir.resolve())}/condor.out",
             "error": f"{str(rd.afs_modeldir.resolve())}/condor.err",
             "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
+            # "+MaxRuntime": "28800",  # 8 hrs in seconds
+            # "+MaxRuntime": "86400",  # 1 days in seconds
             "+MaxRuntime": "172800",  # 2 days in seconds
             # "+MaxRuntime": "259200",  # 3 days in seconds
             # "+MaxRuntime": "432000",  # 5 days in seconds
@@ -73,7 +75,7 @@ class RunDistributed:
             "request_memory": "60GB" if memory is None else memory,
             "request_disk": "5GB",
             'MY.SendCredential': True,
-            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, references, utils"
+            "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, core, utils"
         })
         schedd = htcondor.Schedd()
         submit_result = schedd.submit(submit_description)
@@ -107,30 +109,39 @@ def save_manifest_entry(manifest_path: Path, job_name: str, job_info: dict):
 
 def main(args):
     model_configs = load_model_configs(args.rostername)
+    
     for config in model_configs:
         modeldir = args.workdir / args.outdirname / config.name
         modeldir.mkdir(exist_ok=True, parents=True)
-        if args.distributed:
-            rd = RunDistributed(config.name, args.rostername, args.workdir, args.outdirname, args.trainer, args.log_level)
-            if args.trainer == 'simple':
-                RunDistributed.submit_job(config.name, args.rostername, args.workdir, args.outdirname, args.trainer, args.log_level, pass_idx=None, memory=args.memory)
-            elif args.trainer == 'kfold':
-                for pass_idx in range(5):
-                    RunDistributed.submit_job(config.name, args.rostername, args.workdir, args.outdirname, args.trainer, args.log_level, pass_idx=pass_idx, memory=args.memory)
-        else:
-            from neural_net.trainers import main as submit_locally
-            # Create a namespace object with the correct argument names for trainers.py
-            from argparse import Namespace
-            trainer_args = Namespace(
-                workdir=args.workdir,
-                roster=args.rostername,  # Changed from rostername to roster
-                outdirname=args.outdirname,
-                trainer=args.trainer,
-                pass_idx=args.pass_idx,
-                config_name=config.name,  # Added config_name
-                log_level=args.log_level
-            )
-            submit_locally(trainer_args)
+        
+        pass_indices = [None] if args.trainer == 'simple' else range(5)
+        
+        for pass_idx in pass_indices:
+            if args.distributed:
+                RunDistributed.submit_job(
+                    config.name, args.rostername, args.workdir, 
+                    args.outdirname, args.trainer, args.log_level, 
+                    pass_idx=pass_idx, memory=args.memory
+                )
+            else:
+                _submit_locally(config, args, pass_idx)
+
+def _submit_locally(config, args, pass_idx):
+    """Helper function to submit job locally."""
+    from neural_net.trainers import main as submit_locally
+    from argparse import Namespace
+    
+    trainer_args = Namespace(
+        workdir=args.workdir,
+        roster=args.rostername,
+        outdirname=args.outdirname,
+        trainer=args.trainer,
+        pass_idx=pass_idx,
+        config_name=config.name,
+        log_level=args.log_level
+    )
+    submit_locally(trainer_args)
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-w", "--workdir", type=Path, required=True, help='Full path of work directory')

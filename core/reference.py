@@ -43,3 +43,6 @@ class Reference:
     @property
     def is_simple(self) -> bool:
         return self.observable_sub is None
+
+    def __str__(self) -> str:
+        return self.name

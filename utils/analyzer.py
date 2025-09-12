@@ -1,6 +1,7 @@
 # File: analysis/analyzers/discriminant_analyzer.py
-from core import AnalysisConfig, Reference, ObsType
-from core.observable import get_obs_info
+from core.analysis_config import AnalysisConfig
+from core.reference import Reference
+from core.observable import ObsType, get_obs_info
 from utils.workdirectory import WorkDirectory
 from utils.histogram import extract_signal_background, get_process_hists
 from utils.plot_config import PlotLimits, CMSPlotStyle
@@ -53,9 +54,6 @@ class Analyzer:
                 if plot_limits.ymax is None: plot_limits.ymax = ymax
                 plot_style.xlabel = labels[1]
                 plot_style.ylabel = labels[0]
-
-        print(f"Setting limits: xmin={xmin}, xmax={xmax}, ymin={ymin}, ymax={ymax}")
-        print(f"From vars: vars[0]={info.vars[0]}, vars[1]={info.vars[1]}")
 
         return plot_style, plot_limits
 

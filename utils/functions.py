@@ -1,6 +1,6 @@
 from pathlib import Path
 from core.constants import *
-from core import Reference
+from core.reference import Reference
 import uproot
 
 def process_is_bkg(proc: str) -> bool:

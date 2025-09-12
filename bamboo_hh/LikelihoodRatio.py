@@ -6,7 +6,7 @@ from bamboo.scalefactors import get_correction
 from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
-from core import Reference
+from core.reference import Reference
 from core.observable import classify_observable
 from core.constants import ERA_ENUM
 from itertools import combinations

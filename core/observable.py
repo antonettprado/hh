@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from core import Reference
+from core.reference import Reference
 
 @dataclass(frozen=True)
 class ObsInfo:

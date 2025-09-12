@@ -469,7 +469,7 @@ class PlotGenerator:
         
         fig.tight_layout()
         output_path = outdir / f"{filename}.pdf"
-        fig.savefig(output_path)
+        fig.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close(fig)
         
         log_msg(f"{title} saved to {output_path}", logger=logger)
@@ -499,7 +499,7 @@ class PlotGenerator:
         
         fig.tight_layout()
         output_path = outdir / 'roc_curves.pdf'
-        fig.savefig(output_path)
+        fig.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close(fig)
         
         log_msg(f"ROC curves saved to {output_path}", logger=logger)
@@ -576,14 +576,14 @@ class PlotGenerator:
         ax.set_ylabel('Normalized Number of Events', fontsize=28, labelpad=10)
         ax.tick_params(axis='both', labelsize=26)
         ax.grid(alpha=0.8)
-        ax.legend(fontsize=24, loc='upper right', frameon=True, edgecolor="black")
+        ax.legend(fontsize=24, loc='best', framealpha=0.9, frameon=True, edgecolor="black")
         
         for spine in ax.spines.values():
             spine.set_linewidth(2)
         
         fig.tight_layout()
         output_path = outdir / filename
-        fig.savefig(output_path)
+        fig.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close(fig)
     
     @staticmethod
@@ -603,7 +603,7 @@ class PlotGenerator:
         
         fig.tight_layout()
         output_path = outdir / 'correlation_matrix.pdf'
-        fig.savefig(output_path)
+        fig.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close(fig)
         
         log_msg(f"Correlation matrix saved to {output_path}", logger=logger)

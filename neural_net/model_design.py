@@ -243,43 +243,44 @@ def plot_training_curves(modeldir, history):
 
     # Create individual figures for each metric type
     for metric_type in metric_types:
-        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=(10, 8))
         for metric in history_dict.keys():
             if metric.startswith(metric_type):
                 plt.plot(epochs, history_dict[metric], label=f'{metric}')
                 if f'val_{metric}' in history_dict.keys():
                     plt.plot(epochs, history_dict[f'val_{metric}'], lw=2, label=f'val_{metric}')
         # plt.title(f"{metric_type} vs epochs")
-        plt.xlabel('Epochs')
-        plt.ylabel(metric_type)
-        plt.legend(loc='best')
+        plt.xlabel('Epochs', fontsize=28, labelpad=10)
+        plt.ylabel(metric_type, fontsize=28, labelpad=10)
+        plt.legend(loc='best', fontsize=24)
+        plt.tick_params(axis='both', labelsize=26)
         plt.tight_layout()
-        plt.savefig(outdir / f'{metric_type}_curve.pdf')
+        plt.savefig(outdir / f'{metric_type}_curve.pdf', dpi=300, bbox_inches='tight', facecolor='white')
         plt.close(fig)
 
-    num_metrics = len(metric_types)
-    num_cols = 2
-    num_rows = (num_metrics + 1) // num_cols  # Calculate the number of rows needed
+    # num_metrics = len(metric_types)
+    # num_cols = 2
+    # num_rows = (num_metrics + 1) // num_cols  # Calculate the number of rows needed
 
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 4 * num_rows))
-    axes = axes.flatten()
+    # fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 4 * num_rows))
+    # axes = axes.flatten()
 
-    for i, metric_type in enumerate(metric_types):
-        ax = axes[i]
-        for metric in history_dict.keys():
-            if metric.startswith(metric_type):
-                ax.plot(epochs, history_dict[metric], label=f'{metric}')
-                if f'val_{metric}' in history_dict.keys():
-                    ax.plot(epochs, history_dict[f'val_{metric}'], lw=2, label=f'val_{metric}')
-        ax.set_title(f"{metric_type} vs epochs")
-        ax.set_xlabel('Epochs')
-        ax.set_ylabel(metric_type)
-        ax.legend(loc='best')
+    # for i, metric_type in enumerate(metric_types):
+    #     ax = axes[i]
+    #     for metric in history_dict.keys():
+    #         if metric.startswith(metric_type):
+    #             ax.plot(epochs, history_dict[metric], label=f'{metric}')
+    #             if f'val_{metric}' in history_dict.keys():
+    #                 ax.plot(epochs, history_dict[f'val_{metric}'], lw=2, label=f'val_{metric}')
+    #     ax.set_title(f"{metric_type} vs epochs")
+    #     ax.set_xlabel('Epochs')
+    #     ax.set_ylabel(metric_type)
+    #     ax.legend(loc='best')
 
-    # Remove any unused subplots
-    for i in range(len(metric_types), len(axes)):
-        fig.delaxes(axes[i])
+    # # Remove any unused subplots
+    # for i in range(len(metric_types), len(axes)):
+    #     fig.delaxes(axes[i])
 
-    plt.tight_layout()
-    fig.savefig(outdir / 'all_metrics_curves.pdf')
-    plt.close(fig)
+    # plt.tight_layout()
+    # fig.savefig(outdir / 'all_metrics_curves.pdf', dpi=300, bbox_inches='tight', facecolor='white')
+    # plt.close(fig)

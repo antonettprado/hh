@@ -1,6 +1,6 @@
 from pathlib import Path
 from tabulate import tabulate
-from core import Reference
+from core.reference import Reference
 from utils import functions, histogram
 import subprocess
 import ROOT
@@ -9,10 +9,10 @@ from numpy.typing import NDArray
 
 def generate_dc(disc, dc_path: Path, ref: Reference, era: str) -> Path:
     process_hists = histogram.get_process_hists(ref, disc.processes, era, disc.resultsdir, disc.config)
+    process_hists['asimov'] = compute_asimov(process_hists)
     if disc.is_complex:
         process_hists = run2_binning_strategy(process_hists, 'signal' if 'HH' in ref.observable_sub else 'background')
     dc_path.parent.mkdir(exist_ok=True, parents=True)
-    process_hists['asimov'] = compute_asimov(process_hists)
     process_rates = {proc: hist.Integral() for proc, hist in process_hists.items()}
     dc_text = generate_datacard_text(dc_path.with_suffix('.root'), process_rates, 'asimov', disc.name, ref.channel, era)
     dc_path.write_text(dc_text)

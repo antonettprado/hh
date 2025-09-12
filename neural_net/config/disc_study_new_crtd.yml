@@ -16,7 +16,7 @@ crtd_vars: &crtd_vars ['jj_l_dR',
   'bjets_mbb',
   'bjets_dPhi']
 
-crtd_lrs: &crtd_vars ['jj_l_dR_lr',
+crtd_lrs: &crtd_lrs ['jj_l_dR_lr',
   'jj_lnu_dR_lr',
   'WW_mInv_lr',
   'jj_lnu_dPhi_lr',

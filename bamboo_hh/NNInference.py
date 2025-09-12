@@ -7,8 +7,7 @@ from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
 from bamboo_hh.LikelihoodRatio import LRFactory
-from utils.functions import build_ref
-
+from core.reference import Reference
 from neural_net.model_config import ModelConfig
 from pathlib import Path
 import yaml
@@ -79,12 +78,12 @@ class NNInference(NanoBaseHHbbWW):
                 max_score_index = op.rng_max_element_index(nn_scores, lambda score: score)
                 eqbin = EqBin(400, 0, 1)
                 for i, class_i in enumerate(nn.classes):
-                    ref_for_total = build_ref(for_channel=[sb.name], for_discriminant=[nn.name, class_i])
-                    total_dist = Plot.make1D(ref_for_total, nn_scores[i], sb.sel, eqbin, xTitle=f"{nn.name} {class_i} score")
-                    ref_for_partial = build_ref(for_channel=[sb.name, class_i], for_discriminant=[nn.name, class_i])
-                    sel_nn_cat = sb.sel.refine(f"{ref_for_partial}_sel", cut = (op.AND(i == max_score_index)))
-                    self.yields.add(sel_nn_cat, f"{ref_for_partial}_sel")
-                    partial_dist = Plot.make1D(ref_for_partial, nn_scores[i], sel_nn_cat, eqbin, xTitle=f"{nn.name} {class_i} score (max)")
+                    ref_node = Reference.from_parts(channel_parts=[sb.name], obs_parts=[nn.name, class_i])
+                    total_dist = Plot.make1D(str(ref_node), nn_scores[i], sb.sel, eqbin, xTitle=f"{nn.name} {class_i} score")
+                    ref_node_sub = Reference.from_parts(channel_parts=[sb.name, class_i], obs_parts=[nn.name, class_i])
+                    sel_nn_cat = sb.sel.refine(f"{str(ref_node_sub)}_sel", cut = (op.AND(i == max_score_index)))
+                    self.yields.add(sel_nn_cat, f"{str(ref_node_sub)}_sel")
+                    partial_dist = Plot.make1D(str(ref_node_sub), nn_scores[i], sel_nn_cat, eqbin, xTitle=f"{nn.name} {class_i} score (max)")
                     
                     plots.extend([total_dist, partial_dist])
 

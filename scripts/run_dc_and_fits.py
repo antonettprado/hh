@@ -6,8 +6,11 @@ from typing import Callable
 from multiprocessing import Pool
 from fitting import fitter
 from fitting.disc_new import Discriminant
-from core import AnalysisConfig, Reference, ObsType
-from utils import ResultsManager, functions
+from core.analysis_config import AnalysisConfig
+from core.reference import Reference
+from core.observable import ObsType
+from utils.results_manager import ResultsManager 
+from utils import functions
 from itertools import groupby
 import re
 

@@ -1,7 +1,8 @@
 import ROOT
 import uproot
 from pathlib import Path
-from core import AnalysisConfig, Reference
+from core.analysis_config import AnalysisConfig
+from core.reference import Reference
 from utils import functions
 import numpy as np
 from typing import Union, Any
