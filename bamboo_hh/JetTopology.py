@@ -64,11 +64,11 @@ class JetTopology(NanoBaseHHbbWW):
         hists1D = [Plot.make1D(v.ref.name, v.data, hs.sel, v.eqbin, xTitle=v.full_title) for hs in plot_selections for v in hs.vars1D ]
         plots.extend(hists1D)
 
-        hists2D = [Plot.make2D(v.ref.name, v.data, hs.sel, v.eqbin) for hs in plot_selections for v in hs.vars2D]
-        plots.extend(hists2D)
+        # hists2D = [Plot.make2D(v.ref.name, v.data, hs.sel, v.eqbin) for hs in plot_selections for v in hs.vars2D]
+        # plots.extend(hists2D)
 
-        hists3D = [Plot.make3D(v.ref.name, v.data, hs.sel, v.eqbin) for hs in plot_selections for v in hs.vars3D]
-        plots.extend(hists3D)
+        # hists3D = [Plot.make3D(v.ref.name, v.data, hs.sel, v.eqbin) for hs in plot_selections for v in hs.vars3D]
+        # plots.extend(hists3D)
 
         # # ===============================================================================
         # # ================================== Skims ======================================

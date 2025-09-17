@@ -76,7 +76,7 @@ class ResultsManager:
             limits = CombineParser.parse_fit_file(res_file)
             
             # Classify observable
-            info = classify_observable(ref=None, obs_name=model_name)
+            info = classify_observable(obs_name=model_name)
             
             result = ULResults(
                 obs_name=model_name,
@@ -153,7 +153,7 @@ class ResultsManager:
                 obs_name, mu, s1_min, s1_max, s2_min, s2_max = match.groups()
                 
                 # Classify observable
-                info = classify_observable(ref=None, obs_name=obs_name)
+                info = classify_observable(obs_name=obs_name)
                 
                 def parse_numeric(value_str):
                     return float(value_str) if value_str != 'N/A' else np.nan

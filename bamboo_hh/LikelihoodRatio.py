@@ -55,11 +55,12 @@ class LR:
         self.var_names = var_names if isinstance(var_names, list) else [var_names]
         self.sel_name = sel_name
         self.base_name = "_x_".join(self.var_names)
-        n_vars = len(classify_observable(obs_name=self.base_name).vars)
         self.name = self.base_name + ('_llr' if apply_log else '_lr')
         self.ref = Reference.from_parts([self.sel_name], [self.name])
+        print(self.ref.name)
         self.full_title = self.base_name + (' LLR' if apply_log else ' LR')
         binning_type = self.llr_binning if apply_log else self.lr_binning
+        n_vars = len(classify_observable(obs_name=self.base_name).vars)
         self.__dict__.update(**binning_type.get(n_vars))
         self.eqbin = EqBin(self.nbins, self.min, self.max)
         self.data = None  # filled later
@@ -134,23 +135,23 @@ class LRFactory:
         multivar_lr.data = inter_op(*[lr.data for lr in relevant_lrs1D])
         return multivar_lr
     
-    # def get_lrs_for_multivars_select(self) -> list[LR]:
-    #         """Create LRs for predefined multivariate combinations."""
-    #         candidates = [
-    #             ['bjets_mbb', 'bjets_dR'],
-    #             ['bjets_pt_bb', 'bjets_dR'],
-    #             ['bjets_mbb', 'trijet_mInv'],
-    #             ['bjets_dR', 'bjets_mbb', 'trijet_mInv'],
-    #             ['bjet0_pt', 'bjets_dR', 'bjets_mbb', 'trijet_mInv'],
-    #             ['bjet0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_mbb', 'trijet_mInv'],
-    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat'],
-    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat', 'bjets_pt_bb'],
-    #             ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
-    #             ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
-    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
-    #             ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
-    #         ]
-    #         return [self.create_lr_from_multivar(var_names) for var_names in candidates]
+    def get_lrs_for_multivars_select(self) -> list[LR]:
+            """Create LRs for predefined multivariate combinations."""
+            candidates = [
+                ['bjets_mbb', 'bjets_dR'],
+                ['bjets_pt_bb', 'bjets_dR'],
+                ['bjets_mbb', 'trijet_mInv'],
+                ['bjets_dR', 'bjets_mbb', 'trijet_mInv'],
+                ['bjet0_pt', 'bjets_dR', 'bjets_mbb', 'trijet_mInv'],
+                ['bjet0_pt', 'bjets_dEta', 'bjets_dPhi', 'bjets_mbb', 'trijet_mInv'],
+                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat'],
+                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_pt_rat', 'bjets_pt_bb'],
+                ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
+                ['bjet0_pt','bjets_dEta','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
+                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat'],
+                ['bjet0_pt','bjets_dEta','bjets_dPhi','bjets_dR','bjets_mbb','mjj','trijet_mInv','trijet_pt_rat', 'bjets_pt_bb'],
+            ]
+            return [self.create_lr_from_multivar(cand) for cand in candidates]
 
     def get_lrs_for_curated_vars(self, min_comb: int, max_comb: int, batch_size: int = None, batch_index: int = None) -> list[LR]:
         from itertools import combinations
@@ -215,10 +216,6 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         skim_data = {"event": None, "genWeight": None, "era": op.c_int(ERA_ENUM[self.era])}
         skim_data.update({var.name: var.data for var in sb.vars1D})
         skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars1D})
-        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars2D})
-        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_vars3D})
-        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_multivars_select})
-        # skim_data.update({lr.name: lr.data for lr in sb.lrs_for_multivars_combos})
         return Skim(sb.name, skim_data, sb.sel)
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
@@ -237,21 +234,24 @@ class LikelihoodRatio(NanoBaseHHbbWW):
 
         lr_factory = LRFactory(self.args.lr_functions, sb, apply_log=self.args.apply_log)
 
-        if self.args.min_comb and self.args.max_comb:
-            sb.lrs_for_curated_vars = lr_factory.get_lrs_for_curated_vars(self.args.min_comb, self.args.max_comb, self.args.batch_size, self.args.batch_idx)
-            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_curated_vars ])
-        else:
-            sb.lrs_for_vars1D = lr_factory.get_lrs_for_vars1D()
-            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars1D ])
+        lrs_select_old = lr_factory.get_lrs_for_multivars_select()
+        plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in lrs_select_old ])
 
-            sb.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
-            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars2D ])
+        # if self.args.min_comb and self.args.max_comb:
+        #     sb.lrs_for_curated_vars = lr_factory.get_lrs_for_curated_vars(self.args.min_comb, self.args.max_comb, self.args.batch_size, self.args.batch_idx)
+        #     plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_curated_vars ])
+        # else:
+        #     sb.lrs_for_vars1D = lr_factory.get_lrs_for_vars1D()
+        #     plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars1D ])
 
-            sb.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
-            plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars3D ])
+        #     sb.lrs_for_vars2D = lr_factory.get_lrs_for_vars2D()
+        #     plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars2D ])
 
-        skims = [self.get_skim(sb)]
-        plots.extend(skims)
+        #     sb.lrs_for_vars3D = lr_factory.get_lrs_for_vars3D()
+        #     plots.extend([Plot.make1D(lr.ref.name, lr.data, sb.sel, lr.eqbin, xTitle=lr.full_title) for lr in sb.lrs_for_vars3D ])
+
+        # skims = [self.get_skim(sb)]
+        # plots.extend(skims)
 
         # ===============================================================================
         # ================================== Yields =====================================

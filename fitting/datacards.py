@@ -139,10 +139,10 @@ def run2_binning_strategy(histos: dict[str, ROOT.TH1D], stype: str) -> dict[str,
     back_pdf.Scale(1/lumi_back_hist.Integral())
 
     if stype == "signal":
-        nq: int = 15
+        nq: int = 15        # could increase to 30
         quants = get_quantile_bin_edges(sig_pdf, nq)
         # The AN is unclear here
-        while lumi_back_hist.Rebin(nq, f'test_{nq}', quants).GetBinContent(nq) < 10:
+        while lumi_back_hist.Rebin(nq, f'test_{nq}', quants).GetBinContent(nq) < 10:    # 3
             nq -= 1
             quants = get_quantile_bin_edges(sig_pdf, nq)
 

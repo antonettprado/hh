@@ -234,6 +234,8 @@ def get_event_selections(objects:dict, HLT, baseSel, is_MC:bool, era:int, sample
     )])
 
     return dict(
+        mllSel=mllSel,
+        
         SL_e_res_3j_1b=SL_e_res_3j_1b,
         SL_e_res_3j_2b=SL_e_res_3j_2b,
         SL_e_3j_resolved=SL_e_3j_resolved,

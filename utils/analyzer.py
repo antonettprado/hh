@@ -4,6 +4,7 @@ from core.reference import Reference
 from core.observable import ObsType, get_obs_info
 from utils.workdirectory import WorkDirectory
 from utils.histogram import extract_signal_background, get_process_hists
+from utils.functions import get_refs_from
 from utils.plot_config import PlotLimits, CMSPlotStyle
 
 from utils import histogram as hist_utils
@@ -32,7 +33,10 @@ class Analyzer:
         from bamboo_hh.variables import REG
         info = get_obs_info(ref)
         plot_limits = plot_limits or PlotLimits()
-        if ObsType.is_llr(ref):
+        if ObsType.is_nn(ref):
+            nn_class = ref.observable_sub
+            plot_style.xlabel = f'{nn_class} score'
+        elif ObsType.is_llr(ref):
             var_titles = [REG.get_var1D_title(var) for var in info.vars]
             if info.category == "llr_factorized":
                 plot_style.xlabel = r'LLR_{fact}('+ f'{",".join(var_titles)}' +')'
@@ -67,10 +71,13 @@ class Analyzer:
         )
         return np.array(mapping_data["content"]), np.array(mapping_data["edges"])
 
-    def plot_sig_bkg(self, ref, plot_style = CMSPlotStyle(), plot_limits: PlotLimits = None, eras=None):
+    def plot_sig_bkg(self, ref, plot_style = CMSPlotStyle(), plot_limits: PlotLimits = None, eras=None, save_to=None):
         signal_hist, background_hist = self.get_signal_background(ref, eras=eras)
         plot_style, plot_limits = self._build_ax_labels_limits(ref, plot_style, plot_limits=plot_limits)
-        save_path = self.outdir / f"{ref.name}.pdf"
+        if save_to: 
+            save_path = save_to / f"{ref.name}.pdf"
+        else:
+            save_path = self.outdir / f"{ref.name}.pdf"
 
         signal_norm = hist_utils.normalize(signal_hist)
         background_norm = hist_utils.normalize(background_hist) 
@@ -145,10 +152,10 @@ if __name__ == "__main__":
     if args.outdir is None: args.outdir = args.workdir / 'plotter'
     
     config = AnalysisConfig(args.config)
-    wd = WorkDirectory('/eos/user/a/anunezde/Z_OUTPUT_eos/Disc_Study_New/JetTop_crtd_even')
+    wd = WorkDirectory(args.workdir)
     analyzer = Analyzer(wd, config, outdir=args.outdir)
 
-    refs = wd.get_references(channels=['SL_4j_resolved'])
+    refs = wd.get_refs_for(channels=['SL_4j_resolved'])
     refs.sort(key=lambda r: (r.channel_base, r.observable_base))
     # TO DO: =======================
     # Add plotting for combines eras
@@ -158,4 +165,5 @@ if __name__ == "__main__":
         print(f'Plotting {ref.name}')
         outpath = args.outdir / era / ref.channel_base
         outpath.mkdir(exist_ok=True, parents=True)
-        analyzer.plot_sig_bkg(ref, eras=era, plot_style=plot_style)
+        plot_limits = PlotLimits(xmin=0, xmax=1)
+        analyzer.plot_sig_bkg(ref, eras=era, plot_style=plot_style, plot_limits=plot_limits, save_to=outpath)

@@ -1,6 +1,5 @@
 import uproot
 from dataclasses import dataclass, field
-from pathlib import Path
 from core.constants import *
 
 @dataclass(frozen=True, eq=True)

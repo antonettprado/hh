@@ -1,15 +1,15 @@
 tree: Events
 eras:
-  "2024":
+  "2023":
     luminosity: 31400 # pb^-1     # <=========  THIS IS 2023 VALUE ===> MUST CHANGE
 #dbcache: dascache
 samples:
   # # Signal MC
   bbWW_sl:        # sample
-    era: "2024"        # sampleCfg['era']
+    era: "2023"        # sampleCfg['era']
     group: "HH_bbWW"
     files:
-      - /eos/user/a/anunezde/MC_Samples/For_Trigger_Studies/2024/output_nano_winter24_v2.root
+      - /eos/user/a/anunezde/Run3_Datasets/For_Trigger_Studies/2024/output_nano_winter24_v2.root
     type: mc           # sampleCfg['type']
     cross-section:  0.00334825583
     generated-events: genEventSumw
