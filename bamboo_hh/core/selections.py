@@ -240,7 +240,7 @@ def sl_mu_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False
         )
     )
 
-def sl_resolved_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 3, 
@@ -249,7 +249,7 @@ def sl_resolved_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
         )
     )
 
-def sl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 3, 
@@ -258,7 +258,7 @@ def sl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags
         )
     )
 
-def sl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 3, 
@@ -267,7 +267,7 @@ def sl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags
         )
     )
 
-def sl_resolved_3j_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_3j_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) == 3,
@@ -276,7 +276,7 @@ def sl_resolved_3j_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags
         )
     )
 
-def sl_resolved_3j_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_3j_1b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) == 3, 
@@ -285,7 +285,7 @@ def sl_resolved_3j_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_bt
         )
     )
 
-def sl_resolved_3j_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_3j_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) == 3, 
@@ -294,7 +294,7 @@ def sl_resolved_3j_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_bt
         )
     )
 
-def sl_resolved_4j_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_4j_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 4, 
@@ -303,7 +303,7 @@ def sl_resolved_4j_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags
         )
     )
 
-def sl_resolved_4j_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_4j_1b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 4, 
@@ -312,7 +312,7 @@ def sl_resolved_4j_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_bt
         )
     )
 
-def sl_resolved_4j_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_resolved_4j_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 4, 
@@ -321,7 +321,7 @@ def sl_resolved_4j_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_bt
         )
     )
 
-def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) >= 1,
         op.rng_len(ak4_jets) >= 1, 
@@ -377,7 +377,7 @@ def dl_mumu_selection(electrons, muons, is_mc, era, HLT, noHLT=False):
         )
     )
 
-def dl_resolved_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def dl_resolved_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 1, 
@@ -385,7 +385,7 @@ def dl_resolved_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
         )
     )
 
-def dl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def dl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 1, 
@@ -393,7 +393,7 @@ def dl_resolved_1b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags
         )
     )
 
-def dl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def dl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.AND(
         op.rng_len(ak8_btags) == 0,
         op.rng_len(ak4_jets) >= 2, 
@@ -401,5 +401,5 @@ def dl_resolved_2b_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags
         )
     )
 
-def dl_boosted_jet_selection(ak4_jets, ak4_btags, ak4_loose_btags, ak8_btags):
+def dl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
     return (op.rng_len(ak8_btags) >= 1)

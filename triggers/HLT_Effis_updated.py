@@ -65,62 +65,13 @@ class HLT_Effis(NanoAODHistoModule):
         parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
-        def isMC():
-            if sampleCfg['type'] == 'data':
-                return False
-            elif sampleCfg['type'] == 'mc':
-                return True
-            else:
-                raise RuntimeError(f"The type '{sampleCfg['type']}' of {sample} dataset not understood.")
-
-        self.era = sampleCfg['era'] 
-        self.is_MC = isMC()
-
-        def getNanoAODDescription():
-            # groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
-            groups = ["PV_", "Flag_", "HLT_", "PuppiMET_", "MET_", "L1_"]
-            collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet",
-                "nL1Mu", "nL1EG", "nL1Tau", "nL1Jet", "nL1EtSum",
-                "nGenPart", "nGenJet", "nGenJetAK8"]
-            varReaders = []
-            return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
-
-        tree, noSel, backend, lumiArgs = super(HLT_Effis, self).prepareTree(tree=tree,
-                                            sample=sample,
-                                            sampleCfg=sampleCfg,
-                                            description=getNanoAODDescription(),
-                                            backend=backend)
-
-        # Plots in base that need to be propagated to the Plotters #
-        self.base_plots = []
-
-        # Gen Weight
-        if self.is_MC:
-            noSel = noSel.refine('genWeight', weight=tree.genWeight)
-        else:
-            noSel = noSel
-
-        # Adding self.selections to class -----------------------------------
-        self._noSel = noSel
-
-        if 'HH' in sampleCfg['group']:
-            noSel = noSel.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
-            # Add neccesary plot for corrected sum of genWeights 
-            self.base_plots.append(Plot.make1D("generated_sum_corrected", op.c_float(0.5), noSel, EqBin(1,0.,1.), autoSyst=False))
-        self.noSel = noSel
-        
-        # Base Selection -----------------------------------------------------
-        # PV Selection
-        baseSel = self.noSel.refine('pv', cut=[tree.PV.npvsGood >= 1])               # Change this once genWeights figured out
-
-        # MET Filter Selection
-        baseSel = baseSel.refine('met_filter', cut=[tree.Flag.goodVertices, tree.Flag.globalSuperTightHalo2016Filter, tree.Flag.HBHENoiseFilter, tree.Flag.HBHENoiseIsoFilter, tree.Flag.EcalDeadCellTriggerPrimitiveFilter, tree.Flag.BadPFMuonFilter])
-        self.era = sampleCfg['era'] 
-        if self.era in ["2017", "2018"]:
-            baseSel = baseSel.refine('met_filter_2017_2018', cut=[tree.Flag.ecalBadCalibFilterV2])
-        if not self.is_MC:
-            baseSel = baseSel.refine('met_filter_data', cut=[tree.Flag.eeBadScFilter])
-
+        tree, baseSel, backend, lumiArgs = super(NanoBaseHHbbWW, self).prepareTree(
+            tree=tree,
+            sample=sample,
+            sampleCfg=sampleCfg,
+            description=self.get_NANOAOD_description(nom_desc),
+            backend=backend,
+            NANOAOD_desc_type='trigger_dev')
         return tree, baseSel, backend, lumiArgs
 
     def get_paths_to_process(self) -> tuple:

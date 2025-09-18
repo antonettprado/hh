@@ -1,7 +1,7 @@
 from bamboo import treefunctions as op
 from bamboo.plots import Plot, Skim
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
 from core.constants import ERA_ENUM
@@ -14,11 +14,9 @@ class JetTopology(NanoBaseHHbbWW):
         return Skim(hs.name, skim_data, hs.sel)
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
-        plots = []
-        plots.append(self.yields)
-        plots.extend(self.base_plots)
+        plots = [self.yields]
 
-        objects: dict = get_objects(tree, self.era, get_nano_version(sampleCfg))
+        objects: dict = get_objects(tree, self.era, self.nano_version)
         selections: dict = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample)
         sbc = SelectionBundleContainer.from_objects_and_selections(objects, selections)
 
