@@ -60,7 +60,7 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         elif description == 'gen':
             pass
         elif description == 'trigger_dev':
-            å# groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
+            # groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
             groups = ["PV_", "Flag_", "HLT_", "PuppiMET_", "MET_", "L1_"]
             collections = ["nElectron", "nMuon", "nTau", "nJet", "nFatJet", "nSubJet",
                 "nL1Mu", "nL1EG", "nL1Tau", "nL1Jet", "nL1EtSum",

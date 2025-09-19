@@ -5,7 +5,7 @@ from bamboo.plots import Plot, CutFlowReport, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.plots import VariableBinning
 
-from bamboo_hh.BaseSelection import get_nano_version
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 from bamboo_hh.core.getters import get_objects
 # from triggers.old_object_defs import get_objects
 
@@ -58,18 +58,18 @@ def sl_boosted_jet_selection(ak4_jets, ak4_btags, ak8_btags):
         )
     )
 
-class HLT_Effis(NanoAODHistoModule):
+class HLT_Effis_updated(NanoBaseHHbbWW):
 
     def addArgs(self, parser):
-        super(HLT_Effis, self).addArgs(parser)
+        super(HLT_Effis_updated, self).addArgs(parser)
         parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
-        tree, baseSel, backend, lumiArgs = super(NanoBaseHHbbWW, self).prepareTree(
+        tree, baseSel, backend, lumiArgs = super(HLT_Effis_updated, self).prepareTree(
             tree=tree,
             sample=sample,
             sampleCfg=sampleCfg,
-            description=self.get_NANOAOD_description(nom_desc),
+            description=description,
             backend=backend,
             NANOAOD_desc_type='trigger_dev')
         return tree, baseSel, backend, lumiArgs
@@ -104,13 +104,9 @@ class HLT_Effis(NanoAODHistoModule):
         return ref_flags
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
-        
-        plots = []
-        yields = CutFlowReport("yields", printInLog=True, recursive=True)
-        plots.append(yields)
-        plots.extend(self.base_plots)
+        plots = [self.yields]
 
-        objects: dict = get_objects(tree, self.era, nanov=get_nano_version(sampleCfg), lep_pt_from_L1_or_HLT=self.args.lep_pt)
+        objects: dict = get_objects(tree, self.era, self.nano_version, lep_pt_from_L1_or_HLT=self.args.lep_pt)
         loose_electrons = objects["loose_electrons"]
         tight_electrons = objects["tight_electrons"]
         loose_muons = objects["loose_muons"]
@@ -126,7 +122,7 @@ class HLT_Effis(NanoAODHistoModule):
 
         selections_to_plot = {}
         mllSel = baseSel.refine("mllSel", cut=[mll_selection(loose_electrons, loose_muons)])
-        yields.add(mllSel, "baseSel_mllSel")
+        self.yields.add(mllSel, "baseSel_mllSel")
             
         # =================================================================
         # Muon paths dataframe ============================================
@@ -146,7 +142,7 @@ class HLT_Effis(NanoAODHistoModule):
                 sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags, cleaned_ak8_btags))])
             
             # We want combined efficiency L1 + HLT =========================
-            yields.add(SL_mu, "SL_mu")
+            self.yields.add(SL_mu, "SL_mu")
             selections_to_plot["SL_mu"] = SL_mu
 
             # Retrieve reference flags =====================================
@@ -155,7 +151,7 @@ class HLT_Effis(NanoAODHistoModule):
                 sel_flag_name = 'SL_mu_HLT_' + HLT_flag_name
                 sel_flag = SL_mu.refine(sel_flag_name, cut=[HLT_flag])
                 selections_to_plot[sel_flag_name] = sel_flag
-                yields.add(sel_flag, sel_flag_name)
+                self.yields.add(sel_flag, sel_flag_name)
 
             # Loop through every input path ================================
             for path in paths_Mu.itertuples():
@@ -168,14 +164,14 @@ class HLT_Effis(NanoAODHistoModule):
                 sel_w_path_name = '_'.join(['SL_mu', path.Index]) 
                 sel_w_path = SL_mu.refine(sel_w_path_name, cut=[Mu_path])
                 selections_to_plot[sel_w_path_name] = sel_w_path
-                yields.add(sel_w_path, sel_w_path_name)
+                self.yields.add(sel_w_path, sel_w_path_name)
 
                 for HLT_flag_name, HLT_flag in HLT_Mu_ref_flags.items():
                     sel_w_path_OR_flag_name = '_'.join(['SL_mu', path.Index,'OR',HLT_flag_name]) 
                     sel_w_path_OR_flag = SL_mu.refine(sel_w_path_OR_flag_name, cut=[op.OR(Mu_path, HLT_flag)])
                     if HLT_flag_name == "All":
                         selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
-                    yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
+                    self.yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
 
         # # =================================================================
         # # Electron paths dataframe ========================================
@@ -195,7 +191,7 @@ class HLT_Effis(NanoAODHistoModule):
                 sl_boosted_jet_selection(cleaned_ak4_jets, cleaned_ak4_btags,cleaned_ak8_btags))])
 
             # We want combined efficiency L1 + HLT =========================
-            yields.add(SL_e, "SL_e")
+            self.yields.add(SL_e, "SL_e")
             selections_to_plot["SL_e"] = SL_e
 
             # Retrieve reference flags =====================================
@@ -204,7 +200,7 @@ class HLT_Effis(NanoAODHistoModule):
                 sel_flag_name = 'SL_e_HLT_' + HLT_flag_name
                 sel_flag = SL_e.refine(sel_flag_name, cut=[HLT_flag])
                 selections_to_plot[sel_flag_name] = sel_flag
-                yields.add(sel_flag, sel_flag_name)
+                self.yields.add(sel_flag, sel_flag_name)
 
             # Loop through every input path ================================
             for path in paths_EG.itertuples(): 
@@ -217,14 +213,14 @@ class HLT_Effis(NanoAODHistoModule):
                 sel_w_path_name = '_'.join(['SL_e', path.Index]) 
                 sel_w_path = SL_e.refine(sel_w_path_name, cut=[EG_path])
                 selections_to_plot[sel_w_path_name] = sel_w_path
-                yields.add(sel_w_path, sel_w_path_name)        
+                self.yields.add(sel_w_path, sel_w_path_name)        
 
                 for HLT_flag_name, HLT_flag in HLT_EG_ref_flags.items():
                     sel_w_path_OR_flag_name = '_'.join(['SL_e', path.Index,'OR',HLT_flag_name]) 
                     sel_w_path_OR_flag = SL_e.refine(sel_w_path_OR_flag_name, cut=[op.OR(EG_path, HLT_flag)])
                     if HLT_flag_name == "All":
                         selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
-                    yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
+                    self.yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
 
         # =================================================================
         # Plot selected selections only ===================================
@@ -249,7 +245,7 @@ class HLT_Effis(NanoAODHistoModule):
         return plots
 
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
-        super(HLT_Effis, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
+        super(HLT_Effis_updated, self).postProcess(taskList, config=config, workdir=workdir, resultsdir=resultsdir)
 
         import os
         yields_file = os.path.join(workdir, 'yields_' + str(self.era) + '.tex')
@@ -315,5 +311,5 @@ class HLT_Effis(NanoAODHistoModule):
         print(df)
 
     '''
-    bambooRun -m triggers/HLT_Effis.py bamboo_hh/config/2024_trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/HLT_Effis -lp 15
+    bambooRun -m triggers/HLT_Effis_updated.py bamboo_hh/config/2024_trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/HLT_Effis_updated -lp 15
     '''

@@ -1,19 +1,22 @@
 from bamboo.treeproxies import BoolProxy
 from bamboo import treefunctions as op
+from typing import Literal
 
 LEPTON_PT = {
-    'Uniform': False
-    # 'e_pt': 7,          # Value for loose selection
-    # 'mu_pt': 5,         # Value for loose selection
+    'loose_muon': 5,              # R2: 5
+    'fakeable_muon': 15,              # R2: 5
+    'tight_muon': 15,
+    'loose_electron': 7,       # R2: 7
+    'fakeable_electron': 15,              # R2: 5
+    'tight_electron': 15
 }
 
 def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
     if lep_pt_from_L1_or_HLT is not False:
         global LEPTON_PT
-        if lep_pt_from_L1_or_HLT < 15:
-            LEPTON_PT['Uniform'] = True
-            LEPTON_PT['e_pt'] = lep_pt_from_L1_or_HLT
-            LEPTON_PT['mu_pt'] = lep_pt_from_L1_or_HLT
+        if lep_pt_from_L1_or_HLT:
+            LEPTON_PT['tight_electron'] = lep_pt_from_L1_or_HLT
+            LEPTON_PT['tight_muon'] = lep_pt_from_L1_or_HLT
 
 def get_electron_id(el, era, level):
     if "2022" in era or "2023" in era or "2024" in era:
@@ -26,30 +29,15 @@ def get_electron_id(el, era, level):
     return el_id
 
 def nearbyBtag(lep, jets, era, btag_WP):
-
     btag_WP_cut = 0
     def get_btag_pass(jet):
-        if era in ["2016", "2017", "2018"]: # DeepJet
-            if btag_WP == "M":
-                btag_WP_cut = 0.2770
-            elif btag_WP == "T":
-                btag_WP_cut = 0.7264
-            condition = jet.btagDeepFlavB > btag_WP_cut
-        else: # PNet
-            if btag_WP == "M":
-                btag_WP_cut = 0.2450
-            elif btag_WP == "T":
-                btag_WP_cut = 0.6734
-            condition = jet.btagPNetB > btag_WP_cut
+        if btag_WP == "M":
+            btag_WP_cut = 0.2450
+        elif btag_WP == "T":
+            btag_WP_cut = 0.6734
+        condition = jet.btagPNetB > btag_WP_cut
         return condition
-
     return get_btag_pass(jets[lep.jet.idx])
-    #return op.rng_any(
-    #    jets, lambda j: op.AND(
-    #        op.deltaR(lep.p4, j.p4) < 0.4,
-    #        get_btag_pass(j)
-    #    )            
-    #)
 
 def find_subjets(fatjet, subjets):
     return op.sort(
@@ -60,12 +48,6 @@ def find_subjets(fatjet, subjets):
     )
 
 def calculate_met_quantities(jets, electrons, muons, met_pt):
-    # ht_jets = 0
-    # mht_jets = 0
-    # mht_electrons = 0
-    # mht_muons = 0
-    # mht = 0
-    # met_ld = 0
     ht_jets = op.rng_sum(jets, lambda jet: jet.pt)
     mht_jets = op.rng_sum(jets, lambda jet: jet.p4)
     mht_electrons = op.rng_sum(electrons, lambda el: el.p4)
@@ -84,7 +66,8 @@ def electron_cleaning(electrons, muons, deltar_cut=0.3):
     )
 
 def electron_loose_selection(electrons, jets, era):
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 7
+    pt_cut = LEPTON_PT['loose_electron']
+    print(f"electron_loose_selection: pt cut of {pt_cut}")
     return op.select(electrons, lambda el: op.AND(
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
@@ -99,7 +82,8 @@ def electron_loose_selection(electrons, jets, era):
     )
 
 def electron_fakeable_selection(electrons, jets, era):
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 15
+    pt_cut = LEPTON_PT['fakeable_electron']
+    print(f"electron_fakeable_selection: pt cut of {pt_cut}")
     return op.select(electrons, lambda el: op.AND(
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
@@ -125,7 +109,8 @@ def electron_fakeable_selection(electrons, jets, era):
     )
 
 def electron_tight_selection(electrons, jets, era):
-    pt_cut = LEPTON_PT['e_pt'] if LEPTON_PT['Uniform'] else 15
+    pt_cut = LEPTON_PT['tight_electron']
+    print(f"electron_tight_selection: pt cut of {pt_cut}")
     return op.select(electrons, lambda el: op.AND(
         el.pt > pt_cut,
         op.abs(el.eta) < 2.5,
@@ -148,7 +133,8 @@ def muon_basic_selection(muons):
     return op.select(muons, lambda mu: mu.looseId)
 
 def muon_loose_selection(muons, jets, era):
-    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 5
+    pt_cut = LEPTON_PT['loose_muon']
+    print(f"muon_loose_selection: pt cut of {pt_cut}")
     return op.select(muons, lambda mu: op.AND(
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
@@ -163,7 +149,8 @@ def muon_loose_selection(muons, jets, era):
     )
 
 def muon_fakeable_selection(muons, jets, era):
-    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 15
+    pt_cut = LEPTON_PT['fakeable_muon']
+    print(f"muon_fakeable_selection: pt cut of {pt_cut}")
     return op.select(muons, lambda mu: op.AND(
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
@@ -186,7 +173,8 @@ def muon_fakeable_selection(muons, jets, era):
     )
 
 def muon_tight_selection(muons, jets, era): 
-    pt_cut = LEPTON_PT['mu_pt'] if LEPTON_PT['Uniform'] else 15
+    pt_cut = LEPTON_PT['tight_muon'] if LEPTON_PT['tight_muon'] else 15
+    print(f"muon_tight_selection: pt cut of {pt_cut}")
     return op.select(muons, lambda mu: op.AND(
         mu.pt > pt_cut,
         op.abs(mu.eta) < 2.4,
@@ -317,13 +305,6 @@ def ak4_btag_wp_selection(jets, WP, era):
     else:
         raise ValueError(f"Unsupported b-tagging WP: {WP}")
 
-
-def ak4_loose_btag_wp_selection(jets, era):
-    return ak4_btag_wp_selection(jets, "L", era)
-
-def ak4_medium_btag_wp_selection(jets, era):
-    return ak4_btag_wp_selection(jets, "M", era)
-
 def ak4_loose_btag_selection(jets, era):
     if era == "2022":
         wp = 0.047
@@ -355,9 +336,6 @@ def ak4_btag_selection(jets, era):
     tagger = lambda jet: jet.btagPNetB > wp
 
     return  op.select(jets, tagger)
-
-def ak4_true_bjet_selection(jets):
-    return op.select(jets, lambda jet: jet.hadronFlavour == 5)
 
 def ak8_jet_selection(fatjets, subjets):
     return op.select(fatjets, lambda jet: op.AND(
