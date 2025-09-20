@@ -18,7 +18,7 @@ class HLT_Effis(NanoBaseHHbbWW):
 
     def addArgs(self, parser):
         super(HLT_Effis, self).addArgs(parser)
-        parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
+        parser.add_argument("-lp", "--lep_pt", type=int, action="store", help="Offline Lepton pt cut and no mvaTTH")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         tree, baseSel, backend, lumiArgs = super(HLT_Effis, self).prepareTree(
@@ -187,5 +187,5 @@ class HLT_Effis(NanoBaseHHbbWW):
         calculate(yields_file, Path(workdir))
 
     '''
-    bambooRun -m triggers/HLT_Effis.py bamboo_hh/config/2024_trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/HLT_Effis -lp 15
+    bambooRun -m triggers/HLT_Effis.py bamboo_hh/config/trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/HLT_Effis_10 -lp 10
     '''

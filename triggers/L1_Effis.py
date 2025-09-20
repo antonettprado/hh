@@ -17,7 +17,7 @@ class L1_Effis(NanoBaseHHbbWW):
 
     def addArgs(self, parser):
         super(L1_Effis, self).addArgs(parser)
-        parser.add_argument("-lp", "--lep_pt", type=int, action="store", default=False, help="Offline Lepton pt cut and no mvaTTH")
+        parser.add_argument("--lep_pt", type=int, action="store", help="Offline Lepton pt cut and no mvaTTH")
 
     def prepareTree(self, tree, sample=None, sampleCfg=None, description=None, backend=None):
         tree, baseSel, backend, lumiArgs = super(L1_Effis, self).prepareTree(
@@ -80,7 +80,7 @@ class L1_Effis(NanoBaseHHbbWW):
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = [self.yields]
-
+        print(f"THE ARG IS {self.args.lep_pt}, {type(self.args.lep_pt)}")
         objs: dict = get_objects(tree, self.era, self.nano_version, lep_pt_from_L1_or_HLT=self.args.lep_pt)
         seeds_Mu, seeds_EG = self.get_seeds_to_process()
         
@@ -193,5 +193,5 @@ class L1_Effis(NanoBaseHHbbWW):
         calculate(yields_file, Path(workdir))
 
     '''
-    bambooRun -m triggers/L1_Effis.py bamboo_hh/config/2024_trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/L1_Effis -lp 15
+    bambooRun -m triggers/L1_Effis.py bamboo_hh/config/trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/L1_Effis -lp 15
     '''
