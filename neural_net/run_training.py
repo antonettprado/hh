@@ -70,7 +70,7 @@ class RunDistributed:
             "+MaxRuntime": "172800",  # 2 days in seconds
             # "+MaxRuntime": "259200",  # 3 days in seconds
             # "+MaxRuntime": "432000",  # 5 days in seconds
-            "request_cpus": "6",
+            "request_cpus": "2",
             # "request_gpus": "1",
             "request_memory": "60GB" if memory is None else memory,
             "request_disk": "5GB",

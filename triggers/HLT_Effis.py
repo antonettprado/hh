@@ -53,7 +53,7 @@ class HLT_Effis(NanoBaseHHbbWW):
             ref_flags['Mu15_IsoVVVL_PFHT450'] = HLT.Mu15_IsoVVVL_PFHT450
         elif lepton_sel_name == "SL_e":
             ref_flags['Ele30_WPTight_Gsf'] = HLT.Ele30_WPTight_Gsf    
-            # ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = HLT.Ele28_eta2p1_WPTight_Gsf_HT150
+            ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = HLT.Ele28_eta2p1_WPTight_Gsf_HT150
             ref_flags['Ele15_IsoVVVL_PFHT450'] = HLT.Ele15_IsoVVVL_PFHT450
         # ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         ref_flags['All'] = op.OR(*[flag for name, flag in ref_flags.items()])

@@ -21,26 +21,26 @@ samples:
     cross-section: 0.000948
     generated-events: genEventSumw
     split: 3
-  # ttbar_sl_2022:
-  #   group: ttbar
-  #   era: '2022'
-  #   db:
-  #   - das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
-  #   - das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
-  #   type: mc
-  #   cross-section: 407.8
-  #   generated-events: genEventSumw
-  #   split: 83
-  # ttbar_dl_2022:
-  #   group: ttbar
-  #   era: '2022'
-  #   db:
-  #   - das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
-  #   - das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
-  #   type: mc
-  #   cross-section: 101.8
-  #   generated-events: genEventSumw
-  #   split: 40
+  ttbar_sl_2022:
+    group: ttbar
+    era: '2022'
+    db:
+    - das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 407.8
+    generated-events: genEventSumw
+    split: 83
+  ttbar_dl_2022:
+    group: ttbar
+    era: '2022'
+    db:
+    - das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM
+    - das:/TTto2L2Nu_TuneCP5_13p6TeV_powheg-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5_ext1-v2/NANOAODSIM
+    type: mc
+    cross-section: 101.8
+    generated-events: genEventSumw
+    split: 40
   # tbarWplus_sl_2022:
   #   group: tW
   #   era: '2022'

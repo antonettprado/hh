@@ -4,7 +4,8 @@ from .selections import *
 def get_objects(tree, era: str, nanov: str, lep_pt_from_L1_or_HLT=None) -> dict:
 
     if lep_pt_from_L1_or_HLT is not None: 
-        is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT)
+        print('The lep pt from L1/HLT is', lep_pt_from_L1_or_HLT)
+        set_lep_pt(lep_pt_from_L1_or_HLT)
 
     # Basic Electron and Muon Selection
     electrons = electron_basic_selection(tree.Electron, era)

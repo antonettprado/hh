@@ -209,7 +209,7 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
             HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8
         )
 
-def sl_e_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False, use_mvaTTH=False):
+def sl_e_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False):
     if any(y in era for y in ["2022", "2023"]):
         electron_pt_cut = 28
     elif any(y in era for y in ["2024", "2025", "2026"]):
@@ -227,17 +227,12 @@ def sl_mu_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False
         muon_pt_cut = 24
     elif any(y in era for y in ["2024", "2025", "2026"]):
         muon_pt_cut = 15
-
     return (op.AND(
         op.rng_len(muons) == 1, 
         op.rng_len(electrons) == 0,
         muons[0].pt > muon_pt_cut,
         op.rng_len(taus) == 0,
-        op.OR(
-            noHLT,
-            sl_mu_trigger_selection(is_mc, era, HLT, sample)
-            )
-        )
+        op.OR(noHLT, sl_mu_trigger_selection(is_mc, era, HLT, sample)))
     )
 
 def sl_resolved_jet_selection(ak4_jets, ak4_btags, ak8_btags):

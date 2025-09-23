@@ -58,7 +58,8 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             ]
             return NanoAODDescription.get('v12', year="2022", isMC=self.isMC, systVariations=systVars)
         elif description == 'gen':
-            pass
+            from bamboo.treedecorators import nanoGenDescription
+            return nanoGenDescription
         elif description == 'trigger_dev':
             # groups = ["PV_", "Flag_", "HLT_", "MET_", "GenPart_", "L1EG_", "L1EtSum_", "L1Jet_", "L1Mu_", "L1Tau_"]
             groups = ["PV_", "Flag_", "HLT_", "PuppiMET_", "MET_", "L1_"]
@@ -68,14 +69,14 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             varReaders = []
             return NanoAODDescription(groups=groups, collections=collections, systVariations=varReaders)
 
-    def apply_event_selection(self, _noSel, tree):
+    def apply_event_selection(self, noSel, tree):
         if self.isMC:
             # If MC sample, apply genWeights, select events and adjust normalization
-            _noSel_genWeight = _noSel.refine('_noSel_genWeight', weight=tree.genWeight)
-            self.yields.add(_noSel_genWeight, "_noSel_genWeight")
+            noSel_genWeight = noSel.refine('noSel_genWeight', weight=tree.genWeight)
+            self.yields.add(noSel_genWeight, "noSel_genWeight")
             if 'HH' in self.sampleCfg['group']:
                 print ("Veto super-weighted events in HH")
-                _noSel_genWeight = _noSel_genWeight.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
+                noSel_genWeight = noSel_genWeight.refine("Veto super-weighted events in HH", cut=(op.abs(tree.genWeight) < 100))
 
             cut = ()
             if self.event_nr_sel == 'all': cut = (op.OR(tree.event % 2 == 0, tree.event % 2 == 1))
@@ -84,17 +85,17 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
             else: raise ValueError("events must be 'all', 'odd', or 'even'")
             print (f"Select {self.event_nr_sel} event numbers for MC")
 
-            _noSel_genWeight = _noSel_genWeight.refine('genEventSumWeight', cut=cut)
-            self.yields.add(_noSel_genWeight, "_noSel_genWeight cut")
-            noSel = _noSel_genWeight
+            noSel_genWeight = noSel_genWeight.refine('genEventSumWeight', cut=cut)
+            self.yields.add(noSel_genWeight, "noSel_genWeight cut")
+            baseSel = noSel_genWeight
         else:
-            noSel = _noSel
+            baseSel = noSel
 
-        return noSel
+        return baseSel
 
-    def apply_prelim_selections(self, noSel, tree):
+    def apply_prelim_selections(self, baseSel, tree):
         # PV Selection
-        baseSel = noSel.refine('pv', cut=[tree.PV.npvsGood > 0])
+        baseSel = baseSel.refine('pv', cut=[tree.PV.npvsGood > 0])
         self.yields.add(baseSel, "pv")
 
         # MET Filter Selection
@@ -131,15 +132,18 @@ class NanoBaseHHbbWW(NanoAODHistoModule):
         self.yields = CutFlowReport("yields",printInLog=True,recursive=False)
         self.nano_version = self.get_nano_version()
         
-        tree, _noSel, backend, lumiArgs = super(NanoBaseHHbbWW, self).prepareTree(
+        tree, noSel, backend, lumiArgs = super(NanoBaseHHbbWW, self).prepareTree(
             tree=tree,
             sample=sample,
             sampleCfg=sampleCfg,
             description=self.get_NANOAOD_description(description=NANOAOD_desc_type),
             backend=backend)
 
-        noSel = self.apply_event_selection(_noSel, tree) 
-        baseSel = self.apply_prelim_selections(noSel, tree)
+        baseSel = self.apply_event_selection(noSel, tree)
+
+        if NANOAOD_desc_type != 'gen':
+            baseSel = self.apply_prelim_selections(baseSel, tree)
+
         return tree, baseSel, backend, lumiArgs
 
     def readCounters(self, resultsFile):

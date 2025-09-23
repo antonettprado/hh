@@ -11,12 +11,12 @@ LEPTON_PT = {
     'tight_electron': 15
 }
 
-def is_from_SL_L1_or_HLT(lep_pt_from_L1_or_HLT):
-    if lep_pt_from_L1_or_HLT is not False:
-        global LEPTON_PT
-        if lep_pt_from_L1_or_HLT:
-            LEPTON_PT['tight_electron'] = lep_pt_from_L1_or_HLT
-            LEPTON_PT['tight_muon'] = lep_pt_from_L1_or_HLT
+def set_lep_pt(lep_pt_from_L1_or_HLT: int):
+    global LEPTON_PT
+    LEPTON_PT['tight_electron'] = lep_pt_from_L1_or_HLT
+    LEPTON_PT['tight_muon'] = lep_pt_from_L1_or_HLT
+    print(f"The tight_ele pt is {LEPTON_PT['tight_electron']}")
+    print(f"The tight_mu pt is {LEPTON_PT['tight_muon']}")
 
 def get_electron_id(el, era, level):
     if "2022" in era or "2023" in era or "2024" in era:
@@ -173,7 +173,7 @@ def muon_fakeable_selection(muons, jets, era):
     )
 
 def muon_tight_selection(muons, jets, era): 
-    pt_cut = LEPTON_PT['tight_muon'] if LEPTON_PT['tight_muon'] else 15
+    pt_cut = LEPTON_PT['tight_muon']
     print(f"muon_tight_selection: pt cut of {pt_cut}")
     return op.select(muons, lambda mu: op.AND(
         mu.pt > pt_cut,
