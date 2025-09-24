@@ -84,3 +84,7 @@ class JetTopology(NanoBaseHHbbWW):
         plots.extend(skims)
 
         return plots
+
+        '''
+        python -u scripts/bambooRunBetter.py JetTopology -o $Z_OUTPUT_eos/JetTop --event_nr_sel even -c bamboo_hh_new/config/disc_study_new.yml -d
+        '''

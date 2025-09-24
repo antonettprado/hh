@@ -51,11 +51,12 @@ class HLT_Effis(NanoBaseHHbbWW):
         if lepton_sel_name == "SL_mu":      
             ref_flags['IsoMu24'] = HLT.IsoMu24
             ref_flags['Mu15_IsoVVVL_PFHT450'] = HLT.Mu15_IsoVVVL_PFHT450
+            ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         elif lepton_sel_name == "SL_e":
             ref_flags['Ele30_WPTight_Gsf'] = HLT.Ele30_WPTight_Gsf    
-            ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = HLT.Ele28_eta2p1_WPTight_Gsf_HT150
+            # ref_flags['Ele28_eta2p1_WPTight_Gsf_HT150'] = HLT.Ele28_eta2p1_WPTight_Gsf_HT150
             ref_flags['Ele15_IsoVVVL_PFHT450'] = HLT.Ele15_IsoVVVL_PFHT450
-        # ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
+            ref_flags['PFHT280_QuadPFJet30_PNet2BTagMean0p55'] = HLT.PFHT280_QuadPFJet30_PNet2BTagMean0p55
         ref_flags['All'] = op.OR(*[flag for name, flag in ref_flags.items()])
         return ref_flags
 
@@ -69,13 +70,10 @@ class HLT_Effis(NanoBaseHHbbWW):
         mllSel = baseSel.refine("mllSel", cut=[selections.mll_selection(objs['loose_electrons'], objs['loose_muons'])])
         self.yields.add(mllSel, "baseSel_mllSel")
             
-        # =================================================================
-        # Muon paths dataframe ============================================
-        # =================================================================
         if not paths_Mu.empty:
 
             # Muon selection ==============================================
-            mu_pt_cut = self.args.lep_pt if self.args.lep_pt is not False else 10
+            mu_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 15
             print(f"The offline muon pt cut is: {mu_pt_cut}")
             SL_mu_only = mllSel.refine("SL muon only selection", cut=[op.AND(
                 op.rng_len(objs['tight_muons']) == 1,
@@ -113,13 +111,10 @@ class HLT_Effis(NanoBaseHHbbWW):
                         selections_to_plot[sel_w_path_OR_flag_name] = sel_w_path_OR_flag
                     self.yields.add(sel_w_path_OR_flag, sel_w_path_OR_flag_name)
 
-        # # =================================================================
-        # # Electron paths dataframe ========================================
-        # # =================================================================
         if not paths_EG.empty:
 
             # Electron selection ===========================================
-            e_pt_cut = self.args.lep_pt if self.args.lep_pt is not False else 10
+            e_pt_cut = self.args.lep_pt if self.args.lep_pt is not None else 15
             print(f"The offline electron pt cut is: {e_pt_cut}")
             SL_e_only = mllSel.refine("SL electron only selection", cut=[op.AND(
                 op.rng_len(objs['tight_muons']) == 0,
@@ -160,16 +155,15 @@ class HLT_Effis(NanoBaseHHbbWW):
         # =================================================================
         # Plot selected selections only ===================================
         # =================================================================
-        custom_Uniform4 = np.arange(10, 200, 4).tolist()               
-        custom_Uniform4.append(200)                                   
+        custom_Uniform4 = np.arange(10, 201, 4).tolist()                                               
         if selections_to_plot:
             for sel_name, sel in selections_to_plot.items():
                 if "EG" in sel_name or "SL_e" in sel_name: lep = objs['tight_electrons']
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = objs['tight_muons']
                 plots.extend([
-                    Plot.make1D(sel_name + "_pt_Uniform2", lep[0].pt, sel, EqBin(100, 0, 200)),
-                    Plot.make1D(sel_name + "_pt_Uniform4", lep[0].pt, sel, EqBin(50, 0, 200)),
-                    Plot.make1D(sel_name + "_pt_Uniform4_start10", lep[0].pt, sel, VariableBinning(custom_Uniform4)),     
+                    Plot.make1D(sel_name + "_Uniform2_pt", lep[0].pt, sel, EqBin(100, 0, 200)),
+                    Plot.make1D(sel_name + "_Uniform4_pt", lep[0].pt, sel, EqBin(50, 0, 200)),
+                    Plot.make1D(sel_name + "_Uniform4_start10_pt", lep[0].pt, sel, VariableBinning(custom_Uniform4)),     
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,2,4,6,8,10,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,125,150,200])),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(50, -4, 4)),
                     Plot.make1D(sel_name + "_HT", objs['ht_jets'], sel, VariableBinning([0,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,600,700,800,1000])),
@@ -187,5 +181,5 @@ class HLT_Effis(NanoBaseHHbbWW):
         calculate(yields_file, Path(workdir))
 
     '''
-    bambooRun -m triggers/HLT_Effis.py bamboo_hh/config/trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/HLT_Effis_10 -lp 10
+    bambooRun -m triggers/HLT_Effis.py bamboo_hh/config/trigger_dev.yml -o $Z_OUTPUT_eos/Triggers_New/HLT_Effis_Rep
     '''

@@ -39,48 +39,24 @@ class L1_Effis(NanoBaseHHbbWW):
         return seeds_Mu, seeds_EG
 
     def get_reference_flags(self, lepton_sel_name, L1) -> dict[str, bool]:
-        flags_dict = dict()
+        ref_flags = dict()
         if lepton_sel_name == "SL_mu":          
-            if self.era == '2017':
-                flags_dict['HTT280er'] = self.get_Mu_seed_emulation(pd.Series({'HT': 280}))
-                flags_dict['SingleMu22'] = L1.SingleMu22
-                flags_dict['Mu6_HTT240er'] =  self.get_Mu_seed_emulation(pd.Series({'pt': 6, 'HT': 240}))
-            elif self.era == '2018':
-                flags_dict['HTT280er'] = self.get_Mu_seed_emulation(pd.Series({'HT': 280}))
-                flags_dict['SingleMu22'] = L1.SingleMu22
-                flags_dict['Mu6_HTT240er'] = L1.Mu6_HTT240er
-            elif self.era in ['2023', '2024']:
-                # Using l1 flags
-                flags_dict['HTT280er'] = L1.HTT280er
-                flags_dict['SingleMu22'] = L1.SingleMu22
-                flags_dict['Mu6_HTT240er'] = L1.Mu6_HTT240er
-            flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
+            ref_flags['HTT280er'] = L1.HTT280er
+            # ref_flags['SingleMu22'] = L1.SingleMu22
+            ref_flags['Mu6_HTT240er'] = L1.Mu6_HTT240er
         elif lepton_sel_name == "SL_e":
-            if self.era == '2017':
-                flags_dict['HTT280er'] = self.get_EG_seed_emulation(pd.Series({'HT': 280}))
-                flags_dict['SingleEG36er2p5'] = self.get_EG_seed_emulation(pd.Series({'pt': 36, 'er': 2.523}))
-                flags_dict['SingleIsoEG30er2p5'] = self.get_EG_seed_emulation(pd.Series({'iso': 'single', 'pt': 30, 'er': 2.523}))
-                flags_dict['LooseIsoEG28er2p1_HTT100er'] = L1.LooseIsoEG28er2p1_HTT100er
-                flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = L1.LooseIsoEG28er2p1_Jet34er2p7_dR_Min0p3
-            elif self.era == '2018':
-                flags_dict['HTT280er'] = self.get_EG_seed_emulation(pd.Series({'HT': 280}))
-                flags_dict['SingleEG36er2p5'] = L1.SingleEG36er2p5
-                flags_dict['SingleIsoEG30er2p5'] = L1.SingleIsoEG30er2p5
-                flags_dict['LooseIsoEG28er2p1_HTT100er'] = L1.LooseIsoEG28er2p1_HTT100er
-                flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = L1.LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3
-            elif self.era in ['2023', '2024']:
-                # Using l1 flags
-                flags_dict['HTT280er'] = L1.HTT280er
-                flags_dict['SingleEG36er2p5'] = L1.SingleEG36er2p5
-                flags_dict['SingleIsoEG30er2p5'] = L1.SingleIsoEG30er2p5
-                # flags_dict['LooseIsoEG28er2p1_HTT100er'] = L1.LooseIsoEG28er2p1_HTT100er
-                # flags_dict['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = L1.LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3
-            flags_dict['All'] = op.OR(*[flag for name, flag in flags_dict.items()])
-        return flags_dict
+            # Using l1 flags
+            ref_flags['HTT280er'] = L1.HTT280er
+            # ref_flags['SingleEG36er2p5'] = L1.SingleEG36er2p5
+            # ref_flags['SingleIsoEG30er2p5'] = L1.SingleIsoEG30er2p5
+            # ref_flags['LooseIsoEG28er2p1_HTT100er'] = L1.LooseIsoEG28er2p1_HTT100er
+            # ref_flags['LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3'] = L1.LooseIsoEG28er2p1_Jet34er2p5_dR_Min0p3
+        ref_flags['All'] = op.OR(*[flag for name, flag in ref_flags.items()])
+        return ref_flags
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = [self.yields]
-        print(f"THE ARG IS {self.args.lep_pt}, {type(self.args.lep_pt)}")
+
         objs: dict = get_objects(tree, self.era, self.nano_version, lep_pt_from_L1_or_HLT=self.args.lep_pt)
         seeds_Mu, seeds_EG = self.get_seeds_to_process()
         
@@ -98,24 +74,26 @@ class L1_Effis(NanoBaseHHbbWW):
                 objs['tight_muons'][0].pt > mu_pt_cut)])
             SL_mu = SL_mu_only.refine("SL muon selection", cut=[op.OR(
                 selections.sl_resolved_jet_selection(objs['ak4_jets'], objs['ak4_btags'], objs['ak8_btags']),
-                selections.sl_boosted_jet_selection(objs['ak4_jets'], objs['ak4_btags'], objs['ak8_btags']))])
+                selections.sl_boosted_jet_selection(objs['ak4_jets'], objs['ak4_btags'], objs['ak8_btags'])
+            )])
             
             selections_to_plot["SL_mu"] = SL_mu
             self.yields.add(SL_mu, "SL_mu")
 
+            SL_mu_L1_SingleMu22 = SL_mu.refine('SL_mu_L1_SingleMu22', cut=tree.L1.SingleMu22)
+            selections_to_plot['SL_mu_L1_SingleMu22'] = SL_mu_L1_SingleMu22
+            self.yields.add(SL_mu_L1_SingleMu22, 'SL_mu_L1_SingleMu22')
+
             L1_Mu_flags_dict = self.get_reference_flags("SL_mu", tree.L1)
             for L1_flag_name, L1_flag in L1_Mu_flags_dict.items():
-                sel_flag_name = 'SL_mu_L1_' + L1_flag_name
+                sel_flag_name = f'SL_mu_L1_{L1_flag_name}'
                 sel_flag = SL_mu.refine(sel_flag_name, cut=[L1_flag])
                 selections_to_plot[sel_flag_name] = sel_flag
                 self.yields.add(sel_flag, sel_flag_name)
 
             for seed in seeds_Mu.itertuples():
                 l1_name = seed.Index.replace('L1_', '')
-                if hasattr(tree.L1, l1_name):
-                    Mu_trigger = getattr(tree.L1, l1_name)
-                else:
-                    continue
+                Mu_trigger = getattr(tree.L1, l1_name)
 
                 sel_w_seed_name = '_'.join(['SL_mu', seed.Index]) 
                 sel_w_seed = SL_mu.refine(sel_w_seed_name, cut=[Mu_trigger])
@@ -139,24 +117,26 @@ class L1_Effis(NanoBaseHHbbWW):
                 objs['tight_electrons'][0].pt > e_pt_cut)])
             SL_e = SL_e_only.refine("SL electron selection", cut=[op.OR(
                 selections.sl_resolved_jet_selection(objs['ak4_jets'], objs['ak4_btags'], objs['ak8_btags']),
-                selections.sl_boosted_jet_selection(objs['ak4_jets'], objs['ak4_btags'], objs['ak8_btags']))])
+                selections.sl_boosted_jet_selection(objs['ak4_jets'], objs['ak4_btags'], objs['ak8_btags'])
+                )])
             
             selections_to_plot["SL_e"] = SL_e
             self.yields.add(SL_e, "SL_e")
 
+            SL_e_L1_SingleIsoEG30er2p5 = SL_e.refine('SL_e_L1_SingleIsoEG30er2p5', cut=tree.L1.SingleIsoEG30er2p5)
+            selections_to_plot['SL_e_L1_SingleIsoEG30er2p5'] = SL_e_L1_SingleIsoEG30er2p5
+            self.yields.add(SL_e_L1_SingleIsoEG30er2p5, 'SL_e_L1_SingleIsoEG30er2p5')
+
             L1_EG_flags_dict = self.get_reference_flags("SL_e", tree.L1)
             for L1_flag_name, L1_flag in L1_EG_flags_dict.items():
-                sel_flag_name = 'SL_e_L1_' + L1_flag_name
+                sel_flag_name = f'SL_e_L1_{L1_flag_name}'
                 sel_flag = SL_e.refine(sel_flag_name, cut=[L1_flag])
                 selections_to_plot[sel_flag_name] = sel_flag
                 self.yields.add(sel_flag, sel_flag_name)
 
             for seed in seeds_EG.itertuples(): 
                 l1_name = seed.Index.replace('L1_', '')
-                if hasattr(tree.L1, l1_name):
-                    EG_trigger = getattr(tree.L1, l1_name)
-                else:
-                    continue
+                EG_trigger = getattr(tree.L1, l1_name)
 
                 sel_w_seed_name = '_'.join(['SL_e', seed.Index]) 
                 sel_w_seed = SL_e.refine(sel_w_seed_name, cut=[EG_trigger])
@@ -170,11 +150,13 @@ class L1_Effis(NanoBaseHHbbWW):
                         selections_to_plot[sel_w_seed_OR_flag_name] = sel_w_seed_OR_flag
                     self.yields.add(sel_w_seed_OR_flag, sel_w_seed_OR_flag_name)
 
+        custom_Uniform4 = np.arange(10, 201, 4).tolist()  
         if selections_to_plot:
             for sel_name, sel in selections_to_plot.items():
                 if "EG" in sel_name or "SL_e" in sel_name: lep = objs['tight_electrons']
                 elif "Mu" in sel_name or "SL_mu" in sel_name: lep = objs['tight_muons']
                 plots.extend([
+                    Plot.make1D(sel_name + "_Uniform4_start10_pt", lep[0].pt, sel, VariableBinning(custom_Uniform4)),
                     Plot.make1D(sel_name + "_pt", lep[0].pt, sel, VariableBinning([0,2,4,6,8,10,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,125,150,200])),
                     Plot.make1D(sel_name + "_eta", lep[0].eta, sel, EqBin(50, -4, 4)),
                     # Plot.make1D(sel_name + "_HT_jets", self.ht_jets, sel, VariableBinning([0,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,600,700,800,1000]))
@@ -193,5 +175,5 @@ class L1_Effis(NanoBaseHHbbWW):
         calculate(yields_file, Path(workdir))
 
     '''
-    bambooRun -m triggers/L1_Effis.py bamboo_hh/config/trigger_dev.yml -o /eos/user/a/anunezde/Z_OUTPUT_eos/L1_Effis -lp 15
+    bambooRun -m triggers/L1_Effis.py bamboo_hh/config/trigger_dev.yml -o $Z_OUTPUT_eos/Triggers_New/L1_Effis_New
     '''

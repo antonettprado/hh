@@ -17,11 +17,11 @@ import numpy as np
 import json
     
 class Analyzer:
-    def __init__(self, workdir: WorkDirectory, config: AnalysisConfig, mapping_path: Path = None, outdir: Optional[Path] = None):
+    def __init__(self, workdir: WorkDirectory, config: AnalysisConfig, outdir: Path = None, mapping_path: Path = None, ):
         self.wd = workdir
         self.config = config
+        self.outdir = Path(outdir) if outdir else workdir.path
         self.mapping_path = mapping_path
-        self.outdir = Path(outdir) if outdir else Path('.')
     
     def get_signal_background(self, ref: Reference, processes=None, eras=None):
         processes = processes or self.wd.processes
