@@ -1,14 +1,12 @@
 # File: analysis/analyzers/discriminant_analyzer.py
 from core.analysis_config import AnalysisConfig
 from core.reference import Reference
-from core.observable import ObsType, get_obs_info
+from core.observable import ObsType, classify_observable
 from utils.workdirectory import WorkDirectory
 from utils.histogram import extract_signal_background, get_process_hists
 from utils.functions import get_refs_from
-from utils.plot_config import PlotLimits, CMSPlotStyle
-
 from utils import histogram as hist_utils
-from utils.plots import (plot_1d, plot_2d, hist_to_numpy)
+from utils.plotting import (PlotLimits, CMSPlotStyle, plot_1d, plot_2d, hist_to_numpy)
 
 from typing import Optional
 from itertools import product
@@ -31,24 +29,24 @@ class Analyzer:
 
     def _build_ax_labels_limits(self, ref: Reference, plot_style: CMSPlotStyle, plot_limits = None) -> tuple[CMSPlotStyle, PlotLimits]:
         from bamboo_hh.variables import REG
-        info = get_obs_info(ref)
+        info = classify_observable(ref=ref)
         plot_limits = plot_limits or PlotLimits()
         if ObsType.is_nn(ref):
             nn_class = ref.observable_sub
-            plot_style.xlabel = f'{nn_class} score'
+            xlabel = f'{nn_class} score'
         elif ObsType.is_llr(ref):
             var_titles = [REG.get_var1D_title(var) for var in info.vars]
             if info.category == "llr_factorized":
-                plot_style.xlabel = r'LLR_{fact}('+ f'{",".join(var_titles)}' +')'
+                xlabel = r'LLR_{fact}('+ f'{",".join(var_titles)}' +')'
             else:
-                plot_style.xlabel = f'LLR({",".join(var_titles)})'
+                xlabel = f'LLR({",".join(var_titles)})'
         else:
             labels = tuple(REG.get_var1D_title(var) for var in info.vars)
             if len(info.vars) == 1:
                 _, xmin, xmax = REG.get_var1D_binning(info.vars[0])
                 if plot_limits.xmin is None: plot_limits.xmin = xmin
                 if plot_limits.xmax is None: plot_limits.xmax = xmax
-                plot_style.xlabel = labels[0]
+                xlabel = labels[0]
             elif len(info.vars) == 2:
                 _, xmin, xmax = REG.get_var1D_binning(info.vars[1])  # x = second var
                 _, ymin, ymax = REG.get_var1D_binning(info.vars[0])  # y = first var  
@@ -58,6 +56,9 @@ class Analyzer:
                 if plot_limits.ymax is None: plot_limits.ymax = ymax
                 plot_style.xlabel = labels[1]
                 plot_style.ylabel = labels[0]
+
+        if plot_style.xlabel is None:
+            plot_style.xlabel = xlabel
 
         return plot_style, plot_limits
 

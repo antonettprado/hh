@@ -5,10 +5,10 @@ from typing import Literal
 LEPTON_PT = {
     'loose_muon': 5,              # R2: 5
     'fakeable_muon': 15,              # R2: 5
-    'tight_muon': 15,
+    'tight_muon': 15,           # For trigger stuff: 10
     'loose_electron': 7,       # R2: 7
     'fakeable_electron': 15,              # R2: 5
-    'tight_electron': 15
+    'tight_electron': 15        # For trigger stuff: 10
 }
 
 def set_lep_pt(lep_pt_from_L1_or_HLT: int):

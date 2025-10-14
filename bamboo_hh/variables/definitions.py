@@ -508,7 +508,7 @@ def _get_jet_objects(objs):
     ak8_btags = objs["ak8_btags"]
     return ak4_jets, ak4_btags, ak8_btags
 
-@REG.reg_var1D(name="lep0_pt", nbins=50, min=0, max=500, unit="GeV", title="p_{T}^{#ell_0}")
+@REG.reg_var1D(name="lep0_pt", nbins=125, min=0, max=500, unit="GeV", title="p_{T}^{#ell_0}")
 def data_lep0_pt(objs):
     lep0_p4, _ = _get_leptons_p4(objs)
     return lep0_p4.Pt()

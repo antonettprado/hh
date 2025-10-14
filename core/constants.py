@@ -19,8 +19,8 @@ ERA_ENUM = {
     "2026": 7,
 }
 
-CHANNEL_DISCRIMINANT_DELIM = "___"
-WITHIN_GROUP_DELIM = "__"
+CHANNEL_DISCRIMINANT_DELIM = "_xxx_"
+WITHIN_GROUP_DELIM = "_x_"
 
 BKG_EXCLUDE_PATTERNS = ('data', 'ggHH', 'HH_bbWW', 'asimov')
 SM_SIGNAL_PATTERNS   = ('ggHH_kl_1_kt_1', 'HH_bbWW')

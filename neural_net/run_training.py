@@ -53,7 +53,7 @@ class RunDistributed:
         return executable_path
 
     @staticmethod
-    def submit_job(config_name, rostername, workdir, outdirname, trainer, log_level, pass_idx=None, memory:str=None) -> dict:
+    def submit_job(config_name, rostername, workdir, outdirname, trainer, log_level, pass_idx=None, memory=40) -> dict:
         import htcondor
         col = htcondor.Collector()
         credd = htcondor.Credd()
@@ -67,13 +67,14 @@ class RunDistributed:
             "log": f"{str(rd.afs_modeldir.resolve())}/condor.log",
             # "+MaxRuntime": "28800",  # 8 hrs in seconds
             # "+MaxRuntime": "86400",  # 1 days in seconds
-            "+MaxRuntime": "172800",  # 2 days in seconds
+            # "+MaxRuntime": "172800",  # 2 days in seconds
             # "+MaxRuntime": "259200",  # 3 days in seconds
             # "+MaxRuntime": "432000",  # 5 days in seconds
+            "+JobFlavour": '"testmatch"',
             "request_cpus": "2",
             # "request_gpus": "1",
-            "request_memory": "60GB" if memory is None else memory,
-            "request_disk": "5GB",
+            "request_memory": f"{memory}GB",
+            "request_disk": "2GB",
             'MY.SendCredential': True,
             "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, core, utils"
         })
@@ -89,7 +90,7 @@ class RunDistributed:
             "model": config_name,
             "pass_idx": pass_idx,
             "trainer": trainer,
-            "request_memory": "40GB" if memory is None else memory, 
+            "request_memory": f"{memory}GB", 
             "status": "submitted"
         }
 
@@ -114,7 +115,10 @@ def main(args):
         modeldir = args.workdir / args.outdirname / config.name
         modeldir.mkdir(exist_ok=True, parents=True)
         
-        pass_indices = [None] if args.trainer == 'simple' else range(5)
+        if args.pass_idx:
+            pass_indices = [None] if args.trainer == 'simple' else args.pass_idx
+        else:
+            pass_indices = [None] if args.trainer == 'simple' else range(5)
         
         for pass_idx in pass_indices:
             if args.distributed:
@@ -153,7 +157,7 @@ if __name__ == "__main__":
     driver.add_argument("-m", "--memory", type=int, default=None, help='Memory allocation for job, e.g.: 40GB')
     trainer = parser.add_argument_group("Trainer arguments")
     parser.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='kfold', help='Training mode')
-    parser.add_argument("-p", "--pass_idx", type=int, default=None, help='Pass index for kfold mode')
+    parser.add_argument("-p", "--pass_idx", type=int, nargs='+', default=None, help='Pass index for kfold mode')
 
     args = parser.parse_args()
     main(args)

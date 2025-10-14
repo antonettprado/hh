@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Dict
+from neural_net.model_config import load_model_configs
 import htcondor
 from pathlib import Path
 import yaml
@@ -11,7 +12,7 @@ class Job:
     model: str
     trainer: str
     pass_idx: Optional[int] = None
-    request_memory: Optional[str] = None
+    memory: Optional[str] = None
     status: Optional[str] = None
     hold_reason: Optional[str] = None
     exit_code: Optional[int] = None
@@ -29,84 +30,6 @@ class JobBatch:
     def from_dict(data: Dict) -> "JobBatch":
         jobs = [Job(**job_data) for job_data in data["jobs"]]
         return JobBatch(jobs=jobs)
-
-def submit_training_jobs(config_name: str, roster: Path, workdir: Path, 
-                         outdir: str, afs_configdir: Path,
-                         trainer: str, pass_indices: List[int], 
-                         manifest_path: Path,
-                         request_memory="40GB") -> JobBatch:
-
-    script = f"""#!/bin/bash
-    source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
-    export PYTHONPATH="${{PYTHONPATH}}:${{PWD}}"
-    export X509_USER_PROXY=$(realpath ~/private/x509up)
-
-    echo "Starting training"
-    python neural_net/trainers.py "$@"
-    PY_EXIT=$?
-
-    if [[ $PY_EXIT -ne 0 ]]; then
-        echo "Python failed with $PY_EXIT"
-        exit $PY_EXIT
-    fi
-
-    echo "Training finished"
-    exit 0
-    """
-    executable_path = afs_configdir / "runTraining.sh"
-    executable_path.write_text(script)
-    executable_path.chmod(0o755)
-    
-    submit = htcondor.Submit({
-        "executable": f"{executable_path.resolve()}",
-        "arguments": f"-w {workdir.resolve()} -r {roster} -o {outdir} -t {trainer} -cn {config_name} -p $(pass_idx)",
-        "output": f"{afs_configdir.resolve()}/$(Cluster)_$(Process).out",
-        "error": f"{afs_configdir.resolve()}/$(Cluster)_$(Process).err",
-        "log": f"{afs_configdir.resolve()}/condor.log",
-        # "+JobFlavour": "testmatch", # 3 days
-        # "+JobFlavour": "workday",  # 8 hrs
-        "+MaxRuntime": "259200",  # 3 days in seconds
-        # "+MaxRuntime": "28800",  # 8 hrs in seconds
-        "request_cpus": "6",
-        # "request_cpus": "4",
-        # "request_gpus": "1",
-        "request_memory": "80GB" if request_memory is None else request_memory,
-        "request_disk": "20GB",
-        'MY.SendCredential': True,
-        "transfer_input_files": f"{executable_path.resolve()}, neural_net, references"
-    })
-
-    itemdata = [{"pass_idx": str(idx)} for idx in pass_indices]
-    schedd = htcondor.Schedd()
-    submit_result = schedd.submit(submit, itemdata=iter(itemdata))
-    print(f"[INFO] Submitted cluster {submit_result.cluster()} for model {config_name}")
-
-    jobs = [
-        Job(
-            name=f"{config_name}_Pass{item['pass_idx']}",
-            cluster_id=submit_result.cluster(),
-            proc_id=i,
-            model=config_name,
-            trainer=trainer,
-            pass_idx=item["pass_idx"],
-            request_memory=request_memory,
-            status="submitted"
-        )
-        for i, item in enumerate(itemdata)
-    ]
-
-    if manifest_path.exists():
-        with open(manifest_path) as f:
-            batch_data = yaml.safe_load(f)
-        batch = JobBatch.from_dict(batch_data)
-        batch.jobs.extend(jobs)
-    else:
-        batch = JobBatch(jobs=jobs)
-
-    with open(manifest_path, 'w') as f:
-        yaml.dump(batch.to_dict(), f)
-
-    return batch
 
 class JobManager:
     def __init__(self, manifest_path: Path):
@@ -217,7 +140,7 @@ class JobManager:
     def resubmit_held_jobs(self):
         for job in self.batch.jobs:
             if job.status == "Held" and "cgroup memory limit" in (job.hold_reason or ""):
-                old_mem = int(job.request_memory.rstrip('GB'))
+                old_mem = int(job.memory.rstrip('GB'))
                 new_mem = f"{old_mem + 2}GB"
                 print(f"[INFO] Editing {job.cluster_id}.{job.proc_id} to {new_mem}")
 
@@ -226,7 +149,7 @@ class JobManager:
                     "RequestMemory",
                     f'"{new_mem}"'
                 )
-                job.request_memory = new_mem
+                job.memory = new_mem
 
         self.save_manifest()
 
@@ -273,3 +196,186 @@ class JobManager:
             return f"{Colors.RED}{status}{Colors.RESET}"
         else:
             return status
+
+def submit_training_jobs(config_name: str, roster: str, workdir: Path, 
+                         outdir: str, afs_configdir: Path,
+                         trainer: str, pass_indices: List[int], 
+                         manifest_path: Path,
+                         memory="45GB") -> JobBatch:
+
+    script = f"""#!/bin/bash
+    source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc11-opt/setup.sh
+    export PYTHONPATH="${{PYTHONPATH}}:${{PWD}}"
+    export X509_USER_PROXY=$(realpath ~/private/x509up)
+
+    # Disable core dumps
+    ulimit -c 0
+
+    echo "Starting training"
+    python neural_net/trainers.py -w {workdir} -r {roster} -o {outdir} -t {trainer} -cn {config_name} -p $1
+    PY_EXIT=$?
+
+    if [[ $PY_EXIT -ne 0 ]]; then
+        echo "Python failed with $PY_EXIT"
+        exit $PY_EXIT
+    fi
+
+    echo "Training finished"
+    exit 0
+    """
+    executable_path = afs_configdir / "runTraining.sh"
+    executable_path.write_text(script)
+    executable_path.chmod(0o755)
+    
+    submit = htcondor.Submit({
+        "executable": f"{executable_path.resolve()}",
+        "arguments": "$(pass_idx)",
+        "output": f"{afs_configdir.resolve()}/$(Cluster)_$(Process).out",
+        "error": f"{afs_configdir.resolve()}/$(Cluster)_$(Process).err",
+        "log": f"{afs_configdir.resolve()}/condor.log",
+        # "+MaxRuntime": "28800",  # 8 hrs in seconds
+        # "+MaxRuntime": "86400",  # 1 days in seconds
+        # "+MaxRuntime": "172800",  # 2 days in seconds
+        # "+MaxRuntime": "259200",  # 3 days in seconds
+        # "+MaxRuntime": "432000",  # 5 days in seconds
+        "+JobFlavour": '"testmatch"',
+        "request_cpus": "2",
+        # "request_gpus": "1",
+        "request_memory": memory,
+        "request_disk": "2GB",
+        'MY.SendCredential': True,
+        "transfer_input_files": f"{str(executable_path.resolve())}, neural_net, utils, core"
+    })
+
+    itemdata = [{"pass_idx": str(idx)} for idx in pass_indices]
+    schedd = htcondor.Schedd()
+    submit_result = schedd.submit(submit, itemdata=iter(itemdata))
+    print(f"[INFO] Submitted cluster {submit_result.cluster()} for model {config_name}")
+
+    jobs = [
+        Job(
+            name=f"{config_name}_Pass{item['pass_idx']}",
+            cluster_id=submit_result.cluster(),
+            proc_id=i,
+            model=config_name,
+            trainer=trainer,
+            pass_idx=item["pass_idx"],
+            memory=memory,
+            status="submitted"
+        )
+        for i, item in enumerate(itemdata)
+    ]
+
+    if manifest_path.exists():
+        with open(manifest_path) as f:
+            batch_data = yaml.safe_load(f)
+        batch = JobBatch.from_dict(batch_data)
+        batch.jobs.extend(jobs)
+    else:
+        batch = JobBatch(jobs=jobs)
+
+    with open(manifest_path, 'w') as f:
+        yaml.dump(batch.to_dict(), f)
+
+    return batch
+
+def handle_submit(args):
+
+    afs_outdir = Path("Z_OUTPUT") / args.outdirname
+    if afs_outdir.exists():
+        answer: str = input(f"Overwrite {afs_outdir}? (y/n)")
+        if answer == 'y':
+            import shutil
+            shutil.rmtree(afs_outdir)
+        else:
+            print("Re-run with a new output path name")
+            import sys
+            sys.exit(0)
+    manifest_path =  afs_outdir / "manifest.yml"
+    model_configs = load_model_configs(args.roster)
+    afs_outdir = Path("Z_OUTPUT") / args.outdirname
+
+    for config in model_configs:
+        afs_configdir = afs_outdir / config.name
+        afs_configdir.mkdir(parents=True, exist_ok=True)
+
+        submit_training_jobs(
+            config_name=config.name,
+            roster=args.roster,
+            workdir=args.workdir,
+            outdir=args.outdirname,
+            afs_configdir=afs_configdir,
+            trainer=args.trainer,
+            pass_indices=[0] if args.trainer == 'simple' else list(range(5)),
+            manifest_path=manifest_path,
+            memory=args.memory or "40GB"
+        )
+
+    print(f"\n✅ All jobs tracked in: {manifest_path}")
+
+def check_manifest(afs_outdir):
+    manifest = Path(afs_outdir) / "manifest.yml"
+    if not manifest.exists():
+        raise FileNotFoundError(f"manifest.yml not found at {manifest}")
+    return manifest
+
+def handle_check(args):
+    manifest = check_manifest(args.afs_outdir)
+    manager = JobManager(manifest)
+    manager.check_statuses()
+
+def handle_resubmit(args):
+    manifest = check_manifest(args.manifest)
+    manager = JobManager(manifest)
+    manager.resubmit_held_jobs()
+
+def handle_remove(args):
+    manifest = check_manifest(args.afs_outdir)
+    manager = JobManager(manifest)
+    manager.remove_jobs()
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser(prog="submitter", description="Submit, check, or resubmit your jobs")
+    
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    submit = subparsers.add_parser("submit", help="Submit new jobs")
+    submit.add_argument("-w", "--workdir", type=Path, required=True, help="Path to dataset (EOS is fine here)")
+    submit.add_argument("-r", "--roster", type=str, required=True, help="Name of roster")
+    submit.add_argument("-o", "--outdirname", type=str, required=True, help="Name for your output dir under Z_OUTPUT")
+    submit.add_argument("-t", "--trainer", choices=['simple', 'kfold'], default='simple')
+    submit.add_argument("-m", "--memory", type=str, default=None, help="Request memory (e.g., 40GB)")
+
+    check = subparsers.add_parser("check", help="Check job statuses")
+    check.add_argument("afs_outdir", type=lambda o: Path("Z_OUTPUT")/o, help="Folder name in Z_OUTPUT that contains manifest.yml")
+
+    resubmit = subparsers.add_parser("resubmit", help="Resubmit failed jobs")
+    resubmit.add_argument("afs_outdir", type=lambda o: Path("Z_OUTPUT")/o, help="Folder name in Z_OUTPUT that contains manifest.yml")
+    resubmit.add_argument("-m", "--memory", type=str, default=None, help="Request memory (e.g., 45GB)")
+
+    remove = subparsers.add_parser("remove", help="Remove jobs tracked in a manifest")
+    remove.add_argument("afs_outdir", type=lambda o: Path("Z_OUTPUT")/o, help="Folder name in Z_OUTPUT that contains manifest.yml")
+
+    resume = subparsers.add_parser("resume", help="Resume partially trained NNs")
+    resume.add_argument("manifest", type=str, help="Folder name in Z_OUTPUT that contains manifest.yml")
+    # Future: resume.add_argument(...) for checkpoints etc.
+    args = parser.parse_args()
+
+    if args.command == "submit":
+        handle_submit(args)
+    elif args.command == "check":
+        handle_check(args)
+    elif args.command == "resubmit":
+        handle_resubmit(args)
+    elif args.command == "remove":
+        handle_remove(args)
+    '''
+    python3 neural_net/job_manager.py submit -w $Z_OUTPUT_eos/Run3_0626/Vars_EvenEvs -r test_fewEvs -o NN_test_0708 -t kfold
+    python3 neural_net/job_manager.py check NN_test_0708
+    python3 neural_net/job_manager.py resubmit  ...
+    python3 neural_net/job_manager.py remove NN_test_0708
+    python3 neural_net/job_manager.py resume  ...
+    
+    '''

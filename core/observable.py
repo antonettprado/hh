@@ -19,8 +19,10 @@ class ObsInfo:
     LLR_FACTORIZED = "llr_factorized"
     NN = 'nn_score'
 
-def classify_observable(obs_name = None) -> ObsInfo:
+def classify_observable(obs_name=None, ref=None) -> ObsInfo:
     """Internal classification function."""
+    if ref is not None:
+        obs_name = ref.observable
     vs_count = obs_name.count('_vs_')
     x_count = obs_name.count('_x_')
     is_llr = obs_name.endswith('_llr')
@@ -62,70 +64,64 @@ def classify_observable(obs_name = None) -> ObsInfo:
 # Cache for performance
 _obs_cache = {}
 
-def get_obs_info(ref: Reference) -> ObsInfo:
-    """Get observable info with caching."""
-    if ref.name not in _obs_cache:
-        _obs_cache[ref.name] = classify_observable(ref)
-    return _obs_cache[ref.name]
-
 class ObsType:
     @staticmethod
     def is_var_1d(ref: Reference) -> bool:
         """Check if observable is 1D variable."""
-        return get_obs_info(ref).category == ObsInfo.VAR_1D
+        return classify_observable(ref=ref).category == ObsInfo.VAR_1D
 
     @staticmethod
     def is_var_2d(ref: Reference) -> bool:
         """Check if observable is 2D variable."""
-        return get_obs_info(ref).category == ObsInfo.VAR_2D
+        return classify_observable(ref=ref).category == ObsInfo.VAR_2D
 
     @staticmethod
     def is_var_3d(ref: Reference) -> bool:
         """Check if observable is 3D variable."""
-        return get_obs_info(ref).category == ObsInfo.VAR_3D
+        return classify_observable(ref=ref).category == ObsInfo.VAR_3D
 
     @staticmethod
     def is_llr_from_1d(ref: Reference) -> bool:
         """Check if observable is LLR from 1D."""
-        return get_obs_info(ref).category == ObsInfo.LLR_FROM_1D
+        return classify_observable(ref=ref).category == ObsInfo.LLR_FROM_1D
 
     @staticmethod
     def is_llr_from_2d(ref: Reference) -> bool:
         """Check if observable is LLR from 2D."""
-        return get_obs_info(ref).category == ObsInfo.LLR_FROM_2D
+        return classify_observable(ref=ref).category == ObsInfo.LLR_FROM_2D
 
     @staticmethod
     def is_llr_from_3d(ref: Reference) -> bool:
         """Check if observable is LLR from 3D."""
-        return get_obs_info(ref).category == ObsInfo.LLR_FROM_3D
+        return classify_observable(ref=ref).category == ObsInfo.LLR_FROM_3D
 
     @staticmethod
     def is_llr_factorized(ref: Reference) -> bool:
         """Check if observable is LLR from multivar."""
-        return get_obs_info(ref).category == ObsInfo.LLR_FACTORIZED
+        return classify_observable(ref=ref).category == ObsInfo.LLR_FACTORIZED
 
     # General category checkers
     @staticmethod
     def is_var(ref: Reference) -> bool:
         """Check if observable is any variable type."""
-        return get_obs_info(ref).category.startswith('var_')
+        return classify_observable(ref=ref).category.startswith('var_')
 
     @staticmethod
     def is_llr(ref: Reference) -> bool:
         """Check if observable is any LLR type."""
-        return get_obs_info(ref).category.startswith('llr')
+        return classify_observable(ref=ref).category.startswith('llr')
 
     @staticmethod
     def is_nn(ref: Reference) -> bool:
         """Check if observable is any LLR type."""
-        return get_obs_info(ref).category.startswith('nn')
+        return classify_observable(ref=ref).category.startswith('nn')
     
     @staticmethod
     def get_dimensionality(ref: Reference) -> int:
         """Get observable dimensionality."""
-        return get_obs_info(ref).dim
+        return classify_observable(ref=ref).dim
 
     @staticmethod
     def get_variable_names(ref: Reference) -> list[str]:
         """Get variable names from observable."""
-        return get_obs_info(ref).vars
+        return classify_observable(ref=ref).vars

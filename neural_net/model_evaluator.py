@@ -568,7 +568,7 @@ class PlotGenerator:
             else:
                 scores = classification.probabilities[mask, target_idx]
             
-            ax.hist(scores, bins=50, label=f'{true_name} (n={len(scores)})',
+            ax.hist(scores, bins=50, label=f'{true_name}',
                    histtype='step', linewidth=3, density=True)
         
         # Styling

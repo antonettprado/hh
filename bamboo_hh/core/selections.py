@@ -89,6 +89,7 @@ def sl_e_trigger_selection(is_mc, era, HLT, sample):
     elif "2024" in era:
         EGamma_trig = op.OR(
             HLT.Ele30_WPTight_Gsf,
+            HLT.Ele28_eta2p1_WPTight_Gsf_HT150,
             HLT.Ele15_IsoVVVL_PFHT450,
             HLT.Ele14_eta2p5_IsoVVVL_Gsf_HT200_PNetBTag_0p53    # new trigger
         )
@@ -211,9 +212,11 @@ def dl_mumu_trigger_selection(is_mc, era, HLT):
 
 def sl_e_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False):
     if any(y in era for y in ["2022", "2023"]):
-        electron_pt_cut = 28
+        electron_pt_cut = 28    # For trigger stuff: 10
     elif any(y in era for y in ["2024", "2025", "2026"]):
-        electron_pt_cut = 15
+        electron_pt_cut = 15         
+    print(f"muon pt cut > {electron_pt_cut}")
+    print(f"No HLT ={noHLT}")
     return (op.AND(
         op.rng_len(electrons) == 1, 
         op.rng_len(muons) == 0,
@@ -224,9 +227,11 @@ def sl_e_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False)
 
 def sl_mu_selection(electrons, muons, taus, is_mc, era, HLT, sample, noHLT=False):
     if any(y in era for y in ["2022", "2023"]):
-        muon_pt_cut = 24
+        muon_pt_cut = 24    # For trigger stuff: 10
     elif any(y in era for y in ["2024", "2025", "2026"]):
-        muon_pt_cut = 15
+        muon_pt_cut = 15         
+    print(f"muon pt cut > {muon_pt_cut}")
+    print(f"No HLT ={noHLT}")
     return (op.AND(
         op.rng_len(muons) == 1, 
         op.rng_len(electrons) == 0,

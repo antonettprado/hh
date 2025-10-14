@@ -75,6 +75,9 @@ class SelectionBundleContainer(dict):
     def get_bundles(self, names: list[str]) -> list[SelectionBundle]:
         """Get multiple bundles, skipping missing ones."""
         return [self[name] for name in names if name in self]
+
+    def __iter__(self):
+        return iter(self.values())
     
     def __repr__(self):
         return f"<SelectionBundleContainer: {len(self)} bundles ({', '.join(self.keys())})>"

@@ -54,5 +54,5 @@ class LeptonTopology(NanoBaseHHbbWW):
         return plots
 
         '''
-        python -u scripts/bambooRunBetter.py LeptonTopology -o $Z_OUTPUT_eos/Triggers_New/LepTop --event_nr_sel all -c bamboo_hh_new/config/disc_study_new.yml -d
+        python -u scripts/bambooRunBetter.py LeptonTopology -o $Z_OUTPUT_eos/Triggers_New/2022_LepTop_pt10 --event_nr_sel all -c bamboo_hh_new/config/disc_study_new.yml -d
         '''

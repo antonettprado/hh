@@ -30,438 +30,284 @@ SL_4j_resolved_vars: &SL_4j_resolved_vars [
   'jj_l_dPhi', 'jj_l_dR', 'jj_lnu_dPhi',                              # EXTRA: high-level
   ]
 
+HH_process_sf: &HH_sf
+  ggHH_kl_1_kt_1_bbww: 0.25
+  ggHH_kl_2p45_kt_1_bbww: 0.25
+  ggHH_kl_5_kt_1_bbww: 0.25
+  ggHH_kl_0_kt_1_bbww: 0.25
+
+HH_processes: &HH_processes
+  - ggHH_kl_1_kt_1_bbww
+  - ggHH_kl_2p45_kt_1_bbww
+  - ggHH_kl_5_kt_1_bbww
+  - ggHH_kl_0_kt_1_bbww
+
 models:
-  - name: 'multi_HH_ttbar_tW_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"]}
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0}
+
+  - name: multi_HH_ttbar_tW_3j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
     batch_size: 1024
-    tree_names: ['SL_3j_resolved']
+    tree_names: [SL_3j_resolved]
     features: *SL_3j_resolved_vars
     network:
       units: 256
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000}
 
-  - name: 'multi_HH_ttbar_tW_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-    }
+  - name: multi_HH_ttbar_tW_4j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
     batch_size: 1024
-    tree_names: ['SL_4j_resolved']
+    tree_names: [SL_4j_resolved]
     features: *SL_4j_resolved_vars
     network:
       units: 256
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000}
 
-  - name: 'multi_HH_ttbar_WJets_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "WJets": ["WJets"]
-      }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "WJets": 4.0}
+  - name: multi_HH_ttbar_WJets_3j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      WJets: ["WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_3j_resolved']
+    tree_names: [SL_3j_resolved]
     features: *SL_3j_resolved_vars
     network:
       units: 256
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, WJets: 4_000_000}
 
-  - name: 'multi_HH_ttbar_WJets_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "WJets": ["WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "WJets": 4.0
-    }
+  - name: multi_HH_ttbar_WJets_4j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      WJets: ["WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_4j_resolved']
+    tree_names: [SL_4j_resolved]
     features: *SL_4j_resolved_vars
     network:
       units: 256
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, WJets: 4_000_000}
 
-  - name: 'multi_HH_ttbar_tW_WJets_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"], 
-      "WJets": ["WJets"]}
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0}
+  - name: multi_HH_ttbar_tWandWJets_3j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tWandWJets: ["tW", "WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_3j_resolved']
+    tree_names: [SL_3j_resolved]
     features: *SL_3j_resolved_vars
     network:
       units: 256
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000, WJets: 4_000_000}
 
-  - name: 'multi_HH_ttbar_tW_WJets_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"], 
-      "WJets": ["WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0
-    }
+  - name: multi_HH_ttbar_tWandWJets_4j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tWandWJets: ["tW", "WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_4j_resolved']
+    tree_names: [SL_4j_resolved]
     features: *SL_4j_resolved_vars
     network:
       units: 256
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000, WJets: 4_000_000}
 
-  - name: 'multi_HH_ttbar_tWandWJets_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tWandWJets": ["tW", "WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0
-    }
+  - name: multi_HH_ttbar_tW_u360_3j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
     batch_size: 1024
-    tree_names: ['SL_3j_resolved']
-    features: *SL_3j_resolved_vars
-    network:
-      units: 256
-      resnet: True
-      act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
-    epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
-
-  - name: 'multi_HH_ttbar_tWandWJets_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tWandWJets": ["tW", "WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0
-    }
-    batch_size: 1024
-    tree_names: ['SL_4j_resolved']
-    features: *SL_4j_resolved_vars
-    network:
-      units: 256
-      resnet: True
-      act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
-    epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
-
-
-  - name: 'multi_HH_ttbar_tW_u360_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"]}
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0}
-    batch_size: 1024
-    tree_names: ['SL_3j_resolved']
+    tree_names: [SL_3j_resolved]
     features: *SL_3j_resolved_vars
     network:
       units: 360
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000}
 
-  - name: 'multi_HH_ttbar_tW_u360_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-    }
+  - name: multi_HH_ttbar_tW_u360_4j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
     batch_size: 1024
-    tree_names: ['SL_4j_resolved']
+    tree_names: [SL_4j_resolved]
     features: *SL_4j_resolved_vars
     network:
       units: 360
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000}
 
-  - name: 'multi_HH_ttbar_WJets_u360_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "WJets": ["WJets"]
-      }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "WJets": 4.0}
+  - name: multi_HH_ttbar_WJets_u360_3j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      WJets: ["WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_3j_resolved']
+    tree_names: [SL_3j_resolved]
     features: *SL_3j_resolved_vars
     network:
       units: 360
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, WJets: 4_000_000}
 
-  - name: 'multi_HH_ttbar_WJets_u360_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "WJets": ["WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "WJets": 4.0
-    }
+  - name: multi_HH_ttbar_WJets_u360_4j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      WJets: ["WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_4j_resolved']
+    tree_names: [SL_4j_resolved]
     features: *SL_4j_resolved_vars
     network:
       units: 360
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, WJets: 4_000_000}
 
-  - name: 'multi_HH_ttbar_tW_WJets_u360_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"], 
-      "WJets": ["WJets"]}
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0}
+  - name: multi_HH_ttbar_tWandWJets_u360_3j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tWandWJets: ["tW", "WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_3j_resolved']
+    tree_names: [SL_3j_resolved]
     features: *SL_3j_resolved_vars
     network:
       units: 360
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000, WJets: 4_000_000}
 
-  - name: 'multi_HH_ttbar_tW_WJets_u360_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tW": ["tW"], 
-      "WJets": ["WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0
-    }
+  - name: multi_HH_ttbar_tWandWJets_u360_4j
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tWandWJets: ["tW", "WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+      WJets: 4.0
     batch_size: 1024
-    tree_names: ['SL_4j_resolved']
+    tree_names: [SL_4j_resolved]
     features: *SL_4j_resolved_vars
     network:
       units: 360
-      resnet: True
+      resnet: true
       act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
+    optimizer: {name: adam, lr: 0.001}
     epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
-
-  - name: 'multi_HH_ttbar_tWandWJets_u360_3j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tWandWJets": ["tW", "WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0
-    }
-    batch_size: 1024
-    tree_names: ['SL_3j_resolved']
-    features: *SL_3j_resolved_vars
-    network:
-      units: 360
-      resnet: True
-      act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
-    epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
-
-  - name: 'multi_HH_ttbar_tWandWJets_u360_4j'
-    model_type: 'multi'
-    classification: {
-      "HH": ["ggHH_kl_1_kt_1_bbww", "ggHH_kl_2p45_kt_1_bbww", "ggHH_kl_5_kt_1_bbww", "ggHH_kl_0_kt_1_bbww"], 
-      "ttbar": ["ttbar"], 
-      "tWandWJets": ["tW", "WJets"]
-    }
-    process_sf: {
-      "ggHH_kl_1_kt_1_bbww": 0.25, 
-      "ggHH_kl_2p45_kt_1_bbww": 0.25, 
-      "ggHH_kl_5_kt_1_bbww": 0.25, 
-      "ggHH_kl_0_kt_1_bbww": 0.25, 
-      "ttbar": 8.0, 
-      "tW": 4.0, 
-      "WJets": 4.0
-    }
-    batch_size: 1024
-    tree_names: ['SL_4j_resolved']
-    features: *SL_4j_resolved_vars
-    network:
-      units: 360
-      resnet: True
-      act_regularizer: {l1: 1e-4}
-    optimizer: {name: 'adam', lr: 0.001}
-    epochs: 1000
-    data_split: {'train': 0.6, 'val': 0.2, 'test': 0.2}
-    process_num_events: {"ttbar": 8_000_000, "tW": 4_000_000, "WJets": 4_000_000}
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000, WJets: 4_000_000}

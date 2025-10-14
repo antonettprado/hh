@@ -3,7 +3,6 @@ from typing import Dict, Any, List, Union, Optional
 import yaml
 from pathlib import Path
 from typing import Set
-from core import constants
 from collections import OrderedDict
 import numpy as np
 
@@ -31,9 +30,6 @@ class ClassProcessMapper:
         processes = self.get_processes()
         if len(processes) != len(set(processes)):
             raise ValueError(f"Overlapping processes found in mapper")
-        invalid = set(processes) - set(constants.PROCESSES_FILES)
-        if invalid:
-            raise ValueError(f"Invalid processes: {', '.join(invalid)}")
 
     def is_binary(self):
         if self._model_type == 'multi': 
@@ -99,7 +95,7 @@ class ModelConfig:
         return ModelConfig(**fields_dict)
 
 def load_model_configs(roster_name: Path, verbose: bool = True) -> list[ModelConfig]:
-
+    from core import constants
     roster =  NEURALNET / 'config' / f'{roster_name}.yml'
 
     try:

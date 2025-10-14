@@ -3,7 +3,7 @@ from bamboo.plots import Plot, Skim
 from bamboo.plots import EquidistantBinning as EqBin
 from bamboo.scalefactors import get_correction
 
-from bamboo_hh.BaseSelection import NanoBaseHHbbWW, get_nano_version
+from bamboo_hh.BaseSelection import NanoBaseHHbbWW
 from bamboo_hh.core.getters import get_objects, get_event_selections
 from bamboo_hh.interface.selection_bundles import SelectionBundle, SelectionBundleContainer
 from core.reference import Reference
@@ -223,7 +223,7 @@ class LikelihoodRatio(NanoBaseHHbbWW):
         plots.append(self.yields)
         plots.extend(self.base_plots)
 
-        objects: dict = get_objects(tree, self.era, get_nano_version(sampleCfg))
+        objects: dict = get_objects(tree, self.era, self.nano_version)
         selections: dict = get_event_selections(objects, tree.HLT, baseSel, self.is_MC, self.era, self.sample)
         sbc = SelectionBundleContainer.from_objects_and_selections(objects, selections)
         # ===============================================================================
