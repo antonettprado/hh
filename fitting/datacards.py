@@ -25,9 +25,13 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
     obs_rate = process_rates.pop(obs_process)
     sig_rate = process_rates.pop(signal)
     # Manually remove other kl points, for now
-    # process_rates.pop("ggHH_kl_2p45_kt_1_hbbhww")
-    # process_rates.pop("ggHH_kl_5_kt_1_hbbhww")
-    # process_rates.pop("ggHH_kl_1_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_0_kt_1_bbww")
+    process_rates.pop("ggHH_kl_2p45_kt_1_bbww")
+    process_rates.pop("ggHH_kl_5_kt_1_bbww")
+    process_rates.pop("ggHH_kl_0_kt_1_bbtautau")
+    process_rates.pop("ggHH_kl_1_kt_1_bbtautau")
+    process_rates.pop("ggHH_kl_2p45_kt_1_bbtautau")
+    process_rates.pop("ggHH_kl_5_kt_1_bbtautau")
 
     separator: str = '\n' + '-'*130 + '\n'
     def tab(tabular_data) -> str:
@@ -79,13 +83,18 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
 
     return comment + preamble + shapes + observation + rates_and_systematics + stats
 
-def generate_combined_dc(dc_path, channel_dcs: tuple[str, Path]) -> Path:
+def generate_combined_dc(combined_dc_path: Path, channel_dcs: tuple[str, Path]) -> Path:
     """Generate combined datacards for hierarchical discriminants."""
-    command = ['combineCards.py'] + [f'{ref.channel}={str(dc_path)}' for ref, dc_path in channel_dcs]
-    dc_path.parent.mkdir(exist_ok=True, parents=True)
-    dc_text = subprocess.check_output(command, cwd=dc_path.parent)
-    dc_path.write_bytes(dc_text)
-    return dc_path
+    if isinstance(channel_dcs, tuple):
+        for channel, path in channel_dcs:
+            print(f"{channel=}, {path=}")
+        command = ['combineCards.py'] + [f'{channel}={str(dc_path)}' for channel, dc_path in channel_dcs]
+    else:
+        command = ['combineCards.py'] + [f'{str(dc_path)}' for dc_path in channel_dcs]
+    combined_dc_path.parent.mkdir(exist_ok=True, parents=True)
+    dc_text = subprocess.check_output(command, cwd=combined_dc_path.parent)
+    combined_dc_path.write_bytes(dc_text)
+    return combined_dc_path
 
 # ================================================================
 # =================== Helper functions ===========================

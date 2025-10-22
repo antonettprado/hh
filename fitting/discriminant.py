@@ -1,13 +1,12 @@
-from fitting import datacards
 from core.analysis_config import AnalysisConfig
 from core.reference import Reference
-from utils import histogram, functions
+from utils import functions
+from fitting import datacards
 
 from pathlib import Path
 from typing import ClassVar
 from collections import defaultdict
-from itertools import product, groupby
-
+from itertools import product
 
 class Discriminant:
     """Single discriminant class that handles both hierarchical and simple cases."""
@@ -33,8 +32,10 @@ class Discriminant:
         self.is_complex: bool = any(ref.observable_sub for ref in self.references)
         
         # Pre-compute all paths during initialization
-        self.individual_datacards: dict[tuple, Path] = {}  # (era, ref, channel_info) -> dc_path
-        self.datacards: dict[tuple, Path] = {}  # (era, group_key) -> final_dc_path
+        self.base_single_datacards: dict[tuple, Path] = {}  # (era, ref, channel_info) -> dc_path
+        self.base_comb_datacards: dict[tuple, Path] = {}  # (era, group_key) -> final_dc_path
+        self.comb_sels_datacards: dict[tuple, Path] = {}
+        self.era_datacards: dict[tuple, Path] = {}
         self._compute_datacard_paths()
         
     @property
@@ -54,34 +55,49 @@ class Discriminant:
                 dc_path = self.path / era / ref.channel_base / ref.channel_sub / f"{ref.observable_sub}_score.txt"
             else:
                 dc_path = self.path / era / ref.channel_base / "datacard.txt"
-            self.individual_datacards[(era, ref, keyfn(ref))] = dc_path
+            self.base_single_datacards[(era, ref, keyfn(ref))] = dc_path
             groups[(era, keyfn(ref))].append((ref, dc_path))
 
         for (era, channel), card_list in groups.items():
             if len(card_list) == 1:
                 final_dc = card_list[0][1]
             else:
-                final_dc = self._get_combined_dc_path(era, channel)
+                final_dc = self.path / era / channel / "channel_datacard.txt"
             
-            self.datacards[(era, channel)] = final_dc
+            self.base_comb_datacards[(era, channel)] = final_dc
 
-    def _get_combined_dc_path(self, era: str, channel: str) -> Path:
-        return self.path / era / channel / "combined_datacard.txt"
-
-    def get_datacard_path(self, era: str, key: str) -> Path:
-        return self.datacards.get((era, key))
-
-    def generate_dcs(self):
+    def generate_base_datacards(self) -> None:
+        print(f"\n\nGenerating base datacards for discriminant: {self.name}")
         keyfn = (lambda r: r.channel_base) if self.is_complex else (lambda r: r.channel)
         groups = defaultdict(list)   # (era, group_key) -> [(ref, dc_path)]
-
         for era, ref in product(self.eras, self.active_references):
             print(f"\t[{self.name}] era={era}  channel={ref.channel}  observable={ref.observable}")
-            dc_path = self.individual_datacards[(era, ref, keyfn(ref))]
+            dc_path = self.base_single_datacards[(era, ref, keyfn(ref))]
             datacards.generate_dc(self, dc_path, ref, era)
-            groups[(era, keyfn(ref))].append((ref, dc_path))
-
+            groups[(era, keyfn(ref))].append((ref.channel, dc_path))
         for (era, key), card_list in groups.items():
             if len(card_list) > 1:
-                final_dc_path = self.datacards[(era, key)]
-                datacards.generate_combined_dc(final_dc_path, card_list)
+                combined_dc_path = self.base_comb_datacards[(era, key)]
+                datacards.generate_combined_dc(combined_dc_path, card_list)
+
+    def generate_comb_sels_datacards(self, selections: dict[str, list]) -> None:
+        print(f"\n\nGenerating combined selection datacards for discriminant: {self.name}")
+        for era in self.eras:
+            for sel_name, sels_to_combine in selections.items():
+                # sel_dcs = [(dc_channel, dc_path) for (dc_era, dc_channel), dc_path in self.base_comb_datacards.items() if dc_channel in sels_to_combine and dc_era == era ]
+                sel_dcs = [dc_path for (dc_era, dc_channel), dc_path in self.base_comb_datacards.items() if dc_channel in sels_to_combine and dc_era == era ]
+                era_dir = sel_dcs[0][1].parents[1]
+                combined_sels_dc_path = era_dir / sel_name / "datacard.txt"
+                datacards.generate_combined_dc(combined_sels_dc_path, sel_dcs)
+                self.comb_sels_datacards[(era, sel_name)] = combined_sels_dc_path
+
+    def generate_era_datacards(self, eras: dict[str, list]) -> None:
+        print(f"\n\nGenerating combined era datacards for discriminant: {self.name}")
+        for custom_era_name, eras_to_combine in eras.items():
+            era_name_dir = self.path / custom_era_name
+            for era, sel_name in self.comb_sels_datacards.keys():
+                # era_dcs = [(dc_era, dc_path) for (dc_era, dc_sel_name), dc_path in self.comb_sels_datacards.items() if dc_sel_name == sel_name and dc_era in eras_to_combine]
+                era_dcs = [ dc_path for (dc_era, dc_sel_name), dc_path in self.comb_sels_datacards.items() if dc_sel_name == sel_name and dc_era in eras_to_combine]
+                combined_eras_dc_path = era_name_dir / sel_name / "datacard.txt"
+                datacards.generate_combined_dc(combined_eras_dc_path, era_dcs)
+                self.era_datacards[(custom_era_name, sel_name)] = combined_eras_dc_path

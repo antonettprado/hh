@@ -2,16 +2,16 @@ import time
 import argparse
 import itertools
 from pathlib import Path
-from fitting_for_rep import fitter
+from fitting_old import fitter
 from typing import Callable
-from fitting_for_rep import datacards
+from fitting_old import datacards
 from multiprocessing import Pool
-from fitting_for_rep.datacards import Datacard
-from fitting_for_rep.binning import run2_binning_strategy
+from fitting_old.datacards import Datacard
+from fitting_old.binning import run2_binning_strategy
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("nndir", type=Path, help="Neural Nets directory to pull info from. Ex: Z_OUTPUT/TOTAL_VarsReco_2022/Neural_Nets")
+    parser.add_argument("nndir", type=Path, help="Neural Nets bamboo output directory to pull info from. Ex: Z_OUTPUT/<nndir>")
     parser.add_argument("-i", "--input", action="store", type=Path, help="directory containing the DNN fit root files (default: <nndir>/results)")
     args = parser.parse_args()
     return args
@@ -21,28 +21,37 @@ def make_datacards(nndir: Path, results_dir: Path) -> tuple[list[Datacard], list
     print(f"{'Making Datacards':.<22}", end=' ', flush=True)
     dcs: list[Datacard] = datacards.make_datacards(nndir, results_dir=results_dir, rebin=run2_binning_strategy)
 
-    print(f"{'Datacards':.<22}", end=' ', flush=True)
-    for dc in dcs:
-        print(f"Datacard for {dc.selection} {dc.era} {dc.category} {dc.variable} {dc.model}")
-    
-    sel_dcs: list[Datacard] = datacards.combine_datacards_over_selections(dcs, combine_selections=None)
-    
-    print(f"{'Combining Selection Datacards':.<22}", end=' ', flush=True)
-    for dc in sel_dcs:
-        print(f"Datacard for {dc.selection} {dc.era} {dc.category} {dc.variable} {dc.model}")
+    sel_dcs: list[Datacard] = datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_2b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_4j_1b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_4j_2b'])
+    #sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j4j_1b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_3j_resolved'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_4j_resolved'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_3j_2b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_4j_1b', 'SL_res_4j_2b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_4j_1b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_2b', 'SL_res_4j_2b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_3j_resolved', 'SL_4j_resolved'])
+    #sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j4j_1b', 'SL_res_3j_2b', 'SL_res_4j_2b'])
+    sel_dcs += datacards.combine_datacards_over_selections(dcs, combine_selections=['SL_res_3j_1b', 'SL_res_3j_2b', 'SL_res_4j_1b', 'SL_res_4j_2b'])
     
     # Figure out which selection datacards to combine into a model datacard
+    '''
     if any(dc.selection == None for dc in sel_dcs):
         # Use combined 1b and 2b datacards if they exist
         era_dcs = [ sdc for sdc in sel_dcs if sdc.selection is None ]
-    elif all(dc.selection == 'SL_res_2b_x' for dc in sel_dcs):
-        # Use 2b_x datacards if they are all we ran on
-        era_dcs = sel_dcs
-    elif all(dc.selection == 'SL_4j_resolved' for dc in sel_dcs):
-        # Use 2b_x datacards if they are all we ran on
+    elif all(dc.selection in ['SL_3j_resolved', 'SL_4j_resolved']  for dc in sel_dcs):
+        # Use resolved datacards if they are all we ran on
         era_dcs = sel_dcs
     else:
         raise RuntimeError("Don't know which selection datacards to use to generate combined model datacards")
+    '''
+    era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_1b_SL_res_3j_2b_SL_res_4j_1b_SL_res_4j_2b']
+    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j4j_1b_SL_res_3j_2b_SL_res_4j_2b']
+    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_3j_resolved_SL_4j_resolved']
+    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_1b_SL_res_4j_1b']
+    #era_dcs = [ sdc for sdc in sel_dcs if sdc.selection == 'SL_res_3j_2b_SL_res_4j_2b']
     model_dcs: list[Datacard] = datacards.combine_datacards_over_eras(era_dcs)
 
     print(f'{time.perf_counter()-start:.2f}s')
@@ -90,7 +99,6 @@ def main() -> None:
     and diagnostic fits. Uses multiprocessing to run fits in parallel.
     '''
     args = parse_args()
-    # make_datacards(args.nndir, args.input)
     sel_dcs, model_dcs = make_datacards(args.nndir, args.input)
     datacards_for_fit: list[Path] = [ dc.path for dc in sel_dcs + model_dcs ]
     results_files: list[Path] = run_fits_multiprocessed(datacards_for_fit)

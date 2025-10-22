@@ -1,7 +1,6 @@
 import argparse
 from pathlib import Path
 import subprocess
-import ROOT
 
 def run_fit_diagnostics(workspace_file: Path, fit_type: str, workspace_results_file: Path = None) -> str:
     ''' 
@@ -29,48 +28,26 @@ def run_fit_diagnostics(workspace_file: Path, fit_type: str, workspace_results_f
     return output
 
 def run_asymptotic_limits(workspace_file: Path, fit_type: str, workspace_results_file: Path = None) -> str:
-    """
-    Computes asymptotic limits using `combine -M AsymptoticLimits`.
-    Returns a text block (either normal combine output or an ERROR block).
-    """
-    if workspace_results_file is None:
+    ''' 
+    Computes asymptotic limits using `combine -M AsymptoticLimits`
+    Arguments:
+        workspace_file (Path): root file containing the RooWorkspace corresponding to a datacard
+        fit_type (str): either `'blinded'` for blinded fit or `'unblinded'` for unblinded fit 
+        workspace_results_file (Path): where to store fit results root files (default: workspace_file)
+    '''
+    if not workspace_results_file:
         workspace_results_file = workspace_file
-
-    # ensure we use a directory for cwd
-    # results_dir = workspace_results_file.parent
-    results_dir = workspace_results_file
-    results_dir.mkdir(parents=True, exist_ok=True)
 
     fit_type = fit_type.capitalize()
     if fit_type not in ["Blinded", "Unblinded"]:
         raise ValueError(f"fit_type must be one of 'blinded' or 'unblinded' (passed in {fit_type})")
-    fit_type_cmd = '--run blind' if fit_type == "Blinded" else "--run both"
-
-    cmd = (
-        f"combine -M AsymptoticLimits --mass 125 --minosAlgo stepping "
-        f"--cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 "
-        f"--X-rtd MINIMIZER_analytic {fit_type_cmd} -n {fit_type} {workspace_file}"
-    )
-
-    header = f"Asymptotic Limits for {fit_type} Fit\n\n"
-    try:
-        out = subprocess.check_output(
-            cmd.split(),
-            text=True,
-            cwd=results_dir,                 # <-- directory, not a file
-            stderr=subprocess.STDOUT,
-        )
-        return header + out + "\n\n"
-    except subprocess.CalledProcessError as e:
-        return (
-            header
-            + "ERROR: combine failed\n"
-            + f"Exit code: {e.returncode}\n"
-            + (e.output or "")
-            + "\n"
-        )
-    except Exception as e:
-        return header + f"ERROR: unexpected failure: {type(e).__name__}: {e}\n"
+    fit_type_cmd: str = '--run blind' if fit_type == "Blinded" else "--run both"
+    
+    cmd = f'combine -M AsymptoticLimits --mass 125 --minosAlgo stepping --cminDefaultMinimizerStrategy 0 --cminDefaultMinimizerTolerance 1e-2 --X-rtd MINIMIZER_analytic {fit_type_cmd} -n {fit_type} {workspace_file}'
+    output: str = f'Asymptotic Limits for {fit_type} Fit\n\n'
+    output += subprocess.check_output(cmd.split(), text=True, cwd=workspace_results_file)
+    output += '\n\n'
+    return output
 
 def run_main_fits(workspace_file: Path) -> str:
     ''' Helper function to run blinded and unblinded asymptotic limits as well as blinded and unblinded fit diagnostics '''
@@ -81,29 +58,11 @@ def run_main_fits(workspace_file: Path) -> str:
     fit_results_text += run_fit_diagnostics(workspace_file, 'unblinded')
     return fit_results_text
 
-def workspace_has_observed_events(workspace_path: Path) -> bool:
-    f = ROOT.TFile.Open(str(workspace_path))
-    if not f or f.IsZombie():
-        return False
-    w = f.Get("w")
-    if not w:
-        return False
-    data = w.data("data_obs")
-    if not data:
-        return False
-    try:
-        return data.sumEntries() > 0
-    finally:
-        f.Close()
-
 def create_workspace(dc: Path) -> tuple[Path, Path]:
-    # old: dc: fits/multi_HH_ttbar_tW/datacard_multi_HH_ttbar_tW.txt
     subprocess.run(f'combineTool.py -M T2W -m 125.38 -v 3 -i {dc}'.split(), check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     workspace_file: Path = dc.with_suffix('.root')
-    workspace_results_file: Path = dc.parent / (dc.stem + '_fit')
+    workspace_results_file: Path = dc.parent / (dc.stem.split('_',1)[-1] + '_fit')
     workspace_results_file.mkdir(exist_ok=True)
-    # old | fits/multi_HH_ttbar_tW/datacard_multi_HH_ttbar_tW.root, folder: fits/multi_HH_ttbar_tW/multi_HH_ttbar_tW_fit
-    # new | fits_new/multi_HH_ttbar_tW/2022/SL_3j_resolved/combined/combined_datacard.root, fits_new/multi_HH_ttbar_tW/2022/SL_3j_resolved/combined/combined_datacard_fit
     return workspace_file, workspace_results_file
 
 def parse_args():

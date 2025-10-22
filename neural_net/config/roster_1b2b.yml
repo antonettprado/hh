@@ -1,0 +1,159 @@
+vars: &vars [                                                         #Vars commong  to 1b and 2b
+  'met_pt', 'met_phi', 'nAK4_btag', 
+  'ak4_jet0_pt', 'ak4_jet0_phi', 'ak4_jet0_eta', 'ak4_jet0_bscore', 
+  'ak4_jet1_pt', 'ak4_jet1_phi', 'ak4_jet1_eta', 'ak4_jet1_bscore', 
+  'ak4_jet2_pt', 'ak4_jet2_phi', 'ak4_jet2_eta', 'ak4_jet2_bscore', 
+  'lep0_pt', 'lep0_phi', 'lep0_eta', 'lep0_iso', 
+  'all_sT', 'all_mInv', 'all_mT', 'all_jets_HT', 'all_pt', 'era',
+  'bjets_mbb', 'bjets_dPhi', 'bjets_dEta', 'bjets_dR', 'bjets_pt_bb', 
+  'bb_lnu_dPhi', 'min_b_l_dPhi', 'min_b_l_dR', 'min_b_lnu_dPhi', 
+  'blnu_mT', 'blnu_pt', 'blnu_bl_mInv', 'blnu_lnu_mT'
+  ]
+
+HH_process_sf: &HH_sf
+  ggHH_kl_1_kt_1_bbww: 0.25
+  ggHH_kl_2p45_kt_1_bbww: 0.25
+  ggHH_kl_5_kt_1_bbww: 0.25
+  ggHH_kl_0_kt_1_bbww: 0.25
+
+HH_processes: &HH_processes
+  - ggHH_kl_1_kt_1_bbww
+  - ggHH_kl_2p45_kt_1_bbww
+  - ggHH_kl_5_kt_1_bbww
+  - ggHH_kl_0_kt_1_bbww
+
+models:
+
+  - name: multi_HH_ttbar_tW
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+    batch_size: 1024
+    tree_names: [SL_3j_resolved, SL_4j_resolved]
+    features: *vars
+    network:
+      units: 256
+      resnet: true
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: adam, lr: 0.001}
+    epochs: 1000
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000}
+
+  - name: multi_HH_ttbar_WJets
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      WJets: ["WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      WJets: 4.0
+    batch_size: 1024
+    tree_names: [SL_3j_resolved, SL_4j_resolved]
+    features: *vars
+    network:
+      units: 256
+      resnet: true
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: adam, lr: 0.001}
+    epochs: 1000
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, WJets: 4_000_000}
+
+  - name: multi_HH_ttbar_tWandWJets
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tWandWJets: ["tW", "WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+      WJets: 4.0
+    batch_size: 1024
+    tree_names: [SL_3j_resolved, SL_4j_resolved]
+    features: *vars
+    network:
+      units: 256
+      resnet: true
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: adam, lr: 0.001}
+    epochs: 1000
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000, WJets: 4_000_000}
+
+  - name: multi_HH_ttbar_tW_u360
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tW: ["tW"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+    batch_size: 1024
+    tree_names: [SL_3j_resolved, SL_4j_resolved]
+    features: *vars
+    network:
+      units: 360
+      resnet: true
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: adam, lr: 0.001}
+    epochs: 1000
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000}
+
+  - name: multi_HH_ttbar_WJets_u360
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      WJets: ["WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      WJets: 4.0
+    batch_size: 1024
+    tree_names: [SL_3j_resolved, SL_4j_resolved]
+    features: *vars
+    network:
+      units: 360
+      resnet: true
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: adam, lr: 0.001}
+    epochs: 1000
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, WJets: 4_000_000}
+
+  - name: multi_HH_ttbar_tWandWJets_u360
+    model_type: multi
+    classification:
+      HH: *HH_processes
+      ttbar: ["ttbar"]
+      tWandWJets: ["tW", "WJets"]
+    process_sf:
+      <<: *HH_sf
+      ttbar: 8.0
+      tW: 4.0
+      WJets: 4.0
+    batch_size: 1024
+    tree_names: [SL_3j_resolved, SL_4j_resolved]
+    features: *vars
+    network:
+      units: 360
+      resnet: true
+      act_regularizer: {l1: 1e-4}
+    optimizer: {name: adam, lr: 0.001}
+    epochs: 1000
+    data_split: {train: 0.6, val: 0.2, test: 0.2}
+    process_num_events: {ttbar: 8_000_000, tW: 4_000_000, WJets: 4_000_000}

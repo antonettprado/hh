@@ -126,10 +126,8 @@ class NNInference(NanoBaseHHbbWW):
                     self.yields.add(subnn_cat_sel, str(subnn_cat_ref)+f"_Pass{pass_idx}")
                     subnn_cat_dist = Plot.make1D(str(subnn_cat_ref)+f"_Pass{pass_idx}", subnn_scores[i], subnn_cat_sel, self.NN_EQBIN, xTitle=f"{nn.name} {class_i} score (max)")
                     kfold_plots[f"Pass {pass_idx}"].extend([subnn_total_dist, subnn_cat_dist])
-        summed_plots = [SummedPlot(pass_group[0].name.rsplit('_Pass', 1)[0].removesuffix('_3j').removesuffix('_4j'), pass_group) for pass_group in list(zip(*kfold_plots.values()))]
+        summed_plots = [SummedPlot(pass_group[0].name.rsplit('_Pass', 1)[0].replace('_3j', '').replace('_4j', ''), pass_group) for pass_group in list(zip(*kfold_plots.values()))]
         return [p for plots in kfold_plots.values() for p in plots] + summed_plots
-
-
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = [self.yields]

@@ -5,10 +5,9 @@ from pathlib import Path
 from typing import Callable
 from multiprocessing import Pool
 from fitting import fitter
-from fitting.disc_new import Discriminant
+from fitting import discriminant
+from fitting import datacards
 from core.analysis_config import AnalysisConfig
-from core.reference import Reference
-from core.observable import ObsType
 from utils.results_manager import ResultsManager 
 from utils import functions
 from itertools import groupby
@@ -81,18 +80,42 @@ def main(workdir, config, fit_only: bool) -> None:
     resultsdir = workdir / 'results'
     config = AnalysisConfig(config)
     
-    Discriminant.set_class_settings(fitsdir, resultsdir, config)
+    discriminant.Discriminant.set_class_settings(fitsdir, resultsdir, config)
     refs = functions.get_refs_from(resultsdir)
 
     # refs = list(filter(lambda r: ObsType.is_var_1d(r) and r.channel_base == 'SL_4j_resolved', refs))
+    refs = list(filter(lambda ref: 'Pass' not in ref.name, refs))
 
     refs.sort(key=lambda r: (r.observable_base, r.channel_base, r.channel_sub))
-    discs = [Discriminant(disc_name, set(refs)) for disc_name, refs in groupby(refs, key=lambda r: r.observable_base)]
+    discs = [discriminant.Discriminant(disc_name, set(refs)) for disc_name, refs in groupby(refs, key=lambda r: r.observable_base)]
+    
+    for disc in discs:
+        disc.generate_base_datacards()
+    
+    sels_to_combine = {
+        '3j_4j':['SL_3j_resolved', 'SL_4j_resolved'],
+        '3j1b_3j2b_4j1b_4j2b': ['SL_res_3j_1b', 'SL_res_3j_2b', 'SL_res_4j_1b', 'SL_res_4j_2b'],
+    }
+
+    eras_to_combine = {
+        'eras_22':['2022', '2022EE'],
+        'eras_23': ['2023', '2023BPix'],
+        'eras_all': ['2022', '2022EE', '2023', '2023BPix'],
+    }
 
     for disc in discs:
-        disc.generate_dcs()  # Uses pre-computed paths
+        disc.generate_base_datacards()
+        disc.generate_comb_sels_datacards(sels_to_combine)
+        disc.generate_era_datacards(eras_to_combine)
 
-    dcs_for_fit: list[Path] = [p for disc in discs for p in disc.datacards.values()]
+
+    base_dcs: list[Path] = [p for disc in discs for p in disc.base_comb_datacards.values()]
+    custom_dcs: list[Path] = [p for disc in discs for p in disc.comb_sels_datacards.values()]
+    era_dcs: list[Path] = [p for disc in discs for p in disc.era_datacards.values()]
+
+    dcs_for_fit = base_dcs + custom_dcs 
+    
+    + era_dcs
     fit_results_files: list[Path] = run_fits_multiprocessed(dcs_for_fit)
 
     df = ResultsManager.process_fit_results(fit_results_files)
@@ -102,7 +125,7 @@ def main(workdir, config, fit_only: bool) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("workdir", type=Path, help="Neural Nets bamboo output directory to pull info from. Ex: Z_OUTPUT/<nndir>")
-    parser.add_argument("-c", "--config", help="Path to analysis config")
+    parser.add_argument("-c", "--config", default=Path("bamboo_hh/config/analysis.yml"), help="Path to analysis config")
     parser.add_argument("-f", "--fit_only", action="store_true")
     parser.add_argument("-s", "--summary_only", action="store_true")
     args = parser.parse_args()
