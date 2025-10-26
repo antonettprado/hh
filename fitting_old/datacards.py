@@ -58,18 +58,18 @@ class Datacard():
     def set_file_root(cls, path: Path):
         cls.file_root = path
 
-def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, dc: Datacard, signal: str='ggHH_kl_1_kt_1_bbww') -> str:
+def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, dc: Datacard, signal: str='ggHH_kl_1_kt_1_hbbhww') -> str:
     ''' Updates to datacards (e.g. systematics) go here '''
     obs_rate = process_rates.pop(obs_process)
     sig_rate = process_rates.pop(signal)
     # Manually remove other kl points, for now
-    process_rates.pop("ggHH_kl_0_kt_1_bbww")
-    process_rates.pop("ggHH_kl_2p45_kt_1_bbww")
-    process_rates.pop("ggHH_kl_5_kt_1_bbww")
-    process_rates.pop("ggHH_kl_0_kt_1_bbtautau")
-    process_rates.pop("ggHH_kl_1_kt_1_bbtautau")
-    process_rates.pop("ggHH_kl_2p45_kt_1_bbtautau")
-    process_rates.pop("ggHH_kl_5_kt_1_bbtautau")
+    process_rates.pop("ggHH_kl_0_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_2p45_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_5_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_0_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_1_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_2p45_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_5_kt_1_hbbhtt")
 
     separator: str = '\n' + '-'*130 + '\n'
     def tab(tabular_data) -> str:

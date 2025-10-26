@@ -31,7 +31,7 @@ def run2_binning_strategy(histos: dict[str, ROOT.TH1D], stype: str) -> dict[str,
     Returns:
         rebinned_histos (dict[str, ROOT.TH1D]): dictionary of process names and rebinned histograms
     '''
-    lumi_sig_hist = histos['ggHH_kl_1_kt_1_bbww']
+    lumi_sig_hist = histos['ggHH_kl_1_kt_1_hbbhww']
     sig_pdf = lumi_sig_hist.Clone()
     sig_pdf.Scale(1/lumi_sig_hist.Integral())
 
@@ -41,7 +41,7 @@ def run2_binning_strategy(histos: dict[str, ROOT.TH1D], stype: str) -> dict[str,
     back_pdf.Scale(1/lumi_back_hist.Integral())
 
     if stype == "signal":
-        nq: int = 15
+        nq: int = 30
         quants = get_quantile_bin_edges(sig_pdf, nq)
         # The AN is unclear here
         while lumi_back_hist.Rebin(nq, f'test_{nq}', quants).GetBinContent(nq) < 10:

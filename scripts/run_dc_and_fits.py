@@ -91,7 +91,7 @@ def main(workdir, config, fit_only: bool) -> None:
     
     for disc in discs:
         disc.generate_base_datacards()
-    
+
     sels_to_combine = {
         '3j_4j':['SL_3j_resolved', 'SL_4j_resolved'],
         '3j1b_3j2b_4j1b_4j2b': ['SL_res_3j_1b', 'SL_res_3j_2b', 'SL_res_4j_1b', 'SL_res_4j_2b'],
@@ -104,18 +104,14 @@ def main(workdir, config, fit_only: bool) -> None:
     }
 
     for disc in discs:
-        disc.generate_base_datacards()
         disc.generate_comb_sels_datacards(sels_to_combine)
         disc.generate_era_datacards(eras_to_combine)
-
 
     base_dcs: list[Path] = [p for disc in discs for p in disc.base_comb_datacards.values()]
     custom_dcs: list[Path] = [p for disc in discs for p in disc.comb_sels_datacards.values()]
     era_dcs: list[Path] = [p for disc in discs for p in disc.era_datacards.values()]
 
-    dcs_for_fit = base_dcs + custom_dcs 
-    
-    + era_dcs
+    dcs_for_fit = base_dcs + custom_dcs + era_dcs
     fit_results_files: list[Path] = run_fits_multiprocessed(dcs_for_fit)
 
     df = ResultsManager.process_fit_results(fit_results_files)

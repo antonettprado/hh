@@ -19,19 +19,19 @@ def generate_dc(disc, dc_path: Path, ref: Reference, era: str) -> Path:
     histogram.write_hists_to_root(dc_path.with_suffix('.root'), process_hists)
     return
 
-def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, disc_name: str, channel:str, era: str, signal: str='ggHH_kl_1_kt_1_bbww') -> str:
+def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, disc_name: str, channel:str, era: str, signal: str='ggHH_kl_1_kt_1_hbbhww') -> str:
     ''' Updates to datacards (e.g. systematics) go here '''
 
     obs_rate = process_rates.pop(obs_process)
     sig_rate = process_rates.pop(signal)
     # Manually remove other kl points, for now
-    process_rates.pop("ggHH_kl_0_kt_1_bbww")
-    process_rates.pop("ggHH_kl_2p45_kt_1_bbww")
-    process_rates.pop("ggHH_kl_5_kt_1_bbww")
-    process_rates.pop("ggHH_kl_0_kt_1_bbtautau")
-    process_rates.pop("ggHH_kl_1_kt_1_bbtautau")
-    process_rates.pop("ggHH_kl_2p45_kt_1_bbtautau")
-    process_rates.pop("ggHH_kl_5_kt_1_bbtautau")
+    process_rates.pop("ggHH_kl_0_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_2p45_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_5_kt_1_hbbhww")
+    process_rates.pop("ggHH_kl_0_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_1_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_2p45_kt_1_hbbhtt")
+    process_rates.pop("ggHH_kl_5_kt_1_hbbhtt")
 
     separator: str = '\n' + '-'*130 + '\n'
     def tab(tabular_data) -> str:
@@ -83,14 +83,14 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
 
     return comment + preamble + shapes + observation + rates_and_systematics + stats
 
-def generate_combined_dc(combined_dc_path: Path, channel_dcs: tuple[str, Path]) -> Path:
+def generate_combined_dc(combined_dc_path: Path, channel_dcs) -> Path:
     """Generate combined datacards for hierarchical discriminants."""
-    if isinstance(channel_dcs, tuple):
-        for channel, path in channel_dcs:
-            print(f"{channel=}, {path=}")
-        command = ['combineCards.py'] + [f'{channel}={str(dc_path)}' for channel, dc_path in channel_dcs]
+    # detect if we were passed a list of (channel, path) tuples or plain paths
+    if isinstance(channel_dcs[0], tuple):
+        command = ['combineCards.py'] + [f'{ch}={str(p)}' for ch, p in channel_dcs]
     else:
-        command = ['combineCards.py'] + [f'{str(dc_path)}' for dc_path in channel_dcs]
+        command = ['combineCards.py'] + [str(p) for p in channel_dcs]
+
     combined_dc_path.parent.mkdir(exist_ok=True, parents=True)
     dc_text = subprocess.check_output(command, cwd=combined_dc_path.parent)
     combined_dc_path.write_bytes(dc_text)
@@ -137,7 +137,7 @@ def run2_binning_strategy(histos: dict[str, ROOT.TH1D], stype: str) -> dict[str,
     Returns:
         rebinned_histos (dict[str, ROOT.TH1D]): dictionary of process names and rebinned histograms
     '''
-    lumi_sig_hist = histos['ggHH_kl_1_kt_1_bbww']
+    lumi_sig_hist = histos['ggHH_kl_1_kt_1_hbbhww']
     # lumi_sig_hist = histos['HH_bbWW']
     sig_pdf = lumi_sig_hist.Clone()
     sig_pdf.Scale(1/lumi_sig_hist.Integral())
@@ -148,7 +148,7 @@ def run2_binning_strategy(histos: dict[str, ROOT.TH1D], stype: str) -> dict[str,
     back_pdf.Scale(1/lumi_back_hist.Integral())
 
     if stype == "signal":
-        nq: int = 15        # could increase to 30
+        nq: int = 30        # could increase to 30
         quants = get_quantile_bin_edges(sig_pdf, nq)
         # The AN is unclear here
         while lumi_back_hist.Rebin(nq, f'test_{nq}', quants).GetBinContent(nq) < 10:    # 3

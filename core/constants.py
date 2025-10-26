@@ -26,22 +26,23 @@ BKG_EXCLUDE_PATTERNS = ('data', 'ggHH', 'HH_bbWW', 'asimov')
 SM_SIGNAL_PATTERNS   = ('ggHH_kl_1_kt_1', 'HH_bbWW')
 
 PROCESSES_FILES = dict(
-    ggHH_kl_1_kt_1_bbww=['ggHH_kl_1_kt_1_bbww_sl', 'ggHH_kl_1_kt_1_bbww_dl',],
-    ggHH_kl_2p45_kt_1_bbww=['ggHH_kl_2p45_kt_1_bbww_sl', 'ggHH_kl_2p45_kt_1_bbww_dl',],
-    ggHH_kl_5_kt_1_bbww=['ggHH_kl_5_kt_1_bbww_sl', 'ggHH_kl_5_kt_1_bbww_dl',],
-    ggHH_kl_0_kt_1_bbww=['ggHH_kl_0_kt_1_bbww_sl', 'ggHH_kl_0_kt_1_bbww_dl',],
-
     HH_bbWW=['bbWW_sl', 'bbWW_dl'],
-    
-    ggHH_kl_1_kt_1_bbtautau = ['ggHH_kl_1_kt_1_bbtautau'],
-    ggHH_kl_2p45_kt_1_bbtautau = ['ggHH_kl_2p45_kt_1_bbtautau'],
-    ggHH_kl_5_kt_1_bbtautau = ['ggHH_kl_5_kt_1_bbtautau'],
-    ggHH_kl_0_kt_1_bbtautau = ['ggHH_kl_0_kt_1_bbtautau'],
-    
-    ttbar=['ttbar_sl', 'ttbar_dl', 'ttbar_fh'],
     TTbar=['TTbar_sl', 'TTbar_dl'],
 
-    tW=['tbarWplus_sl', 'tbarWplus_dl', 'tWminus_sl', 'tWminus_dl'],
+    ggHH_kl_1_kt_1_hbbhww=['ggHH_kl_1_kt_1_hbbhwwsl', 'ggHH_kl_1_kt_1_hbbhwwdl'],
+    ggHH_kl_2p45_kt_1_hbbhww=['ggHH_kl_2p45_kt_1_hbbhwwsl', 'ggHH_kl_2p45_kt_1_hbbhwwdl'],
+    ggHH_kl_5_kt_1_hbbhww=['ggHH_kl_5_kt_1_hbbhwwsl', 'ggHH_kl_5_kt_1_hbbhwwdl'],
+    ggHH_kl_0_kt_1_hbbhww=['ggHH_kl_0_kt_1_hbbhwwsl', 'ggHH_kl_0_kt_1_hbbhwwdl'],
+    ggHH_kl_1_kt_1_hbbhtt=['ggHH_kl_1_kt_1_hbbhtt'],
+    ggHH_kl_2p45_kt_1_hbbhtt=['ggHH_kl_2p45_kt_1_hbbhtt'],
+    ggHH_kl_5_kt_1_hbbhtt=['ggHH_kl_5_kt_1_hbbhtt'],
+    ggHH_kl_0_kt_1_hbbhtt=['ggHH_kl_0_kt_1_hbbhtt'],
+    ggHH_kl_1_kt_1_hbbhzz=['ggHH_kl_1_kt_1_hbbhzz'],
+    ggHH_kl_2p45_kt_1_hbbhzz =['ggHH_kl_2p45_kt_1_hbbhzz'],
+    ggHH_kl_5_kt_1_hbbhzz=['ggHH_kl_5_kt_1_hbbhzz'],
+    ggHH_kl_0_kt_1_hbbhzz=['ggHH_kl_0_kt_1_hbbhzz'],
+    ttbar=['ttbar_sl', 'ttbar_dl', 'ttbar_fh'],
+    tW=['tbarWplus_sl', 'tbarWplus_dl', 'tbarWplus_fh', 'tWminus_sl', 'tWminus_dl', 'tWminus_fh'],
     tbq=['TBbarQ', 'TbarBQ'],
     tb=['TBbartoLplusNuBbar', 'TbarBtoLminusNuB'],
     WJets=['Wjets_0J', 'Wjets_1J', 'Wjets_2J'],
@@ -53,21 +54,13 @@ PROCESSES_FILES = dict(
         'QCD_pT_1000to1400', 'QCD_pT_1400to1800', 'QCD_pT_1800to2400', 'QCD_pT_2400to3200', 'QCD_pT_3200'
     ],
     ttV=["TTLNu-1Jets", "TTZ-ZtoQQ-1Jets"],
-    # Previously H. =======================
     ggH = ["GluGluHto2WtoLNu2Q", "GluGluHto2Wto2L2Nu"],
-    VBFH = ["VBFHto2WtoLNu2Q", "VBFHto2Wto2L2Nu"],
-    WH = ["WplusH_Hto2B_WtoLNu", "WplusH_Hto2C_WtoLNu", "WplusH_HtoZG_WtoAll_Zto2L",
-          "WminusH_Hto2B_WtoLNu", "WminusH_Hto2C_WtoLNu", "WminusH_HtoZG_WtoAll_Zto2L"],
-    ZH = ["ZH_Hto2B_Zto2L", "ZH_Hto2C_Zto2L", "ZH_ZtoAll_Hto2Wto2L2Nu",
-            "ggZH_Hto2B_Zto2L", "ggZH_Hto2C_Zto2L"],
+    qqH = ["VBFHto2WtoLNu2Q", "VBFHto2Wto2L2Nu"],
+    WH = ["WplusH_Hto2B_WtoLNu", "WplusH_Hto2C_WtoLNu", "WplusH_HtoZG_WtoAll_Zto2L", "WminusH_Hto2B_WtoLNu", "WminusH_Hto2C_WtoLNu", "WminusH_HtoZG_WtoAll_Zto2L"],
+    ZH = ["ZH_Hto2B_Zto2L", "ZH_Hto2C_Zto2L", "ZH_ZtoAll_Hto2Wto2L2Nu", "ggZH_Hto2B_Zto2L", "ggZH_Hto2C_Zto2L"],
     ttH=["TTHto2B", "TTHtoNon2B"],
-    # ====================================
-    #VVV=[]
-    #ttVV=[]
-    #tH=[]
-    #Others=[]
-    #Fakes=[]
     )
+
 
 all_samples = sum(PROCESSES_FILES.values(), [])
 redundant_files = (len(all_samples) - len(set(all_samples))) > 0 

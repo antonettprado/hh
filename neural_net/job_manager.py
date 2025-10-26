@@ -9,7 +9,7 @@ import shutil
 import re
 
 # Constants
-DEFAULT_MEMORY = "42GB"
+DEFAULT_MEMORY = "40GB"
 
 class JobStatus:
     """HTCondor job status codes"""
@@ -464,7 +464,7 @@ exit $EXIT_CODE
         "log": f"{afs_configdir.resolve()}/condor.log",
         "+JobFlavour": '"testmatch"',
         "request_cpus": "2",
-        "request_memory": memory,
+        "request_memory": "40GB",
         "request_disk": "2GB",
         'MY.SendCredential': True,
         "transfer_input_files": f"{executable_path.resolve()}, neural_net, utils, core"
