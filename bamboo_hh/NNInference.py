@@ -106,9 +106,11 @@ class NNInference(NanoBaseHHbbWW):
         nn = NN(modeldir, self.args.trainer)
         sels = nn.get_selections(sbc)
         kfold_dirs = [ ( int(subpath.name[-1]), subpath ) for subpath in modeldir.iterdir() if subpath.is_dir() ]
-        kfold_plots: dict[str, list[Plot]] = defaultdict(list)
-        for pass_idx, pass_modeldir in kfold_dirs:
-            for sb in sels:
+
+        all_plots = []
+        for sb in sels:
+            plots_to_sum_by_class = defaultdict(list)
+            for pass_idx, pass_modeldir in kfold_dirs:
                 # Pick the right 5th subset of events in this selection
                 subnn_ref = Ref.from_parts(channel_parts=[sb.name], obs_parts=[nn.name])
                 subnn_sel = sb.sel.refine(str(subnn_ref)+f"_Pass{pass_idx}", cut=[ event % self.FOLDS == pass_idx ])
@@ -120,14 +122,24 @@ class NNInference(NanoBaseHHbbWW):
                     # Total distribution
                     subnn_total_ref = Ref.from_parts(channel_parts=[sb.name], obs_parts=[nn.name, class_i])
                     subnn_total_dist = Plot.make1D(str(subnn_total_ref)+f"_Pass{pass_idx}", subnn_scores[i], subnn_sel, self.NN_EQBIN, xTitle=f"{nn.name} {class_i} score")
+                    
                     # Category-specific distribution (based on max score)
                     subnn_cat_ref = Ref.from_parts(channel_parts=[sb.name, class_i], obs_parts=[nn.name, class_i])
                     subnn_cat_sel = subnn_sel.refine(str(subnn_cat_ref)+f"_Pass{pass_idx}", cut = (op.AND(i == subnn_max_score_index)))
                     self.yields.add(subnn_cat_sel, str(subnn_cat_ref)+f"_Pass{pass_idx}")
                     subnn_cat_dist = Plot.make1D(str(subnn_cat_ref)+f"_Pass{pass_idx}", subnn_scores[i], subnn_cat_sel, self.NN_EQBIN, xTitle=f"{nn.name} {class_i} score (max)")
-                    kfold_plots[f"Pass {pass_idx}"].extend([subnn_total_dist, subnn_cat_dist])
-        summed_plots = [SummedPlot(pass_group[0].name.rsplit('_Pass', 1)[0].replace('_3j', '').replace('_4j', ''), pass_group) for pass_group in list(zip(*kfold_plots.values()))]
-        return [p for plots in kfold_plots.values() for p in plots] + summed_plots
+                    
+                    plots_to_sum_by_class[class_i].append(subnn_cat_dist)
+                    all_plots.extend([subnn_total_dist, subnn_cat_dist])
+
+            # Create summed plots for this selection
+            for class_name, class_plots in plots_to_sum_by_class.items():
+                nn_name = nn.name.removesuffix('_3j').removesuffix('_4j')
+                summed_plot_ref = Ref.from_parts(channel_parts=[sb.name, class_name], obs_parts=[nn_name, class_name])
+                summed_plot = SummedPlot(summed_plot_ref.name, class_plots)
+                all_plots.append(summed_plot)
+
+        return all_plots
 
     def definePlots(self, tree, baseSel, sample=None, sampleCfg=None):
         plots = [self.yields]
