@@ -172,15 +172,6 @@ def _generate_era_datacards(discs: list, eras_to_combine: dict, pool: Pool) -> f
     return elapsed
 
 
-def _generate_all_datacards(discs: list, sels_to_combine: dict, eras_to_combine: dict) -> None:
-    """Generate all datacards in parallel."""
-    with Pool() as pool:
-        _generate_base_single_datacards(discs, pool)
-        _generate_base_combined_datacards(discs, pool)
-        _generate_combined_selection_datacards(discs, sels_to_combine, pool)
-        _generate_era_datacards(discs, eras_to_combine, pool)
-
-
 def _process_summary_for_selection(args: tuple) -> tuple[str, int]:
     """Process and write summary for a single selection (parallelizable)."""
     sel_name, discs, summary_dir = args
@@ -276,7 +267,7 @@ def _process_summary_from_glob(args: tuple) -> tuple[str, int]:
 
 def _setup_discriminants(workdir: Path, config: AnalysisConfig, sels_to_combine: dict, eras_to_combine: dict):
     """Initialize and configure all discriminants."""
-    fitsdir = workdir / 'fits_final'
+    fitsdir = workdir / 'fits_for_scan_fixed'
     fitsdir.mkdir(exist_ok=True)
     resultsdir = workdir / 'results'
     
@@ -320,7 +311,7 @@ def main(workdir: Path, config: Path, fit_only: bool = False, summary_only: bool
     
     # Handle summary_only mode
     if summary_only:
-        fitsdir = workdir / 'fits_NEW'
+        fitsdir = workdir / 'fits_final'
         _generate_summaries_from_existing(fitsdir, sels_to_combine)
         return
     
@@ -330,19 +321,23 @@ def main(workdir: Path, config: Path, fit_only: bool = False, summary_only: bool
     
     # Generate datacards unless fit_only
     if not fit_only:
-        _generate_all_datacards(discs, sels_to_combine, eras_to_combine)
+        with Pool() as pool:
+            _generate_base_single_datacards(discs, pool)
+    #         _generate_base_combined_datacards(discs, pool)
+    #         _generate_combined_selection_datacards(discs, sels_to_combine, pool)
+    #         _generate_era_datacards(discs, eras_to_combine, pool)
     
-    # Collect all datacards and run fits
-    base_dcs = [p for disc in discs for p in disc.base_comb_datacards.values()]
-    custom_dcs = [p for disc in discs for p in disc.comb_sels_datacards.values()]
-    era_dcs = [p for disc in discs for p in disc.era_datacards.values()]
+    # # Collect all datacards and run fits
+    # base_dcs = [p for disc in discs for p in disc.base_comb_datacards.values()]
+    # custom_dcs = [p for disc in discs for p in disc.comb_sels_datacards.values()]
+    # era_dcs = [p for disc in discs for p in disc.era_datacards.values()]
     
-    dcs_for_fit = base_dcs + custom_dcs + era_dcs
-    fit_results_files = run_fits_multiprocessed(dcs_for_fit)
+    # dcs_for_fit = base_dcs + custom_dcs + era_dcs
+    # fit_results_files = run_fits_multiprocessed(dcs_for_fit)
     
-    # Generate summaries
-    summary_dir = fitsdir / 'summary'
-    _generate_summaries(discs, sels_to_combine, summary_dir)
+    # # Generate summaries
+    # summary_dir = fitsdir / 'summary'
+    # _generate_summaries(discs, sels_to_combine, summary_dir)
 
 
 if __name__ == "__main__":

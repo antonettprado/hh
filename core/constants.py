@@ -21,6 +21,8 @@ ERA_ENUM = {
 
 CHANNEL_DISCRIMINANT_DELIM = "_xxx_"
 WITHIN_GROUP_DELIM = "_x_"
+# CHANNEL_DISCRIMINANT_DELIM = "___"
+# WITHIN_GROUP_DELIM = "__"
 
 BKG_EXCLUDE_PATTERNS = ('data', 'ggHH', 'HH_bbWW', 'asimov')
 SM_SIGNAL_PATTERNS   = ('ggHH_kl_1_kt_1', 'HH_bbWW')
@@ -28,6 +30,15 @@ SM_SIGNAL_PATTERNS   = ('ggHH_kl_1_kt_1', 'HH_bbWW')
 PROCESSES_FILES = dict(
     HH_bbWW=['bbWW_sl', 'bbWW_dl'],
     TTbar=['TTbar_sl', 'TTbar_dl'],
+
+    ggHH_kl_1_kt_1_bbww=['ggHH_kl_1_kt_1_bbww_sl', 'ggHH_kl_1_kt_1_bbww_dl',],
+    ggHH_kl_2p45_kt_1_bbww=['ggHH_kl_2p45_kt_1_bbww_sl', 'ggHH_kl_2p45_kt_1_bbww_dl',],
+    ggHH_kl_5_kt_1_bbww=['ggHH_kl_5_kt_1_bbww_sl', 'ggHH_kl_5_kt_1_bbww_dl',],
+    ggHH_kl_0_kt_1_bbww=['ggHH_kl_0_kt_1_bbww_sl', 'ggHH_kl_0_kt_1_bbww_dl',],    
+    ggHH_kl_1_kt_1_bbtautau = ['ggHH_kl_1_kt_1_bbtautau'],
+    ggHH_kl_2p45_kt_1_bbtautau = ['ggHH_kl_2p45_kt_1_bbtautau'],
+    ggHH_kl_5_kt_1_bbtautau = ['ggHH_kl_5_kt_1_bbtautau'],
+    ggHH_kl_0_kt_1_bbtautau = ['ggHH_kl_0_kt_1_bbtautau'],
 
     ggHH_kl_1_kt_1_hbbhww=['ggHH_kl_1_kt_1_hbbhwwsl', 'ggHH_kl_1_kt_1_hbbhwwdl'],
     ggHH_kl_2p45_kt_1_hbbhww=['ggHH_kl_2p45_kt_1_hbbhwwsl', 'ggHH_kl_2p45_kt_1_hbbhwwdl'],

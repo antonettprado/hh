@@ -158,8 +158,14 @@ def write_hists_to_root(path: Path, histos: dict[str, ROOT.TH1D]) -> None:
         hist.Write()
     outfile.Close()
 
-def extract_signal_background(process_hists: dict[str, Any], signal_process: str = 'ggHH_kl_1_kt_1_bbww') -> tuple[Any, Any]:
+def extract_signal_background(process_hists: dict[str, Any]) -> tuple[Any, Any]:
     """Extract and combine signal/background histograms."""
+
+    if 'ggHH_kl_1_kt_1_bbww' in process_hists:
+        signal_process = 'ggHH_kl_1_kt_1_bbww'
+    elif 'HH_bbWW' in process_hists:
+        signal_process = 'HH_bbWW'
+        
     signal_hist = process_hists.pop(signal_process)
     
     background_hists = [

@@ -19,25 +19,34 @@ def generate_dc(disc, dc_path: Path, ref: Reference, era: str) -> Path:
     histogram.write_hists_to_root(dc_path.with_suffix('.root'), process_hists)
     return
 
-def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, disc_name: str, channel:str, era: str, signal: str='ggHH_kl_1_kt_1_hbbhww') -> str:
-    ''' Updates to datacards (e.g. systematics) go here '''
+def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], obs_process: str, disc_name: str, channel: str, era: str) -> str:
+    """Generates datacard text for HH→bbWW, assigning κλ signals ≤0 and backgrounds >0."""
 
-    obs_rate = process_rates.pop(obs_process)
-    sig_rate = process_rates.pop(signal)
-    # Manually remove other kl points, for now
-    process_rates.pop("ggHH_kl_0_kt_1_hbbhww")
-    process_rates.pop("ggHH_kl_2p45_kt_1_hbbhww")
-    process_rates.pop("ggHH_kl_5_kt_1_hbbhww")
+    # Define which are signal variants and which is nominal SM
+    signal_nominal = "ggHH_kl_1_kt_1_hbbhww"
+    signal_variants = [
+        "ggHH_kl_0_kt_1_hbbhww",
+        "ggHH_kl_2p45_kt_1_hbbhww",
+        "ggHH_kl_5_kt_1_hbbhww",
+    ]
+
+    # # Manually remove other kl points, for now
+    # process_rates.pop("ggHH_kl_0_kt_1_hbbhww")
+    # process_rates.pop("ggHH_kl_2p45_kt_1_hbbhww")
+    # process_rates.pop("ggHH_kl_5_kt_1_hbbhww")
     process_rates.pop("ggHH_kl_0_kt_1_hbbhtt")
     process_rates.pop("ggHH_kl_1_kt_1_hbbhtt")
     process_rates.pop("ggHH_kl_2p45_kt_1_hbbhtt")
     process_rates.pop("ggHH_kl_5_kt_1_hbbhtt")
 
-    separator: str = '\n' + '-'*130 + '\n'
+    # Extract observation and signal rates
+    obs_rate = process_rates.pop(obs_process)
+    sig_rates = {v: process_rates.pop(v) for v in [signal_nominal] + signal_variants if v in process_rates}
+
+    separator = "\n" + "-" * 130 + "\n"
+
     def tab(tabular_data) -> str:
-        tabstr: str = separator
-        tabstr += tabulate(tabular_data, tablefmt='plain')
-        return tabstr
+        return separator + tabulate(tabular_data, tablefmt="plain")
 
     comment: str = (
         f'# Shape input card for HH to bbWW non-resonant analysis\n' +
@@ -56,18 +65,32 @@ def generate_datacard_text(rfile_path: Path, process_rates: dict[str, float], ob
         ["shapes", "*", "*", rfile_path, "$PROCESS", "$PROCESS_SYSTEMATIC"],
         ["shapes", "data_obs", "*", rfile_path, obs_process]
     ])
-    
+
     observation: str = tab([
         ["bin", channel],
         ["observation", f'{obs_rate:.4f}']
     ])
 
-    num_model_processes = len(process_rates) + 1
-    rates: list[list[str]] = [
+    # Process ordering: all backgrounds (positive IDs), then signal variants (negative), ending with 0 for SM
+    background_processes = list(process_rates.keys())
+
+    # Assign process IDs
+    # Example: [-3, -2, -1, 0] for {kl=0, 2p45, 5, SM}
+    signal_ids = list(range(-len(signal_variants), 1))
+    signal_processes = list(sig_rates.keys())
+
+    # Combine all processes and IDs
+    all_processes = background_processes + signal_processes
+    all_rates = [process_rates[p] for p in background_processes] + [sig_rates[p] for p in signal_processes]
+    all_ids = list(range(1, len(background_processes) + 1)) + signal_ids
+
+    num_model_processes = len(all_processes)
+
+    rates = [
         ["bin", ""] + [channel] * num_model_processes,
-        ["process", ""] + [signal]   + [ proc for proc in process_rates.keys() ],
-        ["process", ""] + [ i for i in range(num_model_processes) ],
-        ["rate", ""]    + [sig_rate] + [ f'{rate:.4f}' for rate in process_rates.values() ],        
+        ["process", ""] + all_processes,
+        ["process", ""] + all_ids,
+        ["rate", ""] + [f"{r:.4f}" for r in all_rates],
     ]
 
     # Sytematics go here

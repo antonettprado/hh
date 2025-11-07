@@ -37,10 +37,11 @@ class Analyzer:
         elif ObsType.is_llr(ref):
             var_titles = [REG.get_var1D_title(var) for var in info.vars]
             if info.category == "llr_factorized":
-                xlabel = r'LLR_{fact}('+ f'{",".join(var_titles)}' +')'
+                xlabel = r'LLR_{comp}('+ f'{",".join(var_titles)}' +')'
             else:
                 xlabel = f'LLR({",".join(var_titles)})'
         else:
+            print(f"Variable detected")
             labels = tuple(REG.get_var1D_title(var) for var in info.vars)
             if len(info.vars) == 1:
                 _, xmin, xmax = REG.get_var1D_binning(info.vars[0])
@@ -59,6 +60,8 @@ class Analyzer:
 
         if plot_style.xlabel is None:
             plot_style.xlabel = xlabel
+
+        # plot_style.xlabel = xlabel
 
         return plot_style, plot_limits
 
